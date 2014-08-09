@@ -5,8 +5,8 @@ copic-j
 ## [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic)
 
 CoPIC:
-Co  = Community = 1-to-1 Correlation to NuPIC = Side-by-Side
-PIC = Platform for Intelligent Computing
+ * Co  = Community = 1-to-1 Correlation to NuPIC = Side-by-Side
+ * PIC = Platform for Intelligent Computing
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
 
