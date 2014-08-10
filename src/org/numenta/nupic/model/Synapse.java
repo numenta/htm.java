@@ -1,7 +1,7 @@
 package org.numenta.nupic.model;
 
+import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
-import org.numenta.nupic.research.TemporalMemory.Connections;
 
 /**
  * Represents a connection with varying strength which when above 
