@@ -99,18 +99,18 @@ public class Parameters {
 			double connectedPermanence, double permanenceIncrement,
 			double permanenceDecrement, Random random) {
 		super();
-		this.columnDimensions = columnDimensions;
-		this.cellsPerColumn = cellsPerColumn;
-		this.activationThreshold = activationThreshold;
-		this.learningRadius = learningRadius;
-		this.minThreshold = minThreshold;
-		this.maxNewSynapseCount = maxNewSynapseCount;
-		this.seed = seed;
-		this.initialPermanence = initialPermanence;
-		this.connectedPermanence = connectedPermanence;
-		this.permanenceIncrement = permanenceIncrement;
-		this.permanenceDecrement = permanenceDecrement;
-		this.random = random;
+		setColumnDimensions(columnDimensions);
+		setCellsPerColumn(cellsPerColumn);
+		setActivationThreshold(activationThreshold);
+		setLearningRadius(learningRadius);
+		setMinThreshold(minThreshold);
+		setMaxNewSynapseCount(maxNewSynapseCount);
+		setSeed(seed);
+		setInitialPermanence(initialPermanence);
+		setConnectedPermanence(connectedPermanence);
+		setPermanenceIncrement(permanenceIncrement);
+		setPermanenceDecrement(permanenceDecrement);
+		setRandom(random);
 	}
 	
 	/**
@@ -184,6 +184,7 @@ public class Parameters {
 	 */
 	public void setColumnDimensions(int columnDimensions) {
 		this.columnDimensions = columnDimensions;
+		getMap().put(KEY.COLUMN_DIMENSIONS, columnDimensions);
 	}
 
 	/**
@@ -192,6 +193,7 @@ public class Parameters {
 	 */
 	public void setCellsPerColumn(int cellsPerColumn) {
 		this.cellsPerColumn = cellsPerColumn;
+		getMap().put(KEY.CELLS_PER_COLUMN, cellsPerColumn);
 	}
 
 	/**
@@ -204,6 +206,7 @@ public class Parameters {
 	 */
 	public void setActivationThreshold(int activationThreshold) {
 		this.activationThreshold = activationThreshold;
+		getMap().put(KEY.ACTIVATION_THRESHOLD, activationThreshold);
 	}
 
 	/**
@@ -214,6 +217,7 @@ public class Parameters {
 	 */
 	public void setLearningRadius(int learningRadius) {
 		this.learningRadius = learningRadius;
+		getMap().put(KEY.LEARNING_RADIUS, learningRadius);
 	}
 
 	/**
@@ -225,6 +229,7 @@ public class Parameters {
 	 */
 	public void setMinThreshold(int minThreshold) {
 		this.minThreshold = minThreshold;
+		getMap().put(KEY.MIN_THRESHOLD, minThreshold);
 	}
 
 	/** 
@@ -234,6 +239,7 @@ public class Parameters {
 	 */
 	public void setMaxNewSynapseCount(int maxNewSynapseCount) {
 		this.maxNewSynapseCount = maxNewSynapseCount;
+		getMap().put(KEY.MAX_NEW_SYNAPSE_COUNT, maxNewSynapseCount);
 	}
 
 	/** 
@@ -243,6 +249,7 @@ public class Parameters {
 	 */
 	public void setSeed(int seed) {
 		this.seed = seed;
+		getMap().put(KEY.SEED, seed);
 	}
 	
 	/** 
@@ -252,6 +259,7 @@ public class Parameters {
 	 */
 	public void setInitialPermanence(double initialPermanence) {
 		this.initialPermanence = initialPermanence;
+		getMap().put(KEY.INITIAL_PERMANENCE, initialPermanence);
 	}
 	
 	/**
@@ -263,6 +271,7 @@ public class Parameters {
 	 */
 	public void setConnectedPermanence(double connectedPermanence) {
 		this.connectedPermanence = connectedPermanence;
+		getMap().put(KEY.CONNECTED_PERMANENCE, connectedPermanence);
 	}
 
 	/** 
@@ -273,6 +282,7 @@ public class Parameters {
 	 */
 	public void setPermanenceIncrement(double permanenceIncrement) {
 		this.permanenceIncrement = permanenceIncrement;
+		getMap().put(KEY.PERMANENCE_INCREMENT, permanenceIncrement);
 	}
 	
 	/** 
@@ -283,6 +293,7 @@ public class Parameters {
 	 */
 	public void setPermanenceDecrement(double permanenceDecrement) {
 		this.permanenceDecrement = permanenceDecrement;
+		getMap().put(KEY.PERMANENCE_DECREMENT, permanenceDecrement);
 	}
 	
 	/**

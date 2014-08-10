@@ -114,5 +114,71 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 		 * assertEquals(1, detailedResults.predictedInactiveColumnsList.get(3).size());
 		 */
 	}
+	
+	/**
+	 * High order sequences (alternating)
+	 */
+	@Test
+	public void testC() {
+		defaultSetup();
+		
+		//Basic first order sequences
+		initTM();
+		
+		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
+		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+		
+		finishSetUp(new ConsecutivePatternMachine(6, 1));
+		
+		List<Integer> inputA = Arrays.asList(new Integer[] { 0, 1, 2, 3, -1 });
+		List<Integer> inputB = Arrays.asList(new Integer[] { 4, 1, 2, 5, -1 });
+		
+		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(inputA);
+		sequence.addAll(sequenceMachine.generateFromNumbers(inputB));
+		
+		feedTM(sequence, true, 1);
+		feedTM(sequence, true, 10);
+		
+		DetailedResults detailedResults = feedTM(sequence, false, 1);
+		//TODO: Requires some form of synaptic decay to forget the
+	    // 		ABC=>Y and XBC=>D transitions that are initially formed
+		assertEquals(1, detailedResults.predictedActiveColumnsList.get(3).size());
+		assertEquals(1, detailedResults.predictedInactiveColumnsList.get(8).size());
+	}
+	
+	/**
+	 * Endlessly repeating sequence of 2 elements
+	 */
+	@Test
+	public void testD() {
+		defaultSetup();
+		parameters.setColumnDimensions(2);
+		
+		//Basic first order sequences
+		initTM();
+		
+		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
+		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+		assertEquals(2, tm.getColumnDimensions());
+		
+		finishSetUp(new ConsecutivePatternMachine(6, 1));
+		
+		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(
+			Arrays.asList(new Integer[] { 0, 1 }));
+		
+		for(int i = 0;i < 7;i++) {
+			feedTM(sequence, true, 1);
+		}
+		
+		feedTM(sequence, true, 50);
+	}
+	
+	/**
+	 * Endlessly repeating sequence of 2 elements with maxNewSynapseCount=1
+	 */
+	@Test
+	public void testE() {
+		
+	}
 
 }
