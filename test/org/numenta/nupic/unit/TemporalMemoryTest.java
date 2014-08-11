@@ -23,6 +23,13 @@ import org.numenta.nupic.research.ComputeCycle;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
+
+/**
+ * Basic unit test for {@link TemporalMemory}
+ * 
+ * @author Chetan Surpur
+ * @author David Ray
+ */
 public class TemporalMemoryTest {
 
 	@Test

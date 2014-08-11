@@ -8,6 +8,7 @@ import org.numenta.nupic.research.Connections;
 /**
  * Software implementation of a neuron in the neocortical region.
  * 
+ * @author Chetan Surpur
  * @author David Ray
  */
 public class Cell implements Comparable<Cell> {

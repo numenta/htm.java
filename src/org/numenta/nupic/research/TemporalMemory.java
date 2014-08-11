@@ -16,6 +16,7 @@ import org.numenta.nupic.model.Synapse;
 /**
  * Temporal Memory implementation in Java
  * 
+ * @author Chetan Surpur
  * @author David Ray
  */
 public class TemporalMemory {

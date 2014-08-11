@@ -10,7 +10,14 @@ import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.TemporalMemory;
 
-public class AbstractTemporalMemoryTest {
+/**
+ * Base class for integration tests of the {@link TemporalMemory}
+ * 
+ * @author Chetan Surpur
+ * @author David Ray
+ * @see BasicTemporalMemoryTest
+ */
+public abstract class AbstractTemporalMemoryTest {
 	protected TemporalMemory tm;
 	protected PatternMachine patternMachine;
 	protected SequenceMachine sequenceMachine;

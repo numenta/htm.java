@@ -21,6 +21,13 @@ import org.numenta.nupic.research.TemporalMemory;
 
 import com.bethecoder.ascii_table.ASCIITable;
 
+/**
+ * Test utility to furnish test data.
+ * 
+ * @author Chetan Surpur
+ * @author David Ray
+ *
+ */
 public class TemporalMemoryTestMachine {
 	private TemporalMemory temporalMemory;
 	

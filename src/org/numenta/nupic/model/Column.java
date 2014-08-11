@@ -14,6 +14,7 @@ import org.numenta.nupic.research.TemporalMemory;
  * {@link Cell}s which have behavior associated with membership to
  * a given {@code Column}
  * 
+ * @author Chetan Surpur
  * @author David Ray
  *
  */

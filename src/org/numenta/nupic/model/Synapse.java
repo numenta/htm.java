@@ -9,6 +9,7 @@ import org.numenta.nupic.research.TemporalMemory;
  * may hold state because its scope is limited to a given {@link Thread}'s
  * {@link Connections} object.
  * 
+ * @author Chetan Surpur
  * @author David Ray
  * 
  * @see Segment

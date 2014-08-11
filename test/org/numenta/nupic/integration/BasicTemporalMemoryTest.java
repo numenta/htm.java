@@ -17,7 +17,9 @@ import org.numenta.nupic.research.Parameters.KEY;
 
 
 /**
+ * Basic {@link TemporalMemory} class
  * 
+ * @author Chetan Surpur
  * @author David Ray
  */
 public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {

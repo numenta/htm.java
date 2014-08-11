@@ -16,6 +16,7 @@ import org.numenta.nupic.research.Connections;
  * which are obversely connected to by a "source cell", which is the {@link Cell}
  * which will activate a given {@link Synapse} owned by this {@code Segment}.
  * 
+ * @author Chetan Surpur
  * @author David Ray
  */
 public class Segment {
