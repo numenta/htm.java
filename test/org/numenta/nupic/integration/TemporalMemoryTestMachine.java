@@ -16,6 +16,7 @@ import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.ComputeCycle;
+import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
 import com.bethecoder.ascii_table.ASCIITable;
@@ -138,6 +139,8 @@ public class TemporalMemoryTestMachine {
 	}
 	
 	public String prettyPrintTemporalMemory() {
+		Connections c = temporalMemory.getConnections();
+		
 		String text = "";
 		
 		text += "Column # / Cell #:\t\t{segment=[[Source Cell: column#, index, permanence], ...]}\n";
@@ -148,9 +151,9 @@ public class TemporalMemoryTestMachine {
 			List<Cell> cells = temporalMemory.getColumn(i).getCells();
 			for(Cell cell : cells) {
 				Map<Segment, List<String>> segmentDict = new LinkedHashMap<Segment, List<String>>();
-				for(Segment seg : cell.getSegments()) {
+				for(Segment seg : cell.getSegments(c)) {
 					List<String> synapseList = new ArrayList<String>();
-					for(Synapse synapse : seg.getAllSynapses()) {
+					for(Synapse synapse : seg.getAllSynapses(c)) {
 						synapseList.add("[" + synapse.getSourceCell() + ", " + synapse.getPermanence() + "]");
 					}
 					segmentDict.put(seg, synapseList);

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
 /**
@@ -75,16 +76,18 @@ public class Column {
 	
 	/**
 	 * Returns the {@link Cell} with the least number of {@link Segment}s.
+	 * 
+	 * @param c			the connections state of the temporal memory
 	 * @param random
 	 * @return
 	 */
-	public Cell getLeastUsedCell(Random random) {
+	public Cell getLeastUsedCell(Connections c, Random random) {
 		List<Cell> cells = getCells();
 		List<Cell> leastUsedCells = new ArrayList<Cell>();
 		int minNumSegments = Integer.MAX_VALUE;
 		
 		for(Cell cell : cells) {
-			int numSegments = cell.getSegments().size();
+			int numSegments = cell.getSegments(c).size();
 			
 			if(numSegments < minNumSegments) {
 				minNumSegments = numSegments;
