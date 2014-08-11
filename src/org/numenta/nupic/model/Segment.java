@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.research.Connections;
 
 /**
  * Represents a proximal or distal dendritic segment.
@@ -46,23 +46,26 @@ public class Segment {
 	 * Creates and returns a newly created {@link Synapse} with the specified
 	 * source cell, permanence, and index.
 	 * 
+	 * @param c				the connections state of the temporal memory
 	 * @param sourceCell	the source cell which will activate the new {@code Synapse}
 	 * @param permanence	the new {@link Synapse}'s initial permanence.
 	 * @param index			the new {@link Synapse}'s index.
 	 * @return
 	 */
-	public Synapse createSynapse(Cell sourceCell, double permanence, int index) {
-		Synapse s = new Synapse(sourceCell, this, permanence, index);
-		TemporalMemory.get().synapses(this).add(s);
+	public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
+		Synapse s = new Synapse(c, sourceCell, this, permanence, index);
+		c.synapses(this).add(s);
 		return s;
 	}
 	
 	/**
 	 * Returns all {@link Synapse}s
+	 * 
+	 * @param	c	the connections state of the temporal memory
 	 * @return
 	 */
-	public List<Synapse> getAllSynapses() {
-		return TemporalMemory.get().synapses(this);
+	public List<Synapse> getAllSynapses(Connections c) {
+		return c.synapses(this);
 	}
 	
 	/**
@@ -92,14 +95,15 @@ public class Segment {
 	 * Called for learning {@code Segment}s so that they may
 	 * adjust the permanences of their synapses.
 	 * 
+	 * @param c						the connections state of the temporal memory
 	 * @param activeSynapses		a set of active synapses owned by this {@code Segment} which
 	 * 								will have their permanences increased. All others will have their
 	 * 								permanences decreased.
 	 * @param permanenceIncrement	the increment by which permanences are increased.
 	 * @param permanenceDecrement	the increment by which permanences are decreased.
 	 */
-	public void adaptSegment(Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
-		for(Synapse synapse : TemporalMemory.get().synapses(this)) {
+	public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
+		for(Synapse synapse : c.synapses(this)) {
 			double permanence = synapse.getPermanence();
 			if(activeSynapses.contains(synapse)) {
 				permanence += permanenceIncrement;
@@ -117,16 +121,17 @@ public class Segment {
 	 * Returns a {@link Set} of previous winner {@link Cell}s which aren't already attached to any
 	 * {@link Synapse}s owned by this {@code Segment}
 	 * 
+	 * @param	c				the connections state of the temporal memory
 	 * @param numPickCells		the number of possible cells this segment may designate
 	 * @param prevWinners		the set of previous winner cells
 	 * @param random			the random number generator
 	 * @return					a {@link Set} of previous winner {@link Cell}s which aren't already attached to any
 	 * 							{@link Synapse}s owned by this {@code Segment}
 	 */
-	public Set<Cell> pickCellsToLearnOn(int numPickCells, Set<Cell> prevWinners, Random random) {
+	public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
 		//Create a list of cells that aren't already synapsed to this segment
 		Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
-		for(Synapse synapse : TemporalMemory.get().synapses(this)) {
+		for(Synapse synapse : c.synapses(this)) {
 			Cell sourceCell = synapse.getSourceCell();
 			if(candidates.contains(sourceCell)) {
 				candidates.remove(sourceCell);

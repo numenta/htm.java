@@ -60,15 +60,15 @@ public class TemporalMemory {
 	 * are decremented during learning.
 	 */
 	private double permanenceDecrement = 0.10;
-	
+	/**
+	 * The connection data state for this {@code TemporalMemory}
+	 */
+	private Connections connections = new Connections();
 	
 	
 	private Cell[] cells;
 	
 	private List<Column> columns = new ArrayList<Column>(columnDimensions);
-	
-	/** Contains thread specific connection mapping	 */
-	private static ThreadLocal<Connections> threadLocal = new ThreadLocal<Connections>();
 	
 	
 	/**
@@ -105,51 +105,11 @@ public class TemporalMemory {
 	}
 	
 	/**
-	 * Returns a thread specific {@link Connections} object.
-	 * @return
-	 */
-	public static Connections get() {
-		Connections retVal = null;
-		if((retVal = threadLocal.get()) == null) {
-			threadLocal.set(retVal = new Connections());
-		}
-		return retVal;
-	}
-	
-	/**
-	 * Sets the {@link Connections} object to be used by the
-	 * current calling {@link Thread}. If a pre-existing {@code Connections}
-	 * object is mapped, that object is first cleared of all of its resources
-	 * prior to the specified {@code Connections} object being set.
-	 * 
-	 * @param c
-	 */
-	public static void set(Connections c) {
-		if(threadLocal.get() != null) {
-			threadLocal.get().clear();
-		}
-		threadLocal.set(c);
-	}
-	
-	/**
-	 * Removes the {@link Connections} object (if any exists) which is 
-	 * mapped to the current calling {@link Thread}. If a pre-existing {@code Connections}
-	 * object is mapped, that object is first cleared of all of its resources
-	 * prior to its removal.
-	 */
-	public static void remove() {
-		if(threadLocal.get() != null) {
-			threadLocal.get().clear();
-			threadLocal.remove();
-		}
-	}
-	
-	/**
 	 * Returns the seeded random number generator.
 	 * @return
 	 */
 	public Random getRandom() {
-		return get().random();
+		return connections.random();
 	}
 	
 	/**
@@ -244,7 +204,7 @@ public class TemporalMemory {
 	 * @param	seed
 	 */
 	public void setSeed(int seed) {
-		get().setSeed(seed);
+		connections.setSeed(seed);
 	}
 	
 	/** 
@@ -309,38 +269,60 @@ public class TemporalMemory {
 	
 	/////////////////////////// CORE FUNCTIONS /////////////////////////////
 	
+	/**
+	 * Feeds input record through TM, performing inferencing and learning
+	 * 
+	 * @param activeColumns		direct proximal dendrite input
+	 * @param learn				learning mode flag
+	 * @return					{@link ComputeCycle} container for one cycle of inference values.
+	 */
 	public ComputeCycle compute(int[] activeColumns, boolean learn) {
-		ComputeCycle result = computeFn(new ComputeCycle(), getColumns(activeColumns), new LinkedHashSet<Cell>(get().predictiveCells), 
-			new LinkedHashSet<Segment>(get().activeSegments), new LinkedHashMap<Segment, Set<Synapse>>(get().activeSynapsesForSegment), 
-				new LinkedHashSet<Cell>(get().winnerCells), learn);
+		ComputeCycle result = computeFn(connections, getColumns(activeColumns), new LinkedHashSet<Cell>(connections.predictiveCells), 
+			new LinkedHashSet<Segment>(connections.activeSegments), new LinkedHashMap<Segment, Set<Synapse>>(connections.activeSynapsesForSegment), 
+				new LinkedHashSet<Cell>(connections.winnerCells), learn);
 		
-		get().activeCells = result.activeCells();
-		get().winnerCells = result.winnerCells();
-		get().predictiveCells = result.predictiveCells();
-		get().predictedColumns = result.predictedColumns();
-		get().activeSegments = result.activeSegments();
-		get().learningSegments = result.learningSegments();
-		get().activeSynapsesForSegment = result.activeSynapsesForSegment();
+		connections.activeCells = result.activeCells();
+		connections.winnerCells = result.winnerCells();
+		connections.predictiveCells = result.predictiveCells();
+		connections.predictedColumns = result.predictedColumns();
+		connections.activeSegments = result.activeSegments();
+		connections.learningSegments = result.learningSegments();
+		connections.activeSynapsesForSegment = result.activeSynapsesForSegment();
 		
-		return result;  
+		return result; 
 	}
 	
-	public ComputeCycle computeFn(ComputeCycle computeCycle, Set<Column> activeColumns, Set<Cell> prevPredictiveCells, Set<Segment> prevActiveSegments,
+	/**
+	 * Functional version of {@link #compute(int[], boolean)}. 
+	 * This method is stateless and concurrency safe.
+	 * 
+	 * @param c								{@link Connections} object containing state of memory members
+	 * @param activeColumns					proximal dendrite input
+	 * @param prevPredictiveCells			cells predicting in t-1
+	 * @param prevActiveSegments			active segments in t-1
+	 * @param prevActiveSynapsesForSegment	{@link Synapse}s active in t-1
+	 * @param prevWinnerCells	`			previous winners
+	 * @param learn							whether mode is "learning" mode
+	 * @return
+	 */
+	public ComputeCycle computeFn(Connections c, Set<Column> activeColumns, Set<Cell> prevPredictiveCells, Set<Segment> prevActiveSegments,
 		Map<Segment, Set<Synapse>> prevActiveSynapsesForSegment, Set<Cell> prevWinnerCells, boolean learn) {
 		
-		activateCorrectlyPredictiveCells(computeCycle, prevPredictiveCells, activeColumns);
+		ComputeCycle cycle = new ComputeCycle();
 		
-		burstColumns(computeCycle, activeColumns, computeCycle.predictedColumns, prevActiveSynapsesForSegment);
+		activateCorrectlyPredictiveCells(cycle, prevPredictiveCells, activeColumns);
+		
+		burstColumns(cycle, c, activeColumns, cycle.predictedColumns, prevActiveSynapsesForSegment);
 		
 		if(learn) {
-			learnOnSegments(prevActiveSegments, computeCycle.learningSegments, prevActiveSynapsesForSegment, computeCycle.winnerCells, prevWinnerCells);
+			learnOnSegments(c, prevActiveSegments, cycle.learningSegments, prevActiveSynapsesForSegment, cycle.winnerCells, prevWinnerCells);
 		}
 		
-		computeCycle.activeSynapsesForSegment = computeActiveSynapses(computeCycle.activeCells);
+		cycle.activeSynapsesForSegment = computeActiveSynapses(c, cycle.activeCells);
 		
-		computePredictiveCells(computeCycle, computeCycle.activeSynapsesForSegment);
+		computePredictiveCells(cycle, cycle.activeSynapsesForSegment);
 		
-		return computeCycle;
+		return cycle;
 	}
 
 	/**
@@ -354,17 +336,17 @@ public class TemporalMemory {
      *     - mark it as winner cell
      *     - mark column as predicted
      *     
-	 * @param ComputeCycle				object to contain results.
+	 * @param c						ComputeCycle interim values container
 	 * @param prevPredictiveCells	predictive {@link Cell}s predictive cells in t-1
 	 * @param activeColumns			active columns in t
 	 */
-	public void activateCorrectlyPredictiveCells(ComputeCycle result, Set<Cell> prevPredictiveCells, Set<Column> activeColumns) {
+	public void activateCorrectlyPredictiveCells(ComputeCycle c, Set<Cell> prevPredictiveCells, Set<Column> activeColumns) {
 		for(Cell cell : prevPredictiveCells) {
 			Column column = cell.getParentColumn();
 			if(activeColumns.contains(column)) {
-				result.activeCells.add(cell);
-				result.winnerCells.add(cell);
-				result.predictedColumns.add(column);
+				c.activeCells.add(cell);
+				c.winnerCells.add(cell);
+				c.predictedColumns.add(column);
 			}
 		}
 	}
@@ -383,13 +365,14 @@ public class TemporalMemory {
      *           - add a segment to it
      *       - mark the segment as learning
 	 * 
-	 * @param cycle							ComputeCycle object to contain result
+	 * @param cycle						    ComputeCycle interim values container
+	 * @param c								Connections temporal memory state
 	 * @param activeColumns					active columns in t
 	 * @param predictedColumns				predicted columns in t
 	 * @param prevActiveSynapsesForSegment		LinkedHashMap of previously active segments which
 	 * 										have had synapses marked as active in t-1     
 	 */
-	public void burstColumns(ComputeCycle cycle, Set<Column> activeColumns, Set<Column> predictedColumns, 
+	public void burstColumns(ComputeCycle cycle, Connections c, Set<Column> activeColumns, Set<Column> predictedColumns, 
 		Map<Segment, Set<Synapse>> prevActiveSynapsesForSegment) {
 		
 		Set<Column> unpred = new LinkedHashSet<Column>(activeColumns);
@@ -399,7 +382,7 @@ public class TemporalMemory {
 			List<Cell> cells = column.getCells();
 			cycle.activeCells.addAll(cells);
 			
-			Object[] bestSegmentAndCell = getBestMatchingCell(column, prevActiveSynapsesForSegment);
+			Object[] bestSegmentAndCell = getBestMatchingCell(c, column, prevActiveSynapsesForSegment);
 			Segment bestSegment = (Segment)bestSegmentAndCell[0];
 			Cell bestCell = (Cell)bestSegmentAndCell[1];
 			if(bestCell != null) {
@@ -407,8 +390,8 @@ public class TemporalMemory {
 			}
 			
 			if(bestSegment == null) {
-				bestSegment = bestCell.createSegment(get().segmentCounter);
-				get().segmentCounter += 1;
+				bestSegment = bestCell.createSegment(c, c.segmentCounter);
+				c.segmentCounter += 1;
 			}
 			
 			cycle.learningSegments.add(bestSegment);
@@ -429,13 +412,14 @@ public class TemporalMemory {
      *       - subsample from prev winner cells
      * </pre>     
      *       
+     * @param c								the Connections state of the temporal memory
 	 * @param prevActiveSegments
 	 * @param learningSegments
 	 * @param prevActiveSynapseSegments
 	 * @param winnerCells
 	 * @param prevWinnerCells
 	 */
-	public void learnOnSegments(Set<Segment> prevActiveSegments, Set<Segment> learningSegments,
+	public void learnOnSegments(Connections c, Set<Segment> prevActiveSegments, Set<Segment> learningSegments,
 		Map<Segment, Set<Synapse>> prevActiveSynapseSegments, Set<Cell> winnerCells, Set<Cell> prevWinnerCells) {
 		
 		List<Segment> prevAndLearning = new ArrayList<Segment>(prevActiveSegments);
@@ -448,15 +432,15 @@ public class TemporalMemory {
 			Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>(dd.getConnectedActiveSynapses(prevActiveSynapseSegments, 0));
 			
 			if(isLearningSegment || isFromWinnerCell) {
-				dd.adaptSegment(activeSynapses, permanenceIncrement, permanenceDecrement);
+				dd.adaptSegment(c, activeSynapses, permanenceIncrement, permanenceDecrement);
 			}
 			
 			if(isLearningSegment) {
 				int n = maxNewSynapseCount - activeSynapses.size();
-				Set<Cell> learnCells = dd.pickCellsToLearnOn(n, prevWinnerCells, get().random);
+				Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.random);
 				for(Cell sourceCell : learnCells) {
-					dd.createSynapse(sourceCell, initialPermanence, get().synapseCounter);
-					get().synapseCounter += 1;
+					dd.createSynapse(c, sourceCell, initialPermanence, c.synapseCounter);
+					c.synapseCounter += 1;
 				}
 			}
 		}
@@ -471,7 +455,7 @@ public class TemporalMemory {
      *   - mark the segment as active
      *   - mark the cell as predictive
 	 * 
-	 * @param cycle			ComputeCycle object to contain results.
+	 * @param c					the Connections state of the temporal memory
 	 * @param activeSegments
 	 */
 	public void computePredictiveCells(ComputeCycle cycle, Map<Segment, Set<Synapse>> activeDendrites) {
@@ -488,14 +472,15 @@ public class TemporalMemory {
 	 * Forward propagates activity from active cells to the synapses that touch
      * them, to determine which synapses are active.
      * 
+     * @param	c			the connections state of the temporal memory
 	 * @param cellsActive
 	 * @return 
 	 */
-	public Map<Segment, Set<Synapse>> computeActiveSynapses(Set<Cell> cellsActive) {
+	public Map<Segment, Set<Synapse>> computeActiveSynapses(Connections c, Set<Cell> cellsActive) {
 		Map<Segment, Set<Synapse>> activesSynapses = new LinkedHashMap<Segment, Set<Synapse>>();
 		
 		for(Cell cell : cellsActive) {
-			for(Synapse s : cell.getReceptorSynapses()) {
+			for(Synapse s : cell.getReceptorSynapses(c)) {
 				Set<Synapse> set = null;
 				if((set = activesSynapses.get(s.getSegment())) == null) {
 					activesSynapses.put(s.getSegment(), set = new LinkedHashSet<Synapse>());
@@ -509,24 +494,28 @@ public class TemporalMemory {
 	
 	/**
 	 * Called to start the input of a new sequence.
+	 * 
+	 * @param	c 	the Connections state of the temporal memory
 	 */
 	public void reset() {
-		get().activeCells.clear();
-		get().predictiveCells.clear();
-		get().activeSegments.clear();
-		get().activeSynapsesForSegment.clear();
-		get().winnerCells.clear();
+		connections.activeCells.clear();
+		connections.predictiveCells.clear();
+		connections.activeSegments.clear();
+		connections.activeSynapsesForSegment.clear();
+		connections.winnerCells.clear();
 	}
 	
 	//////////////////////// RESULT FUNCTIONS ///////////////////////
-	
+	public Connections getConnections() {
+		return this.connections;
+	}
 	/**
 	 * Returns the current {@link Set} of active cells
 	 * 
 	 * @return	the current {@link Set} of active cells
 	 */
 	public Set<Cell> getActiveCells() {
-		return get().activeCells();
+		return connections.activeCells();
 	}
 	
 	/**
@@ -535,7 +524,7 @@ public class TemporalMemory {
 	 * @return	the current {@link Set} of winner cells
 	 */
 	public Set<Cell> getWinnerCells() {
-		return get().winnerCells();
+		return connections.winnerCells();
 	}
 	
 	/**
@@ -543,7 +532,7 @@ public class TemporalMemory {
 	 * @return
 	 */
 	public Set<Cell> getPredictiveCells() {
-		return get().predictiveCells();
+		return connections.predictiveCells();
 	}
 	
 	/**
@@ -552,7 +541,7 @@ public class TemporalMemory {
 	 * @return	the current {@link Set} of predicted columns
 	 */
 	public Set<Column> getPredictedColumns() {
-		return get().predictedColumns();
+		return connections.predictedColumns();
 	}
 	
 	/**
@@ -560,7 +549,7 @@ public class TemporalMemory {
 	 * @return
 	 */
 	public Set<Segment> getLearningSegments() {
-		return get().learningSegments();
+		return connections.learningSegments();
 	}
 	
 	/**
@@ -568,7 +557,7 @@ public class TemporalMemory {
 	 * @return
 	 */
 	public Set<Segment> getActiveSegments() {
-		return get().activeSegments();
+		return connections.activeSegments();
 	}
 	
 	/**
@@ -578,7 +567,7 @@ public class TemporalMemory {
 	 * @return
 	 */
 	public Map<Segment, Set<Synapse>> getActiveSynapsesForSegment() {
-		return get().activeSynapsesForSegment();
+		return connections.activeSynapsesForSegment();
 	}
 	
 	/////////////////////////// HELPER FUNCTIONS ///////////////////////////
@@ -617,13 +606,13 @@ public class TemporalMemory {
 		return objs;
 	}
 	
-	public Object[] getBestMatchingCell(Column column, Map<Segment, Set<Synapse>> prevActiveSynapsesForSegment) {
+	public Object[] getBestMatchingCell(Connections c, Column column, Map<Segment, Set<Synapse>> prevActiveSynapsesForSegment) {
 		Object[] retVal = new Object[2];
 		Cell bestCell = null;
 		Segment bestSegment = null;
 		int maxSynapses = 0;
 		for(Cell cell : column.getCells()) {
-			Segment dd = getBestMatchingSegment(cell, prevActiveSynapsesForSegment);
+			Segment dd = getBestMatchingSegment(c, cell, prevActiveSynapsesForSegment);
 			if(dd != null) {
 				Set<Synapse> connectedActiveSynapses = dd.getConnectedActiveSynapses(prevActiveSynapsesForSegment, 0);
 				if(connectedActiveSynapses.size() > maxSynapses) {
@@ -635,7 +624,7 @@ public class TemporalMemory {
 		}
 		
 		if(bestCell == null) {
-			bestCell = column.getLeastUsedCell(get().random());
+			bestCell = column.getLeastUsedCell(c, c.random());
 		}
 		
 		retVal[0] = bestSegment;
@@ -643,10 +632,10 @@ public class TemporalMemory {
 		return retVal;
 	}
 	
-	public Segment getBestMatchingSegment(Cell cell, Map<Segment, Set<Synapse>> activeSynapseSegments) {
+	public Segment getBestMatchingSegment(Connections c, Cell cell, Map<Segment, Set<Synapse>> activeSynapseSegments) {
 		int maxSynapses = minThreshold;
 		Segment bestSegment = null;
-		for(Segment dd : cell.getSegments()) {
+		for(Segment dd : cell.getSegments(c)) {
 			Set<Synapse> activeSyns = dd.getConnectedActiveSynapses(activeSynapseSegments, 0);
 			if(activeSyns.size() >= maxSynapses) {
 				maxSynapses = activeSyns.size();

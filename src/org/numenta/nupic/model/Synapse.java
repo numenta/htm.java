@@ -23,18 +23,19 @@ public class Synapse {
 	/**
 	 * Constructs a new {@code Synapse}
 	 * 
+	 * @param c				the connections state of the temporal memory
 	 * @param sourceCell	the {@link Cell} which will activate this {@code Synapse}
 	 * @param segment		the owning dendritic segment
 	 * @param permanence	this {@code Synapse}'s permanence
 	 * @param index			this {@code Synapse}'s index
 	 */
-	public Synapse(Cell sourceCell, Segment segment, double permanence, int index) {
+	public Synapse(Connections c, Cell sourceCell, Segment segment, double permanence, int index) {
 		this.sourceCell = sourceCell;
 		this.segment = segment;
 		this.permanence = permanence;
 		this.index = index;
 		
-		sourceCell.addReceptorSynapse(this);
+		sourceCell.addReceptorSynapse(c, this);
 	}
 	
 	public double getPermanence() {

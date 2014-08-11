@@ -36,16 +36,16 @@ public class ComputeCycle {
 	 * the connections relevant to the current calling {@link Thread} for
 	 * the specified {@link TemporalMemory}
 	 * 
-	 * @param	tm		the current TemporalMemory
+	 * @param	c		the current connections state of the TemporalMemory
 	 */
-	public ComputeCycle(TemporalMemory tm) {
-		this.activeCells = new LinkedHashSet<Cell>(tm.getActiveCells());
-		this.winnerCells = new LinkedHashSet<Cell>(tm.getWinnerCells());
-		this.predictiveCells = new LinkedHashSet<Cell>(tm.getPredictiveCells());
-		this.predictedColumns = new LinkedHashSet<Column>(tm.getPredictedColumns());
-		this.activeSegments = new LinkedHashSet<Segment>(tm.getActiveSegments());
-		this.learningSegments = new LinkedHashSet<Segment>(tm.getLearningSegments());
-		this.activeSynapsesForSegment = new LinkedHashMap<Segment, Set<Synapse>>(tm.getActiveSynapsesForSegment());
+	public ComputeCycle(Connections c) {
+		this.activeCells = new LinkedHashSet<Cell>(c.activeCells());
+		this.winnerCells = new LinkedHashSet<Cell>(c.winnerCells());
+		this.predictiveCells = new LinkedHashSet<Cell>(c.predictiveCells());
+		this.predictedColumns = new LinkedHashSet<Column>(c.predictedColumns());
+		this.activeSegments = new LinkedHashSet<Segment>(c.activeSegments());
+		this.learningSegments = new LinkedHashSet<Segment>(c.learningSegments());
+		this.activeSynapsesForSegment = new LinkedHashMap<Segment, Set<Synapse>>(c.activeSynapsesForSegment());
 	}
 	
 	/**

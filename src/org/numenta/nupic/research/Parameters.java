@@ -141,13 +141,13 @@ public class Parameters {
 			for(Parameters.KEY key : p.paramMap.keySet()) {
 				switch(key){
 					case RANDOM: {
-//						Field f = tm.getClass().getDeclaredField(key.fieldName);
-//						f.setAccessible(true);
-//						f.set(tm, p.random);
-//						
-//						f = p.getClass().getDeclaredField(key.fieldName);
-//						f.setAccessible(true);
-//						f.set(p, p.random);
+						Field f = tm.getClass().getDeclaredField(key.fieldName);
+						f.setAccessible(true);
+						f.set(tm, p.random);
+						
+						f = p.getClass().getDeclaredField(key.fieldName);
+						f.setAccessible(true);
+						f.set(p, p.random);
 						
 						break;
 					}

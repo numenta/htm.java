@@ -2,6 +2,7 @@ package org.numenta.nupic.integration;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -9,10 +10,16 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.numenta.nupic.data.ConsecutivePatternMachine;
+import org.numenta.nupic.data.SequenceMachine;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 
+
+/**
+ * 
+ * @author David Ray
+ */
 public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	
 	/**
@@ -71,7 +78,6 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	public void testB() {
 		defaultSetup();
 		
-		//Basic first order sequences
 		initTM();
 		
 		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
@@ -122,7 +128,6 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	public void testC() {
 		defaultSetup();
 		
-		//Basic first order sequences
 		initTM();
 		
 		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
@@ -154,14 +159,13 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 		defaultSetup();
 		parameters.setColumnDimensions(2);
 		
-		//Basic first order sequences
 		initTM();
 		
 		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
 		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
 		assertEquals(2, tm.getColumnDimensions());
 		
-		finishSetUp(new ConsecutivePatternMachine(6, 1));
+		finishSetUp(new ConsecutivePatternMachine(2, 1));
 		
 		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(
 			Arrays.asList(new Integer[] { 0, 1 }));
@@ -178,7 +182,86 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	 */
 	@Test
 	public void testE() {
+		defaultSetup();
+		parameters.setColumnDimensions(2);
+		parameters.setMaxNewSynapseCount(1);
+		parameters.setCellsPerColumn(10);
 		
+		initTM();
+		
+		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
+		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+		assertEquals(2, tm.getColumnDimensions());
+		
+		finishSetUp(new ConsecutivePatternMachine(2, 1));
+		
+		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(
+			Arrays.asList(new Integer[] { 0, 1 }));
+		
+		for(int i = 0;i < 7;i++) {
+			feedTM(sequence, true, 1);
+		}
+		
+		DetailedResults results = feedTM(sequence, true, 100);
+		assertEquals(200, results.predictedActiveColumnsList.size());
+		assertEquals(200, results.predictedInactiveColumnsList.size());
+	}
+	
+	/**
+	 * Long repeating sequence with novel pattern at the end
+	 */
+	@Test
+	public void testF() {
+		defaultSetup();
+		parameters.setColumnDimensions(3);
+		
+		initTM();
+		
+		assertEquals(3, tm.getColumnDimensions());
+		
+		finishSetUp(new ConsecutivePatternMachine(3, 1));
+		
+		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(
+			Arrays.asList(new Integer[] { 0, 1 }));
+		for(int i = 0;i < 9;i++) {
+			sequence.addAll(sequenceMachine.generateFromNumbers(
+				Arrays.asList(new Integer[] { 0, 1 })));
+		}
+		
+		sequence.add(patternMachine.get(2));
+		sequence.add(SequenceMachine.NONE);
+		
+		for(int i = 0;i < 4;i++) {
+			feedTM(sequence, true, 1);
+		}
+		
+		feedTM(sequence, true, 10);
+	}
+	
+	/**
+	 * A single endlessly repeating pattern
+	 */
+	@Test
+	public void testG() {
+		defaultSetup();
+		parameters.setColumnDimensions(1);
+		
+		initTM();
+		
+		assertEquals(1, tm.getColumnDimensions());
+		
+		finishSetUp(new ConsecutivePatternMachine(1, 1));
+		
+		List<Set<Integer>> sequence = new ArrayList<Set<Integer>>();
+		sequence.add(patternMachine.get(0));
+		
+		for(int i = 0;i < 4;i++) {
+			feedTM(sequence, true, 1);
+		}
+		
+		for(int i = 0;i < 2;i++) {
+			feedTM(sequence, true, 10);
+		}
 	}
 
 }
