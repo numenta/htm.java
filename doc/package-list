@@ -1,0 +1,5 @@
+org.numenta.nupic.data
+org.numenta.nupic.integration
+org.numenta.nupic.model
+org.numenta.nupic.research
+org.numenta.nupic.unit
