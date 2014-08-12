@@ -66,7 +66,7 @@ public abstract class AbstractTemporalMemoryTest {
 	 * @param learn			flag indicating whether the algorithm will execute learning functions
 	 * @param num			number of times "sequence" should be repeated
 	 */
-	public void showInput(List<Set<Integer>> sequence, boolean learn, int num) {
+	protected void showInput(List<Set<Integer>> sequence, boolean learn, int num) {
 		if(checkParams()) {
 			System.out.println("New TemporalMemory Parameters:");
 			System.out.println(parameters);
@@ -86,7 +86,7 @@ public abstract class AbstractTemporalMemoryTest {
 	 * @param num			number of times "sequence" should be repeated
 	 * @return
 	 */
-	public DetailedResults feedTM(List<Set<Integer>> sequence, boolean learn, int num) {
+	protected DetailedResults feedTM(List<Set<Integer>> sequence, boolean learn, int num) {
 		showInput(sequence, learn, num);
 		
 		List<Set<Integer>> actual = new ArrayList<Set<Integer>>(sequence);

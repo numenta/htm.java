@@ -2,12 +2,15 @@ package org.numenta.nupic.data;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Utilities for generating and manipulating patterns, for use in
@@ -20,14 +23,15 @@ import java.util.Set;
  */
 public class PatternMachine {
 	protected int numPatterns = 100;
-	protected int seed = 42;
-	
 	protected int n;
 	protected int w;
 	
 	protected Random random;
 	
 	protected Map<Integer, LinkedHashSet<Integer>> patterns;
+	
+	protected static final int SEED = 42;
+	
 	
 	/**
 	 * @param n   Number of available bits in pattern
@@ -37,9 +41,20 @@ public class PatternMachine {
 	 * Constructs a new {@code PatternMachine}
 	 */
 	public PatternMachine(int n, int w) {
+		this(n, w, SEED);
+	}
+	
+	/**
+	 * @param n   Number of available bits in pattern
+     * @param w   Number of on bits in pattern
+     * @param num Number of available patterns
+	 * 
+	 * Constructs a new {@code PatternMachine}
+	 */
+	public PatternMachine(int n, int w, int seed) {
 		this.n = n;
 		this.w = w;
-		random = new Random(seed);
+		random = new MersenneTwister(new int[] { seed });
 		patterns = new LinkedHashMap<Integer, LinkedHashSet<Integer>>();
 		
 		generate();
@@ -51,7 +66,10 @@ public class PatternMachine {
 	public void generate() {
 		LinkedHashSet<Integer> pattern;
 		for(int i = 0;i < numPatterns;i++) {
-			pattern = xrange(n, w);
+			if(i == 80) {
+				System.out.println("at index 80");
+			}
+			pattern = sample(new ArrayList<Integer>(xrange(0, n)), w);
 			patterns.put(i, pattern);
 		}
 	}
@@ -75,8 +93,8 @@ public class PatternMachine {
 	 */
 	public LinkedHashSet<Integer> numbersForBit(int bit) {
 		LinkedHashSet<Integer> retVal = new LinkedHashSet<Integer>();
-		for(int i = 0;i < n;i++) {
-			if(get(i).contains(bit)) {
+		for(Integer i : patterns.keySet()) {
+			if(patterns.get(i).contains(bit)) {
 				retVal.add(i);
 			}
 		}
@@ -92,7 +110,7 @@ public class PatternMachine {
 	 * @return
 	 */
 	public Map<Integer, Set<Integer>> numberMapForBits(Set<Integer> bits) {
-		Map<Integer, Set<Integer>> numberMap = new LinkedHashMap<Integer, Set<Integer>>();
+		Map<Integer, Set<Integer>> numberMap = new TreeMap<Integer, Set<Integer>>();
 		
 		for(Integer bit : bits) {
 			Set<Integer> numbers = numbersForBit(bit);
@@ -100,9 +118,9 @@ public class PatternMachine {
 			for(Integer number : numbers) {
 				Set<Integer> set = null;
 				if((set = numberMap.get(number)) == null) {
-					numberMap.put(number, set = new LinkedHashSet<Integer>());
+					numberMap.put(number, set = new HashSet<Integer>());
 				}
-				set.add(number);
+				set.add(bit);
 			}
 		}
 		
@@ -137,15 +155,20 @@ public class PatternMachine {
 	 * @param map
 	 * @return
 	 */
-	public LinkedHashMap<Integer, LinkedHashSet<Integer>> sortedMap(Map<Integer, Set<Integer>> map) {
+	public LinkedHashMap<Integer, LinkedHashSet<Integer>> sortedMap(final Map<Integer, Set<Integer>> map) {
 		LinkedHashMap<Integer, LinkedHashSet<Integer>> retVal = new LinkedHashMap<Integer, LinkedHashSet<Integer>>();
 		
 		List<Integer> sortByKeys = new ArrayList<Integer>(map.keySet());
-		Collections.sort(sortByKeys);
+		Collections.sort(sortByKeys, new Comparator<Integer>() {
+			@Override public int compare(Integer arg0, Integer arg1) {
+				int len0 = map.get(arg0).size();
+				int len1 = map.get(arg1).size();
+				return len0 == len1 ? 0 : len0 > len1 ? -1 : 1;
+			}
+			
+		});
 		for(Integer key : sortByKeys) {
-			List<Integer> sortByEntries = new ArrayList<Integer>(map.get(key));
-			Collections.sort(sortByEntries);
-			retVal.put(key, new LinkedHashSet<Integer>(sortByEntries));
+			retVal.put(key, new LinkedHashSet<Integer>(map.get(key)));
 		}
 		
 		return retVal;
@@ -170,21 +193,26 @@ public class PatternMachine {
 	
 	/**
 	 * Returns a {@link Set} of numbers whose size equals the 
-	 * number num and whose value is less than or equal "population".
+	 * number num and whose values range from 0 to "population".
 	 * 
-	 * @param random
 	 * @param population
 	 * @param num
 	 * @return
 	 */
-	public Set<Integer> sample(Random random, int population, int num) {
-		Set<Integer> retVal = new LinkedHashSet<Integer>();
-		int count = 0;
-		while(count <= num) {
-			retVal.add(random.nextInt(population));
-			count = retVal.size();
+	public LinkedHashSet<Integer> sample(List<Integer> population, int num) {
+		List<Integer> retVal = new ArrayList<Integer>();
+		int len = population.size();
+		for(int i = 0;i < num;i++) {
+			int j = (int)(random.nextDouble() * (len - i));
+			if(i == 17 || j == 14) {
+				System.out.println("what happens here");
+			}
+			retVal.add(population.get(j));
+			population.set(j, population.get(len - i - 1));
 		}
-		return retVal;
+		
+		Collections.sort(retVal);
+		return new LinkedHashSet<Integer>(retVal);
 	}
 	
 	
