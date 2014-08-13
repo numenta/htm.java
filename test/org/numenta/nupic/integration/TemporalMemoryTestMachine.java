@@ -153,7 +153,7 @@ public class TemporalMemoryTestMachine {
 		text += "Column # / Cell #:\t\t{segment=[[Source Cell: column#, index, permanence], ...]}\n";
 		text += "------------------------------------\n";
 		
-		int len = temporalMemory.getColumnDimensions();
+		int len = temporalMemory.getColumnDimensions()[0];
 		for(int i = 0;i < len;i++) {
 			List<Cell> cells = temporalMemory.getColumn(i).getCells();
 			for(Cell cell : cells) {

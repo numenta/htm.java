@@ -1,6 +1,7 @@
 package org.numenta.nupic.integration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +30,8 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	 */
 	private void defaultSetup() {
 		parameters = new Parameters();
-		EnumMap<Parameters.KEY, Number> p = parameters.getMap();
-		p.put(KEY.COLUMN_DIMENSIONS, 6);
+		EnumMap<Parameters.KEY, Object> p = parameters.getMap();
+		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 6 });
 		p.put(KEY.CELLS_PER_COLUMN, 4);
 		p.put(KEY.INITIAL_PERMANENCE, 0.3);
 		p.put(KEY.CONNECTED_PERMANENCE, 0.5);
@@ -159,13 +160,13 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	@Test
 	public void testD() {
 		defaultSetup();
-		parameters.setColumnDimensions(2);
+		parameters.setColumnDimensions(new int[] { 2 });
 		
 		initTM();
 		
 		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
 		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
-		assertEquals(2, tm.getColumnDimensions());
+		assertTrue(Arrays.equals(new int[] { 2 }, tm.getColumnDimensions()));
 		
 		finishSetUp(new ConsecutivePatternMachine(2, 1));
 		
@@ -185,7 +186,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	@Test
 	public void testE() {
 		defaultSetup();
-		parameters.setColumnDimensions(2);
+		parameters.setColumnDimensions(new int[] { 2 });
 		parameters.setMaxNewSynapseCount(1);
 		parameters.setCellsPerColumn(10);
 		
@@ -193,7 +194,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 		
 		assertEquals(0.05, tm.getPermanenceDecrement(), .001);
 		assertEquals(0.1, tm.getPermanenceIncrement(), .001);
-		assertEquals(2, tm.getColumnDimensions());
+		assertTrue(Arrays.equals(new int[] { 2 }, tm.getColumnDimensions()));
 		
 		finishSetUp(new ConsecutivePatternMachine(2, 1));
 		
@@ -215,11 +216,11 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	@Test
 	public void testF() {
 		defaultSetup();
-		parameters.setColumnDimensions(3);
+		parameters.setColumnDimensions(new int[] { 3 });
 		
 		initTM();
 		
-		assertEquals(3, tm.getColumnDimensions());
+		assertTrue(Arrays.equals(new int[] { 3 }, tm.getColumnDimensions()));
 		
 		finishSetUp(new ConsecutivePatternMachine(3, 1));
 		
@@ -246,11 +247,11 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	@Test
 	public void testG() {
 		defaultSetup();
-		parameters.setColumnDimensions(1);
+		parameters.setColumnDimensions(new int[] { 1 });
 		
 		initTM();
 		
-		assertEquals(1, tm.getColumnDimensions());
+		assertTrue(Arrays.equals(new int[] { 1 }, tm.getColumnDimensions()));
 		
 		finishSetUp(new ConsecutivePatternMachine(1, 1));
 		

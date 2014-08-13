@@ -404,7 +404,7 @@ public class TemporalMemoryTest {
 	@Test
 	public void testGetBestMatchingCellFewestSegments() {
 		TemporalMemory tm = new TemporalMemory();
-		tm.setColumnDimensions(2);
+		tm.setColumnDimensions(new int[] { 2 });
 		tm.setCellsPerColumn(2);
 		tm.setConnectedPermanence(0.50);
 		tm.setMinThreshold(1);
@@ -481,7 +481,7 @@ public class TemporalMemoryTest {
 	@Test
 	public void testGetLeastUsedCell() {
 		TemporalMemory tm = new TemporalMemory();
-		tm.setColumnDimensions(2);
+		tm.setColumnDimensions(new int[] { 2 });
 		tm.setCellsPerColumn(2);
 		tm.setSeed(42);
 		tm.init();

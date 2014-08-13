@@ -97,8 +97,8 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
 	 */
 	private void defaultSetup() {
 		parameters = new Parameters();
-		EnumMap<Parameters.KEY, Number> p = parameters.getMap();
-		p.put(KEY.COLUMN_DIMENSIONS, 100);
+		EnumMap<Parameters.KEY, Object> p = parameters.getMap();
+		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
 		p.put(KEY.CELLS_PER_COLUMN, 1);
 		p.put(KEY.INITIAL_PERMANENCE, 0.8);
 		p.put(KEY.CONNECTED_PERMANENCE, 0.7);
@@ -120,7 +120,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
 		
 		int seed = 42;
 		finishSetUp(new PatternMachine(
-			parameters.getMap().get(Parameters.KEY.COLUMN_DIMENSIONS).intValue(), 23, seed));
+			((int[])parameters.getMap().get(Parameters.KEY.COLUMN_DIMENSIONS))[0], 23, seed));
 		
 		// Instead of implementing the Python "shuffle" method, just use the exact output
 		Integer[] shuffledNums = new Integer[] { 

@@ -21,30 +21,32 @@ public class Parameters {
 	 * Constant values representing configuration parameters for the {@link TemporalMemory}
 	 */
 	public enum KEY { 
-		COLUMN_DIMENSIONS("columnDimensions", 2048),
-		CELLS_PER_COLUMN("cellsPerColumn", 32),
-		ACTIVATION_THRESHOLD("activationThreshold", 13),
-		LEARNING_RADIUS("learningRadius", 2048),
-		MIN_THRESHOLD("minThreshold", 10),
-		MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", 20),
-		INITIAL_PERMANENCE("initialPermanence", 0.21),
-		CONNECTED_PERMANENCE("connectedPermanence", 0.5),
-		PERMANENCE_INCREMENT("permanenceIncrement", 0.10), 
-		PERMANENCE_DECREMENT("permanenceDecrement", 0.10),
-		RANDOM("random", -1),
-		SEED("seed", 42);
+		COLUMN_DIMENSIONS("columnDimensions", new int[] { 2048 }, true),
+		CELLS_PER_COLUMN("cellsPerColumn", 32, false),
+		ACTIVATION_THRESHOLD("activationThreshold", 13, false),
+		LEARNING_RADIUS("learningRadius", 2048, false),
+		MIN_THRESHOLD("minThreshold", 10, false),
+		MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", 20, false),
+		INITIAL_PERMANENCE("initialPermanence", 0.21, false),
+		CONNECTED_PERMANENCE("connectedPermanence", 0.5, false),
+		PERMANENCE_INCREMENT("permanenceIncrement", 0.10, false), 
+		PERMANENCE_DECREMENT("permanenceDecrement", 0.10, false),
+		RANDOM("random", -1, false),
+		SEED("seed", 42, false);
 		
 		private String fieldName;
-		private double fieldValue;
+		private Object fieldValue;
+		private boolean isDimensional;
 		
-		private KEY(String fieldName, double fieldValue) {
+		private KEY(String fieldName, Object fieldValue, boolean isDimensional) {
 			this.fieldName = fieldName;
 			this.fieldValue = fieldValue;
+			this.isDimensional = isDimensional;
 		}
 	};
 	
 	/** Total number of columns */
-	private int columnDimensions = 2048;
+	private int[] columnDimensions = new int[] { 2048 };
 	/** Total number of cells per column */
 	private int cellsPerColumn = 32;
 	/** 
@@ -88,12 +90,12 @@ public class Parameters {
 	/** Random Number Generator */
 	private Random random;
 	/** Map of parameters to their values */
-	private EnumMap<Parameters.KEY, Number> paramMap;
+	private EnumMap<Parameters.KEY, Object> paramMap;
 	
 	
 	public Parameters() {}
 	
-	public Parameters(int columnDimensions, int cellsPerColumn,
+	public Parameters(int[] columnDimensions, int cellsPerColumn,
 			int activationThreshold, int learningRadius, int minThreshold,
 			int maxNewSynapseCount, int seed, double initialPermanence,
 			double connectedPermanence, double permanenceIncrement,
@@ -121,9 +123,9 @@ public class Parameters {
 	 * 
 	 * @return
 	 */
-	public EnumMap<Parameters.KEY, Number> getMap() {
+	public EnumMap<Parameters.KEY, Object> getMap() {
 		if(paramMap == null) {
-			paramMap = new EnumMap<Parameters.KEY, Number>(Parameters.KEY.class);
+			paramMap = new EnumMap<Parameters.KEY, Object>(Parameters.KEY.class);
 		}
 		
 		return paramMap;
@@ -182,7 +184,7 @@ public class Parameters {
 	 * 
 	 * @param columnDimensions
 	 */
-	public void setColumnDimensions(int columnDimensions) {
+	public void setColumnDimensions(int[] columnDimensions) {
 		this.columnDimensions = columnDimensions;
 		getMap().put(KEY.COLUMN_DIMENSIONS, columnDimensions);
 	}

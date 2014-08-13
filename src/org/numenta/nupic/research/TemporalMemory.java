@@ -21,7 +21,7 @@ import org.numenta.nupic.model.Synapse;
  */
 public class TemporalMemory {
 	/** Total number of columns */
-	protected int columnDimensions = 2048;
+	protected int[] columnDimensions = new int[] { 2048 };
 	/** Total number of cells per column */
 	protected int cellsPerColumn = 32;
 	/** 
@@ -69,7 +69,7 @@ public class TemporalMemory {
 	
 	private Cell[] cells;
 	
-	private List<Column> columns = new ArrayList<Column>(columnDimensions);
+	private List<Column> columns = new ArrayList<Column>(columnDimensions[0]);
 	
 	
 	/**
@@ -94,9 +94,9 @@ public class TemporalMemory {
 	 * Builds the grid of {@link Cell}s and  {@link Column}s
 	 */
 	public void init() {
-		cells = new Cell[columnDimensions * cellsPerColumn];
+		cells = new Cell[columnDimensions[0] * cellsPerColumn];
 		
-		for(int i = 0;i < columnDimensions;i++) {
+		for(int i = 0;i < columnDimensions[0];i++) {
 			Column column = new Column(cellsPerColumn, i);
 			columns.add(column);
 			for(int j = 0;j < cellsPerColumn;j++) {
@@ -127,7 +127,7 @@ public class TemporalMemory {
 	 * 
 	 * @param columnDimensions
 	 */
-	public void setColumnDimensions(int columnDimensions) {
+	public void setColumnDimensions(int[] columnDimensions) {
 		this.columnDimensions = columnDimensions;
 	}
 	
@@ -136,7 +136,7 @@ public class TemporalMemory {
 	 * 
 	 * @return columnDimensions
 	 */
-	public int getColumnDimensions() {
+	public int[] getColumnDimensions() {
 		return this.columnDimensions;
 	}
 
