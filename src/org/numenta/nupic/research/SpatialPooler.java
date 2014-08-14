@@ -1,9 +1,10 @@
 package org.numenta.nupic.research;
 
-import org.numenta.nupic.research.Parameters.KEY;
+
 
 public class SpatialPooler {
 	private int[] inputDimensions = new int[] { 32, 32 };
+	private int[] columnDimensions = new int[] { 64, 64 };
 	private int potentialRadius = 16;
 	private double potentialPct = 0.5;
 	private boolean globalInhibition = false;
@@ -18,6 +19,10 @@ public class SpatialPooler {
 	private double dutyCyclePeriod = 1000;
 	private double maxBoost = 10.0;
 	private int spVerbosity = 0;
+	private int seed;
+	
+	private int numInputs = 1;  //product of input dimensions
+	private int numColumns = 1;	//product of column dimensions
 	
 	
 	public SpatialPooler() {
@@ -28,6 +33,29 @@ public class SpatialPooler {
 		if(params != null) {
 			Parameters.apply(this, params);
 		}
+		
+		for(int i = 0;i < inputDimensions.length;i++) {
+			numInputs *= inputDimensions[i];
+		}
+		for(int i = 0;i < columnDimensions.length;i++) {
+			numColumns *= columnDimensions[i];
+		}
+	}
+	
+	/**
+	 * Returns the product of the input dimensions 
+	 * @return	the product of the input dimensions 
+	 */
+	public int getNumInputs() {
+		return numInputs;
+	}
+	
+	/**
+	 * Returns the product of the column dimensions 
+	 * @return	the product of the column dimensions 
+	 */
+	public int getNumColumns() {
+		return numColumns;
 	}
 	
 	/**
@@ -42,6 +70,40 @@ public class SpatialPooler {
 	 */
 	public void setInputDimensions(int[] inputDimensions) {
 		this.inputDimensions = inputDimensions;
+	}
+	
+	/**
+	 * Returns the configured input dimensions
+	 *
+	 * @return the configured input dimensions
+	 * @see {@link #setInputDimensions(int[])}
+	 */
+	public int[] getInputDimensions() {
+		return inputDimensions;
+	}
+	
+	/**
+	 * A list representing the dimensions of the columns in
+     * the region. Format is [height, width, depth, ...],
+     * where each value represents the size of the dimension.
+     * For a topology of one dimension with 2000 columns use
+     * 2000, or [2000]. For a three dimensional topology of
+     * 32x64x16 use [32, 64, 16].
+     * 
+	 * @param columnDimensions
+	 */
+	public void setColumnDimensions(int[] columnDimensions) {
+		this.columnDimensions = columnDimensions;
+	}
+	
+	/**
+	 * Returns the configured column dimensions.
+	 * 
+	 * @return	the configured column dimensions.
+	 * @see {@link #setColumnDimensions(int[])}
+	 */
+	public int[] getColumnDimensions() {
+		return columnDimensions;
 	}
 	
 	/**
@@ -61,6 +123,15 @@ public class SpatialPooler {
 	public void setPotentialRadius(int potentialRadius) {
 		this.potentialRadius = potentialRadius;
 	}
+	
+	/**
+	 * Returns the configured potential radius
+	 * @return	the configured potential radius
+	 * @see {@link #setPotentialRadius(int)}
+	 */
+	public int getPotentialRadius() {
+		return potentialRadius;
+	}
 
 	/**
 	 * The percent of the inputs, within a column's
@@ -79,6 +150,16 @@ public class SpatialPooler {
 	public void setPotentialPct(double potentialPct) {
 		this.potentialPct = potentialPct;
 	}
+	
+	/**
+	 * Returns the configured potential pct
+	 * 
+	 * @return the configured potential pct
+	 * @see {@link #setPotentialPct(double)}
+	 */
+	public double getPotentialPct() {
+		return potentialPct;
+	}
 
 	/**
 	 * If true, then during inhibition phase the winning
@@ -92,6 +173,15 @@ public class SpatialPooler {
 	 */
 	public void setGlobalInhibition(boolean globalInhibition) {
 		this.globalInhibition = globalInhibition;
+	}
+	
+	/**
+	 * Returns the configured global inhibition flag
+	 * @return	the configured global inhibition flag
+	 * @see {@link #setGlobalInhibition(boolean)}
+	 */
+	public boolean getGlobalInhibition() {
+		return globalInhibition;
 	}
 
 	/**
@@ -109,6 +199,15 @@ public class SpatialPooler {
 	 */
 	public void setLocalAreaDensity(double localAreaDensity) {
 		this.localAreaDensity = localAreaDensity;
+	}
+	
+	/**
+	 * Returns the configured local area density
+	 * @return	the configured local area density
+	 * @see {@link #setLocalAreaDensity(double)}
+	 */
+	public double getLocalAreaDensity() {
+		return localAreaDensity;
 	}
 
 	/**
@@ -134,6 +233,17 @@ public class SpatialPooler {
 	public void setNumActiveColumnsPerInhArea(double numActiveColumnsPerInhArea) {
 		this.numActiveColumnsPerInhArea = numActiveColumnsPerInhArea;
 	}
+	
+	/**
+	 * Returns the configured number of active columns per
+	 * inhibition area.
+	 * @return	the configured number of active columns per
+	 * inhibition area.
+	 * @see {@link #setNumActiveColumnsPerInhArea(double)}
+	 */
+	public double getNumActiveColumnsPerInhArea() {
+		return numActiveColumnsPerInhArea;
+	}
 
 	/**
 	 * This is a number specifying the minimum number of
@@ -147,6 +257,15 @@ public class SpatialPooler {
 	public void setStimulusThreshold(double stimulusThreshold) {
 		this.stimulusThreshold = stimulusThreshold;
 	}
+	
+	/**
+	 * Returns the stimulus threshold
+	 * @return	the stimulus threshold
+	 * @see {@link #setStimulusThreshold(double)}
+	 */
+	public double getStimulusThreshold() {
+		return stimulusThreshold;
+	}
 
 	/**
 	 * The amount by which an inactive synapse is
@@ -157,6 +276,15 @@ public class SpatialPooler {
 	 */
 	public void setSynPermInactiveDec(double synPermInactiveDec) {
 		this.synPermInactiveDec = synPermInactiveDec;
+	}
+	
+	/**
+	 * Returns the synaptic permanence inactive decrement.
+	 * @return	the synaptic permanence inactive decrement.
+	 * @see {@link #setSynPermInactiveDec(double)}
+	 */
+	public double getSynPermInactiveDec() {
+		return synPermInactiveDec;
 	}
 
 	/**
@@ -169,6 +297,15 @@ public class SpatialPooler {
 	public void setSynPermActiveInc(double synPermActiveInc) {
 		this.synPermActiveInc = synPermActiveInc;
 	}
+	
+	/**
+	 * Returns the configured active permanence increment
+	 * @return the configured active permanence increment
+	 * @see {@link #setSynPermActiveInc(double)}
+	 */
+	public double getSynPermActiveInc() {
+		return synPermActiveInc;
+	}
 
 	/**
 	 * The default connected threshold. Any synapse whose
@@ -180,6 +317,15 @@ public class SpatialPooler {
 	 */
 	public void setSynPermConnected(double synPermConnected) {
 		this.synPermConnected = synPermConnected;
+	}
+	
+	/**
+	 * Returns the synapse permanence connected threshold
+	 * @return the synapse permanence connected threshold
+	 * @see {@link #setSynPermConnected(double)}
+	 */
+	public double getSynPermConnected() {
+		return synPermConnected;
 	}
 
 	/**
@@ -206,6 +352,14 @@ public class SpatialPooler {
 	public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycle) {
 		this.minPctOverlapDutyCycle = minPctOverlapDutyCycle;
 	}
+	
+	/**
+	 * {@see #setMinPctOverlapDutyCycle(double)}
+	 * @return
+	 */
+	public double getMinPctOverlapDutyCycle() {
+		return minPctOverlapDutyCycle;
+	}
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
@@ -225,6 +379,15 @@ public class SpatialPooler {
 	public void setMinPctActiveDutyCycle(double minPctActiveDutyCycle) {
 		this.minPctActiveDutyCycle = minPctActiveDutyCycle;
 	}
+	
+	/**
+	 * Returns the minPctActiveDutyCycle
+	 * @return	the minPctActiveDutyCycle
+	 * @see {@link #setMinPctActiveDutyCycle(double)}
+	 */
+	public double getMinPctActiveDutyCycle() {
+		return minPctActiveDutyCycle;
+	}
 
 	/**
 	 * The period used to calculate duty cycles. Higher
@@ -236,6 +399,15 @@ public class SpatialPooler {
 	 */
 	public void setDutyCyclePeriod(double dutyCyclePeriod) {
 		this.dutyCyclePeriod = dutyCyclePeriod;
+	}
+	
+	/**
+	 * Returns the configured duty cycle period
+	 * @return	the configured duty cycle period
+	 * @see {@link #setDutyCyclePeriod(double)}
+	 */
+	public double getDutyCyclePeriod() {
+		return dutyCyclePeriod;
 	}
 
 	/**
@@ -254,6 +426,31 @@ public class SpatialPooler {
 	public void setMaxBoost(double maxBoost) {
 		this.maxBoost = maxBoost;
 	}
+	
+	/**
+	 * Returns the max boost
+	 * @return	the max boost
+	 * @see {@link #setMaxBoost(double)}
+	 */
+	public double getMaxBoost() {
+		return maxBoost;
+	}
+	
+	/**
+	 * Sets the seed used by the random number generator
+	 * @param seed
+	 */
+	public void setSeed(int seed) {
+		this.seed = seed;
+	}
+	
+	/**
+	 * Returns the seed used to configure the random generator
+	 * @return
+	 */
+	public int getSeed() {
+		return seed;
+	}
 
 	/**
 	 * spVerbosity level: 0, 1, 2, or 3
@@ -262,5 +459,14 @@ public class SpatialPooler {
 	 */
 	public void setSpVerbosity(int spVerbosity) {
 		this.spVerbosity = spVerbosity;
+	}
+	
+	/**
+	 * Returns the verbosity setting.
+	 * @return	the verbosity setting.
+	 * @see {@link #setSpVerbosity(int)}
+	 */
+	public int getSpVerbosity() {
+		return spVerbosity;
 	}
 }
