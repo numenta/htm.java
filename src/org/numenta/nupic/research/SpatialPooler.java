@@ -1,5 +1,11 @@
 package org.numenta.nupic.research;
 
+import java.util.Random;
+
+import org.numenta.nupic.data.MersenneTwister;
+import org.numenta.nupic.data.SparseBinaryMatrix;
+import org.numenta.nupic.data.SparseDoubleMatrix;
+
 
 
 public class SpatialPooler {
@@ -24,6 +30,60 @@ public class SpatialPooler {
 	private int numInputs = 1;  //product of input dimensions
 	private int numColumns = 1;	//product of column dimensions
 	
+	//Extra parameter settings
+	private double synPermMin = 0.0;
+	private double synPermMax = 1.0;
+	private double synPermThreshold = synPermActiveInc / 2.0;
+	private int updatePeriod = 50;
+	private double initConnectedPct = 0.5;
+	
+	//Internal state
+	private double version = 1.0;
+	private int interationNum = 0;
+	private int iterationLearnNum = 0;
+	/**
+	 * Store the set of all inputs that are within each column's potential pool.
+     * 'potentialPools' is a matrix, whose rows represent cortical columns, and
+     * whose columns represent the input bits. if potentialPools[i][j] == 1,
+     * then input bit 'j' is in column 'i's potential pool. A column can only be
+     * connected to inputs in its potential pool. The indices refer to a
+     * flattened version of both the inputs and columns. Namely, irrespective
+     * of the topology of the inputs and columns, they are treated as being a
+     * one dimensional array. Since a column is typically connected to only a
+     * subset of the inputs, many of the entries in the matrix are 0. Therefore
+     * the potentialPool matrix is stored using the SparseBinaryMatrix
+     * class, to reduce memory footprint and computation time of algorithms that
+     * require iterating over the data structure.
+     */
+	private SparseBinaryMatrix<int[]> potentialPools;
+	/**
+	 * Initialize the permanences for each column. Similar to the
+     * 'self._potentialPools', the permanences are stored in a matrix whose rows
+     * represent the cortical columns, and whose columns represent the input
+     * bits. If self._permanences[i][j] = 0.2, then the synapse connecting
+     * cortical column 'i' to input bit 'j'  has a permanence of 0.2. Here we
+     * also use the SparseMatrix class to reduce the memory footprint and
+     * computation time of algorithms that require iterating over the data
+     * structure. This permanence matrix is only allowed to have non-zero
+     * elements where the potential pool is non-zero.
+     */
+	private SparseDoubleMatrix<double[]> permanences;
+	/**
+	 * Initialize a tiny random tie breaker. This is used to determine winning
+     * columns where the overlaps are identical.
+     */
+	private SparseDoubleMatrix<double[]> tieBreaker;
+	/**
+	 * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
+     * (rows represent cortical columns, columns represent input bits) whose
+     * entries represent whether the cortical column is connected to the input
+     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+     * this information is readily available from the 'self._permanence' matrix,
+     * it is stored separately for efficiency purposes.
+     */
+	private SparseBinaryMatrix<int[]> connectedSynapses;
+	
+	private Random random = new MersenneTwister(42);
 	
 	public SpatialPooler() {
 		this(null);
@@ -40,6 +100,31 @@ public class SpatialPooler {
 		for(int i = 0;i < columnDimensions.length;i++) {
 			numColumns *= columnDimensions[i];
 		}
+		
+		potentialPools = new SparseBinaryMatrix<int[]>(new int[] { numColumns, numInputs } );
+		
+		permanences = new SparseDoubleMatrix<double[]>(new int[] { numColumns, numInputs } );
+		
+		tieBreaker = new SparseDoubleMatrix<double[]>(new int[] { numColumns, numInputs } );
+		for(int i = 0;i < numColumns;i++) {
+			for(int j = 0;j < numInputs;j++) {
+				tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
+			}
+		}
+		/**
+		 * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
+	     * (rows represent cortical columns, columns represent input bits) whose
+	     * entries represent whether the cortical column is connected to the input
+	     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+	     * this information is readily available from the 'self._permanence' matrix,
+	     * it is stored separately for efficiency purposes.
+	     */
+		connectedSynapses = new SparseBinaryMatrix<int[]>(new int[] { numColumns, numInputs } );
+		
+		// Initialize the set of permanence values for each column. Ensure that
+	    // each column is connected to enough input bits to allow it to be
+	    // activated.
+		
 	}
 	
 	/**
@@ -468,5 +553,35 @@ public class SpatialPooler {
 	 */
 	public int getSpVerbosity() {
 		return spVerbosity;
+	}
+	
+	/**
+	 * Maps a column to its input bits. This method encapsulates the topology of
+     * the region. It takes the index of the column as an argument and determines
+     * what are the indices of the input vector that are located within the
+     * column's potential pool. The return value is a list containing the indices
+     * of the input bits. The current implementation of the base class only
+     * supports a 1 dimensional topology of columns with a 1 dimensional topology
+     * of inputs. To extend this class to support 2-D topology you will need to
+     * override this method. Examples of the expected output of this method:
+     * * If the potentialRadius is greater than or equal to the entire input
+     *   space, (global visibility), then this method returns an array filled with
+     *   all the indices
+     * * If the topology is one dimensional, and the potentialRadius is 5, this
+     *   method will return an array containing 5 consecutive values centered on
+     *   the index of the column (wrapping around if necessary).
+     * * If the topology is two dimensional (not implemented), and the
+     *   potentialRadius is 5, the method should return an array containing 25
+     *   '1's, where the exact indices are to be determined by the mapping from
+     *   1-D index to 2-D position.
+	 *                 
+	 * @param index			The index identifying a column in the permanence, potential
+     *                 		and connectivity matrices.
+	 * @param wrapAround	A boolean value indicating that boundaries should be
+     *                 		ignored.
+	 * @return
+	 */
+	public int[] mapPotential(int index, boolean wrapAround) {
+		return null;
 	}
 }
