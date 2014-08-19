@@ -1,7 +1,6 @@
 package org.numenta.nupic.unit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -149,10 +148,10 @@ public class TemporalMemoryTest {
 		
 		assertEquals(dd, learningSegments.get(0));
 		//Test that one of the learning Dendrites was created during call to burst...
-		assertNotEquals(dd, learningSegments.get(1));
-		assertNotEquals(dd2, learningSegments.get(1));
-		assertNotEquals(dd3, learningSegments.get(1));
-		assertNotEquals(dd4, learningSegments.get(1));
+		assertTrue(!dd.equals(learningSegments.get(1)));
+		assertTrue(!dd2.equals(learningSegments.get(1)));
+		assertTrue(!dd3.equals(learningSegments.get(1)));
+		assertTrue(!dd4.equals(learningSegments.get(1)));
 	}
 	
 	@Test

@@ -64,8 +64,8 @@ public class SpatialPoolerTest {
 		assertEquals(42, sp.getSeed());
 		assertEquals(0, sp.getSpVerbosity());
 		
-		assertEquals(9, sp.getNumInputs());
-		assertEquals(5, sp.getNumColumns());
+		assertEquals(45, sp.getNumInputs());
+		assertEquals(25, sp.getNumColumns());
 	}
 
 	@Test
