@@ -16,8 +16,8 @@ public class SpatialPoolerTest {
 	public void defaultSetup() {
 		parameters = new Parameters();
 		EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-		p.put(KEY.INPUT_DIMENSIONS, new int[] { 9 });
-		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });
+		p.put(KEY.INPUT_DIMENSIONS, new int[] { 9, 5 });
+		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5, 5 });
 		p.put(KEY.POTENTIAL_RADIUS, 3);
 		p.put(KEY.POTENTIAL_PCT, 0.5);
 		p.put(KEY.GLOBAL_INHIBITIONS, false);
@@ -37,6 +37,7 @@ public class SpatialPoolerTest {
 	
 	private void initSP() {
 		sp = new SpatialPooler(parameters);
+		sp.mapColumn(1);
 	}
 	
 	@Test

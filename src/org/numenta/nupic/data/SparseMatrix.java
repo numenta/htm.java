@@ -157,7 +157,7 @@ public abstract class SparseMatrix<T> {
 	 * @return	the maximum accessible flat index.
 	 */
 	public int getMaxIndex() {
-		return dimensions[0] * dimensionMultiples[0] - 1;
+		return dimensions[0] * Math.max(1, dimensionMultiples[0] - 1);
 	}
 	
 	/**
@@ -303,6 +303,103 @@ public abstract class SparseMatrix<T> {
 					print1DArray(index) + " > " + print1DArray(dimensions));
 			}
 		}
+	}
+	
+	/**
+	 * Returns an array with the same shape and the contents
+	 * converted to doubles.
+	 * 
+	 * @param ints	an array of ints.
+	 * @return
+	 */
+	public static double[] toDoubleArray(int[] ints) {
+		double[] retVal = new double[ints.length];
+		for(int i = 0;i < ints.length;i++) {
+			retVal[i] = ints[i];
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns an array with the same shape and the contents
+	 * converted to doubles.
+	 * 
+	 * @param ints	an array of ints.
+	 * @return
+	 */
+	public static int[] toIntArray(double[] doubs) {
+		int[] retVal = new int[doubs.length];
+		for(int i = 0;i < doubs.length;i++) {
+			retVal[i] = (int)doubs[i];
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns a double array whose values are the maximum of the value
+	 * in the array and the max value argument.
+	 * @param doubs
+	 * @param maxValue
+	 * @return
+	 */
+	public static double[] maximum(double[] doubs, double maxValue) {
+		double[] retVal = new double[doubs.length];
+		for(int i = 0;i < doubs.length;i++) {
+			retVal[i] = Math.max(doubs[i], maxValue);
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns an array whose members are the quotient of the dividend array
+	 * values and the divisor array values.
+	 * 
+	 * @param dividend
+	 * @param divisor
+	 * @param dividend adjustment
+	 * @param divisor adjustment
+	 * 
+	 * @return
+	 * @throws	IllegalArgumentException 	if the two argument arrays are not the same length
+	 */
+	public static double[] divide(double[] dividend, double[] divisor, 
+		double dividendAdjustment, double divisorAdjustment) {
+		
+		if(dividend.length != divisor.length) {
+			throw new IllegalArgumentException(
+				"The dividend array and the divisor array must be the same length");
+		}
+		double[] quotient = new double[dividend.length];
+		for(int i = 0;i < dividend.length;i++) {
+			quotient[i] = (dividend[i] + dividendAdjustment) / (divisor[i] + divisorAdjustment);
+		}
+		return quotient;
+	}
+	
+	/**
+	 * Returns an array whose members are the product of the multiplicand array
+	 * values and the factor array values.
+	 * 
+	 * @param multiplicand
+	 * @param factor
+	 * @param multiplicand adjustment
+	 * @param factor adjustment
+	 * 
+	 * @return
+	 * @throws	IllegalArgumentException 	if the two argument arrays are not the same length
+	 */
+	public static double[] multiply(double[] multiplicand, double[] factor, 
+		double multiplicandAdjustment, double factorAdjustment) {
+		
+		if(multiplicand.length != factor.length) {
+			throw new IllegalArgumentException(
+				"The multiplicand array and the factor array must be the same length");
+		}
+		double[] product = new double[multiplicand.length];
+		for(int i = 0;i < multiplicand.length;i++) {
+			product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
+		}
+		return product;
 	}
 	
 	/**
