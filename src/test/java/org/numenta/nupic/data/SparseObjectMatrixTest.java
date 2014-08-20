@@ -3,9 +3,6 @@ package org.numenta.nupic.data;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.numenta.nupic.data.SparseMatrix;
-import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.data.TypeFactory;
 
 public class SparseObjectMatrixTest {
 
@@ -18,7 +15,7 @@ public class SparseObjectMatrixTest {
 		
 		sm = new SparseObjectMatrix<TestObject>(new int[] { 1, 2, 3, 4, 5 });
 		dm = sm.getDimensionMultiples();
-		assertEquals(SparseMatrix.print1DArray(dm), "[120, 60, 20, 5, 1]");
+		assertEquals(ArrayUtils.print1DArray(dm), "[120, 60, 20, 5, 1]");
 	}
 	
 	/**

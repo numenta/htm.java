@@ -2,6 +2,7 @@ package org.numenta.nupic.research;
 
 import java.util.Random;
 
+import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.MersenneTwister;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
@@ -85,14 +86,17 @@ public class SpatialPooler {
      * it is stored separately for efficiency purposes.
      */
 	private SparseBinaryMatrix<int[]> connectedSynapses;
-	/**
-	 * The main pooler data structure containing the cortical object model.
-	 */
+	/** The main pooler data structure containing the cortical object model. */
 	private SparseObjectMatrix<Column> poolerMemory;
-	/**
-	 * A matrix representing the shape of the input.
-	 */
+	/** A matrix representing the shape of the input. */
 	private SparseBinaryMatrix<int[]> inputMatrix;
+	/** 
+	 * Stores the number of connected synapses for each column. This is simply
+     * a sum of each row of 'self._connectedSynapses'. again, while this
+     * information is readily available from 'self._connectedSynapses', it is
+     * stored separately for efficiency purposes.
+	 */
+	private int[] connectedCounts = new int[numColumns];
 	
 	private Random random = new MersenneTwister(42);
 	
@@ -135,10 +139,13 @@ public class SpatialPooler {
 	     */
 		connectedSynapses = new SparseBinaryMatrix<int[]>(new int[] { numColumns, numInputs } );
 		
+		connectedCounts = new int[numColumns];
 		// Initialize the set of permanence values for each column. Ensure that
 	    // each column is connected to enough input bits to allow it to be
 	    // activated.
-		
+		for(int i = 0;i < numColumns;i++) {
+			//potential = mapPotential(i, true);
+		}
 	}
 	
 	/**
@@ -590,12 +597,12 @@ public class SpatialPooler {
 	 */
 	public int mapColumn(int columnIndex) {
 		int[] columnCoords = poolerMemory.computeCoordinates(columnIndex);
-		double[] colCoords = SparseMatrix.toDoubleArray(columnCoords);
-		double[] ratios = SparseMatrix.divide(
-			colCoords, SparseMatrix.toDoubleArray(columnDimensions), 0, -1);
-		double[] inputCoords = SparseMatrix.multiply(
-			SparseMatrix.toDoubleArray(inputDimensions), ratios, -1, 0);
-		int[] inputCoordInts = SparseMatrix.toIntArray(inputCoords);
+		double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
+		double[] ratios = ArrayUtils.divide(
+			colCoords, ArrayUtils.toDoubleArray(columnDimensions), 0, -1);
+		double[] inputCoords = ArrayUtils.multiply(
+				ArrayUtils.toDoubleArray(inputDimensions), ratios, -1, 0);
+		int[] inputCoordInts = ArrayUtils.toIntArray(inputCoords);
 		int inputIndex = inputMatrix.computeIndex(inputCoordInts);
 		return inputIndex;
 	}
@@ -626,7 +633,16 @@ public class SpatialPooler {
      *                 		ignored.
 	 * @return
 	 */
-	public int[] mapPotential(int index, boolean wrapAround) {
+	public int[] mapPotential(int columnIndex, boolean wrapAround) {
+		int inputIndex = mapColumn(columnIndex);
+		return null;
+	}
+	
+	public int[] getNeighborsND(SparseMatrix poolerMem, int columnIndex, int radius, boolean wrapAround) {
+		int[] columnCoords = poolerMem.computeCoordinates(columnIndex);
+		for(int i = 0;i <= poolerMem.getMaxIndex();i++) {
+			
+		}
 		return null;
 	}
 }
