@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.EnumMap;
 
 import org.junit.Test;
+import org.numenta.nupic.data.SparseBinaryMatrix;
+import org.numenta.nupic.model.Column;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.research.SpatialPooler;
@@ -66,6 +68,15 @@ public class SpatialPoolerTest {
 		
 		assertEquals(45, sp.getNumInputs());
 		assertEquals(25, sp.getNumColumns());
+	}
+	
+	@Test
+	public void testGetNeighborsND() {
+		defaultSetup();
+		
+		initSP();
+		
+		sp.getNeighborsND(new SparseBinaryMatrix<Column>(new int[] { 9, 5 }), 2, 3, true);
 	}
 
 	@Test

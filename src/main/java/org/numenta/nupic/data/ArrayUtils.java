@@ -192,11 +192,7 @@ public class ArrayUtils {
 			depthIndexes[i] = 0;
 		}
 		List<TIntList> retVal = new ArrayList<TIntList>();
-		recurse(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
-		
-		for(int i = 0;i < retVal.size();i++) {
-			System.out.println(ArrayUtils.print1DArray(retVal.get(i)));
-		}
+		recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
 		
 		return retVal;
 	}
@@ -219,7 +215,7 @@ public class ArrayUtils {
 	 * @param resultList			the container of the final list of coordinates
 	 * @return						meaningless for the caller but is of interim significance during the recursion
 	 */
-	public static TIntList recurse(int depth, int maxDepth, int[] depthIndexes, 
+	 private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
 		TIntList coords, List<int[]> dimensionIndexes, List<TIntList> resultList) {
 		
 		//Return null if we've added all indexes for each dimension
@@ -227,7 +223,7 @@ public class ArrayUtils {
 			//Add the index coordinate at the current depth
 			coords.add(dimensionIndexes.get(depth)[depthIndexes[depth]]);
 			//Go to the next dimensional coordinate and add that
-			coords = recurse(depth + 1, maxDepth, depthIndexes, coords, dimensionIndexes, resultList);
+			coords = recurseAssembleCoordinates(depth + 1, maxDepth, depthIndexes, coords, dimensionIndexes, resultList);
 			
 			//Return until we're back at the top
 			if(depth > 0) {
@@ -243,7 +239,7 @@ public class ArrayUtils {
 						depthIndexes[i] = 0;
 					}
 				}
-				recurse(0, dimensionIndexes.size(), depthIndexes, new TIntArrayList(), dimensionIndexes, resultList);
+				recurseAssembleCoordinates(0, dimensionIndexes.size(), depthIndexes, new TIntArrayList(), dimensionIndexes, resultList);
 				//We've finished so unwind.
 				return null;
 			}

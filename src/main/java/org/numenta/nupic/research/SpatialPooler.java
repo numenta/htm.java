@@ -648,7 +648,7 @@ public class SpatialPooler {
 	public int[] getNeighborsND(SparseMatrix<Column> poolerMem, int columnIndex, int radius, boolean wrapAround) {
 		int[] columnCoords = poolerMem.computeCoordinates(columnIndex);
 		List<int[]> dimensionCoords = new ArrayList<int[]>();
-		for(int i = 0;i <= columnDimensions.length;i++) {
+		for(int i = 0;i < inputDimensions.length;i++) {
 			TIntHashSet uniques = new TIntHashSet();
 			
 			int[] range = ArrayUtils.range(columnCoords[0] - radius, columnCoords[0] + radius + 1);
@@ -656,7 +656,7 @@ public class SpatialPooler {
 			
 			if(wrapAround) {
 				for(int j = 0;j < curRange.length;j++) {
-					curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], columnDimensions[i]);
+					curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], inputDimensions[i]);
 				}
 			}else{
 				curRange = range;
