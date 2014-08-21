@@ -42,9 +42,6 @@ public class SpatialPoolerTest {
 	
 	@Test
 	public void confirmSPConstruction() {
-//		[-3 -2 -1  0  1  2  3]
-//				[6 7 8 0 1 2 3]
-		System.out.println("a " + (-3 / 9) + ", " + (-2 % 9) + ", " + (-1 % 9) + ", " + (0 % 9) + ", " + (1 % 9) + ", " + (2 % 9) + ", " + (3 % 9));
 		defaultSetup();
 		
 		initSP();

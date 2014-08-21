@@ -1,5 +1,12 @@
 package org.numenta.nupic.research;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import org.numenta.nupic.data.ArrayUtils;
@@ -638,11 +645,34 @@ public class SpatialPooler {
 		return null;
 	}
 	
-	public int[] getNeighborsND(SparseMatrix poolerMem, int columnIndex, int radius, boolean wrapAround) {
+	public int[] getNeighborsND(SparseMatrix<Column> poolerMem, int columnIndex, int radius, boolean wrapAround) {
 		int[] columnCoords = poolerMem.computeCoordinates(columnIndex);
-		for(int i = 0;i <= poolerMem.getMaxIndex();i++) {
+		List<int[]> dimensionCoords = new ArrayList<int[]>();
+		for(int i = 0;i <= columnDimensions.length;i++) {
+			TIntHashSet uniques = new TIntHashSet();
 			
+			int[] range = ArrayUtils.range(columnCoords[0] - radius, columnCoords[0] + radius + 1);
+			int[] curRange = new int[range.length];
+			
+			if(wrapAround) {
+				for(int j = 0;j < curRange.length;j++) {
+					curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], columnDimensions[i]);
+				}
+			}else{
+				curRange = range;
+			}
+			
+			uniques.addAll(curRange);
+			int[] dimensionIndexes = uniques.toArray();
+			Arrays.sort(dimensionIndexes);
+			dimensionCoords.add(dimensionIndexes);
 		}
-		return null;
+		
+		List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
+		int[] neighbors = new int[neighborList.size()];
+		for(int i = 0;i < neighborList.size();i++) {
+			neighbors[i] = poolerMem.computeIndex(neighborList.get(i).toArray());
+		}
+		return neighbors;
 	}
 }
