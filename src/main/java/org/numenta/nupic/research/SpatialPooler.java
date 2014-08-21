@@ -22,6 +22,7 @@
 package org.numenta.nupic.research;
 
 import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.List;
