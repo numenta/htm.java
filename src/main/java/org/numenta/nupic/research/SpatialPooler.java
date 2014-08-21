@@ -85,7 +85,7 @@ public class SpatialPooler {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-	private SparseBinaryMatrix<int[]> potentialPools;
+	private SparseBinaryMatrix potentialPools;
 	/**
 	 * Initialize the permanences for each column. Similar to the
      * 'self._potentialPools', the permanences are stored in a matrix whose rows
@@ -111,11 +111,11 @@ public class SpatialPooler {
      * this information is readily available from the 'self._permanence' matrix,
      * it is stored separately for efficiency purposes.
      */
-	private SparseBinaryMatrix<int[]> connectedSynapses;
+	private SparseBinaryMatrix connectedSynapses;
 	/** The main pooler data structure containing the cortical object model. */
 	private SparseObjectMatrix<Column> poolerMemory;
 	/** A matrix representing the shape of the input. */
-	private SparseBinaryMatrix<int[]> inputMatrix;
+	private SparseBinaryMatrix inputMatrix;
 	/** 
 	 * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
@@ -136,7 +136,7 @@ public class SpatialPooler {
 		}
 		
 		poolerMemory = new SparseObjectMatrix<Column>(columnDimensions);
-		inputMatrix = new SparseBinaryMatrix<int[]>(inputDimensions);
+		inputMatrix = new SparseBinaryMatrix(inputDimensions);
 		
 		for(int i = 0;i < inputDimensions.length;i++) {
 			numInputs *= inputDimensions[i];
@@ -145,7 +145,7 @@ public class SpatialPooler {
 			numColumns *= columnDimensions[i];
 		}
 		
-		potentialPools = new SparseBinaryMatrix<int[]>(new int[] { numColumns, numInputs } );
+		potentialPools = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
 		
 		permanences = new SparseDoubleMatrix<double[]>(new int[] { numColumns, numInputs } );
 		
@@ -163,7 +163,7 @@ public class SpatialPooler {
 	     * this information is readily available from the 'self._permanence' matrix,
 	     * it is stored separately for efficiency purposes.
 	     */
-		connectedSynapses = new SparseBinaryMatrix<int[]>(new int[] { numColumns, numInputs } );
+		connectedSynapses = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
 		
 		connectedCounts = new int[numColumns];
 		// Initialize the set of permanence values for each column. Ensure that
@@ -690,11 +690,11 @@ public class SpatialPooler {
      *               
 	 * @return				a list of the flat indices of these columns
 	 */
-	public int[] getNeighborsND(SparseMatrix<Column> poolerMem, int columnIndex, int radius, boolean wrapAround) {
+	public <M extends SparseMatrix> int[] getNeighborsND(M poolerMem, int columnIndex, int radius, boolean wrapAround) {
 		int[] columnCoords = poolerMem.computeCoordinates(columnIndex);
 		List<int[]> dimensionCoords = new ArrayList<int[]>();
 		for(int i = 0;i < inputDimensions.length;i++) {
-			int[] range = ArrayUtils.range(columnCoords[0] - radius, columnCoords[0] + radius + 1);
+			int[] range = ArrayUtils.range(columnCoords[i] - radius, columnCoords[i] + radius + 1);
 			int[] curRange = new int[range.length];
 			
 			if(wrapAround) {
