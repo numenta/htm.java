@@ -669,10 +669,12 @@ public class SpatialPooler {
 		}
 		
 		List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
-		int[] neighbors = new int[neighborList.size()];
+		TIntList neighbors = new TIntArrayList(neighborList.size());
 		for(int i = 0;i < neighborList.size();i++) {
-			neighbors[i] = poolerMem.computeIndex(neighborList.get(i).toArray());
+			int flatIndex = poolerMem.computeIndex(neighborList.get(i).toArray());
+			if(flatIndex == columnIndex) continue;
+			neighbors.add(flatIndex);
 		}
-		return neighbors;
+		return neighbors.toArray();
 	}
 }
