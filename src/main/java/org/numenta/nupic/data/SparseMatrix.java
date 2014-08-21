@@ -1,6 +1,28 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.data;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public abstract class SparseMatrix<T> {
 	
@@ -299,10 +321,126 @@ public abstract class SparseMatrix<T> {
 		for(int i = 0;i < index.length;i++) {
 			if(index[i] >= dimensions[i]) {
 				throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
-					ArrayUtils.print1DArray(index) + " > " + ArrayUtils.print1DArray(dimensions));
+					print1DArray(index) + " > " + print1DArray(dimensions));
 			}
 		}
 	}
 	
-
+	/**
+	 * Returns an array with the same shape and the contents
+	 * converted to doubles.
+	 * 
+	 * @param ints	an array of ints.
+	 * @return
+	 */
+	public static double[] toDoubleArray(int[] ints) {
+		double[] retVal = new double[ints.length];
+		for(int i = 0;i < ints.length;i++) {
+			retVal[i] = ints[i];
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns an array with the same shape and the contents
+	 * converted to doubles.
+	 * 
+	 * @param ints	an array of ints.
+	 * @return
+	 */
+	public static int[] toIntArray(double[] doubs) {
+		int[] retVal = new int[doubs.length];
+		for(int i = 0;i < doubs.length;i++) {
+			retVal[i] = (int)doubs[i];
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns a double array whose values are the maximum of the value
+	 * in the array and the max value argument.
+	 * @param doubs
+	 * @param maxValue
+	 * @return
+	 */
+	public static double[] maximum(double[] doubs, double maxValue) {
+		double[] retVal = new double[doubs.length];
+		for(int i = 0;i < doubs.length;i++) {
+			retVal[i] = Math.max(doubs[i], maxValue);
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns an array whose members are the quotient of the dividend array
+	 * values and the divisor array values.
+	 * 
+	 * @param dividend
+	 * @param divisor
+	 * @param dividend adjustment
+	 * @param divisor adjustment
+	 * 
+	 * @return
+	 * @throws	IllegalArgumentException 	if the two argument arrays are not the same length
+	 */
+	public static double[] divide(double[] dividend, double[] divisor, 
+		double dividendAdjustment, double divisorAdjustment) {
+		
+		if(dividend.length != divisor.length) {
+			throw new IllegalArgumentException(
+				"The dividend array and the divisor array must be the same length");
+		}
+		double[] quotient = new double[dividend.length];
+		for(int i = 0;i < dividend.length;i++) {
+			quotient[i] = (dividend[i] + dividendAdjustment) / (divisor[i] + divisorAdjustment);
+		}
+		return quotient;
+	}
+	
+	/**
+	 * Returns an array whose members are the product of the multiplicand array
+	 * values and the factor array values.
+	 * 
+	 * @param multiplicand
+	 * @param factor
+	 * @param multiplicand adjustment
+	 * @param factor adjustment
+	 * 
+	 * @return
+	 * @throws	IllegalArgumentException 	if the two argument arrays are not the same length
+	 */
+	public static double[] multiply(double[] multiplicand, double[] factor, 
+		double multiplicandAdjustment, double factorAdjustment) {
+		
+		if(multiplicand.length != factor.length) {
+			throw new IllegalArgumentException(
+				"The multiplicand array and the factor array must be the same length");
+		}
+		double[] product = new double[multiplicand.length];
+		for(int i = 0;i < multiplicand.length;i++) {
+			product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
+		}
+		return product;
+	}
+	
+	/**
+	 * Prints the specified array to a returned String.
+	 * 
+	 * @param aObject	the array object to print.
+	 * @return	the array in string form suitable for display.
+	 */
+	public static String print1DArray(Object aObject) {
+	    if (aObject.getClass().isArray()) {
+	        if (aObject instanceof Object[]) // can we cast to Object[]
+	            return Arrays.toString((Object[]) aObject);
+	        else {  // we can't cast to Object[] - case of primitive arrays
+	            int length = Array.getLength(aObject);
+	            Object[] objArr = new Object[length];
+	            for (int i=0; i<length; i++)
+	                objArr[i] =  Array.get(aObject, i);
+	            return Arrays.toString(objArr);
+	        }
+	    }
+	    return "[]";
+	}
 }
