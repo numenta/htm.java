@@ -26,6 +26,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.EnumMap;
 
 import org.junit.Test;
+import org.numenta.nupic.data.ArrayUtils;
+import org.numenta.nupic.data.SparseBinaryMatrix;
+import org.numenta.nupic.data.SparseMatrix;
+import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.data.TypeFactory;
+import org.numenta.nupic.model.Column;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.research.SpatialPooler;
@@ -37,8 +43,8 @@ public class SpatialPoolerTest {
 	public void defaultSetup() {
 		parameters = new Parameters();
 		EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-		p.put(KEY.INPUT_DIMENSIONS, new int[] { 9, 5 });
-		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5, 5 });
+		p.put(KEY.INPUT_DIMENSIONS, new int[] { 9 });
+		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });
 		p.put(KEY.POTENTIAL_RADIUS, 3);
 		p.put(KEY.POTENTIAL_PCT, 0.5);
 		p.put(KEY.GLOBAL_INHIBITIONS, false);
@@ -58,7 +64,6 @@ public class SpatialPoolerTest {
 	
 	private void initSP() {
 		sp = new SpatialPooler(parameters);
-		sp.mapColumn(1);
 	}
 	
 	@Test
@@ -85,8 +90,47 @@ public class SpatialPoolerTest {
 		assertEquals(42, sp.getSeed());
 		assertEquals(0, sp.getSpVerbosity());
 		
-		assertEquals(45, sp.getNumInputs());
-		assertEquals(25, sp.getNumColumns());
+		assertEquals(9, sp.getNumInputs());
+		assertEquals(5, sp.getNumColumns());
+	}
+	
+	/**
+	 * As coded in the Python test
+	 */
+	@Test
+	public void testGetNeighborsND() {
+		//This setup isn't relevant to this test
+		defaultSetup();
+		parameters.setInputDimensions(new int[] { 9, 5 });
+		initSP();
+		
+		////////////////////// Test not part of Python port /////////////////////
+		int[] result = sp.getNeighborsND(new SparseBinaryMatrix(new int[] { 9, 5 }), 2, 3, true);
+		int[] expected = new int[] { 
+			0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+			13, 14, 15, 16, 17, 18, 19, 30, 31, 32, 33, 
+			34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 
+		};
+		for(int i = 0;i < result.length;i++) {
+			assertEquals(expected[i], result[i]);
+		}
+		/////////////////////////////////////////////////////////////////////////
+		
+		defaultSetup();
+		parameters.setInputDimensions(new int[] { 5, 7, 2 });
+		initSP();
+		
+		int[] dimensions = new int[] { 5, 7, 2 };
+		SparseBinaryMatrix layout = new SparseBinaryMatrix(dimensions);
+			
+		int radius = 1;
+		int x = 1;
+		int y = 3;
+		int z = 2;
+		int columnIndex = layout.computeIndex(new int[] { z, y, x });
+		int[] neighbors = sp.getNeighborsND(layout, columnIndex, radius, true);
+		String expect = "[18, 19, 20, 21, 22, 23, 32, 33, 34, 36, 37, 46, 47, 48, 49, 50, 51]";
+		assertEquals(expect, ArrayUtils.print1DArray(neighbors));
 	}
 
 	@Test

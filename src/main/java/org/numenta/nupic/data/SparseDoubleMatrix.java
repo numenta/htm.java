@@ -24,7 +24,7 @@ package org.numenta.nupic.data;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 
-public class SparseDoubleMatrix<T> extends SparseMatrix<T> {
+public class SparseDoubleMatrix<T> extends SparseMatrix {
 	private TIntDoubleMap sparseMap = new TIntDoubleHashMap();
 	
 	public SparseDoubleMatrix(int[] dimensions) {
