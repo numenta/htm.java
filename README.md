@@ -1,8 +1,7 @@
-copic-j
+CoPIC-J
 =======
 
-(Temporarily Unofficial) Java port of the... 
-## [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic)
+Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
 CoPIC:
  * Co  = Community = 1-to-1 Correlation to NuPIC = Side-by-Side
