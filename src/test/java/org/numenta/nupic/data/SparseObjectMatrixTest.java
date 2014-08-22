@@ -24,22 +24,19 @@ package org.numenta.nupic.data;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.numenta.nupic.data.SparseMatrix;
-import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.data.TypeFactory;
 
 public class SparseObjectMatrixTest {
 
 	@Test
 	public void testGetDimensionMultiples() {
-		SparseMatrix<TestObject> sm = new SparseObjectMatrix<TestObject>(new int[] { 4 });
+		SparseMatrix sm = new SparseObjectMatrix<TestObject>(new int[] { 4 });
 		int[] dm = sm.getDimensionMultiples();
 		assertEquals(1, dm.length);
 		assertEquals(1, dm[0]);
 		
 		sm = new SparseObjectMatrix<TestObject>(new int[] { 1, 2, 3, 4, 5 });
 		dm = sm.getDimensionMultiples();
-		assertEquals(SparseMatrix.print1DArray(dm), "[120, 60, 20, 5, 1]");
+		assertEquals(ArrayUtils.print1DArray(dm), "[120, 60, 20, 5, 1]");
 	}
 	
 	/**
@@ -60,6 +57,15 @@ public class SparseObjectMatrixTest {
 		assertEquals(indices[1], 1);
 		assertEquals(indices[2], 2);
 		assertEquals(indices[3], 3);
+	}
+	
+	@Test
+	public void testGetMaxIndex() {
+		SparseObjectMatrix<TestObject> sm = 
+			new SparseObjectMatrix<TestObject>(new int[] { 5, 5 });
+		
+		int max = sm.getMaxIndex();
+		assertEquals(24, max);
 	}
 	
 	/**
@@ -92,7 +98,7 @@ public class SparseObjectMatrixTest {
 	 */
 	@Test
 	public void testComputeIndex() {
-		SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
+		SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
 		
 		int index = l.computeIndex(new int[] { 0, 2, 2 });
 		assertEquals(10, index);
@@ -107,7 +113,7 @@ public class SparseObjectMatrixTest {
 	@Test
 	public void testComputeIndex_ColumnMajor() {
 		// Column major
-		SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
+		SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
 				
 		int index = l.computeIndex(new int[] { 2, 2, 0 });
 		assertEquals(10, index);
@@ -121,7 +127,7 @@ public class SparseObjectMatrixTest {
 	 */
 	@Test
 	public void testComputeCoordinates() {
-		SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
+		SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
 		int[] coordinates = l.computeCoordinates(27);
 		assertEquals(1, coordinates[0]);
 		assertEquals(2, coordinates[1]);
@@ -133,7 +139,7 @@ public class SparseObjectMatrixTest {
 	 */
 	@Test
 	public void testComputeCoordinates_ColumnMajor() {
-		SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
+		SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
 		int[] coordinates = l.computeCoordinates(27);
 		assertEquals(3, coordinates[0]);
 		assertEquals(2, coordinates[1]);

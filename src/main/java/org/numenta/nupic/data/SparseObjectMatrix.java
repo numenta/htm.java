@@ -24,7 +24,7 @@ package org.numenta.nupic.data;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class SparseObjectMatrix<T> extends SparseMatrix<T> {
+public class SparseObjectMatrix<T> extends SparseMatrix {
 	private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
 	
 	public SparseObjectMatrix(int[] dimensions) {
@@ -41,9 +41,10 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
 	 * @param index		the index the object will occupy
 	 * @param object	the object to be indexed.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(int index, T object) {
-		sparseMap.put(index, object);
+	public void set(int index, Object object) {
+		sparseMap.put(index, (T)object);
 	}
 	
 	/**
@@ -53,7 +54,7 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
-	public void set(int[] coordinates, T object) {
+	public void set(int[] coordinates, Object object) {
 		set(computeIndex(coordinates), object);
 	}
 	
@@ -72,6 +73,7 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
 	 * @param coordinates	the coordinates from which to retrieve the indexed object
 	 * @return	the indexed object
 	 */
+	@SuppressWarnings("unchecked")
 	public T get(int[] coordinates) {
 		return sparseMap.get(computeIndex(coordinates));
 	}

@@ -21,10 +21,13 @@
  */
 package org.numenta.nupic.data;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-public abstract class SparseMatrix<T> {
+public abstract class SparseMatrix {
 	
 	protected int[] dimensionMultiples;
 	protected int[] dimensions;
@@ -77,7 +80,7 @@ public abstract class SparseMatrix<T> {
 	 * @param index		the index the object will occupy
 	 * @param object	the object to be indexed.
 	 */
-	protected void set(int index, T object) {}
+	protected <T> void set(int index, T object) {}
 	
 	/**
 	 * Sets the object to occupy the specified index.
@@ -102,7 +105,7 @@ public abstract class SparseMatrix<T> {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
-	protected void set(int[] coordinates, T object) {}
+	protected <T> void set(int[] coordinates, T object) {}
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -128,7 +131,7 @@ public abstract class SparseMatrix<T> {
 	 * @param index		the index of the T to return
 	 * @return	the T at the specified index.
 	 */
-	protected T getObject(int index) { return null; }
+	protected <T> T getObject(int index) { return null; }
 	
 	/**
 	 * Returns the T at the specified index.
@@ -151,7 +154,7 @@ public abstract class SparseMatrix<T> {
 	 * @param coordinates	the coordinates from which to retrieve the indexed object
 	 * @return	the indexed object
 	 */
-	protected T get(int[] coordinates) { return null; }
+	protected <T> T get(int[] coordinates) { return null; }
 	
 	/**
 	 * Returns the T at the index computed from the specified coordinates
@@ -174,11 +177,41 @@ public abstract class SparseMatrix<T> {
 	public int[] getSparseIndices() { return null; }
 	
 	/**
+	 * Returns an array of all the flat indexes that can be 
+	 * computed from the current configuration.
+	 * @return
+	 */
+	public int[] get1DIndexes() {
+		TIntList results = new TIntArrayList(getMaxIndex() + 1);
+		visit(dimensions, 0, new int[numDimensions], results);
+		return results.toArray();
+	}
+	
+	/**
+	 * Recursively loops through the matrix dimensions to fill the results
+	 * array with flattened computed array indexes.
+	 * 
+	 * @param bounds
+	 * @param currentDimension
+	 * @param p
+	 * @param results
+	 */
+	private void visit(int[] bounds, int currentDimension, int[] p, TIntList results) {
+		for (int i = 0; i < bounds[currentDimension]; i++) {
+	        p[currentDimension] = i;
+	        if (currentDimension == p.length - 1) {
+	        	results.add(computeIndex(p));
+	        }
+	        else visit(bounds, currentDimension + 1, p, results);
+		}
+	}
+	
+	/**
 	 * Returns the maximum accessible flat index.
 	 * @return	the maximum accessible flat index.
 	 */
 	public int getMaxIndex() {
-		return dimensions[0] * Math.max(1, dimensionMultiples[0] - 1);
+		return dimensions[0] * Math.max(1, dimensionMultiples[0]) - 1;
 	}
 	
 	/**
@@ -190,8 +223,8 @@ public abstract class SparseMatrix<T> {
 	 * @return	the dense array
 	 */
 	@SuppressWarnings("unchecked")
-	public T[] asDense(TypeFactory<T> factory) {
-		T[] retVal = (T[])Array.newInstance(factory.typeClass(), 2, 4, 8);
+	public <T> T[] asDense(TypeFactory<T> factory) {
+		T[] retVal = (T[])Array.newInstance(factory.typeClass(), dimensions);
 		fill(factory, 0, dimensions, dimensions[0], retVal);
 		
 		return (T[])retVal;
@@ -209,7 +242,7 @@ public abstract class SparseMatrix<T> {
 	 * @return a dynamically created multidimensional array
 	 */
 	@SuppressWarnings("unchecked")
-	protected Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
+	protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
 		if(dimensions.length == 1) {
 			for(int i = 0;i < count;i++) {
 				arr[i] = f.make(this.dimensions);

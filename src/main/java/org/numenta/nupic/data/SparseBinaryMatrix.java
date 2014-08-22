@@ -21,10 +21,12 @@
  */
 package org.numenta.nupic.data;
 
+import java.lang.reflect.Array;
+
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
-public class SparseBinaryMatrix<T> extends SparseMatrix<T> {
+public class SparseBinaryMatrix extends SparseMatrix {
 	private TIntIntMap sparseMap = new TIntIntHashMap();
 	
 	public SparseBinaryMatrix(int[] dimensions) {
@@ -53,6 +55,7 @@ public class SparseBinaryMatrix<T> extends SparseMatrix<T> {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
+	@Override
 	public void set(int[] coordinates, int value) {
 		set(computeIndex(coordinates), value);
 	}
@@ -73,6 +76,7 @@ public class SparseBinaryMatrix<T> extends SparseMatrix<T> {
 	 * @param coordinates	the coordinates from which to retrieve the indexed object
 	 * @return	the indexed object
 	 */
+	@Override
 	public int getIntValue(int[] coordinates) {
 		return sparseMap.get(computeIndex(coordinates));
 	}
@@ -81,8 +85,36 @@ public class SparseBinaryMatrix<T> extends SparseMatrix<T> {
 	 * Returns a sorted array of occupied indexes.
 	 * @return	a sorted array of occupied indexes.
 	 */
+	@Override
 	public int[] getSparseIndices() {
 		return reverse(sparseMap.keys());
 	}
 	
+	/**
+	 * Uses reflection to create and fill a dynamically created multidimensional array.
+	 * 
+	 * @param f					the {@link TypeFactory}
+	 * @param dimensionIndex	the current index into <em>this class's</em> configured dimensions array
+	 * 							<em>*NOT*</em> the dimensions used as this method's argument	
+	 * @param dimensions		the array specifying remaining dimensions to create
+	 * @param count				the current dimensional size
+	 * @param arr				the array to fill
+	 * @return a dynamically created multidimensional array
+	 */
+	@SuppressWarnings("unchecked")
+	protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
+		if(dimensions.length == 1) {
+			for(int i = 0;i < count;i++) {
+				arr[i] = f.make(dimensionIndex);
+			}
+			return arr;
+		}else{
+			for(int i = 0;i < count;i++) {
+				int[] inner = copyInnerArray(dimensions);
+				T[] r = (T[])Array.newInstance(f.typeClass(), inner);
+				arr[i] = (Object[])fill(f, dimensionIndex + 1, inner, this.dimensions[dimensionIndex + 1], r);
+			}
+			return (T[])arr;
+		}
+	}
 }

@@ -1,8 +1,7 @@
 htm.java
 =======
 
-(Temporarily Unofficial) Java port of the... 
-## [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic)
+Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
 
