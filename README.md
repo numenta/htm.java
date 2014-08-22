@@ -1,12 +1,8 @@
-copic-j
+htm.java
 =======
 
 (Temporarily Unofficial) Java port of the... 
 ## [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic)
-
-CoPIC:
- * Co  = Community = 1-to-1 Correlation to NuPIC = Side-by-Side
- * PIC = Platform for Intelligent Computing
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
 
@@ -22,4 +18,4 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
-In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "copic-j" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
+In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
