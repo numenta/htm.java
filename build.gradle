@@ -5,7 +5,7 @@ sourceCompatibility = 1.7
 version = '0.20'
 jar {
     manifest {
-        attributes 'Implementation-Title': 'CoPIC-J', 'Implementation-Version': 0.20
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': 0.20
     }
 }
 
