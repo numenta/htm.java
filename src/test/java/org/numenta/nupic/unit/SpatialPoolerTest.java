@@ -21,7 +21,7 @@
  */
 package org.numenta.nupic.unit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -198,13 +198,171 @@ public class SpatialPoolerTest {
 		parameters.setInputDimensions(dimensions);
 		initSP();
 		layout = new SparseBinaryMatrix(dimensions);
+		layout.set(new int[] { 2, 4 }, new int[] { 1, 1 });
 		radius = 1;
 		columnIndex = 3;
 		int[] mask = sp.getNeighborsND(layout, columnIndex, radius, true);
 		TIntArrayList msk = new TIntArrayList(mask);
 		TIntArrayList neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
 		
+		//////
+		defaultSetup();
+		dimensions = new int[] { 8 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		layout.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 });
+		radius = 2;
+		columnIndex = 3;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		//Wrap around
+		defaultSetup();
+		dimensions = new int[] { 8 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		layout.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 });
+		radius = 2;
+		columnIndex = 0;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		//Radius too big
+		defaultSetup();
+		dimensions = new int[] { 8 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		layout.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 });
+		radius = 20;
+		columnIndex = 6;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		//These are all the same tests from 2D
+		defaultSetup();
+		dimensions = new int[] { 6, 5 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		int[][] input = new int[][] { {0, 0, 0, 0, 0},
+		                          {0, 0, 0, 0, 0},
+		                          {0, 1, 1, 1, 0},
+		                          {0, 1, 0, 1, 0},
+		                          {0, 1, 1, 1, 0},
+		                          {0, 0, 0, 0, 0}};
+		for(int i = 0;i < input.length;i++) {
+			for(int j = 0;j < input[i].length;j++) {
+				if(input[i][j] == 1) 
+					layout.set(layout.computeIndex(new int[] { i, j }), 1);
+			}
+		}
+		radius = 1;
+		columnIndex = 3*5 + 2;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		////////
+		defaultSetup();
+		dimensions = new int[] { 6, 5 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		input = new int[][] { {0, 0, 0, 0, 0},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 0, 1, 1},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 1, 1, 1}};
+		for(int i = 0;i < input.length;i++) {
+			for(int j = 0;j < input[i].length;j++) {
+				if(input[i][j] == 1) 
+					layout.set(layout.computeIndex(new int[] { i, j }), 1);
+			}
+		}
+		radius = 2;
+		columnIndex = 3*5 + 2;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		//Radius too big
+		defaultSetup();
+		dimensions = new int[] { 6, 5 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		input = new int[][] { {1, 1, 1, 1, 1},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 0, 1, 1},
+						      {1, 1, 1, 1, 1},
+						      {1, 1, 1, 1, 1}};
+		for(int i = 0;i < input.length;i++) {
+			for(int j = 0;j < input[i].length;j++) {
+				if(input[i][j] == 1) 
+					layout.set(layout.computeIndex(new int[] { i, j }), 1);
+			}
+		}
+		radius = 7;
+		columnIndex = 3*5 + 2;
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
+		
+		//Wrap-around
+		defaultSetup();
+		dimensions = new int[] { 6, 5 };
+		parameters.setInputDimensions(dimensions);
+		initSP();
+		layout = new SparseBinaryMatrix(dimensions);
+		input = new int[][] { {1, 0, 0, 1, 1},
+						      {0, 0, 0, 0, 0},
+						      {0, 0, 0, 0, 0},
+						      {0, 0, 0, 0, 0},
+						      {1, 0, 0, 1, 1},
+						      {1, 0, 0, 1, 0}};
+		for(int i = 0;i < input.length;i++) {
+			for(int j = 0;j < input[i].length;j++) {
+				if(input[i][j] == 1) 
+					layout.set(layout.computeIndex(new int[] { i, j }), 1);
+			}
+		}
+		radius = 1;
+		columnIndex = layout.getMaxIndex();
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		msk = new TIntArrayList(mask);
+		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+		neg.removeAll(msk);
+		assertTrue(layout.all(mask));
+		assertFalse(layout.any(neg));
 	}
 
 	@Test

@@ -21,10 +21,14 @@
  */
 package org.numenta.nupic.data;
 
-import java.lang.reflect.Array;
-
+import gnu.trove.TIntCollection;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.TIntList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class SparseBinaryMatrix extends SparseMatrix {
 	private TIntIntMap sparseMap = new TIntIntHashMap();
@@ -38,26 +42,45 @@ public class SparseBinaryMatrix extends SparseMatrix {
 	}
 	
 	/**
-	 * Sets the object to occupy the specified index.
+	 * Sets the value at the specified index.
 	 * 
 	 * @param index		the index the object will occupy
 	 * @param object	the object to be indexed.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(int index, int value) {
+	public SparseBinaryMatrix set(int index, int value) {
 		sparseMap.put(index, value);
+		return this;
 	}
 	
 	/**
-	 * Sets the specified object to be indexed at the index
+	 * Sets the value to be indexed at the index
 	 * computed from the specified coordinates.
 	 * 
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(int[] coordinates, int value) {
+	public SparseBinaryMatrix set(int[] coordinates, int value) {
 		set(computeIndex(coordinates), value);
+		return this;
+	}
+	
+	/**
+	 * Sets the specified values at the specified indexes.
+	 * 
+	 * @param indexes	indexes of the values to be set
+	 * @param values	the values to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
+	 */
+	public SparseBinaryMatrix set(int[] indexes, int[] values) { 
+		for(int i = 0;i < indexes.length;i++) {
+			set(indexes[i], values[i]);
+		}
+		return this;
 	}
 	
 	/**
@@ -116,5 +139,129 @@ public class SparseBinaryMatrix extends SparseMatrix {
 			}
 			return (T[])arr;
 		}
+	}
+	
+	/**
+	 * This {@code SparseBinaryMatrix} will contain the operation of or-ing
+	 * the inputMatrix with the contents of this matrix; returning this matrix
+	 * as the result.
+	 * 
+	 * @param inputMatrix	the matrix containing the "on" bits to or
+	 * @return	this matrix
+	 */
+	public SparseBinaryMatrix or(SparseBinaryMatrix inputMatrix) {
+		int[] mask = inputMatrix.getSparseIndices();
+		int[] ones = new int[mask.length];
+		Arrays.fill(ones, 1);
+		return set(mask, ones);
+	}
+	
+	/**
+	 * This {@code SparseBinaryMatrix} will contain the operation of or-ing
+	 * the inputMatrix with the contents of this matrix; returning this matrix
+	 * as the result.
+	 * 
+	 * @param onBitIndexes	the matrix containing the "on" bits to or
+	 * @return	this matrix
+	 */
+	public SparseBinaryMatrix or(TIntCollection onBitIndexes) {
+		int[] ones = new int[onBitIndexes.size()];
+		Arrays.fill(ones, 1);
+		return set(onBitIndexes.toArray(), ones);
+	}
+	
+	/**
+	 * This {@code SparseBinaryMatrix} will contain the operation of or-ing
+	 * the inputMatrix with the contents of this matrix; returning this matrix
+	 * as the result.
+	 * 
+	 * @param onBitIndexes	the int array containing the "on" bits to or
+	 * @return	this matrix
+	 */
+	public SparseBinaryMatrix or(int[] onBitIndexes) {
+		int[] ones = new int[onBitIndexes.length];
+		Arrays.fill(ones, 1);
+		return set(onBitIndexes, ones);
+	}
+	
+	/**
+	 * Returns true if the on bits of the specified matrix are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean all(SparseBinaryMatrix matrix) {
+		return sparseMap.keySet().containsAll(matrix.sparseMap.keys());
+	}
+	
+	/**
+	 * Returns true if the on bits of the specified matrix are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean all(TIntCollection onBits) {
+		return sparseMap.keySet().containsAll(onBits);
+	}
+	
+	/**
+	 * Returns true if the on bits of the specified matrix are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean all(int[] onBits) {
+		return sparseMap.keySet().containsAll(onBits);
+	}
+	
+	/**
+	 * Returns true if any of the on bits of the specified matrix are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean any(SparseBinaryMatrix matrix) {
+		for(int i : matrix.sparseMap.keys()) {
+			if(sparseMap.containsKey(i)) return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Returns true if any of the on bit indexes of the specified collection are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean any(TIntList onBits) {
+		for(TIntIterator i = onBits.iterator();i.hasNext();) {
+			if(sparseMap.containsKey(i.next())) return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Returns true if any of the on bit indexes of the specified matrix are
+	 * matched by the on bits of this matrix. It is allowed that 
+	 * this matrix have more on bits than the specified matrix.
+	 * 
+	 * @param matrix
+	 * @return
+	 */
+	public boolean any(int[] onBits) {
+		for(int i : onBits) {
+			if(sparseMap.containsKey(i)) return true;
+		}
+		return false;
 	}
 }

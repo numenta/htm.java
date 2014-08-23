@@ -24,7 +24,7 @@ package org.numenta.nupic.data;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 
-public class SparseDoubleMatrix<T> extends SparseMatrix {
+public class SparseDoubleMatrix extends SparseMatrix {
 	private TIntDoubleMap sparseMap = new TIntDoubleHashMap();
 	
 	public SparseDoubleMatrix(int[] dimensions) {
@@ -42,9 +42,11 @@ public class SparseDoubleMatrix<T> extends SparseMatrix {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(int[] coordinates, double value) {
+	public SparseDoubleMatrix set(int[] coordinates, double value) {
 		set(computeIndex(coordinates), value);
+		return this;
 	}
 	
 	/**
