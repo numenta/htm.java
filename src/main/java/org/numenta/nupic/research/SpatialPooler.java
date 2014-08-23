@@ -97,12 +97,12 @@ public class SpatialPooler {
      * structure. This permanence matrix is only allowed to have non-zero
      * elements where the potential pool is non-zero.
      */
-	private SparseDoubleMatrix<double[]> permanences;
+	private SparseDoubleMatrix permanences;
 	/**
 	 * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
      */
-	private SparseDoubleMatrix<double[]> tieBreaker;
+	private SparseDoubleMatrix tieBreaker;
 	/**
 	 * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
      * (rows represent cortical columns, columns represent input bits) whose
@@ -147,9 +147,9 @@ public class SpatialPooler {
 		
 		potentialPools = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
 		
-		permanences = new SparseDoubleMatrix<double[]>(new int[] { numColumns, numInputs } );
+		permanences = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
 		
-		tieBreaker = new SparseDoubleMatrix<double[]>(new int[] { numColumns, numInputs } );
+		tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
 		for(int i = 0;i < numColumns;i++) {
 			for(int j = 0;j < numInputs;j++) {
 				tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());

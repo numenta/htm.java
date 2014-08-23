@@ -43,8 +43,9 @@ public class SparseObjectMatrix<T> extends SparseMatrix {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void set(int index, Object object) {
+	public SparseObjectMatrix<T> set(int index, Object object) {
 		sparseMap.put(index, (T)object);
+		return this;
 	}
 	
 	/**
@@ -54,8 +55,10 @@ public class SparseObjectMatrix<T> extends SparseMatrix {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
-	public void set(int[] coordinates, Object object) {
+	@SuppressWarnings("unchecked")
+	public SparseObjectMatrix<T> set(int[] coordinates, Object object) {
 		set(computeIndex(coordinates), object);
+		return this;
 	}
 	
 	/**

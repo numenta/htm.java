@@ -79,24 +79,30 @@ public abstract class SparseMatrix {
 	 * 
 	 * @param index		the index the object will occupy
 	 * @param object	the object to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <T> void set(int index, T object) {}
+	protected <T, S extends SparseMatrix> S set(int index, T object) { return null; }
 	
 	/**
 	 * Sets the object to occupy the specified index.
 	 * 
 	 * @param index		the index the object will occupy
 	 * @param value		the value to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected void set(int index, int value) {}
+	protected <S extends SparseMatrix> S set(int index, int value) { return null; }
 	
 	/**
 	 * Sets the object to occupy the specified index.
 	 * 
 	 * @param index		the index the object will occupy
 	 * @param value		the value to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected void set(int index, double value) {}
+	protected <S extends SparseMatrix> S set(int index, double value) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -104,8 +110,10 @@ public abstract class SparseMatrix {
 	 * 
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <T> void set(int[] coordinates, T object) {}
+	protected <T, S extends SparseMatrix> S set(int[] coordinates, T object) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -113,8 +121,10 @@ public abstract class SparseMatrix {
 	 * 
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param value			the value to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected void set(int[] coordinates, int value) {}
+	protected <S extends SparseMatrix> S set(int[] coordinates, int value) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -122,8 +132,10 @@ public abstract class SparseMatrix {
 	 * 
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param value			the value to be indexed.
+	 * 
+	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected void set(int[] coordinates, double value) {}
+	protected <S extends SparseMatrix> S set(int[] coordinates, double value) { return null; }
 	
 	/**
 	 * Returns the T at the specified index.
@@ -312,7 +324,19 @@ public abstract class SparseMatrix {
 	 * @return
 	 */
 	public int computeIndex(int[] coordinates) {
-		checkDims(coordinates);
+		return computeIndex(coordinates, true);
+	}
+	
+	/**
+	 * Assumes row-major ordering. For a 3 dimensional array, the
+	 * indexing expected is [depth, height, width] or [slice, row, column].
+	 * 
+	 * @param coordinates
+	 * @param doCheck 			won't validate bounds if false
+	 * @return
+	 */
+	public int computeIndex(int[] coordinates, boolean doCheck) {
+		if(doCheck) checkDims(coordinates);
 		
 		int[] localMults = isColumnMajor ? reverse(dimensionMultiples) : dimensionMultiples;
 		int base = 0;
