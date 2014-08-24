@@ -40,8 +40,9 @@ import org.numenta.nupic.research.TemporalMemory;
  *
  */
 public class Column {
+	/** The flat non-topological index of this column */
 	private final int index;
-	
+	/** Configuration of cell count */
 	private final int numCells;
 	
 	private Cell[] cells;
