@@ -100,10 +100,11 @@ public class SpatialPoolerTest {
 		//This setup isn't relevant to this test
 		defaultSetup();
 		parameters.setInputDimensions(new int[] { 9, 5 });
+		parameters.setColumnDimensions(new int[] { 5, 5 });
 		initSP();
 		
 		////////////////////// Test not part of Python port /////////////////////
-		int[] result = sp.getNeighborsND(new SparseBinaryMatrix(new int[] { 9, 5 }), 2, 3, true);
+		int[] result = sp.getNeighborsND(new SparseBinaryMatrix(new int[] { 9, 5 }), 2, 3, true).toArray();
 		int[] expected = new int[] { 
 			0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
 			13, 14, 15, 16, 17, 18, 19, 30, 31, 32, 33, 
@@ -124,7 +125,7 @@ public class SpatialPoolerTest {
 		int y = 3;
 		int z = 2;
 		int columnIndex = layout.computeIndex(new int[] { z, y, x });
-		int[] neighbors = sp.getNeighborsND(layout, columnIndex, radius, true);
+		int[] neighbors = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		String expect = "[18, 19, 20, 21, 22, 23, 32, 33, 34, 36, 37, 46, 47, 48, 49, 50, 51]";
 		assertEquals(expect, ArrayUtils.print1DArray(neighbors));
 		
@@ -140,7 +141,7 @@ public class SpatialPoolerTest {
 		y = 0;
 		z = 3;
 		columnIndex = layout.computeIndex(new int[] { z, y, x });
-		neighbors = sp.getNeighborsND(layout, columnIndex, radius, true);
+		neighbors = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		expect = "[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 24, 25, 26, "
 				+ "27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 51, "
 				+ "52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 69, 70, 71, 72, 73, 74, "
@@ -171,7 +172,7 @@ public class SpatialPoolerTest {
 		y = 6;
 		z = 2;
 		columnIndex = layout.computeIndex(new int[] { z, y, x, w });
-		neighbors = sp.getNeighborsND(layout, columnIndex, radius, true);
+		neighbors = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		
 		TIntHashSet trueNeighbors = new TIntHashSet();
 		for(int i = -radius;i <= radius;i++) {
@@ -201,7 +202,7 @@ public class SpatialPoolerTest {
 		layout.set(new int[] { 2, 4 }, new int[] { 1, 1 });
 		radius = 1;
 		columnIndex = 3;
-		int[] mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		int[] mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		TIntArrayList msk = new TIntArrayList(mask);
 		TIntArrayList neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -217,7 +218,7 @@ public class SpatialPoolerTest {
 		layout.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 });
 		radius = 2;
 		columnIndex = 3;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -233,7 +234,7 @@ public class SpatialPoolerTest {
 		layout.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 });
 		radius = 2;
 		columnIndex = 0;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -249,7 +250,7 @@ public class SpatialPoolerTest {
 		layout.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 });
 		radius = 20;
 		columnIndex = 6;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -276,7 +277,7 @@ public class SpatialPoolerTest {
 		}
 		radius = 1;
 		columnIndex = 3*5 + 2;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -303,7 +304,7 @@ public class SpatialPoolerTest {
 		}
 		radius = 2;
 		columnIndex = 3*5 + 2;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -330,7 +331,7 @@ public class SpatialPoolerTest {
 		}
 		radius = 7;
 		columnIndex = 3*5 + 2;
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);
@@ -357,7 +358,7 @@ public class SpatialPoolerTest {
 		}
 		radius = 1;
 		columnIndex = layout.getMaxIndex();
-		mask = sp.getNeighborsND(layout, columnIndex, radius, true);
+		mask = sp.getNeighborsND(layout, columnIndex, radius, true).toArray();
 		msk = new TIntArrayList(mask);
 		neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
 		neg.removeAll(msk);

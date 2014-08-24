@@ -89,26 +89,26 @@ public class Cell implements Comparable<Cell> {
 	}
 	
 	/**
-	 * Returns a newly created {@link Segment}
+	 * Returns a newly created {@link DistalDendrite}
 	 * 
 	 * @param	c		the connections state of the temporal memory
-	 * @param index		the index of the new {@link Segment}
-	 * @return			 a newly created {@link Segment}
+	 * @param index		the index of the new {@link DistalDendrite}
+	 * @return			 a newly created {@link DistalDendrite}
 	 */
-	public Segment createSegment(Connections c, int index) {
-		Segment dd = new Segment(this, index);
+	public DistalDendrite createSegment(Connections c, int index) {
+		DistalDendrite dd = new DistalDendrite(this, index);
 		c.segments(this).add(dd);
 		
 		return dd;
 	}
 	
 	/**
-	 * Returns a {@link List} of this {@code Cell}'s {@link Segment}s
+	 * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
 	 * 
 	 * @param	c	the connections state of the temporal memory
-	 * @return	a {@link List} of this {@code Cell}'s {@link Segment}s
+	 * @return	a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
 	 */
-	public List<Segment> getSegments(Connections c) {
+	public List<DistalDendrite> getSegments(Connections c) {
 		return c.segments(this);
 	}
 	

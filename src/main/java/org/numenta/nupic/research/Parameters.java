@@ -30,6 +30,7 @@ import org.numenta.nupic.model.Column;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
+ * or {@link SpatialPooler}
  * 
  * @author David Ray
  * 

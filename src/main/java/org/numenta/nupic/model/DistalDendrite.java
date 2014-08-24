@@ -40,7 +40,7 @@ import org.numenta.nupic.research.Connections;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class Segment {
+public class DistalDendrite {
 	private Cell cell;
 	private int index;
 	
@@ -51,7 +51,7 @@ public class Segment {
 	 * @param cell		the owner
 	 * @param index		this {@code Segment}'s index.
 	 */
-	public Segment(Cell cell, int index) {
+	public DistalDendrite(Cell cell, int index) {
 		this.cell = cell;
 		this.index = index;
 	}
@@ -95,10 +95,10 @@ public class Segment {
      * from active cells.
      * 
 	 * @param activeSynapsesForSegment
-	 * @param permanenceThreashold
+	 * @param permanenceThreshold
 	 * @return
 	 */
-	public Set<Synapse> getConnectedActiveSynapses(Map<Segment, Set<Synapse>> activeSynapsesForSegment, double permanenceThreashold) {
+	public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
 		Set<Synapse> connectedSynapses = new LinkedHashSet<Synapse>();
 		
 		if(!activeSynapsesForSegment.containsKey(this)) {
@@ -106,7 +106,7 @@ public class Segment {
 		}
 		
 		for(Synapse s : activeSynapsesForSegment.get(this)) {
-			if(s.getPermanence() >= permanenceThreashold) {
+			if(s.getPermanence() >= permanenceThreshold) {
 				connectedSynapses.add(s);
 			}
 		}

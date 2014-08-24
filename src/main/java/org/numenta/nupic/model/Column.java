@@ -97,7 +97,7 @@ public class Column {
 	}
 	
 	/**
-	 * Returns the {@link Cell} with the least number of {@link Segment}s.
+	 * Returns the {@link Cell} with the least number of {@link DistalDendrite}s.
 	 * 
 	 * @param c			the connections state of the temporal memory
 	 * @param random

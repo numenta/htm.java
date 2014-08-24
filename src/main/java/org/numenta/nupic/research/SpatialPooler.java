@@ -25,6 +25,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -63,7 +64,7 @@ public class SpatialPooler {
 	//Extra parameter settings
 	private double synPermMin = 0.0;
 	private double synPermMax = 1.0;
-	private double synPermThreshold = synPermActiveInc / 2.0;
+	private double synPermTrimThreshold = synPermActiveInc / 2.0;
 	private int updatePeriod = 50;
 	private double initConnectedPct = 0.5;
 	
@@ -85,7 +86,7 @@ public class SpatialPooler {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-	private SparseBinaryMatrix potentialPools;
+	private SparseObjectMatrix<TIntArrayList> potentialPools;
 	/**
 	 * Initialize the permanences for each column. Similar to the
      * 'self._potentialPools', the permanences are stored in a matrix whose rows
@@ -132,6 +133,9 @@ public class SpatialPooler {
 	
 	public SpatialPooler(Parameters params) {
 		if(params != null) {
+			//TODO: 	Use of this method should be applied to the portable
+			//			memory (Connections object?) - only defaults should 
+			//			be declared in this class!!!!
 			Parameters.apply(this, params);
 		}
 		
@@ -145,7 +149,7 @@ public class SpatialPooler {
 			numColumns *= columnDimensions[i];
 		}
 		
-		potentialPools = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
+		potentialPools = new SparseObjectMatrix<TIntArrayList>(new int[] { numColumns, numInputs } );
 		
 		permanences = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
 		
@@ -170,7 +174,10 @@ public class SpatialPooler {
 	    // each column is connected to enough input bits to allow it to be
 	    // activated.
 		for(int i = 0;i < numColumns;i++) {
-			//potential = mapPotential(i, true);
+			int[] potential = mapPotential(0, true);
+			potentialPools.set(i, new TIntArrayList(potential));
+			double[] perm = initPermanence(potential, initConnectedPct);
+			updatePermanencesForColumn(perm, i, true);
 		}
 	}
 	
@@ -603,6 +610,92 @@ public class SpatialPooler {
 	}
 	
 	/**
+	 * This method updates the permanence matrix with a column's new permanence
+     * values. The column is identified by its index, which reflects the row in
+     * the matrix, and the permanence is given in 'dense' form, i.e. a full
+     * array containing all the zeros as well as the non-zero values. It is in
+     * charge of implementing 'clipping' - ensuring that the permanence values are
+     * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
+     * all permanence values below '_synPermTrimThreshold'. It also maintains
+     * the consistency between 'self._permanences' (the matrix storing the
+     * permanence values), 'self._connectedSynapses', (the matrix storing the bits
+     * each column is connected to), and 'self._connectedCounts' (an array storing
+     * the number of input bits each column is connected to). Every method wishing
+     * to modify the permanence matrix should do so through this method.
+     * 
+	 * @param perm				An array of permanence values for a column. The array is
+     *               			"dense", i.e. it contains an entry for each input bit, even
+     *               			if the permanence value is 0.
+	 * @param columnIndex		The index identifying a column in the permanence, potential
+     *               			and connectivity matrices
+	 * @param raisePerm			a boolean value indicating whether the permanence values
+     *               			should be raised until a minimum number are synapses are in
+     *               			a connected state. Should be set to 'false' when a direct
+     *               			assignment is required.
+	 */
+	public void updatePermanencesForColumn(double[] perm, int columnIndex, boolean raisePerm) {
+		
+	}
+	
+	/**
+	 * Returns a randomly generated permanence value for a synapses that is
+     * initialized in a connected state. The basic idea here is to initialize
+     * permanence values very close to synPermConnected so that a small number of
+     * learning steps could make it disconnected or connected.
+     *
+     * Note: experimentation was done a long time ago on the best way to initialize
+     * permanence values, but the history for this particular scheme has been lost.
+     * 
+	 * @return	a randomly generated permanence value
+	 */
+	public double initPermConnected() {
+		double p = synPermConnected + random.nextDouble() * synPermActiveInc / 4.0;
+		p = ((int)p * 100000) / 100000.0d;
+		return p;
+	}
+	
+	/**
+	 * Returns a randomly generated permanence value for a synapses that is to be
+     * initialized in a non-connected state.
+     * 
+	 * @return	a randomly generated permanence value
+	 */
+	public double initPermNonConnected() {
+		double p = synPermConnected * random.nextDouble();
+		p = ((int)p * 100000) / 100000.0d;
+		return p;
+	}
+	/**
+	 * Initializes the permanences of a column. The method
+     * returns a 1-D array the size of the input, where each entry in the
+     * array represents the initial permanence value between the input bit
+     * at the particular index in the array, and the column represented by
+     * the 'index' parameter.
+     * 
+	 * @param potentialPool		An array specifying the potential pool of the column.
+     *               			Permanence values will only be generated for input bits
+     *               			corresponding to indices for which the mask value is 1.
+	 * @param connectedPct		A value between 0 or 1 specifying the percent of the input
+     *               			bits that will start off in a connected state.
+	 * @return
+	 */
+	public double[] initPermanence(int[] potentialPool, double connectedPct) {
+		double[] perm = new double[numInputs];
+		Arrays.fill(perm, 0);
+		for(int i = 0;i < potentialPool.length;i++) {
+			if(random.nextDouble() <= connectedPct) {
+				perm[i] = initPermConnected();
+			}else{
+				perm[i] = initPermNonConnected();
+			}
+			
+			perm[i] = perm[i] < synPermTrimThreshold ? 0 : perm[i];
+		}
+		
+		return perm;
+	}
+	
+	/**
 	 * Maps a column to its respective input index, keeping to the topology of
      * the region. It takes the index of the column as an argument and determines
      * what is the index of the flattened input vector that is to be the center of
@@ -661,9 +754,16 @@ public class SpatialPooler {
 	 */
 	public int[] mapPotential(int columnIndex, boolean wrapAround) {
 		int inputIndex = mapColumn(columnIndex);
-		return null;
+		
+		TIntArrayList indices = getNeighborsND(inputMatrix, inputIndex, potentialRadius, wrapAround);
+		indices.add(inputIndex);
+		indices.sort();
+		
+		int[] sample = ArrayUtils.sample((int)Math.round(indices.size() * potentialPct), indices, random);
+		
+		return sample;
 	}
-	
+
 	/**
 	 * Similar to _getNeighbors1D and _getNeighbors2D (Not included in this implementation), 
 	 * this function Returns a list of indices corresponding to the neighbors of a given column. 
@@ -690,7 +790,7 @@ public class SpatialPooler {
      *               
 	 * @return				a list of the flat indices of these columns
 	 */
-	public <M extends SparseMatrix> int[] getNeighborsND(M poolerMem, int columnIndex, int radius, boolean wrapAround) {
+	public <M extends SparseMatrix> TIntArrayList getNeighborsND(M poolerMem, int columnIndex, int radius, boolean wrapAround) {
 		int[] columnCoords = poolerMem.computeCoordinates(columnIndex);
 		List<int[]> dimensionCoords = new ArrayList<int[]>();
 		for(int i = 0;i < inputDimensions.length;i++) {
@@ -709,12 +809,12 @@ public class SpatialPooler {
 		}
 		
 		List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
-		TIntList neighbors = new TIntArrayList(neighborList.size());
+		TIntArrayList neighbors = new TIntArrayList(neighborList.size());
 		for(int i = 0;i < neighborList.size();i++) {
 			int flatIndex = poolerMem.computeIndex(neighborList.get(i).toArray());
 			if(flatIndex == columnIndex) continue;
 			neighbors.add(flatIndex);
 		}
-		return neighbors.toArray();
+		return neighbors;
 	}
 }

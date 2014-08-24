@@ -34,7 +34,7 @@ import java.util.Set;
 import org.numenta.nupic.data.PatternMachine;
 import org.numenta.nupic.data.SequenceMachine;
 import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Segment;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.ComputeCycle;
 import org.numenta.nupic.research.Connections;
@@ -178,8 +178,8 @@ public class TemporalMemoryTestMachine {
 		for(int i = 0;i < len;i++) {
 			List<Cell> cells = temporalMemory.getColumn(i).getCells();
 			for(Cell cell : cells) {
-				Map<Segment, List<String>> segmentDict = new LinkedHashMap<Segment, List<String>>();
-				for(Segment seg : cell.getSegments(c)) {
+				Map<DistalDendrite, List<String>> segmentDict = new LinkedHashMap<DistalDendrite, List<String>>();
+				for(DistalDendrite seg : cell.getSegments(c)) {
 					List<String> synapseList = new ArrayList<String>();
 					for(Synapse synapse : seg.getAllSynapses(c)) {
 						synapseList.add("[" + synapse.getSourceCell() + ", " + synapse.getPermanence() + "]");
