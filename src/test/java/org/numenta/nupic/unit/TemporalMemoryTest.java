@@ -54,6 +54,7 @@ public class TemporalMemoryTest {
 
 	@Test
 	public void testActivateCorrectlyPredictiveCells() {
+		
 		TemporalMemory tm = new TemporalMemory();
 		tm.init();
 		
