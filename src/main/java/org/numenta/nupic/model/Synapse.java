@@ -33,12 +33,12 @@ import org.numenta.nupic.research.TemporalMemory;
  * @author Chetan Surpur
  * @author David Ray
  * 
- * @see Segment
+ * @see DistalDendrite
  * @see TemporalMemory.Connections
  */
 public class Synapse {
 	private Cell sourceCell;
-	private Segment segment;
+	private DistalDendrite segment;
 	private double permanence;
 	private int index;
 	
@@ -51,7 +51,7 @@ public class Synapse {
 	 * @param permanence	this {@code Synapse}'s permanence
 	 * @param index			this {@code Synapse}'s index
 	 */
-	public Synapse(Connections c, Cell sourceCell, Segment segment, double permanence, int index) {
+	public Synapse(Connections c, Cell sourceCell, DistalDendrite segment, double permanence, int index) {
 		this.sourceCell = sourceCell;
 		this.segment = segment;
 		this.permanence = permanence;
@@ -68,7 +68,7 @@ public class Synapse {
 		this.permanence = perm;
 	}
 	
-	public Segment getSegment() {
+	public DistalDendrite getSegment() {
 		return segment;
 	}
 	

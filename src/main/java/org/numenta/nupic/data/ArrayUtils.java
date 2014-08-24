@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Utilities to match some of the functionality found in Python's Numpy.
@@ -248,5 +249,29 @@ public class ArrayUtils {
 		resultList.add(coords);
 		//Return null if we've added all indexes for each dimension
 		return null;
+	}
+
+	 /**
+	  * Returns a random, sorted, and  unique array of the specified sample size of 
+	  * selections from the specified list of choices.
+	  * 
+	  * @param sampleSize	the number of selections in the returned sample
+	  * @param choices		the list of choices to select from
+	  * @param random		a random number generator
+	  * @return	a sample of numbers of the specified size
+	  */
+	public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
+		TIntHashSet temp = new TIntHashSet();
+		int upperBound = choices.size();
+		for(int i = 0;i < sampleSize;i++) {
+			int randomIdx = random.nextInt(upperBound);
+			while(temp.contains(choices.get(randomIdx))) {
+				randomIdx = random.nextInt(upperBound);
+			}
+			temp.add(choices.get(randomIdx));
+		}
+		TIntArrayList al = new TIntArrayList(temp);
+		al.sort();
+		return al.toArray();
 	}
 }

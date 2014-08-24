@@ -28,7 +28,7 @@ import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Segment;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 
 /**
@@ -42,9 +42,9 @@ public class ComputeCycle {
 	Set<Cell> winnerCells = new LinkedHashSet<Cell>();
 	Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
 	Set<Column> predictedColumns = new LinkedHashSet<Column>();
-	Set<Segment> activeSegments = new LinkedHashSet<Segment>();
-	Set<Segment> learningSegments = new LinkedHashSet<Segment>();
-	Map<Segment, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<Segment, Set<Synapse>>();
+	Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
+	Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
+	Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
 	
 	
 	/**
@@ -64,9 +64,9 @@ public class ComputeCycle {
 		this.winnerCells = new LinkedHashSet<Cell>(c.winnerCells());
 		this.predictiveCells = new LinkedHashSet<Cell>(c.predictiveCells());
 		this.predictedColumns = new LinkedHashSet<Column>(c.predictedColumns());
-		this.activeSegments = new LinkedHashSet<Segment>(c.activeSegments());
-		this.learningSegments = new LinkedHashSet<Segment>(c.learningSegments());
-		this.activeSynapsesForSegment = new LinkedHashMap<Segment, Set<Synapse>>(c.activeSynapsesForSegment());
+		this.activeSegments = new LinkedHashSet<DistalDendrite>(c.activeSegments());
+		this.learningSegments = new LinkedHashSet<DistalDendrite>(c.learningSegments());
+		this.activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>(c.activeSynapsesForSegment());
 	}
 	
 	/**
@@ -105,18 +105,18 @@ public class ComputeCycle {
 	}
 	
 	/**
-	 * Returns the Set of learning {@link Segment}s
+	 * Returns the Set of learning {@link DistalDendrite}s
 	 * @return
 	 */
-	public Set<Segment> learningSegments() {
+	public Set<DistalDendrite> learningSegments() {
 		return learningSegments;
 	}
 	
 	/**
-	 * Returns the Set of active {@link Segment}s
+	 * Returns the Set of active {@link DistalDendrite}s
 	 * @return
 	 */
-	public Set<Segment> activeSegments() {
+	public Set<DistalDendrite> activeSegments() {
 		return activeSegments;
 	}
 	
@@ -124,7 +124,7 @@ public class ComputeCycle {
 	 * Returns the mapping of Segments to active synapses in t-1
 	 * @return
 	 */
-	public Map<Segment, Set<Synapse>> activeSynapsesForSegment() {
+	public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
 		return activeSynapsesForSegment;
 	}
 }
