@@ -113,71 +113,71 @@ import org.numenta.nupic.research.Parameters.KEY;
  * @see BasicTemporalMemoryTest
  */
 public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
-	/**
-	 * Basic static input for all tests in this class
-	 */
-	private void defaultSetup() {
-		parameters = new Parameters();
-		EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-		p.put(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
-		p.put(KEY.CELLS_PER_COLUMN, 1);
-		p.put(KEY.INITIAL_PERMANENCE, 0.8);
-		p.put(KEY.CONNECTED_PERMANENCE, 0.7);
-		p.put(KEY.MIN_THRESHOLD, 11);
-		p.put(KEY.MAX_NEW_SYNAPSE_COUNT, 11);
-		p.put(KEY.PERMANENCE_INCREMENT, 0.4);
-		p.put(KEY.PERMANENCE_DECREMENT, 0);
-		p.put(KEY.ACTIVATION_THRESHOLD, 8);
-	}
-	
-	/**
-	 * Basic sequence learner.  M=1, N=100, P=1.
-	 */
-	@Test
-	public void testB1() {
-		defaultSetup();
-		
-		initTM();
-		
-		int seed = 42;
-		finishSetUp(new PatternMachine(
-			((int[])parameters.getMap().get(Parameters.KEY.COLUMN_DIMENSIONS))[0], 23, seed));
-		
-		// Instead of implementing the Python "shuffle" method, just use the exact output
-		Integer[] shuffledNums = new Integer[] { 
-			80, 59, 19, 9, 48, 97, 83, 90, 51, 16, 27, 18, 2, 42, 95, 
-			57, 26, 21, 84, 88, 41, 13, 40, 43, 71, 99, 92, 32, 11, 91, 
-			73, 86, 39, 56, 8, 60, 53, 65, 25, 33, 4, 66, 12, 14, 31, 
-			58, 72, 55, 10, 22, 15, 94, 49, 81, 79, 98, 5, 1, 20, 70, 
-			35, 87, 24, 78, 37, 38, 67, 34, 17, 0, 85, 96, 54, 29, 77, 
-			74, 3, 50, 28, 89, 62, 6, 52, 45, 76, 30, 68, 47, 61, 82, 
-			46, 36, 44, 93, 7, 75, 69, 64, 23, 63 };
-		
-		List<Integer> numberList = Arrays.asList(shuffledNums);
-		List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(numberList);
-		sequence.add(SequenceMachine.NONE);
-		
-		System.out.println("testB1 numbers = " + numberList);
-		System.out.println("testB1 sequence = " + sequence);
-		
-		feedTM(sequence, true, 1);
-		
-		DetailedResults results = feedTM(sequence, false, 1);
-		
-		int count = 0;
-		for(int i = 0;i < results.unpredictedActiveColumnsList.size();i++) {
-			if(results.unpredictedActiveColumnsList.get(0).iterator().hasNext()) {
-				count += 1;
-			}
-		}
-		assertEquals(0, count);
-		
-		for(int i = 1;i < results.predictedActiveColumnsList.size() - 1;i++) {
-			assertEquals(23, results.predictedActiveColumnsList.get(i).size());
-		}
-		
-		for(int i = 1;i < results.predictedInactiveColumnsList.size() - 1;i++) {
-			assertTrue(results.predictedInactiveColumnsList.get(i).size() < 5);
-		}
-	}
+    /**
+     * Basic static input for all tests in this class
+     */
+    private void defaultSetup() {
+        parameters = new Parameters();
+        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
+        p.put(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
+        p.put(KEY.CELLS_PER_COLUMN, 1);
+        p.put(KEY.INITIAL_PERMANENCE, 0.8);
+        p.put(KEY.CONNECTED_PERMANENCE, 0.7);
+        p.put(KEY.MIN_THRESHOLD, 11);
+        p.put(KEY.MAX_NEW_SYNAPSE_COUNT, 11);
+        p.put(KEY.PERMANENCE_INCREMENT, 0.4);
+        p.put(KEY.PERMANENCE_DECREMENT, 0);
+        p.put(KEY.ACTIVATION_THRESHOLD, 8);
+    }
+    
+    /**
+     * Basic sequence learner.  M=1, N=100, P=1.
+     */
+    @Test
+    public void testB1() {
+        defaultSetup();
+        
+        initTM();
+        
+        int seed = 42;
+        finishSetUp(new PatternMachine(
+            ((int[])parameters.getMap().get(Parameters.KEY.COLUMN_DIMENSIONS))[0], 23, seed));
+        
+        // Instead of implementing the Python "shuffle" method, just use the exact output
+        Integer[] shuffledNums = new Integer[] { 
+            80, 59, 19, 9, 48, 97, 83, 90, 51, 16, 27, 18, 2, 42, 95, 
+            57, 26, 21, 84, 88, 41, 13, 40, 43, 71, 99, 92, 32, 11, 91, 
+            73, 86, 39, 56, 8, 60, 53, 65, 25, 33, 4, 66, 12, 14, 31, 
+            58, 72, 55, 10, 22, 15, 94, 49, 81, 79, 98, 5, 1, 20, 70, 
+            35, 87, 24, 78, 37, 38, 67, 34, 17, 0, 85, 96, 54, 29, 77, 
+            74, 3, 50, 28, 89, 62, 6, 52, 45, 76, 30, 68, 47, 61, 82, 
+            46, 36, 44, 93, 7, 75, 69, 64, 23, 63 };
+        
+        List<Integer> numberList = Arrays.asList(shuffledNums);
+        List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(numberList);
+        sequence.add(SequenceMachine.NONE);
+        
+        System.out.println("testB1 numbers = " + numberList);
+        System.out.println("testB1 sequence = " + sequence);
+        
+        feedTM(sequence, true, 1);
+        
+        DetailedResults results = feedTM(sequence, false, 1);
+        
+        int count = 0;
+        for(int i = 0;i < results.unpredictedActiveColumnsList.size();i++) {
+            if(results.unpredictedActiveColumnsList.get(0).iterator().hasNext()) {
+                count += 1;
+            }
+        }
+        assertEquals(0, count);
+        
+        for(int i = 1;i < results.predictedActiveColumnsList.size() - 1;i++) {
+            assertEquals(23, results.predictedActiveColumnsList.get(i).size());
+        }
+        
+        for(int i = 1;i < results.predictedInactiveColumnsList.size() - 1;i++) {
+            assertTrue(results.predictedInactiveColumnsList.get(i).size() < 5);
+        }
+    }
 }
