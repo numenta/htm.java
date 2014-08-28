@@ -32,16 +32,16 @@ import java.util.LinkedHashSet;
  * @see PatternMachine
  */
 public class ConsecutivePatternMachine extends PatternMachine {
-	public ConsecutivePatternMachine(int n, int w) {
-		super(n, w);
-	}
-	
-	@Override
-	public void generate() {
-		LinkedHashSet<Integer> pattern;
-		for(int i = 0;i < n / w;i++) {
-			pattern = xrange(i * w, (i + 1) * w);
-			patterns.put(i, pattern);
-		}
-	}
+    public ConsecutivePatternMachine(int n, int w) {
+        super(n, w);
+    }
+    
+    @Override
+    public void generate() {
+        LinkedHashSet<Integer> pattern;
+        for(int i = 0;i < n / w;i++) {
+            pattern = xrange(i * w, (i + 1) * w);
+            patterns.put(i, pattern);
+        }
+    }
 }
