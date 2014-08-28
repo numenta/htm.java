@@ -274,4 +274,50 @@ public class ArrayUtils {
 		al.sort();
 		return al.toArray();
 	}
+	
+	/**
+	 * Ensures that each entry in the specified array has a min value
+	 * equal to or greater than the specified min and a maximum value less
+	 * than or equal to the specified max.
+	 * 
+	 * @param values	the values to clip
+	 * @param min		the minimum value
+	 * @param max		the maximum value
+	 */
+	public static void clip(double[] values, double min, double max) {
+		for(int i = 0;i < values.length;i++) {
+			values[i] = Math.min(1, Math.max(0, values[i]));
+		}
+	}
+	
+	/**
+	 * Returns the count of values in the specified array that are
+	 * greater than the specified compare value
+	 * 
+	 * @param compare	the value to compare to
+	 * @param array		the values being compared
+	 * 
+	 * @return	the count of values greater
+	 */
+	public static int valueGreaterCount(double compare, double[] array) {
+		int count = 0;
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] > compare) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
+	/**
+	 * Raises the values in the specified array by the amount specified
+	 * @param amount		the amount to raise the values
+	 * @param values		the values to raise
+	 */
+	public static void raiseValuesBy(double amount, double[] values) {
+		for(int i = 0;i < values.length;i++) {
+			values[i] += amount;
+		}
+	}
 }

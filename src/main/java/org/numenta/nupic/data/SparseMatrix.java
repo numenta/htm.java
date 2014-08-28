@@ -27,7 +27,7 @@ import gnu.trove.list.array.TIntArrayList;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-public abstract class SparseMatrix {
+public abstract class SparseMatrix<T> {
 	
 	protected int[] dimensionMultiples;
 	protected int[] dimensions;
@@ -82,7 +82,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <T, S extends SparseMatrix> S set(int index, T object) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int index, T object) { return null; }
 	
 	/**
 	 * Sets the object to occupy the specified index.
@@ -92,7 +92,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <S extends SparseMatrix> S set(int index, int value) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int index, int value) { return null; }
 	
 	/**
 	 * Sets the object to occupy the specified index.
@@ -102,7 +102,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <S extends SparseMatrix> S set(int index, double value) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int index, double value) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -113,7 +113,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <T, S extends SparseMatrix> S set(int[] coordinates, T object) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int[] coordinates, T object) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -124,7 +124,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <S extends SparseMatrix> S set(int[] coordinates, int value) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int[] coordinates, int value) { return null; }
 	
 	/**
 	 * Sets the specified object to be indexed at the index
@@ -135,7 +135,7 @@ public abstract class SparseMatrix {
 	 * 
 	 * @return this {@code SparseMatrix} implementation
 	 */
-	protected <S extends SparseMatrix> S set(int[] coordinates, double value) { return null; }
+	protected <S extends SparseMatrix<T>> S set(int[] coordinates, double value) { return null; }
 	
 	/**
 	 * Returns the T at the specified index.
@@ -143,7 +143,7 @@ public abstract class SparseMatrix {
 	 * @param index		the index of the T to return
 	 * @return	the T at the specified index.
 	 */
-	protected <T> T getObject(int index) { return null; }
+	protected T getObject(int index) { return null; }
 	
 	/**
 	 * Returns the T at the specified index.
@@ -166,7 +166,7 @@ public abstract class SparseMatrix {
 	 * @param coordinates	the coordinates from which to retrieve the indexed object
 	 * @return	the indexed object
 	 */
-	protected <T> T get(int[] coordinates) { return null; }
+	protected T get(int[] coordinates) { return null; }
 	
 	/**
 	 * Returns the T at the index computed from the specified coordinates
@@ -235,7 +235,7 @@ public abstract class SparseMatrix {
 	 * @return	the dense array
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T[] asDense(TypeFactory<T> factory) {
+	public T[] asDense(TypeFactory<T> factory) {
 		T[] retVal = (T[])Array.newInstance(factory.typeClass(), dimensions);
 		fill(factory, 0, dimensions, dimensions[0], retVal);
 		
@@ -254,7 +254,7 @@ public abstract class SparseMatrix {
 	 * @return a dynamically created multidimensional array
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
+	protected Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
 		if(dimensions.length == 1) {
 			for(int i = 0;i < count;i++) {
 				arr[i] = f.make(this.dimensions);

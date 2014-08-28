@@ -378,7 +378,7 @@ public class SpatialPoolerTest {
 	@Test
 	public void testCompute1() {
 		defaultSetup();
-		
+		parameters.setPotentialRadius(5);
 		initSP();
 	}
 

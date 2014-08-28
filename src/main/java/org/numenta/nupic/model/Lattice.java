@@ -14,9 +14,9 @@ import org.numenta.nupic.data.SparseMatrix;
  */
 public abstract class Lattice {
 	/** Main memory model and state */
-	protected SparseMatrix memory;
+	protected SparseMatrix<?> memory;
 	/** A matrix representing the shape of the input. */
-	protected SparseMatrix inputMatrix;
+	protected SparseMatrix<?> inputMatrix;
 	
 	protected Random random = new MersenneTwister(42);
 	
@@ -31,13 +31,13 @@ public abstract class Lattice {
 	 * 	
 	 * @return	the main memory matrix
 	 */
-	public abstract SparseMatrix getMemory();
+	public abstract SparseMatrix<?> getMemory();
 	
 	/**
 	 * Returns the input bit matrix
 	 * @return
 	 */
-	public abstract SparseMatrix getInputMatrix();
+	public abstract SparseMatrix<?> getInputMatrix();
 	
 	/**
 	 * Sets the {@link Random} number generator

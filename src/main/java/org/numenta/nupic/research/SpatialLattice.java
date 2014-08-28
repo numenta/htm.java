@@ -1,6 +1,7 @@
 package org.numenta.nupic.research;
 
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
@@ -20,6 +21,7 @@ public class SpatialLattice extends Lattice {
 	private double synPermInactiveDec = 0.01;
 	private double synPermActiveInc = 0.10;
 	private double synPermConnected = 0.10;
+	private double synPermBelowStimulusInc = synPermConnected / 10.0;
 	private double minPctOverlapDutyCycle = 0.001;
 	private double minPctActiveDutyCycle = 0.001;
 	private double dutyCyclePeriod = 1000;
@@ -55,7 +57,7 @@ public class SpatialLattice extends Lattice {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-	private SparseObjectMatrix<TIntArrayList> potentialPools;
+	private SparseObjectMatrix<int[]> potentialPools;
 	/**
 	 * Initialize the permanences for each column. Similar to the
      * 'self._potentialPools', the permanences are stored in a matrix whose rows
@@ -119,7 +121,7 @@ public class SpatialLattice extends Lattice {
 			numColumns *= columnDimensions[i];
 		}
 		
-		potentialPools = new SparseObjectMatrix<TIntArrayList>(new int[] { numColumns, numInputs } );
+		potentialPools = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
 		
 		permanences = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
 		
@@ -130,11 +132,11 @@ public class SpatialLattice extends Lattice {
 			}
 		}
 		/**
-		 * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
+		 * 'connectedSynapses' is a similar matrix to 'permanences'
 	     * (rows represent cortical columns, columns represent input bits) whose
 	     * entries represent whether the cortical column is connected to the input
 	     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-	     * this information is readily available from the 'self._permanence' matrix,
+	     * this information is readily available from the 'permanences' matrix,
 	     * it is stored separately for efficiency purposes.
 	     */
 		connectedSynapses = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
@@ -142,11 +144,11 @@ public class SpatialLattice extends Lattice {
 		connectedCounts = new int[numColumns];
 		// Initialize the set of permanence values for each column. Ensure that
 	    // each column is connected to enough input bits to allow it to be
-	    // activated.
+		// activated.
 		for(int i = 0;i < numColumns;i++) {
 			int[] potential = SpatialPooler.mapPotential(this, 0, true);
-			potentialPools.set(i, new TIntArrayList(potential));
-			double[] perm = SpatialPooler.initPermanence(this, potential, initConnectedPct);
+			potentialPools.set(i, potential);
+			double[] perm = SpatialPooler.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
 			SpatialPooler.updatePermanencesForColumn(this, perm, i, true);
 		}
 	}
@@ -156,7 +158,7 @@ public class SpatialLattice extends Lattice {
 	 * 	
 	 * @return	the main memory matrix
 	 */
-	public SparseMatrix getMemory() {
+	public SparseMatrix<?> getMemory() {
 		return memory;
 	}
 	
@@ -164,14 +166,14 @@ public class SpatialLattice extends Lattice {
 	 * Sets the {@link SparseMatrix} which contains the model elements
 	 * @param matrix
 	 */
-	public void setMemory(SparseMatrix matrix) {
+	public void setMemory(SparseMatrix<?> matrix) {
 		this.memory = matrix;
 	}
 	
 	/**
 	 * Returns the input column mapping
 	 */
-	public SparseMatrix getInputMatrix() {
+	public SparseMatrix<?> getInputMatrix() {
 		return inputMatrix;
 	}
 	
@@ -179,7 +181,7 @@ public class SpatialLattice extends Lattice {
 	 * Sets the input column mapping matrix
 	 * @param matrix
 	 */
-	public void setInputMatrix(SparseMatrix matrix) {
+	public void setInputMatrix(SparseMatrix<?> matrix) {
 		this.inputMatrix = matrix;
 	}
 	
@@ -223,7 +225,7 @@ public class SpatialLattice extends Lattice {
 	 * @see {@link #setPotentialRadius(int)}
 	 */
 	public int getPotentialRadius() {
-		return potentialRadius;
+		return Math.min(numInputs, potentialRadius);
 	}
 
 	/**
@@ -420,6 +422,16 @@ public class SpatialLattice extends Lattice {
 	public double getSynPermConnected() {
 		return synPermConnected;
 	}
+	
+	/**
+	 * Returns the stimulus increment for synapse permanences below 
+	 * the measured threshold.
+	 * 
+	 * @return
+	 */
+	public double getSynPermBelowStimulusInc() {
+		return synPermBelowStimulusInc;
+	}
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
@@ -577,5 +589,30 @@ public class SpatialLattice extends Lattice {
 	 */
 	public double getSynPermTrimThreshold() {
 		return synPermTrimThreshold;
+	}
+	
+	/**
+	 * Returns the {@link SparseObjectMatrix} which holds the mapping
+	 * of column indexes to their lists of potential inputs.
+	 * @return
+	 */
+	public SparseObjectMatrix<int[]> getPotentialPools() {
+		return this.potentialPools;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public double getSynPermMin() {
+		return synPermMin;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public double getSynPermMax() {
+		return synPermMax;
 	}
 }

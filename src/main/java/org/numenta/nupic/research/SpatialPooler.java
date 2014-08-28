@@ -23,6 +23,7 @@ package org.numenta.nupic.research;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,16 +41,39 @@ public class SpatialPooler {
 	}
 	
 	/**
+	 * This method ensures that each column has enough connections to input bits
+     * to allow it to become active. Since a column must have at least
+     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * inhibition phase, columns without such minimal number of connections, even
+     * if all the input bits they are connected to turn on, have no chance of
+     * obtaining the minimum threshold. For such columns, the permanence values
+     * are increased until the minimum number of connections are formed.
+     * 
+	 * @param l
+	 * @param perm
+	 * @param mask
+	 */
+	public static void raisePermanenceToThreshold(SpatialLattice l, double[] perm, int[] mask) {
+		ArrayUtils.clip(perm, l.getSynPermMin(), l.getSynPermMax());
+		while(true) {
+			int numConnected = ArrayUtils.valueGreaterCount(l.getSynPermConnected(), perm);
+			if(numConnected >= l.getStimulusThreshold()) return;
+			
+			ArrayUtils.raiseValuesBy(l.getSynPermBelowStimulusInc(), perm);
+		}
+	}
+	
+	/**
 	 * This method updates the permanence matrix with a column's new permanence
      * values. The column is identified by its index, which reflects the row in
      * the matrix, and the permanence is given in 'dense' form, i.e. a full
      * array containing all the zeros as well as the non-zero values. It is in
      * charge of implementing 'clipping' - ensuring that the permanence values are
      * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
-     * all permanence values below '_synPermTrimThreshold'. It also maintains
-     * the consistency between 'self._permanences' (the matrix storing the
-     * permanence values), 'self._connectedSynapses', (the matrix storing the bits
-     * each column is connected to), and 'self._connectedCounts' (an array storing
+     * all permanence values below 'synPermTrimThreshold'. It also maintains
+     * the consistency between 'permanences' (the matrix storing the
+     * permanence values), 'connectedSynapses', (the matrix storing the bits
+     * each column is connected to), and 'connectedCounts' (an array storing
      * the number of input bits each column is connected to). Every method wishing
      * to modify the permanence matrix should do so through this method.
      * 
@@ -64,8 +88,11 @@ public class SpatialPooler {
      *               			a connected state. Should be set to 'false' when a direct
      *               			assignment is required.
 	 */
-	public static void updatePermanencesForColumn(Lattice l, double[] perm, int columnIndex, boolean raisePerm) {
-		
+	public static void updatePermanencesForColumn(SpatialLattice l, double[] perm, int columnIndex, boolean raisePerm) {
+		int[] maskPotential = l.getPotentialPools().getObject(columnIndex); 
+		if(raisePerm) {
+			raisePermanenceToThreshold(l, perm, maskPotential);
+		}
 	}
 	
 	/**
@@ -81,7 +108,7 @@ public class SpatialPooler {
 	 */
 	public static double initPermConnected(SpatialLattice l) {
 		double p = l.getSynPermConnected() + l.getRandom().nextDouble() * l.getSynPermActiveInc() / 4.0;
-		p = ((int)p * 100000) / 100000.0d;
+		p = ((int)(p * 100000)) / 100000.0d;
 		return p;
 	}
 	
@@ -93,7 +120,7 @@ public class SpatialPooler {
 	 */
 	public static double initPermNonConnected(SpatialLattice l) {
 		double p = l.getSynPermConnected() * l.getRandom().nextDouble();
-		p = ((int)p * 100000) / 100000.0d;
+		p = ((int)(p * 100000)) / 100000.0d;
 		return p;
 	}
 	/**
@@ -111,10 +138,13 @@ public class SpatialPooler {
      *               			bits that will start off in a connected state.
 	 * @return
 	 */
-	public static double[] initPermanence(SpatialLattice l, int[] potentialPool, double connectedPct) {
-		double[] perm = new double[l.getNumInputs()];
+	public static double[] initPermanence(SpatialLattice l, TIntHashSet potentialPool, double connectedPct) {
+		int len = l.getNumInputs();
+		double[] perm = new double[len];
 		Arrays.fill(perm, 0);
-		for(int i = 0;i < potentialPool.length;i++) {
+		for(int i = 0;i < len;i++) {
+			if(!potentialPool.contains(i)) continue;
+			
 			if(l.getRandom().nextDouble() <= connectedPct) {
 				perm[i] = initPermConnected(l);
 			}else{
