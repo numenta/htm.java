@@ -1,6 +1,5 @@
 package org.numenta.nupic.research;
 
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
 import org.numenta.nupic.data.SparseBinaryMatrix;
