@@ -44,58 +44,58 @@ public class SpatialLattice extends Lattice {
 	private int iterationLearnNum = 0;
 	/**
 	 * Store the set of all inputs that are within each column's potential pool.
-     * 'potentialPools' is a matrix, whose rows represent cortical columns, and
-     * whose columns represent the input bits. if potentialPools[i][j] == 1,
-     * then input bit 'j' is in column 'i's potential pool. A column can only be
-     * connected to inputs in its potential pool. The indices refer to a
-     * flattened version of both the inputs and columns. Namely, irrespective
-     * of the topology of the inputs and columns, they are treated as being a
-     * one dimensional array. Since a column is typically connected to only a
-     * subset of the inputs, many of the entries in the matrix are 0. Therefore
-     * the potentialPool matrix is stored using the SparseBinaryMatrix
-     * class, to reduce memory footprint and computation time of algorithms that
-     * require iterating over the data structure.
-     */
+	 * 'potentialPools' is a matrix, whose rows represent cortical columns, and
+	 * whose columns represent the input bits. if potentialPools[i][j] == 1,
+	 * then input bit 'j' is in column 'i's potential pool. A column can only be
+	 * connected to inputs in its potential pool. The indices refer to a
+	 * flattened version of both the inputs and columns. Namely, irrespective
+	 * of the topology of the inputs and columns, they are treated as being a
+	 * one dimensional array. Since a column is typically connected to only a
+	 * subset of the inputs, many of the entries in the matrix are 0. Therefore
+	 * the potentialPool matrix is stored using the SparseBinaryMatrix
+	 * class, to reduce memory footprint and computation time of algorithms that
+	 * require iterating over the data structure.
+	 */
 	private SparseObjectMatrix<int[]> potentialPools;
 	/**
 	 * Initialize the permanences for each column. Similar to the
-     * 'self._potentialPools', the permanences are stored in a matrix whose rows
-     * represent the cortical columns, and whose columns represent the input
-     * bits. If self._permanences[i][j] = 0.2, then the synapse connecting
-     * cortical column 'i' to input bit 'j'  has a permanence of 0.2. Here we
-     * also use the SparseMatrix class to reduce the memory footprint and
-     * computation time of algorithms that require iterating over the data
-     * structure. This permanence matrix is only allowed to have non-zero
-     * elements where the potential pool is non-zero.
-     */
+	 * 'self._potentialPools', the permanences are stored in a matrix whose rows
+	 * represent the cortical columns, and whose columns represent the input
+	 * bits. If self._permanences[i][j] = 0.2, then the synapse connecting
+	 * cortical column 'i' to input bit 'j'  has a permanence of 0.2. Here we
+	 * also use the SparseMatrix class to reduce the memory footprint and
+	 * computation time of algorithms that require iterating over the data
+	 * structure. This permanence matrix is only allowed to have non-zero
+	 * elements where the potential pool is non-zero.
+	 */
 	private SparseDoubleMatrix permanences;
 	/**
 	 * Initialize a tiny random tie breaker. This is used to determine winning
-     * columns where the overlaps are identical.
-     */
+	 * columns where the overlaps are identical.
+	 */
 	private SparseDoubleMatrix tieBreaker;
 	/**
 	 * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
-     * (rows represent cortical columns, columns represent input bits) whose
-     * entries represent whether the cortical column is connected to the input
-     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-     * this information is readily available from the 'self._permanence' matrix,
-     * it is stored separately for efficiency purposes.
-     */
+	 * (rows represent cortical columns, columns represent input bits) whose
+	 * entries represent whether the cortical column is connected to the input
+	 * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+	 * this information is readily available from the 'self._permanence' matrix,
+	 * it is stored separately for efficiency purposes.
+	 */
 	private SparseBinaryMatrix connectedSynapses;
 	/** 
 	 * Stores the number of connected synapses for each column. This is simply
-     * a sum of each row of 'self._connectedSynapses'. again, while this
-     * information is readily available from 'self._connectedSynapses', it is
-     * stored separately for efficiency purposes.
+	 * a sum of each row of 'self._connectedSynapses'. again, while this
+	 * information is readily available from 'self._connectedSynapses', it is
+	 * stored separately for efficiency purposes.
 	 */
 	private int[] connectedCounts = new int[numColumns];
 	/**
 	 * The inhibition radius determines the size of a column's local
-     * neighborhood. of a column. A cortical column must overcome the overlap
-     * score of columns in his neighborhood in order to become actives. This
-     * radius is updated every learning round. It grows and shrinks with the
-     * average number of connected synapses per column.
+	 * neighborhood. of a column. A cortical column must overcome the overlap
+	 * score of columns in his neighborhood in order to become actives. This
+	 * radius is updated every learning round. It grows and shrinks with the
+	 * average number of connected synapses per column.
 	 */
 	private int inhibitionRadius = 0;
 	
@@ -132,17 +132,17 @@ public class SpatialLattice extends Lattice {
 		}
 		/**
 		 * 'connectedSynapses' is a similar matrix to 'permanences'
-	     * (rows represent cortical columns, columns represent input bits) whose
-	     * entries represent whether the cortical column is connected to the input
-	     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-	     * this information is readily available from the 'permanences' matrix,
-	     * it is stored separately for efficiency purposes.
-	     */
+		 * (rows represent cortical columns, columns represent input bits) whose
+		 * entries represent whether the cortical column is connected to the input
+		 * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+		 * this information is readily available from the 'permanences' matrix,
+		 * it is stored separately for efficiency purposes.
+		 */
 		connectedSynapses = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
 		
 		connectedCounts = new int[numColumns];
 		// Initialize the set of permanence values for each column. Ensure that
-	    // each column is connected to enough input bits to allow it to be
+		// each column is connected to enough input bits to allow it to be
 		// activated.
 		for(int i = 0;i < numColumns;i++) {
 			int[] potential = SpatialPooler.mapPotential(this, 0, true);
@@ -202,16 +202,16 @@ public class SpatialLattice extends Lattice {
 	
 	/**
 	 * This parameter determines the extent of the input
-     * that each column can potentially be connected to.
-     * This can be thought of as the input bits that
-     * are visible to each column, or a 'receptiveField' of
-     * the field of vision. A large enough value will result
-     * in 'global coverage', meaning that each column
-     * can potentially be connected to every input bit. This
-     * parameter defines a square (or hyper square) area: a
-     * column will have a max square potential pool with
-     * sides of length 2 * potentialRadius + 1.
-     * 
+	 * that each column can potentially be connected to.
+	 * This can be thought of as the input bits that
+	 * are visible to each column, or a 'receptiveField' of
+	 * the field of vision. A large enough value will result
+	 * in 'global coverage', meaning that each column
+	 * can potentially be connected to every input bit. This
+	 * parameter defines a square (or hyper square) area: a
+	 * column will have a max square potential pool with
+	 * sides of length 2 * potentialRadius + 1.
+	 * 
 	 * @param potentialRadius
 	 */
 	public void setPotentialRadius(int potentialRadius) {
@@ -229,16 +229,16 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The percent of the inputs, within a column's
-     * potential radius, that a column can be connected to.
-     * If set to 1, the column will be connected to every
-     * input within its potential radius. This parameter is
-     * used to give each column a unique potential pool when
-     * a large potentialRadius causes overlap between the
-     * columns. At initialization time we choose
-     * ((2*potentialRadius + 1)^(# inputDimensions) *
-     * potentialPct) input bits to comprise the column's
-     * potential pool.
-     * 
+	 * potential radius, that a column can be connected to.
+	 * If set to 1, the column will be connected to every
+	 * input within its potential radius. This parameter is
+	 * used to give each column a unique potential pool when
+	 * a large potentialRadius causes overlap between the
+	 * columns. At initialization time we choose
+	 * ((2*potentialRadius + 1)^(# inputDimensions) *
+	 * potentialPct) input bits to comprise the column's
+	 * potential pool.
+	 * 
 	 * @param potentialPct
 	 */
 	public void setPotentialPct(double potentialPct) {
@@ -257,12 +257,12 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * If true, then during inhibition phase the winning
-     * columns are selected as the most active columns from
-     * the region as a whole. Otherwise, the winning columns
-     * are selected with respect to their local
-     * neighborhoods. Using global inhibition boosts
-     * performance x60.
-     * 
+	 * columns are selected as the most active columns from
+	 * the region as a whole. Otherwise, the winning columns
+	 * are selected with respect to their local
+	 * neighborhoods. Using global inhibition boosts
+	 * performance x60.
+	 * 
 	 * @param globalInhibition
 	 */
 	public void setGlobalInhibition(boolean globalInhibition) {
@@ -280,15 +280,15 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The desired density of active columns within a local
-     * inhibition area (the size of which is set by the
-     * internally calculated inhibitionRadius, which is in
-     * turn determined from the average size of the
-     * connected potential pools of all columns). The
-     * inhibition logic will insure that at most N columns
-     * remain ON within a local inhibition area, where N =
-     * localAreaDensity * (total number of columns in
-     * inhibition area).
-     * 
+	 * inhibition area (the size of which is set by the
+	 * internally calculated inhibitionRadius, which is in
+	 * turn determined from the average size of the
+	 * connected potential pools of all columns). The
+	 * inhibition logic will insure that at most N columns
+	 * remain ON within a local inhibition area, where N =
+	 * localAreaDensity * (total number of columns in
+	 * inhibition area).
+	 * 
 	 * @param localAreaDensity
 	 */
 	public void setLocalAreaDensity(double localAreaDensity) {
@@ -306,22 +306,22 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * An alternate way to control the density of the active
-     * columns. If numActivePerInhArea is specified then
-     * localAreaDensity must be less than 0, and vice versa.
-     * When using numActivePerInhArea, the inhibition logic
-     * will insure that at most 'numActivePerInhArea'
-     * columns remain ON within a local inhibition area (the
-     * size of which is set by the internally calculated
-     * inhibitionRadius, which is in turn determined from
-     * the average size of the connected receptive fields of
-     * all columns). When using this method, as columns
-     * learn and grow their effective receptive fields, the
-     * inhibitionRadius will grow, and hence the net density
-     * of the active columns will *decrease*. This is in
-     * contrast to the localAreaDensity method, which keeps
-     * the density of active columns the same regardless of
-     * the size of their receptive fields.
-     * 
+	 * columns. If numActivePerInhArea is specified then
+	 * localAreaDensity must be less than 0, and vice versa.
+	 * When using numActivePerInhArea, the inhibition logic
+	 * will insure that at most 'numActivePerInhArea'
+	 * columns remain ON within a local inhibition area (the
+	 * size of which is set by the internally calculated
+	 * inhibitionRadius, which is in turn determined from
+	 * the average size of the connected receptive fields of
+	 * all columns). When using this method, as columns
+	 * learn and grow their effective receptive fields, the
+	 * inhibitionRadius will grow, and hence the net density
+	 * of the active columns will *decrease*. This is in
+	 * contrast to the localAreaDensity method, which keeps
+	 * the density of active columns the same regardless of
+	 * the size of their receptive fields.
+	 * 
 	 * @param numActiveColumnsPerInhArea
 	 */
 	public void setNumActiveColumnsPerInhArea(double numActiveColumnsPerInhArea) {
@@ -341,11 +341,11 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * This is a number specifying the minimum number of
-     * synapses that must be on in order for a columns to
-     * turn ON. The purpose of this is to prevent noise
-     * input from activating columns. Specified as a percent
-     * of a fully grown synapse.
-     * 
+	 * synapses that must be on in order for a columns to
+	 * turn ON. The purpose of this is to prevent noise
+	 * input from activating columns. Specified as a percent
+	 * of a fully grown synapse.
+	 * 
 	 * @param stimulusThreshold
 	 */
 	public void setStimulusThreshold(double stimulusThreshold) {
@@ -363,9 +363,9 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The amount by which an inactive synapse is
-     * decremented in each round. Specified as a percent of
-     * a fully grown synapse.
-     * 
+	 * decremented in each round. Specified as a percent of
+	 * a fully grown synapse.
+	 * 
 	 * @param synPermInactiveDec
 	 */
 	public void setSynPermInactiveDec(double synPermInactiveDec) {
@@ -383,9 +383,9 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The amount by which an active synapse is incremented
-     * in each round. Specified as a percent of a
-     * fully grown synapse.
-     * 
+	 * in each round. Specified as a percent of a
+	 * fully grown synapse.
+	 * 
 	 * @param synPermActiveInc
 	 */
 	public void setSynPermActiveInc(double synPermActiveInc) {
@@ -403,10 +403,10 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The default connected threshold. Any synapse whose
-     * permanence value is above the connected threshold is
-     * a "connected synapse", meaning it can contribute to
-     * the cell's firing.
-     * 
+	 * permanence value is above the connected threshold is
+	 * a "connected synapse", meaning it can contribute to
+	 * the cell's firing.
+	 * 
 	 * @param minPctOverlapDutyCycle
 	 */
 	public void setSynPermConnected(double synPermConnected) {
@@ -434,23 +434,23 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
-     * how often a column should have at least
-     * stimulusThreshold active inputs. Periodically, each
-     * column looks at the overlap duty cycle of
-     * all other columns within its inhibition radius and
-     * sets its own internal minimal acceptable duty cycle
-     * to: minPctDutyCycleBeforeInh * max(other columns'
-     * duty cycles).
-     * On each iteration, any column whose overlap duty
-     * cycle falls below this computed value will  get
-     * all of its permanence values boosted up by
-     * synPermActiveInc. Raising all permanences in response
-     * to a sub-par duty cycle before  inhibition allows a
-     * cell to search for new inputs when either its
-     * previously learned inputs are no longer ever active,
-     * or when the vast majority of them have been
-     * "hijacked" by other columns.
-     * 
+	 * how often a column should have at least
+	 * stimulusThreshold active inputs. Periodically, each
+	 * column looks at the overlap duty cycle of
+	 * all other columns within its inhibition radius and
+	 * sets its own internal minimal acceptable duty cycle
+	 * to: minPctDutyCycleBeforeInh * max(other columns'
+	 * duty cycles).
+	 * On each iteration, any column whose overlap duty
+	 * cycle falls below this computed value will  get
+	 * all of its permanence values boosted up by
+	 * synPermActiveInc. Raising all permanences in response
+	 * to a sub-par duty cycle before  inhibition allows a
+	 * cell to search for new inputs when either its
+	 * previously learned inputs are no longer ever active,
+	 * or when the vast majority of them have been
+	 * "hijacked" by other columns.
+	 * 
 	 * @param minPctOverlapDutyCycle
 	 */
 	public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycle) {
@@ -467,17 +467,17 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
-     * how often a column should be activate.
-     * Periodically, each column looks at the activity duty
-     * cycle of all other columns within its inhibition
-     * radius and sets its own internal minimal acceptable
-     * duty cycle to:
-     *   minPctDutyCycleAfterInh *
-     *   max(other columns' duty cycles).
-     * On each iteration, any column whose duty cycle after
-     * inhibition falls below this computed value will get
-     * its internal boost factor increased.
-     * 
+	 * how often a column should be activate.
+	 * Periodically, each column looks at the activity duty
+	 * cycle of all other columns within its inhibition
+	 * radius and sets its own internal minimal acceptable
+	 * duty cycle to:
+	 *   minPctDutyCycleAfterInh *
+	 *   max(other columns' duty cycles).
+	 * On each iteration, any column whose duty cycle after
+	 * inhibition falls below this computed value will get
+	 * its internal boost factor increased.
+	 * 
 	 * @param minPctActiveDutyCycle
 	 */
 	public void setMinPctActiveDutyCycle(double minPctActiveDutyCycle) {
@@ -495,10 +495,10 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The period used to calculate duty cycles. Higher
-     * values make it take longer to respond to changes in
-     * boost or synPerConnectedCell. Shorter values make it
-     * more unstable and likely to oscillate.
-     * 
+	 * values make it take longer to respond to changes in
+	 * boost or synPerConnectedCell. Shorter values make it
+	 * more unstable and likely to oscillate.
+	 * 
 	 * @param dutyCyclePeriod
 	 */
 	public void setDutyCyclePeriod(double dutyCyclePeriod) {
@@ -516,15 +516,15 @@ public class SpatialLattice extends Lattice {
 
 	/**
 	 * The maximum overlap boost factor. Each column's
-     * overlap gets multiplied by a boost factor
-     * before it gets considered for inhibition.
-     * The actual boost factor for a column is number
-     * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
-     * maxBoost is used if the duty cycle is 0, and any duty
-     * cycle in between is linearly extrapolated from these
-     * 2 endpoints.
-     * 
+	 * overlap gets multiplied by a boost factor
+	 * before it gets considered for inhibition.
+	 * The actual boost factor for a column is number
+	 * between 1.0 and maxBoost. A boost factor of 1.0 is
+	 * used if the duty cycle is >= minOverlapDutyCycle,
+	 * maxBoost is used if the duty cycle is 0, and any duty
+	 * cycle in between is linearly extrapolated from these
+	 * 2 endpoints.
+	 * 
 	 * @param maxBoost
 	 */
 	public void setMaxBoost(double maxBoost) {

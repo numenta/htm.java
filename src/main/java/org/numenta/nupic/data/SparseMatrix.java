@@ -210,11 +210,11 @@ public abstract class SparseMatrix<T> {
 	 */
 	private void visit(int[] bounds, int currentDimension, int[] p, TIntList results) {
 		for (int i = 0; i < bounds[currentDimension]; i++) {
-	        p[currentDimension] = i;
-	        if (currentDimension == p.length - 1) {
-	        	results.add(computeIndex(p));
-	        }
-	        else visit(bounds, currentDimension + 1, p, results);
+			p[currentDimension] = i;
+			if (currentDimension == p.length - 1) {
+				results.add(computeIndex(p));
+			}
+			else visit(bounds, currentDimension + 1, p, results);
 		}
 	}
 	
@@ -487,17 +487,17 @@ public abstract class SparseMatrix<T> {
 	 * @return	the array in string form suitable for display.
 	 */
 	public static String print1DArray(Object aObject) {
-	    if (aObject.getClass().isArray()) {
-	        if (aObject instanceof Object[]) // can we cast to Object[]
-	            return Arrays.toString((Object[]) aObject);
-	        else {  // we can't cast to Object[] - case of primitive arrays
-	            int length = Array.getLength(aObject);
-	            Object[] objArr = new Object[length];
-	            for (int i=0; i<length; i++)
-	                objArr[i] =  Array.get(aObject, i);
-	            return Arrays.toString(objArr);
-	        }
-	    }
-	    return "[]";
+		if (aObject.getClass().isArray()) {
+			if (aObject instanceof Object[]) // can we cast to Object[]
+				return Arrays.toString((Object[]) aObject);
+			else {  // we can't cast to Object[] - case of primitive arrays
+				int length = Array.getLength(aObject);
+				Object[] objArr = new Object[length];
+				for (int i=0; i<length; i++)
+					objArr[i] =  Array.get(aObject, i);
+				return Arrays.toString(objArr);
+			}
+		}
+		return "[]";
 	}
 }

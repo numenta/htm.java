@@ -92,8 +92,8 @@ public class DistalDendrite {
 	
 	/**
 	 * Returns the synapses on a segment that are active due to lateral input
-     * from active cells.
-     * 
+	 * from active cells.
+	 * 
 	 * @param activeSynapsesForSegment
 	 * @param permanenceThreshold
 	 * @return

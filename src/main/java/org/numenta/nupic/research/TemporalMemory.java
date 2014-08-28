@@ -48,18 +48,18 @@ public class TemporalMemory {
 	/** 
 	 * If the number of active connected synapses on a segment 
 	 * is at least this threshold, the segment is said to be active.
-     */
+	 */
 	private int activationThreshold = 13;
 	/**
 	 * Radius around cell from which it can
-     * sample to form distal {@link DistalDendrite} connections.
+	 * sample to form distal {@link DistalDendrite} connections.
 	 */
 	@SuppressWarnings("unused")
 	private int learningRadius = 2048;
 	/**
 	 * If the number of synapses active on a segment is at least this
 	 * threshold, it is selected as the best matching
-     * cell in a bursting column.
+	 * cell in a bursting column.
 	 */
 	private int minThreshold = 10;
 	/** The maximum number of synapses added to a segment during learning. */
@@ -69,7 +69,7 @@ public class TemporalMemory {
 	/**
 	 * If the permanence value for a synapse
 	 * is greater than this value, it is said
-     * to be connected.
+	 * to be connected.
 	 */
 	private double connectedPermanence = 0.50;
 	/** 
@@ -192,9 +192,9 @@ public class TemporalMemory {
 
 	/**
 	 * Radius around cell from which it can
-     * sample to form distal dendrite connections.
-     * 
-     * @param	learningRadius
+	 * sample to form distal dendrite connections.
+	 * 
+	 * @param	learningRadius
 	 */
 	public void setLearningRadius(int learningRadius) {
 		this.learningRadius = learningRadius;
@@ -203,9 +203,9 @@ public class TemporalMemory {
 	/**
 	 * If the number of synapses active on a segment is at least this
 	 * threshold, it is selected as the best matching
-     * cell in a bursing column.
-     * 
-     * @param	minThreshold
+	 * cell in a bursing column.
+	 * 
+	 * @param	minThreshold
 	 */
 	public void setMinThreshold(int minThreshold) {
 		this.minThreshold = minThreshold;
@@ -241,9 +241,9 @@ public class TemporalMemory {
 	/**
 	 * If the permanence value for a synapse
 	 * is greater than this value, it is said
-     * to be connected.
-     * 
-     * @param connectedPermanence
+	 * to be connected.
+	 * 
+	 * @param connectedPermanence
 	 */
 	public void setConnectedPermanence(double connectedPermanence) {
 		this.connectedPermanence = connectedPermanence;
@@ -351,13 +351,13 @@ public class TemporalMemory {
 	 * Phase 1: Activate the correctly predictive cells
 	 * 
 	 * Pseudocode:
-     *
-     * - for each prev predictive cell
-     *   - if in active column
-     *     - mark it as active
-     *     - mark it as winner cell
-     *     - mark column as predicted
-     *     
+	 *
+	 * - for each prev predictive cell
+	 *   - if in active column
+	 *	 - mark it as active
+	 *	 - mark it as winner cell
+	 *	 - mark column as predicted
+	 *	 
 	 * @param c						ComputeCycle interim values container
 	 * @param prevPredictiveCells	predictive {@link Cell}s predictive cells in t-1
 	 * @param activeColumns			active columns in t
@@ -377,22 +377,22 @@ public class TemporalMemory {
 	 * Phase 2: Burst unpredicted columns.
 	 * 
 	 * Pseudocode:
-     *
-     * - for each unpredicted active column
-     *   - mark all cells as active
-     *   - mark the best matching cell as winner cell
-     *     - (learning)
-     *       - if it has no matching segment
-     *         - (optimization) if there are prev winner cells
-     *           - add a segment to it
-     *       - mark the segment as learning
+	 *
+	 * - for each unpredicted active column
+	 *   - mark all cells as active
+	 *   - mark the best matching cell as winner cell
+	 *	 - (learning)
+	 *	   - if it has no matching segment
+	 *		 - (optimization) if there are prev winner cells
+	 *		   - add a segment to it
+	 *	   - mark the segment as learning
 	 * 
-	 * @param cycle						    ComputeCycle interim values container
+	 * @param cycle							ComputeCycle interim values container
 	 * @param c								Connections temporal memory state
 	 * @param activeColumns					active columns in t
 	 * @param predictedColumns				predicted columns in t
 	 * @param prevActiveSynapsesForSegment		LinkedHashMap of previously active segments which
-	 * 										have had synapses marked as active in t-1     
+	 * 										have had synapses marked as active in t-1	 
 	 */
 	public void burstColumns(ComputeCycle cycle, Connections c, Set<Column> activeColumns, Set<Column> predictedColumns, 
 		Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
@@ -424,17 +424,17 @@ public class TemporalMemory {
 	 * Phase 3: Perform learning by adapting segments.
 	 * <pre>
 	 * Pseudocode:
-     *
-     * - (learning) for each prev active or learning segment
-     *   - if learning segment or from winner cell
-     *     - strengthen active synapses
-     *     - weaken inactive synapses
-     *   - if learning segment
-     *     - add some synapses to the segment
-     *       - subsample from prev winner cells
-     * </pre>     
-     *       
-     * @param c								the Connections state of the temporal memory
+	 *
+	 * - (learning) for each prev active or learning segment
+	 *   - if learning segment or from winner cell
+	 *	 - strengthen active synapses
+	 *	 - weaken inactive synapses
+	 *   - if learning segment
+	 *	 - add some synapses to the segment
+	 *	   - subsample from prev winner cells
+	 * </pre>	 
+	 *	   
+	 * @param c								the Connections state of the temporal memory
 	 * @param prevActiveSegments
 	 * @param learningSegments
 	 * @param prevActiveSynapseSegments
@@ -471,11 +471,11 @@ public class TemporalMemory {
 	/**
 	 * Phase 4: Compute predictive cells due to lateral input on distal dendrites.
 	 *
-     * Pseudocode:
-     *
-     * - for each distal dendrite segment with activity >= activationThreshold
-     *   - mark the segment as active
-     *   - mark the cell as predictive
+	 * Pseudocode:
+	 *
+	 * - for each distal dendrite segment with activity >= activationThreshold
+	 *   - mark the segment as active
+	 *   - mark the cell as predictive
 	 * 
 	 * @param c					the Connections state of the temporal memory
 	 * @param activeSegments
@@ -492,9 +492,9 @@ public class TemporalMemory {
 	
 	/**
 	 * Forward propagates activity from active cells to the synapses that touch
-     * them, to determine which synapses are active.
-     * 
-     * @param	c			the connections state of the temporal memory
+	 * them, to determine which synapses are active.
+	 * 
+	 * @param	c			the connections state of the temporal memory
 	 * @param cellsActive
 	 * @return 
 	 */

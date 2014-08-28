@@ -93,17 +93,17 @@ public class Parameters {
 	/** 
 	 * If the number of active connected synapses on a segment 
 	 * is at least this threshold, the segment is said to be active.
-     */
+	 */
 	private int activationThreshold = 13;
 	/**
 	 * Radius around cell from which it can
-     * sample to form distal {@link Dendrite} connections.
+	 * sample to form distal {@link Dendrite} connections.
 	 */
 	private int learningRadius = 2048;
 	/**
 	 * If the number of synapses active on a segment is at least this
 	 * threshold, it is selected as the best matching
-     * cell in a bursting column.
+	 * cell in a bursting column.
 	 */
 	private int minThreshold = 10;
 	/** The maximum number of synapses added to a segment during learning. */
@@ -115,7 +115,7 @@ public class Parameters {
 	/**
 	 * If the permanence value for a synapse
 	 * is greater than this value, it is said
-     * to be connected.
+	 * to be connected.
 	 */
 	private double connectedPermanence = 0.50;
 	/** 
@@ -318,9 +318,9 @@ public class Parameters {
 
 	/**
 	 * Radius around cell from which it can
-     * sample to form distal dendrite connections.
-     * 
-     * @param	learningRadius
+	 * sample to form distal dendrite connections.
+	 * 
+	 * @param	learningRadius
 	 */
 	public void setLearningRadius(int learningRadius) {
 		this.learningRadius = learningRadius;
@@ -330,9 +330,9 @@ public class Parameters {
 	/**
 	 * If the number of synapses active on a segment is at least this
 	 * threshold, it is selected as the best matching
-     * cell in a bursing column.
-     * 
-     * @param	minThreshold
+	 * cell in a bursing column.
+	 * 
+	 * @param	minThreshold
 	 */
 	public void setMinThreshold(int minThreshold) {
 		this.minThreshold = minThreshold;
@@ -372,9 +372,9 @@ public class Parameters {
 	/**
 	 * If the permanence value for a synapse
 	 * is greater than this value, it is said
-     * to be connected.
-     * 
-     * @param connectedPermanence
+	 * to be connected.
+	 * 
+	 * @param connectedPermanence
 	 */
 	public void setConnectedPermanence(double connectedPermanence) {
 		this.connectedPermanence = connectedPermanence;
@@ -407,12 +407,12 @@ public class Parameters {
 	
 	/**
 	 * A list representing the dimensions of the input
-     * vector. Format is [height, width, depth, ...], where
-     * each value represents the size of the dimension. For a
-     * topology of one dimension with 100 inputs use 100, or
-     * [100]. For a two dimensional topology of 10x5 use
-     * [10,5].
-     * 
+	 * vector. Format is [height, width, depth, ...], where
+	 * each value represents the size of the dimension. For a
+	 * topology of one dimension with 100 inputs use 100, or
+	 * [100]. For a two dimensional topology of 10x5 use
+	 * [10,5].
+	 * 
 	 * @param inputDimensions
 	 */
 	public void setInputDimensions(int[] inputDimensions) {
@@ -422,16 +422,16 @@ public class Parameters {
 	
 	/**
 	 * This parameter determines the extent of the input
-     * that each column can potentially be connected to.
-     * This can be thought of as the input bits that
-     * are visible to each column, or a 'receptiveField' of
-     * the field of vision. A large enough value will result
-     * in 'global coverage', meaning that each column
-     * can potentially be connected to every input bit. This
-     * parameter defines a square (or hyper square) area: a
-     * column will have a max square potential pool with
-     * sides of length 2 * potentialRadius + 1.
-     * 
+	 * that each column can potentially be connected to.
+	 * This can be thought of as the input bits that
+	 * are visible to each column, or a 'receptiveField' of
+	 * the field of vision. A large enough value will result
+	 * in 'global coverage', meaning that each column
+	 * can potentially be connected to every input bit. This
+	 * parameter defines a square (or hyper square) area: a
+	 * column will have a max square potential pool with
+	 * sides of length 2 * potentialRadius + 1.
+	 * 
 	 * @param potentialRadius
 	 */
 	public void setPotentialRadius(int potentialRadius) {
@@ -441,16 +441,16 @@ public class Parameters {
 
 	/**
 	 * The percent of the inputs, within a column's
-     * potential radius, that a column can be connected to.
-     * If set to 1, the column will be connected to every
-     * input within its potential radius. This parameter is
-     * used to give each column a unique potential pool when
-     * a large potentialRadius causes overlap between the
-     * columns. At initialization time we choose
-     * ((2*potentialRadius + 1)^(# inputDimensions) *
-     * potentialPct) input bits to comprise the column's
-     * potential pool.
-     * 
+	 * potential radius, that a column can be connected to.
+	 * If set to 1, the column will be connected to every
+	 * input within its potential radius. This parameter is
+	 * used to give each column a unique potential pool when
+	 * a large potentialRadius causes overlap between the
+	 * columns. At initialization time we choose
+	 * ((2*potentialRadius + 1)^(# inputDimensions) *
+	 * potentialPct) input bits to comprise the column's
+	 * potential pool.
+	 * 
 	 * @param potentialPct
 	 */
 	public void setPotentialPct(double potentialPct) {
@@ -460,12 +460,12 @@ public class Parameters {
 
 	/**
 	 * If true, then during inhibition phase the winning
-     * columns are selected as the most active columns from
-     * the region as a whole. Otherwise, the winning columns
-     * are selected with respect to their local
-     * neighborhoods. Using global inhibition boosts
-     * performance x60.
-     * 
+	 * columns are selected as the most active columns from
+	 * the region as a whole. Otherwise, the winning columns
+	 * are selected with respect to their local
+	 * neighborhoods. Using global inhibition boosts
+	 * performance x60.
+	 * 
 	 * @param globalInhibition
 	 */
 	public void setGlobalInhibition(boolean globalInhibition) {
@@ -475,15 +475,15 @@ public class Parameters {
 
 	/**
 	 * The desired density of active columns within a local
-     * inhibition area (the size of which is set by the
-     * internally calculated inhibitionRadius, which is in
-     * turn determined from the average size of the
-     * connected potential pools of all columns). The
-     * inhibition logic will insure that at most N columns
-     * remain ON within a local inhibition area, where N =
-     * localAreaDensity * (total number of columns in
-     * inhibition area).
-     * 
+	 * inhibition area (the size of which is set by the
+	 * internally calculated inhibitionRadius, which is in
+	 * turn determined from the average size of the
+	 * connected potential pools of all columns). The
+	 * inhibition logic will insure that at most N columns
+	 * remain ON within a local inhibition area, where N =
+	 * localAreaDensity * (total number of columns in
+	 * inhibition area).
+	 * 
 	 * @param localAreaDensity
 	 */
 	public void setLocalAreaDensity(double localAreaDensity) {
@@ -493,22 +493,22 @@ public class Parameters {
 
 	/**
 	 * An alternate way to control the density of the active
-     * columns. If numActivePerInhArea is specified then
-     * localAreaDensity must be less than 0, and vice versa.
-     * When using numActivePerInhArea, the inhibition logic
-     * will insure that at most 'numActivePerInhArea'
-     * columns remain ON within a local inhibition area (the
-     * size of which is set by the internally calculated
-     * inhibitionRadius, which is in turn determined from
-     * the average size of the connected receptive fields of
-     * all columns). When using this method, as columns
-     * learn and grow their effective receptive fields, the
-     * inhibitionRadius will grow, and hence the net density
-     * of the active columns will *decrease*. This is in
-     * contrast to the localAreaDensity method, which keeps
-     * the density of active columns the same regardless of
-     * the size of their receptive fields.
-     * 
+	 * columns. If numActivePerInhArea is specified then
+	 * localAreaDensity must be less than 0, and vice versa.
+	 * When using numActivePerInhArea, the inhibition logic
+	 * will insure that at most 'numActivePerInhArea'
+	 * columns remain ON within a local inhibition area (the
+	 * size of which is set by the internally calculated
+	 * inhibitionRadius, which is in turn determined from
+	 * the average size of the connected receptive fields of
+	 * all columns). When using this method, as columns
+	 * learn and grow their effective receptive fields, the
+	 * inhibitionRadius will grow, and hence the net density
+	 * of the active columns will *decrease*. This is in
+	 * contrast to the localAreaDensity method, which keeps
+	 * the density of active columns the same regardless of
+	 * the size of their receptive fields.
+	 * 
 	 * @param numActiveColumnsPerInhArea
 	 */
 	public void setNumActiveColumnsPerInhArea(double numActiveColumnsPerInhArea) {
@@ -518,11 +518,11 @@ public class Parameters {
 
 	/**
 	 * This is a number specifying the minimum number of
-     * synapses that must be on in order for a columns to
-     * turn ON. The purpose of this is to prevent noise
-     * input from activating columns. Specified as a percent
-     * of a fully grown synapse.
-     * 
+	 * synapses that must be on in order for a columns to
+	 * turn ON. The purpose of this is to prevent noise
+	 * input from activating columns. Specified as a percent
+	 * of a fully grown synapse.
+	 * 
 	 * @param stimulusThreshold
 	 */
 	public void setStimulusThreshold(double stimulusThreshold) {
@@ -532,9 +532,9 @@ public class Parameters {
 
 	/**
 	 * The amount by which an inactive synapse is
-     * decremented in each round. Specified as a percent of
-     * a fully grown synapse.
-     * 
+	 * decremented in each round. Specified as a percent of
+	 * a fully grown synapse.
+	 * 
 	 * @param synPermInactiveDec
 	 */
 	public void setSynPermInactiveDec(double synPermInactiveDec) {
@@ -544,9 +544,9 @@ public class Parameters {
 
 	/**
 	 * The amount by which an active synapse is incremented
-     * in each round. Specified as a percent of a
-     * fully grown synapse.
-     * 
+	 * in each round. Specified as a percent of a
+	 * fully grown synapse.
+	 * 
 	 * @param synPermActiveInc
 	 */
 	public void setSynPermActiveInc(double synPermActiveInc) {
@@ -556,10 +556,10 @@ public class Parameters {
 
 	/**
 	 * The default connected threshold. Any synapse whose
-     * permanence value is above the connected threshold is
-     * a "connected synapse", meaning it can contribute to
-     * the cell's firing.
-     * 
+	 * permanence value is above the connected threshold is
+	 * a "connected synapse", meaning it can contribute to
+	 * the cell's firing.
+	 * 
 	 * @param minPctOverlapDutyCycle
 	 */
 	public void setSynPermConnected(double synPermConnected) {
@@ -569,23 +569,23 @@ public class Parameters {
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
-     * how often a column should have at least
-     * stimulusThreshold active inputs. Periodically, each
-     * column looks at the overlap duty cycle of
-     * all other columns within its inhibition radius and
-     * sets its own internal minimal acceptable duty cycle
-     * to: minPctDutyCycleBeforeInh * max(other columns'
-     * duty cycles).
-     * On each iteration, any column whose overlap duty
-     * cycle falls below this computed value will  get
-     * all of its permanence values boosted up by
-     * synPermActiveInc. Raising all permanences in response
-     * to a sub-par duty cycle before  inhibition allows a
-     * cell to search for new inputs when either its
-     * previously learned inputs are no longer ever active,
-     * or when the vast majority of them have been
-     * "hijacked" by other columns.
-     * 
+	 * how often a column should have at least
+	 * stimulusThreshold active inputs. Periodically, each
+	 * column looks at the overlap duty cycle of
+	 * all other columns within its inhibition radius and
+	 * sets its own internal minimal acceptable duty cycle
+	 * to: minPctDutyCycleBeforeInh * max(other columns'
+	 * duty cycles).
+	 * On each iteration, any column whose overlap duty
+	 * cycle falls below this computed value will  get
+	 * all of its permanence values boosted up by
+	 * synPermActiveInc. Raising all permanences in response
+	 * to a sub-par duty cycle before  inhibition allows a
+	 * cell to search for new inputs when either its
+	 * previously learned inputs are no longer ever active,
+	 * or when the vast majority of them have been
+	 * "hijacked" by other columns.
+	 * 
 	 * @param minPctOverlapDutyCycle
 	 */
 	public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycle) {
@@ -595,17 +595,17 @@ public class Parameters {
 
 	/**
 	 * A number between 0 and 1.0, used to set a floor on
-     * how often a column should be activate.
-     * Periodically, each column looks at the activity duty
-     * cycle of all other columns within its inhibition
-     * radius and sets its own internal minimal acceptable
-     * duty cycle to:
-     *   minPctDutyCycleAfterInh *
-     *   max(other columns' duty cycles).
-     * On each iteration, any column whose duty cycle after
-     * inhibition falls below this computed value will get
-     * its internal boost factor increased.
-     * 
+	 * how often a column should be activate.
+	 * Periodically, each column looks at the activity duty
+	 * cycle of all other columns within its inhibition
+	 * radius and sets its own internal minimal acceptable
+	 * duty cycle to:
+	 *   minPctDutyCycleAfterInh *
+	 *   max(other columns' duty cycles).
+	 * On each iteration, any column whose duty cycle after
+	 * inhibition falls below this computed value will get
+	 * its internal boost factor increased.
+	 * 
 	 * @param minPctActiveDutyCycle
 	 */
 	public void setMinPctActiveDutyCycle(double minPctActiveDutyCycle) {
@@ -615,10 +615,10 @@ public class Parameters {
 
 	/**
 	 * The period used to calculate duty cycles. Higher
-     * values make it take longer to respond to changes in
-     * boost or synPerConnectedCell. Shorter values make it
-     * more unstable and likely to oscillate.
-     * 
+	 * values make it take longer to respond to changes in
+	 * boost or synPerConnectedCell. Shorter values make it
+	 * more unstable and likely to oscillate.
+	 * 
 	 * @param dutyCyclePeriod
 	 */
 	public void setDutyCyclePeriod(double dutyCyclePeriod) {
@@ -628,15 +628,15 @@ public class Parameters {
 
 	/**
 	 * The maximum overlap boost factor. Each column's
-     * overlap gets multiplied by a boost factor
-     * before it gets considered for inhibition.
-     * The actual boost factor for a column is number
-     * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
-     * maxBoost is used if the duty cycle is 0, and any duty
-     * cycle in between is linearly extrapolated from these
-     * 2 endpoints.
-     * 
+	 * overlap gets multiplied by a boost factor
+	 * before it gets considered for inhibition.
+	 * The actual boost factor for a column is number
+	 * between 1.0 and maxBoost. A boost factor of 1.0 is
+	 * used if the duty cycle is >= minOverlapDutyCycle,
+	 * maxBoost is used if the duty cycle is 0, and any duty
+	 * cycle in between is linearly extrapolated from these
+	 * 2 endpoints.
+	 * 
 	 * @param maxBoost
 	 */
 	public void setMaxBoost(double maxBoost) {

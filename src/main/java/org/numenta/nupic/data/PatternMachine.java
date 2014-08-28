@@ -56,8 +56,8 @@ public class PatternMachine {
 	
 	/**
 	 * @param n   Number of available bits in pattern
-     * @param w   Number of on bits in pattern
-     * @param num Number of available patterns
+	 * @param w   Number of on bits in pattern
+	 * @param num Number of available patterns
 	 * 
 	 * Constructs a new {@code PatternMachine}
 	 */
@@ -67,8 +67,8 @@ public class PatternMachine {
 	
 	/**
 	 * @param n   Number of available bits in pattern
-     * @param w   Number of on bits in pattern
-     * @param num Number of available patterns
+	 * @param w   Number of on bits in pattern
+	 * @param num Number of available patterns
 	 * 
 	 * Constructs a new {@code PatternMachine}
 	 */
@@ -125,8 +125,8 @@ public class PatternMachine {
 	
 	/**
 	 * Return a map from number to matching on bits,
-     * for all numbers that match a set of bits.
-     * 
+	 * for all numbers that match a set of bits.
+	 * 
 	 * @param bits
 	 * @return
 	 */
