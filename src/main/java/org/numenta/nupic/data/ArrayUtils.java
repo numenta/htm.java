@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Utilities to match some of the functionality found in Python's Numpy.
@@ -248,5 +249,75 @@ public class ArrayUtils {
 		resultList.add(coords);
 		//Return null if we've added all indexes for each dimension
 		return null;
+	}
+
+	 /**
+	  * Returns a random, sorted, and  unique array of the specified sample size of 
+	  * selections from the specified list of choices.
+	  * 
+	  * @param sampleSize	the number of selections in the returned sample
+	  * @param choices		the list of choices to select from
+	  * @param random		a random number generator
+	  * @return	a sample of numbers of the specified size
+	  */
+	public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
+		TIntHashSet temp = new TIntHashSet();
+		int upperBound = choices.size();
+		for(int i = 0;i < sampleSize;i++) {
+			int randomIdx = random.nextInt(upperBound);
+			while(temp.contains(choices.get(randomIdx))) {
+				randomIdx = random.nextInt(upperBound);
+			}
+			temp.add(choices.get(randomIdx));
+		}
+		TIntArrayList al = new TIntArrayList(temp);
+		al.sort();
+		return al.toArray();
+	}
+	
+	/**
+	 * Ensures that each entry in the specified array has a min value
+	 * equal to or greater than the specified min and a maximum value less
+	 * than or equal to the specified max.
+	 * 
+	 * @param values	the values to clip
+	 * @param min		the minimum value
+	 * @param max		the maximum value
+	 */
+	public static void clip(double[] values, double min, double max) {
+		for(int i = 0;i < values.length;i++) {
+			values[i] = Math.min(1, Math.max(0, values[i]));
+		}
+	}
+	
+	/**
+	 * Returns the count of values in the specified array that are
+	 * greater than the specified compare value
+	 * 
+	 * @param compare	the value to compare to
+	 * @param array		the values being compared
+	 * 
+	 * @return	the count of values greater
+	 */
+	public static int valueGreaterCount(double compare, double[] array) {
+		int count = 0;
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] > compare) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
+	/**
+	 * Raises the values in the specified array by the amount specified
+	 * @param amount		the amount to raise the values
+	 * @param values		the values to raise
+	 */
+	public static void raiseValuesBy(double amount, double[] values) {
+		for(int i = 0;i < values.length;i++) {
+			values[i] += amount;
+		}
 	}
 }

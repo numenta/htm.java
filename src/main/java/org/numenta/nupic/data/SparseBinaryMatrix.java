@@ -27,9 +27,9 @@ import gnu.trove.list.TIntList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
+@SuppressWarnings("rawtypes")
 public class SparseBinaryMatrix extends SparseMatrix {
 	private TIntIntMap sparseMap = new TIntIntHashMap();
 	
@@ -47,7 +47,6 @@ public class SparseBinaryMatrix extends SparseMatrix {
 	 * @param index		the index the object will occupy
 	 * @param object	the object to be indexed.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public SparseBinaryMatrix set(int index, int value) {
 		sparseMap.put(index, value);
@@ -61,7 +60,6 @@ public class SparseBinaryMatrix extends SparseMatrix {
 	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
 	 * @param object		the object to be indexed.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public SparseBinaryMatrix set(int[] coordinates, int value) {
 		set(computeIndex(coordinates), value);
@@ -124,22 +122,23 @@ public class SparseBinaryMatrix extends SparseMatrix {
 	 * @param arr				the array to fill
 	 * @return a dynamically created multidimensional array
 	 */
-	@SuppressWarnings("unchecked")
-	protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
-		if(dimensions.length == 1) {
-			for(int i = 0;i < count;i++) {
-				arr[i] = f.make(dimensionIndex);
-			}
-			return arr;
-		}else{
-			for(int i = 0;i < count;i++) {
-				int[] inner = copyInnerArray(dimensions);
-				T[] r = (T[])Array.newInstance(f.typeClass(), inner);
-				arr[i] = (Object[])fill(f, dimensionIndex + 1, inner, this.dimensions[dimensionIndex + 1], r);
-			}
-			return (T[])arr;
-		}
-	}
+//	@SuppressWarnings("unchecked")
+//	@Override
+//	protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
+//		if(dimensions.length == 1) {
+//			for(int i = 0;i < count;i++) {
+//				arr[i] = f.make(dimensionIndex);
+//			}
+//			return arr;
+//		}else{
+//			for(int i = 0;i < count;i++) {
+//				int[] inner = copyInnerArray(dimensions);
+//				T[] r = (T[])Array.newInstance(f.typeClass(), inner);
+//				arr[i] = (Object[])fill(f, dimensionIndex + 1, inner, this.dimensions[dimensionIndex + 1], r);
+//			}
+//			return (T[])arr;
+//		}
+//	}
 	
 	/**
 	 * This {@code SparseBinaryMatrix} will contain the operation of or-ing

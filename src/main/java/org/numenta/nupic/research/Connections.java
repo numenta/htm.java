@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Segment;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 
 /**
@@ -44,15 +44,16 @@ public class Connections {
 	protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
 	protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
 	protected Set<Column> predictedColumns = new LinkedHashSet<Column>();
-	protected Set<Segment> activeSegments = new LinkedHashSet<Segment>();
-	protected Set<Segment> learningSegments = new LinkedHashSet<Segment>();
-	protected Map<Segment, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<Segment, Set<Synapse>>();
+	protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
+	protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
+	protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
 	
 	///////////////////////   Structural element state /////////////////////
 	/** Reverse mapping from source cell to {@link Synapse} */
 	protected Map<Cell, Set<Synapse>> receptorSynapses;
-	protected Map<Cell, List<Segment>> segments;
-	protected Map<Segment, List<Synapse>> synapses;
+	
+	protected Map<Cell, List<DistalDendrite>> segments;
+	protected Map<DistalDendrite, List<Synapse>> synapses;
 	
 	/** Helps index each new Segment */
 	protected int segmentCounter = 0;
@@ -144,18 +145,18 @@ public class Connections {
 	}
 	
 	/**
-	 * Returns the Set of learning {@link Segment}s
+	 * Returns the Set of learning {@link DistalDendrite}s
 	 * @return
 	 */
-	public Set<Segment> learningSegments() {
+	public Set<DistalDendrite> learningSegments() {
 		return learningSegments;
 	}
 	
 	/**
-	 * Returns the Set of active {@link Segment}s
+	 * Returns the Set of active {@link DistalDendrite}s
 	 * @return
 	 */
-	public Set<Segment> activeSegments() {
+	public Set<DistalDendrite> activeSegments() {
 		return activeSegments;
 	}
 	
@@ -163,7 +164,7 @@ public class Connections {
 	 * Returns the mapping of Segments to active synapses in t-1
 	 * @return
 	 */
-	public Map<Segment, Set<Synapse>> activeSynapsesForSegment() {
+	public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
 		return activeSynapsesForSegment;
 	}
 	
@@ -193,41 +194,41 @@ public class Connections {
 	}
 	
 	/**
-	 * Returns the mapping of {@link Cell}s to their {@link Segment}s.
+	 * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
 	 * 
 	 * @param cell		the {@link Cell} used as a key.
-	 * @return			the mapping of {@link Cell}s to their {@link Segment}s.
+	 * @return			the mapping of {@link Cell}s to their {@link DistalDendrite}s.
 	 */
-	public List<Segment> segments(Cell cell) {
+	public List<DistalDendrite> segments(Cell cell) {
 		if(cell == null) {
 			throw new IllegalArgumentException("Cell was null");
 		}
 		
 		if(segments == null) {
-			segments = new LinkedHashMap<Cell, List<Segment>>();
+			segments = new LinkedHashMap<Cell, List<DistalDendrite>>();
 		}
 		
-		List<Segment> retVal = null;
+		List<DistalDendrite> retVal = null;
 		if((retVal = segments.get(cell)) == null) {
-			segments.put(cell, retVal = new ArrayList<Segment>());
+			segments.put(cell, retVal = new ArrayList<DistalDendrite>());
 		}
 		
 		return retVal;
 	}
 	
 	/**
-	 * Returns the mapping of {@link Segment}s to their {@link Synapse}s.
+	 * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
 	 * 
-	 * @param segment	the {@link Segment} used as a key.
-	 * @return			the mapping of {@link Segment}s to their {@link Synapse}s.
+	 * @param segment	the {@link DistalDendrite} used as a key.
+	 * @return			the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
 	 */
-	public List<Synapse> synapses(Segment segment) {
+	public List<Synapse> synapses(DistalDendrite segment) {
 		if(segment == null) {
 			throw new IllegalArgumentException("Segment was null");
 		}
 		
 		if(synapses == null) {
-			synapses = new LinkedHashMap<Segment, List<Synapse>>();
+			synapses = new LinkedHashMap<DistalDendrite, List<Synapse>>();
 		}
 		
 		List<Synapse> retVal = null;

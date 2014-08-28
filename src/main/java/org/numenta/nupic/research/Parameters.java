@@ -27,9 +27,11 @@ import java.util.Random;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.Lattice;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
+ * or {@link SpatialPooler}
  * 
  * @author David Ray
  * 
@@ -231,19 +233,19 @@ public class Parameters {
 	
 	/**
 	 * Sets the fields specified by the {@code Parameters} on the specified
-	 * {@link SpatialPooler}
+	 * {@link Lattice}
 	 * 
-	 * @param sp
+	 * @param l		a given {@link Lattice}
 	 * @param p
 	 */
-	public static void apply(SpatialPooler sp, Parameters p) {
+	public static void apply(Lattice l, Parameters p) {
 		try {
 			for(Parameters.KEY key : p.paramMap.keySet()) {
 				switch(key){
 					case RANDOM: {
-						Field f = sp.getClass().getDeclaredField(key.fieldName);
+						Field f = l.getClass().getDeclaredField(key.fieldName);
 						f.setAccessible(true);
-						f.set(sp, p.random);
+						f.set(l, p.random);
 						
 						f = p.getClass().getDeclaredField(key.fieldName);
 						f.setAccessible(true);
@@ -252,9 +254,14 @@ public class Parameters {
 						break;
 					}
 					default: {
-						Field f = sp.getClass().getDeclaredField(key.fieldName);
+						Field f = null;
+						try {
+							f = l.getClass().getDeclaredField(key.fieldName);
+						}catch(Exception e) {
+							 f = l.getClass().getSuperclass().getDeclaredField(key.fieldName);
+						}
 						f.setAccessible(true);
-						f.set(sp, p.paramMap.get(key));
+						f.set(l, p.paramMap.get(key));
 						
 						f = p.getClass().getDeclaredField(key.fieldName);
 						f.setAccessible(true);
