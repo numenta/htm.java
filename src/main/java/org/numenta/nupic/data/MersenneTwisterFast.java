@@ -334,8 +334,8 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 (1812433253 * (mt[mti-1] ^ (mt[mti-1] >>> 30)) + mti); 
             /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
             /* In the previous versions, MSBs of the seed affect   */
-            /* only MSBs of the array mt[].                        */
-            /* 2002/01/09 modified by Makoto Matsumoto             */
+            /* only MSBs of the array mt[].                     */
+            /* 2002/01/09 modified by Makoto Matsumoto           */
             // mt[mti] &= 0xffffffff;
             /* for >32 bit machines */
             }
@@ -407,9 +407,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return y;
@@ -444,9 +444,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (short)(y >>> 16);
@@ -481,9 +481,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (char)(y >>> 16);
@@ -517,9 +517,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (boolean)((y >>> 31) != 0);
@@ -564,9 +564,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (y >>> 8) / ((float)(1 << 24)) < probability;
@@ -584,7 +584,7 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
 
         if (probability < 0.0 || probability > 1.0)
             throw new IllegalArgumentException ("probability must be between 0.0 and 1.0 inclusive.");
-        if (probability==0.0) return false;             // fix half-open issues
+        if (probability==0.0) return false;          // fix half-open issues
         else if (probability==1.0) return true; // fix half-open issues
         if (mti >= N)   // generate N words at one time
             {
@@ -609,9 +609,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         if (mti >= N)   // generate N words at one time
@@ -637,9 +637,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
         
         z = mt[mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+        z ^= z >>> 11;                        // TEMPERING_SHIFT_U(z)
+        z ^= (z << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(z)
+        z ^= (z << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(z)
         z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
         
         /* derived from nextDouble documentation in jdk 1.2 docs, see top */
@@ -674,9 +674,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (byte)(y >>> 24);
@@ -712,9 +712,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 }
             
             y = mt[mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+            y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+            y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+            y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
             y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
             bytes[x] = (byte)(y >>> 24);
@@ -750,9 +750,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         if (mti >= N)   // generate N words at one time
@@ -778,9 +778,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
         
         z = mt[mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+        z ^= z >>> 11;                        // TEMPERING_SHIFT_U(z)
+        z ^= (z << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(z)
+        z ^= (z << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(z)
         z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
         
         return (((long)y) << 32) + (long)z;
@@ -824,9 +824,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 }
     
             y = mt[mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+            y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+            y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+            y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
             y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
     
             if (mti >= N)   // generate N words at one time
@@ -852,9 +852,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 }
             
             z = mt[mti++];
-            z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-            z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-            z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+            z ^= z >>> 11;                        // TEMPERING_SHIFT_U(z)
+            z ^= (z << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(z)
+            z ^= (z << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(z)
             z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
             
             bits = (((((long)y) << 32) + (long)z) >>> 1);
@@ -893,9 +893,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         if (mti >= N)   // generate N words at one time
@@ -921,9 +921,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
         
         z = mt[mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+        z ^= z >>> 11;                        // TEMPERING_SHIFT_U(z)
+        z ^= (z << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(z)
+        z ^= (z << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(z)
         z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
         
         /* derived from nextDouble documentation in jdk 1.2 docs, see top */
@@ -949,7 +949,7 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
         double d = 0.0;
         do
             {
-            d = nextDouble();                           // grab a value, initially from half-open [0.0, 1.0)
+            d = nextDouble();                          // grab a value, initially from half-open [0.0, 1.0)
             if (includeOne && nextBoolean()) d += 1.0;  // if includeOne, with 1/2 probability, push to [1.0, 2.0)
             } 
         while ( (d > 1.0) ||                            // everything above 1.0 is always invalid
@@ -999,9 +999,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                     }
                 
                 y = mt[mti++];
-                y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-                y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-                y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+                y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+                y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+                y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
                 y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
                 
                 if (mti >= N)   // generate N words at one time
@@ -1027,9 +1027,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                     }
                 
                 z = mt[mti++];
-                z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-                z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-                z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+                z ^= z >>> 11;                        // TEMPERING_SHIFT_U(z)
+                z ^= (z << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(z)
+                z ^= (z << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(z)
                 z ^= (z >>> 18);                        // TEMPERING_SHIFT_L(z)
                 
                 if (mti >= N)   // generate N words at one time
@@ -1055,9 +1055,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                     }
                 
                 a = mt[mti++];
-                a ^= a >>> 11;                          // TEMPERING_SHIFT_U(a)
-                a ^= (a << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(a)
-                a ^= (a << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(a)
+                a ^= a >>> 11;                        // TEMPERING_SHIFT_U(a)
+                a ^= (a << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(a)
+                a ^= (a << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(a)
                 a ^= (a >>> 18);                        // TEMPERING_SHIFT_L(a)
                 
                 if (mti >= N)   // generate N words at one time
@@ -1083,9 +1083,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                     }
                 
                 b = mt[mti++];
-                b ^= b >>> 11;                          // TEMPERING_SHIFT_U(b)
-                b ^= (b << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(b)
-                b ^= (b << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(b)
+                b ^= b >>> 11;                        // TEMPERING_SHIFT_U(b)
+                b ^= (b << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(b)
+                b ^= (b << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(b)
                 b ^= (b >>> 18);                        // TEMPERING_SHIFT_L(b)
                 
                 /* derived from nextDouble documentation in jdk 1.2 docs, see top */
@@ -1136,9 +1136,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             }
   
         y = mt[mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
 
         return (y >>> 8) / ((float)(1 << 24));
@@ -1165,8 +1165,8 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             d = nextFloat();                            // grab a value, initially from half-open [0.0f, 1.0f)
             if (includeOne && nextBoolean()) d += 1.0f; // if includeOne, with 1/2 probability, push to [1.0f, 2.0f)
             } 
-        while ( (d > 1.0f) ||                           // everything above 1.0f is always invalid
-            (!includeZero && d == 0.0f));           // if we're not including zero, 0.0f is invalid
+        while ( (d > 1.0f) ||                          // everything above 1.0f is always invalid
+            (!includeZero && d == 0.0f));          // if we're not including zero, 0.0f is invalid
         return d;
         }
 
@@ -1206,9 +1206,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 }
             
             y = mt[mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+            y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+            y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+            y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
             y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
             
             return (int)((n * (long) (y >>> 1) ) >> 31);
@@ -1242,9 +1242,9 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
                 }
             
             y = mt[mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+            y ^= y >>> 11;                        // TEMPERING_SHIFT_U(y)
+            y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
+            y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
             y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
         
             bits = (y >>> 1);
@@ -1276,7 +1276,7 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
             String s = String.valueOf(l);
             while(s.length() < 10) s = " " + s;  // buffer
             System.out.print(s + " ");
-            if (j%5==4) System.out.println();       
+            if (j%5==4) System.out.println();      
             }
 
         // SPEED TEST
@@ -1291,14 +1291,14 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable
         ms = System.currentTimeMillis();
         for (j = 0; j < 100000000; j++)
             xx += rr.nextInt();
-        System.out.println("java.util.Random: " + (System.currentTimeMillis()-ms) + "          Ignore this: " + xx);
+        System.out.println("java.util.Random: " + (System.currentTimeMillis()-ms) + "         Ignore this: " + xx);
         
         r = new MersenneTwisterFast(SEED);
         ms = System.currentTimeMillis();
         xx=0;
         for (j = 0; j < 100000000; j++)
             xx += r.nextInt();
-        System.out.println("Mersenne Twister Fast: " + (System.currentTimeMillis()-ms) + "          Ignore this: " + xx);
+        System.out.println("Mersenne Twister Fast: " + (System.currentTimeMillis()-ms) + "        Ignore this: " + xx);
         
         // TEST TO COMPARE TYPE CONVERSION BETWEEN
         // MersenneTwisterFast.java AND MersenneTwister.java

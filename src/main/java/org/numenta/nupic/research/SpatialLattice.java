@@ -105,7 +105,6 @@ public class SpatialLattice extends Lattice {
     private double[] minActiveDutyCycles;
     private double[] boostFactors;
     
-    
     /**
      * Constructs a new {@code SpatialLattice}
      */

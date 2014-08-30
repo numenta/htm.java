@@ -44,6 +44,7 @@ public class SpatialPooler {
     }
     
     /**
+<<<<<<< HEAD
      * This is the primary public method of the SpatialPooler class. This
      * function takes a input vector and outputs the indices of the active columns.
      * If 'learn' is set to True, this method also updates the permanences of the
@@ -154,6 +155,8 @@ public class SpatialPooler {
     }
     
     /**
+=======
+>>>>>>> upstream/master
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
      * 'self._stimulusThreshold' overlaps in order to be considered during the
@@ -200,6 +203,14 @@ public class SpatialPooler {
      *                          should be raised until a minimum number are synapses are in
      *                          a connected state. Should be set to 'false' when a direct
      *                          assignment is required.
+     *                      "dense", i.e. it contains an entry for each input bit, even
+     *                      if the permanence value is 0.
+     * @param columnIndex       The index identifying a column in the permanence, potential
+     *                      and connectivity matrices
+     * @param raisePerm         a boolean value indicating whether the permanence values
+     *                      should be raised until a minimum number are synapses are in
+     *                      a connected state. Should be set to 'false' when a direct
+     *                      assignment is required.
      */
     public static void updatePermanencesForColumn(SpatialLattice l, double[] perm, int columnIndex, boolean raisePerm) {
         int[] maskPotential = l.getPotentialPools().getObject(columnIndex); 
@@ -257,10 +268,17 @@ public class SpatialPooler {
      * 
      * @param l                 the {@link SpatialLattice} which is the memory model
      * @param potentialPool     An array specifying the potential pool of the column.
+<<<<<<< HEAD
      *                          Permanence values will only be generated for input bits
      *                          corresponding to indices for which the mask value is 1.
      * @param connectedPct      A value between 0 or 1 specifying the percent of the input
      *                          bits that will start off in a connected state.
+=======
+     *                      Permanence values will only be generated for input bits
+     *                      corresponding to indices for which the mask value is 1.
+     * @param connectedPct      A value between 0 or 1 specifying the percent of the input
+     *                      bits that will start off in a connected state.
+>>>>>>> upstream/master
      * @return
      */
     public static double[] initPermanence(SpatialLattice l, TIntHashSet potentialPool, double connectedPct) {
@@ -297,9 +315,15 @@ public class SpatialPooler {
      *   returns input index 8. 
      *   
      * @param columnIndex   The index identifying a column in the permanence, potential
+<<<<<<< HEAD
      *                      and connectivity matrices.
      * @return              A boolean value indicating that boundaries should be
      *                      ignored.
+=======
+     *                  and connectivity matrices.
+     * @return              A boolean value indicating that boundaries should be
+     *                  ignored.
+>>>>>>> upstream/master
      */
     public static int mapColumn(Lattice l, int columnIndex) {
         int[] columnCoords = l.getMemory().computeCoordinates(columnIndex);

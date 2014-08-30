@@ -52,7 +52,7 @@ public class SpatialPoolerTest {
         p.put(KEY.GLOBAL_INHIBITIONS, false);
         p.put(KEY.LOCAL_AREA_DENSITY, -1.0);
         p.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3);
-        p.put(KEY.STIMULUS_THRESHOLD, 0.0);
+        p.put(KEY.STIMULUS_THRESHOLD, 1.0);
         p.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
         p.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         p.put(KEY.SYN_PERM_CONNECTED, 0.1);
