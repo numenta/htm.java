@@ -1,6 +1,7 @@
 package org.numenta.nupic.data;
 
 import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -32,9 +33,9 @@ public class ArrayUtils {
 	
 	/**
 	 * Returns an array with the same shape and the contents
-	 * converted to doubles.
+	 * converted to integers.
 	 * 
-	 * @param ints	an array of ints.
+	 * @param doubs	an array of doubles.
 	 * @return
 	 */
 	public static int[] toIntArray(double[] doubs) {
@@ -58,6 +59,99 @@ public class ArrayUtils {
 			retVal[i] = Math.max(doubs[i], maxValue);
 		}
 		return retVal;
+	}
+	
+	/**
+	 * Returns an array of identical shape containing the maximum
+	 * of the values between each corresponding index. Input arrays
+	 * must be the same length.
+	 * 
+	 * @param arr1
+	 * @param arr2
+	 * @return
+	 */
+	public static int[] maxBetween(int[] arr1, int[] arr2) {
+		int[] retVal = new int[arr1.length];
+		for(int i = 0;i < arr1.length;i++) {
+			retVal[i] = Math.max(arr1[i], arr2[i]);
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns an array of identical shape containing the minimum
+	 * of the values between each corresponding index. Input arrays
+	 * must be the same length.
+	 * 
+	 * @param arr1
+	 * @param arr2
+	 * @return
+	 */
+	public static int[] minBetween(int[] arr1, int[] arr2) {
+		int[] retVal = new int[arr1.length];
+		for(int i = 0;i < arr1.length;i++) {
+			retVal[i] = Math.min(arr1[i], arr2[i]);
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Implemented to be used as arguments in other operations.
+	 * see {@link ArrayUtils#retainLogicalAnd(int[], Condition[])};
+	 * {@link ArrayUtils#retainLogicalAnd(double[], Condition[])}.
+	 */
+	public static interface Condition {
+		/**
+		 * Convenience adapter to remove verbosity
+		 * @author metaware
+		 *
+		 */
+		public class Adapter implements Condition {
+			public boolean eval(int n) { return false; }
+			public boolean eval(double d) { return false; }
+		}
+		public boolean eval(int n);
+		public boolean eval(double d);
+	}
+	
+	/**
+	 * Returns an array of values that test true for all of the 
+	 * specified {@link Condition}s.
+	 * 
+	 * @param values
+	 * @param conditions
+	 * @return
+	 */
+	public static int[] retainLogicalAnd(int[] values, Condition[] conditions) {
+		TIntArrayList l = new TIntArrayList();
+		for(int i = 0;i < values.length;i++) {
+			boolean result = true;
+			for(int j = 0;j < conditions.length && result;j++) {
+				result &= conditions[j].eval(values[i]);
+			}
+			if(result) l.add(values[i]);
+		}
+		return l.toArray();
+	}
+	
+	/**
+	 * Returns an array of values that test true for all of the 
+	 * specified {@link Condition}s.
+	 * 
+	 * @param values
+	 * @param conditions
+	 * @return
+	 */
+	public static double[] retainLogicalAnd(double[] values, Condition[] conditions) {
+		TDoubleArrayList l = new TDoubleArrayList();
+		for(int i = 0;i < values.length;i++) {
+			boolean result = true;
+			for(int j = 0;j < conditions.length && result;j++) {
+				result &= conditions[j].eval(values[i]);
+			}
+			if(result) l.add(values[i]);
+		}
+		return l.toArray();
 	}
 	
 	/**
@@ -110,6 +204,63 @@ public class ArrayUtils {
 			product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
 		}
 		return product;
+	}
+	
+	/**
+	 * Returns an integer array containing the result of subtraction
+	 * operations between corresponding indexes of the specified arrays.
+	 * 
+	 * @param minuend
+	 * @param subtrahend
+	 * @return
+	 */
+	public static int[] subtract(int[] minuend, int[] subtrahend) {
+		int[] retVal = new int[minuend.length];
+		for(int i = 0;i < minuend.length;i++) {
+			retVal[i] = minuend[i] - subtrahend[i];
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Returns the average of all the specified array contents.
+	 * @param arr
+	 * @return
+	 */
+	public static double average(int[] arr) {
+		int sum = 0;
+		for(int i = 0;i < arr.length;i++) {
+			sum += arr[i];
+		}
+		return sum / (double)arr.length;
+	}
+	
+	/**
+	 * Returns the average of all the specified array contents.
+	 * @param arr
+	 * @return
+	 */
+	public static double average(double[] arr) {
+		int sum = 0;
+		for(int i = 0;i < arr.length;i++) {
+			sum += arr[i];
+		}
+		return sum / (double)arr.length;
+	}
+	
+	/**
+	 * Returns the passed in array with every value being altered
+	 * by the addition of the specified amount.
+	 * 
+	 * @param arr
+	 * @param amount
+	 * @return
+	 */
+	public static int[] add(int[] arr, int amount) {
+		for(int i = 0;i < arr.length;i++) {
+			arr[i] += amount;
+		}
+		return arr;
 	}
 	
 	/**
@@ -319,5 +470,87 @@ public class ArrayUtils {
 		for(int i = 0;i < values.length;i++) {
 			values[i] += amount;
 		}
+	}
+	
+	/**
+	 * Makes all values in the specified array which are less than or equal to the specified
+	 * "x" value, equal to the specified "y".
+	 * @param array
+	 * @param x		the comparison
+	 * @param y		the value to set if the comparison fails
+	 */
+	public static void lessThanOrEqualXThanSetToY(double[] array, double x, double y) {
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] <= x) array[i] = y;
+		}
+	}
+	
+	/**
+	 * Makes all values in the specified array which are less than the specified
+	 * "x" value, equal to the specified "y".
+	 * @param array
+	 * @param x		the comparison
+	 * @param y		the value to set if the comparison fails
+	 */
+	public static void lessThanXThanSetToY(double[] array, double x, double y) {
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] < x) array[i] = y;
+		}
+	}
+	
+	/**
+	 * Makes all values in the specified array which are greater than or equal to the specified
+	 * "x" value, equal to the specified "y".
+	 * @param array
+	 * @param x		the comparison
+	 * @param y		the value to set if the comparison fails
+	 */
+	public static void greaterThanOrEqualXThanSetToY(double[] array, double x, double y) {
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] >= x) array[i] = y;
+		}
+	}
+	
+	/**
+	 * Makes all values in the specified array which are greater than the specified
+	 * "x" value, equal to the specified "y".
+	 * @param array
+	 * @param x		the comparison
+	 * @param y		the value to set if the comparison fails
+	 */
+	public static void greaterThanXThanSetToY(double[] array, double x, double y) {
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] > x) array[i] = y;
+		}
+	}
+	
+	/**
+	 * Returns the maximum value in the specified array
+	 * @param array
+	 * @return
+	 */
+	public static int max(int[] array) {
+		int max = Integer.MIN_VALUE;
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] > max) {
+				max = array[i];
+			}
+		}
+		return max;
+	}
+	
+	/**
+	 * Returns the minimum value in the specified array
+	 * @param array
+	 * @return
+	 */
+	public static int min(int[] array) {
+		int min = Integer.MAX_VALUE;
+		for(int i = 0;i < array.length;i++) {
+			if(array[i] < min) {
+				min = array[i];
+			}
+		}
+		return min;
 	}
 }
