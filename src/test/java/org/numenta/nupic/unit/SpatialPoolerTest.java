@@ -82,12 +82,12 @@ public class SpatialPoolerTest {
         assertEquals(false, mem.getGlobalInhibition());
         assertEquals(-1.0, mem.getLocalAreaDensity(), 0);
         assertEquals(3, mem.getNumActiveColumnsPerInhArea(), 0);
-        assertEquals(1, mem.getStimulusThreshold(), 0);
+        assertEquals(1, mem.getStimulusThreshold(), 1);
         assertEquals(0.01, mem.getSynPermInactiveDec(), 0);
         assertEquals(0.1, mem.getSynPermActiveInc(), 0);
         assertEquals(0.1, mem.getSynPermConnected(), 0);
-        assertEquals(0.1, mem.getMinPctOverlapDutyCycle(), 0);
-        assertEquals(0.1, mem.getMinPctActiveDutyCycle(), 0);
+        assertEquals(0.1, mem.getMinPctOverlapDutyCycles(), 0);
+        assertEquals(0.1, mem.getMinPctActiveDutyCycles(), 0);
         assertEquals(10, mem.getDutyCyclePeriod(), 0);
         assertEquals(10.0, mem.getMaxBoost(), 0);
         assertEquals(42, mem.getSeed());
@@ -375,6 +375,10 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
     }
 
+    /**
+     * Checks that feeding in the same input vector leads to polarized
+     * permanence values: either zeros or ones, but no fractions
+     */
     @Test
     public void testCompute1() {
         defaultSetup();

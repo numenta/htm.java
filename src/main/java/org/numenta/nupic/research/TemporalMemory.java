@@ -354,10 +354,10 @@ public class TemporalMemory {
      *
      * - for each prev predictive cell
      *   - if in active column
-     *   - mark it as active
-     *   - mark it as winner cell
-     *   - mark column as predicted
-     *   
+     *     - mark it as active
+     *     - mark it as winner cell
+     *     - mark column as predicted
+     *     
      * @param c                     ComputeCycle interim values container
      * @param prevPredictiveCells   predictive {@link Cell}s predictive cells in t-1
      * @param activeColumns         active columns in t
@@ -381,18 +381,18 @@ public class TemporalMemory {
      * - for each unpredicted active column
      *   - mark all cells as active
      *   - mark the best matching cell as winner cell
-     *   - (learning)
-     *     - if it has no matching segment
-     *       - (optimization) if there are prev winner cells
-     *         - add a segment to it
-     *     - mark the segment as learning
+     *     - (learning)
+     *       - if it has no matching segment
+     *         - (optimization) if there are prev winner cells
+     *           - add a segment to it
+     *       - mark the segment as learning
      * 
      * @param cycle                         ComputeCycle interim values container
      * @param c                             Connections temporal memory state
      * @param activeColumns                 active columns in t
      * @param predictedColumns              predicted columns in t
      * @param prevActiveSynapsesForSegment      LinkedHashMap of previously active segments which
-     *                                      have had synapses marked as active in t-1    
+     *                                      have had synapses marked as active in t-1     
      */
     public void burstColumns(ComputeCycle cycle, Connections c, Set<Column> activeColumns, Set<Column> predictedColumns, 
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {

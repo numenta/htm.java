@@ -21,8 +21,8 @@ public class SpatialLattice extends Lattice {
     private double synPermActiveInc = 0.10;
     private double synPermConnected = 0.10;
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
-    private double minPctOverlapDutyCycle = 0.001;
-    private double minPctActiveDutyCycle = 0.001;
+    private double minPctOverlapDutyCycles = 0.001;
+    private double minPctActiveDutyCycles = 0.001;
     private double dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
@@ -40,8 +40,8 @@ public class SpatialLattice extends Lattice {
     
     //Internal state
     private double version = 1.0;
-    private int interationNum = 0;
-    private int iterationLearnNum = 0;
+    public int interationNum = 0;
+    public int iterationLearnNum = 0;
     /**
      * Store the set of all inputs that are within each column's potential pool.
      * 'potentialPools' is a matrix, whose rows represent cortical columns, and
@@ -68,7 +68,7 @@ public class SpatialLattice extends Lattice {
      * structure. This permanence matrix is only allowed to have non-zero
      * elements where the potential pool is non-zero.
      */
-    private SparseDoubleMatrix permanences;
+    private SparseObjectMatrix<double[]> permanences;
     /**
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
@@ -82,7 +82,7 @@ public class SpatialLattice extends Lattice {
      * this information is readily available from the 'self._permanence' matrix,
      * it is stored separately for efficiency purposes.
      */
-    private SparseBinaryMatrix connectedSynapses;
+    private SparseObjectMatrix<int[]> connectedSynapses;
     /** 
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
@@ -99,6 +99,11 @@ public class SpatialLattice extends Lattice {
      */
     private int inhibitionRadius = 0;
     
+    private double[] overlapDutyCycles;
+    private double[] activeDutyCycles;
+    private double[] minOverlapDutyCycles;
+    private double[] minActiveDutyCycles;
+    private double[] boostFactors;
     
     /**
      * Constructs a new {@code SpatialLattice}
@@ -122,7 +127,7 @@ public class SpatialLattice extends Lattice {
         
         potentialPools = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
         
-        permanences = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        permanences = new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } );
         
         tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
         for(int i = 0;i < numColumns;i++) {
@@ -138,7 +143,7 @@ public class SpatialLattice extends Lattice {
          * this information is readily available from the 'permanences' matrix,
          * it is stored separately for efficiency purposes.
          */
-        connectedSynapses = new SparseBinaryMatrix(new int[] { numColumns, numInputs } );
+        connectedSynapses = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
         
         connectedCounts = new int[numColumns];
         // Initialize the set of permanence values for each column. Ensure that
@@ -149,6 +154,18 @@ public class SpatialLattice extends Lattice {
             potentialPools.set(i, potential);
             double[] perm = SpatialPooler.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
             SpatialPooler.updatePermanencesForColumn(this, perm, i, true);
+        }
+        
+        overlapDutyCycles = new double[numColumns];
+        activeDutyCycles = new double[numColumns];
+        minOverlapDutyCycles = new double[numColumns];
+        minActiveDutyCycles = new double[numColumns];
+        boostFactors = new double[numColumns];
+        
+        SpatialPooler.updateInhibitionRadius(this);
+        
+        if(getVerbosity() > 0) {
+            printParameters();
         }
     }
     
@@ -182,6 +199,22 @@ public class SpatialLattice extends Lattice {
      */
     public void setInputMatrix(SparseMatrix<?> matrix) {
         this.inputMatrix = matrix;
+    }
+    
+    /**
+     * Returns the inhibition radius
+     * @return
+     */
+    public int getInhibitionRadius() {
+        return inhibitionRadius;
+    }
+    
+    /**
+     * Sets the inhibition radius
+     * @param radius
+     */
+    public void setInhibitionRadius(int radius) {
+        this.inhibitionRadius = radius;
     }
     
     /**
@@ -254,7 +287,59 @@ public class SpatialLattice extends Lattice {
     public double getPotentialPct() {
         return potentialPct;
     }
-
+    
+    /**
+     * Returns the {@link SparseObjectMatrix} representing the 
+     * proximal dendrite permanence values.
+     * 
+     * @return  the {@link SparseDoubleMatrix}
+     */
+    public SparseObjectMatrix<double[]> getPermanences() {
+        return permanences;
+    }
+    
+    /**
+     * Sets the {@link SparseObjectMatrix} which represents the 
+     * proximal dendrite permanence values.
+     * 
+     * @param s the {@link SparseDoubleMatrix}
+     */
+    public void setPermanences(SparseObjectMatrix<double[]> s) {
+        this.permanences = s;
+    }
+    
+    /**
+     * Returns the {@link SparseObjectMatrix} that represents the connected synapses.
+     * @return
+     */
+    public SparseObjectMatrix<int[]> getConnectedSynapses() {
+        return connectedSynapses;
+    }
+    
+    /**
+     * Sets the {@link SparseObjectMatrix} representing the connected synapses.
+     * @param s
+     */
+    public void setConnectedSysnapses(SparseObjectMatrix<int[]> s) {
+        this.connectedSynapses = s;
+    }
+    
+    /**
+     * Returns the indexed count of connected synapses per column.
+     * @return
+     */
+    public int[] getConnectedCounts() {
+        return connectedCounts;
+    }
+    
+    /**
+     * Sets the indexed count of synapses connected at the columns in each index.
+     * @param counts
+     */
+    public void setConnectedCounts(int[] counts) {
+        this.connectedCounts = counts;
+    }
+    
     /**
      * If true, then during inhibition phase the winning
      * columns are selected as the most active columns from
@@ -453,16 +538,16 @@ public class SpatialLattice extends Lattice {
      * 
      * @param minPctOverlapDutyCycle
      */
-    public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycle) {
-        this.minPctOverlapDutyCycle = minPctOverlapDutyCycle;
+    public void setMinPctOverlapDutyCycles(double minPctOverlapDutyCycle) {
+        this.minPctOverlapDutyCycles = minPctOverlapDutyCycle;
     }
     
     /**
-     * {@see #setMinPctOverlapDutyCycle(double)}
+     * {@see #setMinPctOverlapDutyCycles(double)}
      * @return
      */
-    public double getMinPctOverlapDutyCycle() {
-        return minPctOverlapDutyCycle;
+    public double getMinPctOverlapDutyCycles() {
+        return minPctOverlapDutyCycles;
     }
 
     /**
@@ -480,8 +565,8 @@ public class SpatialLattice extends Lattice {
      * 
      * @param minPctActiveDutyCycle
      */
-    public void setMinPctActiveDutyCycle(double minPctActiveDutyCycle) {
-        this.minPctActiveDutyCycle = minPctActiveDutyCycle;
+    public void setMinPctActiveDutyCycles(double minPctActiveDutyCycle) {
+        this.minPctActiveDutyCycles = minPctActiveDutyCycle;
     }
     
     /**
@@ -489,8 +574,8 @@ public class SpatialLattice extends Lattice {
      * @return  the minPctActiveDutyCycle
      * @see {@link #setMinPctActiveDutyCycle(double)}
      */
-    public double getMinPctActiveDutyCycle() {
-        return minPctActiveDutyCycle;
+    public double getMinPctActiveDutyCycles() {
+        return minPctActiveDutyCycles;
     }
 
     /**
@@ -613,5 +698,45 @@ public class SpatialLattice extends Lattice {
      */
     public double getSynPermMax() {
         return synPermMax;
+    }
+    
+    /**
+     * Returns the output setting for verbosity
+     * @return
+     */
+    public int getVerbosity() {
+        return spVerbosity;
+    }
+    
+    /**
+     * Returns the version number
+     * @return
+     */
+    public double getVersion() {
+        return version;
+    }
+    
+    /**
+     * High verbose output useful for debugging
+     */
+    public void printParameters() {
+        System.out.println("------------J  SpatialPooler Parameters ------------------");
+        System.out.println("numInputs                  = " + getNumInputs());
+        System.out.println("numColumns                 = " + getNumColumns());
+        System.out.println("columnDimensions           = " + getColumnDimensions());
+        System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
+        System.out.println("potentialPct               = " + getPotentialPct());
+        System.out.println("globalInhibition           = " + getGlobalInhibition());
+        System.out.println("localAreaDensity           = " + getLocalAreaDensity());
+        System.out.println("stimulusThreshold          = " + getStimulusThreshold());
+        System.out.println("synPermActiveInc           = " + getSynPermActiveInc());
+        System.out.println("synPermInactiveDec         = " + getSynPermInactiveDec());
+        System.out.println("synPermConnected           = " + getSynPermConnected());
+        System.out.println("minPctOverlapDutyCycle     = " + getMinPctOverlapDutyCycles());
+        System.out.println("minPctActiveDutyCycle      = " + getMinPctActiveDutyCycles());
+        System.out.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
+        System.out.println("maxBoost                   = " + getMaxBoost());
+        System.out.println("spVerbosity                = " + getSpVerbosity());
+        System.out.println("version                    = " + getVersion());
     }
 }
