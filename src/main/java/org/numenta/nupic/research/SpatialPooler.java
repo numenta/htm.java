@@ -22,6 +22,7 @@
 package org.numenta.nupic.research;
 
 import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -30,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.numenta.nupic.data.ArrayUtils;
+import org.numenta.nupic.data.ArrayUtils.Condition;
+import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.model.Lattice;
 
 
@@ -38,6 +41,116 @@ public class SpatialPooler {
 	
 	public SpatialPooler() {
 		
+	}
+	
+	/**
+	 * This is the primary public method of the SpatialPooler class. This
+     * function takes a input vector and outputs the indices of the active columns.
+     * If 'learn' is set to True, this method also updates the permanences of the
+     * columns. 
+     * 
+	 * @param l
+	 * @param inputVector		A <del>numpy</del> array of 0's and 1's that comprises the input to
+	 *			                the spatial pooler. The array will be treated as a one
+	 *			                dimensional array, therefore the dimensions of the array
+	 *			                do not have to match the exact dimensions specified in the
+	 *			                class constructor. In fact, even a list would suffice.
+	 * 			                The number of input bits in the vector must, however,
+	 * 			                match the number of bits specified by the call to the
+     *			                constructor. Therefore there must be a '0' or '1' in the
+     *			                array for every input bit.
+	 * @param learn				A boolean value indicating whether learning should be
+	 *		                    performed. Learning entails updating the  permanence
+	 *		                    values of the synapses, and hence modifying the 'state'
+	 *		                    of the model. Setting learning to 'off' freezes the SP
+	 *		                    and has many uses. For example, you might want to feed in
+	 *		                    various inputs and examine the resulting SDR's.
+	 * @param activeArray		An array whose size is equal to the number of columns.
+	 *		                    Before the function returns this array will be populated
+	 *		                    with 1's at the indices of the active columns, and 0's
+	 *		                    everywhere else.
+	 */
+	public void compute(SpatialLattice l, int[] inputVector, boolean learn, int[] activeArray) {
+		if(inputVector.length != l.getNumInputs()) {
+			throw new IllegalArgumentException("Input array must be same size as the defined number of inputs");
+		}
+		
+		updateBookeepingVars(l, learn);
+		calculateOverlap(l, inputVector);
+	}
+	
+	/**
+	 * The range of connectedSynapses per column, averaged for each dimension.
+     * This value is used to calculate the inhibition radius. This variation of
+     * the function supports arbitrary column dimensions.
+     *  
+	 * @param l				the {@link SpatialLattice} (spatial pooler memory)
+	 * @param columnIndex	the current column for which to avg.
+	 * @return
+	 */
+	public static double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+		int[] dimensions = l.getInputDimensions();
+		int[] connected = l.getConnectedSynapses().getObject(columnIndex);
+		if(connected.length == 0) return 0;
+		
+		int[] maxCoord = new int[l.getInputDimensions().length];
+		int[] minCoord = new int[l.getInputDimensions().length];
+		Arrays.fill(maxCoord, -1);
+		Arrays.fill(minCoord, ArrayUtils.max(dimensions));
+		SparseMatrix<?> inputMatrix = l.getInputMatrix();
+		for(int i = 0;i < connected.length;i++) {
+			maxCoord = ArrayUtils.maxBetween(maxCoord, inputMatrix.computeCoordinates(connected[i]));
+			minCoord = ArrayUtils.minBetween(minCoord, inputMatrix.computeCoordinates(connected[i]));
+		}
+		return ArrayUtils.average(ArrayUtils.add(ArrayUtils.subtract(maxCoord, minCoord), 1));
+	}
+	
+	/**
+	 * Update the inhibition radius. The inhibition radius is a measure of the
+     * square (or hypersquare) of columns that each a column is "connected to"
+     * on average. Since columns are are not connected to each other directly, we
+     * determine this quantity by first figuring out how many *inputs* a column is
+     * connected to, and then multiplying it by the total number of columns that
+     * exist for each input. For multiple dimension the aforementioned
+     * calculations are averaged over all dimensions of inputs and columns. This
+     * value is meaningless if global inhibition is enabled.
+     * 
+	 * @param l
+	 */
+	public static void updateInhibitionRadius(SpatialLattice l) {
+		if(l.getGlobalInhibition()) {
+			l.setInhibitionRadius(l.getMemory().getMaxIndex());
+			return;
+		}
+		
+		TDoubleArrayList avgCollected = new TDoubleArrayList();
+		int len = l.getNumColumns();
+		for(int i = 0;i < len;i++) {
+			avgCollected.add(avgConnectedSpanForColumnND(l, i));
+		}
+		double avgConnectedSpan = ArrayUtils.average(avgCollected.toArray());
+		double diameter = avgConnectedSpan * avgColumnsPerInput(l);
+		double radius = (diameter - 1) / 2.0d;
+		radius = Math.max(1, radius);
+		l.setInhibitionRadius((int)Math.round(radius));
+	}
+	
+	/**
+	 * The average number of columns per input, taking into account the topology
+     * of the inputs and columns. This value is used to calculate the inhibition
+     * radius. This function supports an arbitrary number of dimensions. If the
+     * number of column dimensions does not match the number of input dimensions,
+     * we treat the missing, or phantom dimensions as 'ones'.
+     *  
+	 * @param l
+	 * @return
+	 */
+	public static double avgColumnsPerInput(SpatialLattice l) {
+		int[] colDim = Arrays.copyOf(l.getColumnDimensions(), l.getColumnDimensions().length);
+		int[] inputDim = Arrays.copyOf(l.getInputDimensions(), l.getInputDimensions().length);
+		double[] columnsPerInput = ArrayUtils.divide(
+			ArrayUtils.toDoubleArray(colDim), ArrayUtils.toDoubleArray(inputDim), 0, 0);
+		return ArrayUtils.average(columnsPerInput);
 	}
 	
 	/**
@@ -93,6 +206,18 @@ public class SpatialPooler {
 		if(raisePerm) {
 			raisePermanenceToThreshold(l, perm, maskPotential);
 		}
+		
+		ArrayUtils.lessThanXThanSetToY(perm, l.getSynPermTrimThreshold(), 0);
+		ArrayUtils.clip(perm, l.getSynPermMin(), l.getSynPermMax());
+		TIntArrayList newConnected = new TIntArrayList();
+		for(int i = 0;i < perm.length;i++) {
+			if(perm[i] >= l.getSynPermConnected()) {
+				newConnected.add(i);
+			}
+		}
+		l.getPermanences().set(l.getPermanences().computeCoordinates(columnIndex), perm);
+		l.getConnectedSynapses().set(columnIndex, newConnected.toArray());
+		l.getConnectedCounts()[columnIndex] = newConnected.size();
 	}
 	
 	/**
@@ -220,6 +345,7 @@ public class SpatialPooler {
 		
 		TIntArrayList indices = getNeighborsND(l, inputIndex, l.getPotentialRadius(), wrapAround);
 		indices.add(inputIndex);
+		//TODO: See https://github.com/numenta/nupic.core/issues/128
 		indices.sort();
 		
 		int[] sample = ArrayUtils.sample((int)Math.round(indices.size() * l.getPotentialPct()), indices, l.getRandom());
@@ -254,20 +380,31 @@ public class SpatialPooler {
 	 * @return				a list of the flat indices of these columns
 	 */
 	public static TIntArrayList getNeighborsND(SpatialLattice l, int columnIndex, int radius, boolean wrapAround) {
+		final int[] dimensions = l.getInputDimensions();
 		int[] columnCoords = l.getInputMatrix().computeCoordinates(columnIndex);
 		List<int[]> dimensionCoords = new ArrayList<int[]>();
-		for(int i = 0;i < l.getInputDimensions().length;i++) {
+		for(int i = 0;i < dimensions.length;i++) {
 			int[] range = ArrayUtils.range(columnCoords[i] - radius, columnCoords[i] + radius + 1);
 			int[] curRange = new int[range.length];
 			
 			if(wrapAround) {
 				for(int j = 0;j < curRange.length;j++) {
-					curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], l.getInputDimensions()[i]);
+					curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], dimensions[i]);
 				}
 			}else{
+				final int idx = i;
 				curRange = range;
+				curRange = ArrayUtils.retainLogicalAnd(range, 
+					new Condition[] {
+						new Condition.Adapter() {
+							@Override public boolean eval(int n) { return n >= 0; }
+						},
+						new Condition.Adapter() {
+							@Override public boolean eval(int n) { return n < dimensions[idx]; }
+						}
+					}
+				);
 			}
-			
 			dimensionCoords.add(ArrayUtils.unique(curRange));
 		}
 		
@@ -279,5 +416,39 @@ public class SpatialPooler {
 			neighbors.add(flatIndex);
 		}
 		return neighbors;
+	}
+	
+	/**
+	 * Updates counter instance variables each cycle.
+	 *  
+	 * @param l			the {@link SpatialLattice} memory encapsulation
+	 * @param learn		a boolean value indicating whether learning should be
+     *               	performed. Learning entails updating the  permanence
+     *               	values of the synapses, and hence modifying the 'state'
+     *               	of the model. setting learning to 'off' might be useful
+     *               	for indicating separate training vs. testing sets.
+	 */
+	public void updateBookeepingVars(SpatialLattice l, boolean learn) {
+		l.iterationLearnNum += 1;
+		if(learn) l.iterationLearnNum += 1;
+	}
+	
+	/**
+	 * This function determines each column's overlap with the current input
+     * vector. The overlap of a column is the number of synapses for that column
+     * that are connected (permanence value is greater than '_synPermConnected')
+     * to input bits which are turned on. Overlap values that are lower than
+     * the 'stimulusThreshold' are ignored. The implementation takes advantage of
+     * the SpraseBinaryMatrix class to perform this calculation efficiently.
+     *  
+	 * @param l
+	 * @param inputVector	a <del>numpy</del> array of 0's and 1's that comprises the input to
+                    		the spatial pooler.
+	 * @return
+	 */
+	public int[] calculateOverlap(SpatialLattice l, int[] inputVector) {
+		int[] overlaps = new int[l.getNumColumns()];
+		//l.conn
+		return null;
 	}
 }

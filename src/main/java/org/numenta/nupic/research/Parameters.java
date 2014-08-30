@@ -69,8 +69,8 @@ public class Parameters {
 		SYN_PERM_INACTIVE_DEC("synPermInactiveDec", 0.01, false),
 		SYN_PERM_ACTIVE_INC("synPermActiveInc", 0.1, false),
 		SYN_PERM_CONNECTED("synPermConnected", 0.10, false),
-		MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycle", 0.001, false),
-		MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycle", 0.001, false),
+		MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", 0.001, false),
+		MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001, false),
 		DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000, false),
 		MAX_BOOST("maxBoost", 10, false),
 		SP_VERBOSITY("spVerbosity", 0, false);
@@ -141,8 +141,8 @@ public class Parameters {
 	private double synPermInactiveDec = 0.01;
 	private double synPermActiveInc = 0.10;
 	private double synPermConnected = 0.10;
-	private double minPctOverlapDutyCycle = 0.001;
-	private double minPctActiveDutyCycle = 0.001;
+	private double minPctOverlapDutyCycles = 0.001;
+	private double minPctActiveDutyCycles = 0.001;
 	private double dutyCyclePeriod = 1000;
 	private double maxBoost = 10.0;
 	private int spVerbosity = 0;
@@ -588,9 +588,9 @@ public class Parameters {
      * 
 	 * @param minPctOverlapDutyCycle
 	 */
-	public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycle) {
-		this.minPctOverlapDutyCycle = minPctOverlapDutyCycle;
-		getMap().put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, minPctOverlapDutyCycle);
+	public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycles) {
+		this.minPctOverlapDutyCycles = minPctOverlapDutyCycles;
+		getMap().put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, minPctOverlapDutyCycles);
 	}
 
 	/**
@@ -608,9 +608,9 @@ public class Parameters {
      * 
 	 * @param minPctActiveDutyCycle
 	 */
-	public void setMinPctActiveDutyCycle(double minPctActiveDutyCycle) {
-		this.minPctActiveDutyCycle = minPctActiveDutyCycle;
-		getMap().put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, minPctActiveDutyCycle);
+	public void setMinPctActiveDutyCycle(double minPctActiveDutyCycles) {
+		this.minPctActiveDutyCycles = minPctActiveDutyCycles;
+		getMap().put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, minPctActiveDutyCycles);
 	}
 
 	/**
