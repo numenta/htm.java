@@ -25,72 +25,72 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class SparseObjectMatrix<T> extends SparseMatrix<T> {
-	private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
-	
-	public SparseObjectMatrix(int[] dimensions) {
-		super(dimensions, false);
-	}
-	
-	public SparseObjectMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-	}
-	
-	/**
-	 * Sets the object to occupy the specified index.
-	 * 
-	 * @param index		the index the object will occupy
-	 * @param object	the object to be indexed.
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends SparseMatrix<T>> S set(int index, T object) {
-		sparseMap.put(index, (T)object);
-		return (S)this;
-	}
-	
-	/**
-	 * Sets the specified object to be indexed at the index
-	 * computed from the specified coordinates.
-	 * 
-	 * @param coordinates	the row major coordinates [outer --> ,...,..., inner]
-	 * @param object		the object to be indexed.
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends SparseMatrix<T>> S set(int[] coordinates, T object) {
-		set(computeIndex(coordinates), object);
-		return (S)this;
-	}
-	
-	/**
-	 * Returns the T at the specified index.
-	 * 
-	 * @param index		the index of the T to return
-	 * @return	the T at the specified index.
-	 */
-	@Override
-	public T getObject(int index) {
-		return sparseMap.get(index);
-	}
-	
-	/**
-	 * Returns the T at the index computed from the specified coordinates
-	 * @param coordinates	the coordinates from which to retrieve the indexed object
-	 * @return	the indexed object
-	 */
-	@Override
-	public T get(int[] coordinates) {
-		return sparseMap.get(computeIndex(coordinates));
-	}
-	
-	/**
-	 * Returns a sorted array of occupied indexes.
-	 * @return	a sorted array of occupied indexes.
-	 */
-	@Override
-	public int[] getSparseIndices() {
-		return reverse(sparseMap.keys());
-	}
-	
-	
+    private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
+    
+    public SparseObjectMatrix(int[] dimensions) {
+        super(dimensions, false);
+    }
+    
+    public SparseObjectMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+        super(dimensions, useColumnMajorOrdering);
+    }
+    
+    /**
+     * Sets the object to occupy the specified index.
+     * 
+     * @param index     the index the object will occupy
+     * @param object    the object to be indexed.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S extends SparseMatrix<T>> S set(int index, T object) {
+        sparseMap.put(index, (T)object);
+        return (S)this;
+    }
+    
+    /**
+     * Sets the specified object to be indexed at the index
+     * computed from the specified coordinates.
+     * 
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
+     * @param object        the object to be indexed.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S extends SparseMatrix<T>> S set(int[] coordinates, T object) {
+        set(computeIndex(coordinates), object);
+        return (S)this;
+    }
+    
+    /**
+     * Returns the T at the specified index.
+     * 
+     * @param index     the index of the T to return
+     * @return  the T at the specified index.
+     */
+    @Override
+    public T getObject(int index) {
+        return sparseMap.get(index);
+    }
+    
+    /**
+     * Returns the T at the index computed from the specified coordinates
+     * @param coordinates   the coordinates from which to retrieve the indexed object
+     * @return  the indexed object
+     */
+    @Override
+    public T get(int[] coordinates) {
+        return sparseMap.get(computeIndex(coordinates));
+    }
+    
+    /**
+     * Returns a sorted array of occupied indexes.
+     * @return  a sorted array of occupied indexes.
+     */
+    @Override
+    public int[] getSparseIndices() {
+        return reverse(sparseMap.keys());
+    }
+    
+    
 }

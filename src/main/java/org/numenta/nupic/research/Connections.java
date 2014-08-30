@@ -40,202 +40,202 @@ import org.numenta.nupic.model.Synapse;
  * (i.e. Cells, Columns, Segments, Synapses etc.)
  */
 public class Connections {
-	protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
-	protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
-	protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-	protected Set<Column> predictedColumns = new LinkedHashSet<Column>();
-	protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
-	protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
-	protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
-	
-	///////////////////////   Structural element state /////////////////////
-	/** Reverse mapping from source cell to {@link Synapse} */
-	protected Map<Cell, Set<Synapse>> receptorSynapses;
-	
-	protected Map<Cell, List<DistalDendrite>> segments;
-	protected Map<DistalDendrite, List<Synapse>> synapses;
-	
-	/** Helps index each new Segment */
-	protected int segmentCounter = 0;
-	/** Helps index each new Synapse */
-	protected int synapseCounter = 0;
-	/** The default random number seed */
-	protected int seed = 42;
-	/** The random number generator */
-	protected Random random = new Random(seed);
-	
-	
-	
-	/**
-	 * Constructs a new {@code Connections} object. Use
-	 * 
-	 */
-	public Connections() {}
-	
-	public void clear() {
-		activeCells.clear();
-		winnerCells.clear();
-		predictiveCells.clear();
-		predictedColumns.clear();
-		activeSegments.clear();
-		learningSegments.clear();
-		activeSynapsesForSegment.clear();
-	}
-	
-	/**
-	 * Sets the seed used for the internal random number generator.
-	 * If the generator has been instantiated, this method will initialize
-	 * a new random generator with the specified seed.
-	 * 
-	 * @param seed
-	 */
-	public void setSeed(int seed) {
-		random = new Random(seed);
-	}
-	
-	/**
-	 * Returns the configured random number seed
-	 * @return
-	 */
-	public int seed() {
-		return seed;
-	}
+    protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
+    protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
+    protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
+    protected Set<Column> predictedColumns = new LinkedHashSet<Column>();
+    protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
+    protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
+    protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
+    
+    ///////////////////////   Structural element state /////////////////////
+    /** Reverse mapping from source cell to {@link Synapse} */
+    protected Map<Cell, Set<Synapse>> receptorSynapses;
+    
+    protected Map<Cell, List<DistalDendrite>> segments;
+    protected Map<DistalDendrite, List<Synapse>> synapses;
+    
+    /** Helps index each new Segment */
+    protected int segmentCounter = 0;
+    /** Helps index each new Synapse */
+    protected int synapseCounter = 0;
+    /** The default random number seed */
+    protected int seed = 42;
+    /** The random number generator */
+    protected Random random = new Random(seed);
+    
+    
+    
+    /**
+     * Constructs a new {@code Connections} object. Use
+     * 
+     */
+    public Connections() {}
+    
+    public void clear() {
+        activeCells.clear();
+        winnerCells.clear();
+        predictiveCells.clear();
+        predictedColumns.clear();
+        activeSegments.clear();
+        learningSegments.clear();
+        activeSynapsesForSegment.clear();
+    }
+    
+    /**
+     * Sets the seed used for the internal random number generator.
+     * If the generator has been instantiated, this method will initialize
+     * a new random generator with the specified seed.
+     * 
+     * @param seed
+     */
+    public void setSeed(int seed) {
+        random = new Random(seed);
+    }
+    
+    /**
+     * Returns the configured random number seed
+     * @return
+     */
+    public int seed() {
+        return seed;
+    }
 
-	/**
-	 * Returns the thread specific {@link Random} number generator.
-	 * @return
-	 */
-	public Random random() {
-		return random;
-	}
-	
-	/**
-	 * Returns the current {@link Set} of active cells
-	 * 
-	 * @return	the current {@link Set} of active cells
-	 */
-	public Set<Cell> activeCells() {
-		return activeCells;
-	}
-	
-	/**
-	 * Returns the current {@link Set} of winner cells
-	 * 
-	 * @return	the current {@link Set} of winner cells
-	 */
-	public Set<Cell> winnerCells() {
-		return winnerCells;
-	}
-	
-	/**
-	 * Returns the {@link Set} of predictive cells.
-	 * @return
-	 */
-	public Set<Cell> predictiveCells() {
-		return predictiveCells;
-	}
-	
-	/**
-	 * Returns the current {@link Set} of predicted columns
-	 * 
-	 * @return	the current {@link Set} of predicted columns
-	 */
-	public Set<Column> predictedColumns() {
-		return predictedColumns;
-	}
-	
-	/**
-	 * Returns the Set of learning {@link DistalDendrite}s
-	 * @return
-	 */
-	public Set<DistalDendrite> learningSegments() {
-		return learningSegments;
-	}
-	
-	/**
-	 * Returns the Set of active {@link DistalDendrite}s
-	 * @return
-	 */
-	public Set<DistalDendrite> activeSegments() {
-		return activeSegments;
-	}
-	
-	/**
-	 * Returns the mapping of Segments to active synapses in t-1
-	 * @return
-	 */
-	public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
-		return activeSynapsesForSegment;
-	}
-	
-	/**
-	 * Returns the mapping of {@link Cell}s to their reverse mapped 
-	 * {@link Synapse}s.
-	 * 
-	 * @param cell		the {@link Cell} used as a key.
-	 * @return			the mapping of {@link Cell}s to their reverse mapped 
-	 * 					{@link Synapse}s.	
-	 */
-	public Set<Synapse> receptorSynapses(Cell cell) {
-		if(cell == null) {
-			throw new IllegalArgumentException("Cell was null");
-		}
-		
-		if(receptorSynapses == null) {
-			receptorSynapses = new LinkedHashMap<Cell, Set<Synapse>>();
-		}
-		
-		Set<Synapse> retVal = null;
-		if((retVal = receptorSynapses.get(cell)) == null) {
-			receptorSynapses.put(cell, retVal = new LinkedHashSet<Synapse>());
-		}
-		
-		return retVal;
-	}
-	
-	/**
-	 * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-	 * 
-	 * @param cell		the {@link Cell} used as a key.
-	 * @return			the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-	 */
-	public List<DistalDendrite> segments(Cell cell) {
-		if(cell == null) {
-			throw new IllegalArgumentException("Cell was null");
-		}
-		
-		if(segments == null) {
-			segments = new LinkedHashMap<Cell, List<DistalDendrite>>();
-		}
-		
-		List<DistalDendrite> retVal = null;
-		if((retVal = segments.get(cell)) == null) {
-			segments.put(cell, retVal = new ArrayList<DistalDendrite>());
-		}
-		
-		return retVal;
-	}
-	
-	/**
-	 * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
-	 * 
-	 * @param segment	the {@link DistalDendrite} used as a key.
-	 * @return			the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
-	 */
-	public List<Synapse> synapses(DistalDendrite segment) {
-		if(segment == null) {
-			throw new IllegalArgumentException("Segment was null");
-		}
-		
-		if(synapses == null) {
-			synapses = new LinkedHashMap<DistalDendrite, List<Synapse>>();
-		}
-		
-		List<Synapse> retVal = null;
-		if((retVal = synapses.get(segment)) == null) {
-			synapses.put(segment, retVal = new ArrayList<Synapse>());
-		}
-		
-		return retVal;
-	}
+    /**
+     * Returns the thread specific {@link Random} number generator.
+     * @return
+     */
+    public Random random() {
+        return random;
+    }
+    
+    /**
+     * Returns the current {@link Set} of active cells
+     * 
+     * @return  the current {@link Set} of active cells
+     */
+    public Set<Cell> activeCells() {
+        return activeCells;
+    }
+    
+    /**
+     * Returns the current {@link Set} of winner cells
+     * 
+     * @return  the current {@link Set} of winner cells
+     */
+    public Set<Cell> winnerCells() {
+        return winnerCells;
+    }
+    
+    /**
+     * Returns the {@link Set} of predictive cells.
+     * @return
+     */
+    public Set<Cell> predictiveCells() {
+        return predictiveCells;
+    }
+    
+    /**
+     * Returns the current {@link Set} of predicted columns
+     * 
+     * @return  the current {@link Set} of predicted columns
+     */
+    public Set<Column> predictedColumns() {
+        return predictedColumns;
+    }
+    
+    /**
+     * Returns the Set of learning {@link DistalDendrite}s
+     * @return
+     */
+    public Set<DistalDendrite> learningSegments() {
+        return learningSegments;
+    }
+    
+    /**
+     * Returns the Set of active {@link DistalDendrite}s
+     * @return
+     */
+    public Set<DistalDendrite> activeSegments() {
+        return activeSegments;
+    }
+    
+    /**
+     * Returns the mapping of Segments to active synapses in t-1
+     * @return
+     */
+    public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
+        return activeSynapsesForSegment;
+    }
+    
+    /**
+     * Returns the mapping of {@link Cell}s to their reverse mapped 
+     * {@link Synapse}s.
+     * 
+     * @param cell      the {@link Cell} used as a key.
+     * @return          the mapping of {@link Cell}s to their reverse mapped 
+     *                  {@link Synapse}s.   
+     */
+    public Set<Synapse> receptorSynapses(Cell cell) {
+        if(cell == null) {
+            throw new IllegalArgumentException("Cell was null");
+        }
+        
+        if(receptorSynapses == null) {
+            receptorSynapses = new LinkedHashMap<Cell, Set<Synapse>>();
+        }
+        
+        Set<Synapse> retVal = null;
+        if((retVal = receptorSynapses.get(cell)) == null) {
+            receptorSynapses.put(cell, retVal = new LinkedHashSet<Synapse>());
+        }
+        
+        return retVal;
+    }
+    
+    /**
+     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     * 
+     * @param cell      the {@link Cell} used as a key.
+     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     */
+    public List<DistalDendrite> segments(Cell cell) {
+        if(cell == null) {
+            throw new IllegalArgumentException("Cell was null");
+        }
+        
+        if(segments == null) {
+            segments = new LinkedHashMap<Cell, List<DistalDendrite>>();
+        }
+        
+        List<DistalDendrite> retVal = null;
+        if((retVal = segments.get(cell)) == null) {
+            segments.put(cell, retVal = new ArrayList<DistalDendrite>());
+        }
+        
+        return retVal;
+    }
+    
+    /**
+     * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
+     * 
+     * @param segment   the {@link DistalDendrite} used as a key.
+     * @return          the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
+     */
+    public List<Synapse> synapses(DistalDendrite segment) {
+        if(segment == null) {
+            throw new IllegalArgumentException("Segment was null");
+        }
+        
+        if(synapses == null) {
+            synapses = new LinkedHashMap<DistalDendrite, List<Synapse>>();
+        }
+        
+        List<Synapse> retVal = null;
+        if((retVal = synapses.get(segment)) == null) {
+            synapses.put(segment, retVal = new ArrayList<Synapse>());
+        }
+        
+        return retVal;
+    }
 }

@@ -40,96 +40,96 @@ import org.numenta.nupic.research.TemporalMemory;
  *
  */
 public class Column {
-	/** The flat non-topological index of this column */
-	private final int index;
-	/** Configuration of cell count */
-	private final int numCells;
-	
-	private Cell[] cells;
-	
-	/**
-	 * Constructs a new {@code Column}
-	 * 
-	 * @param numCells		number of cells per column
-	 * @param index			the index of this column
-	 */
-	public Column(int numCells, int index) {
-		this.numCells = numCells;
-		this.index = index;
-		cells = new Cell[numCells];
-		for(int i = 0;i < numCells;i++) {
-			cells[i] = new Cell(this, i);
-		}
-	}
-	
-	/**
-	 * Returns the {@link Cell} residing at the specified index.
-	 * 
-	 * @param index		the index of the {@link Cell} to return.
-	 * @return			the {@link Cell} residing at the specified index.
-	 */
-	public Cell getCell(int index) {
-		return cells[index];
-	}
-	
-	/**
-	 * Returns a {@link List} view of this {@code Column}'s {@link Cell}s.
-	 * @return
-	 */
-	public List<Cell> getCells() {
-		return Arrays.asList(cells);
-	}
-	
-	/**
-	 * Returns the index of this {@code Column}
-	 * @return	the index of this {@code Column}
-	 */
-	public int getIndex() {
-		return index;
-	}
-	
-	/**
-	 * Returns the configured number of cells per column for
-	 * all {@code Column} objects within the current {@link TemporalMemory}
-	 * @return
-	 */
-	public int getNumCellsPerColumn() {
-		return numCells;
-	}
-	
-	/**
-	 * Returns the {@link Cell} with the least number of {@link DistalDendrite}s.
-	 * 
-	 * @param c			the connections state of the temporal memory
-	 * @param random
-	 * @return
-	 */
-	public Cell getLeastUsedCell(Connections c, Random random) {
-		List<Cell> cells = getCells();
-		List<Cell> leastUsedCells = new ArrayList<Cell>();
-		int minNumSegments = Integer.MAX_VALUE;
-		
-		for(Cell cell : cells) {
-			int numSegments = cell.getSegments(c).size();
-			
-			if(numSegments < minNumSegments) {
-				minNumSegments = numSegments;
-				leastUsedCells = new ArrayList<Cell>();
-			}
-			
-			if(numSegments == minNumSegments) {
-				leastUsedCells.add(cell);
-			}
-		}
-		int index = random.nextInt(leastUsedCells.size());
-		Collections.sort(leastUsedCells);
-		return leastUsedCells.get(index); 
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public String toString() {
-		return "Column: idx=" + index;
-	}
+    /** The flat non-topological index of this column */
+    private final int index;
+    /** Configuration of cell count */
+    private final int numCells;
+    
+    private Cell[] cells;
+    
+    /**
+     * Constructs a new {@code Column}
+     * 
+     * @param numCells      number of cells per column
+     * @param index         the index of this column
+     */
+    public Column(int numCells, int index) {
+        this.numCells = numCells;
+        this.index = index;
+        cells = new Cell[numCells];
+        for(int i = 0;i < numCells;i++) {
+            cells[i] = new Cell(this, i);
+        }
+    }
+    
+    /**
+     * Returns the {@link Cell} residing at the specified index.
+     * 
+     * @param index     the index of the {@link Cell} to return.
+     * @return          the {@link Cell} residing at the specified index.
+     */
+    public Cell getCell(int index) {
+        return cells[index];
+    }
+    
+    /**
+     * Returns a {@link List} view of this {@code Column}'s {@link Cell}s.
+     * @return
+     */
+    public List<Cell> getCells() {
+        return Arrays.asList(cells);
+    }
+    
+    /**
+     * Returns the index of this {@code Column}
+     * @return  the index of this {@code Column}
+     */
+    public int getIndex() {
+        return index;
+    }
+    
+    /**
+     * Returns the configured number of cells per column for
+     * all {@code Column} objects within the current {@link TemporalMemory}
+     * @return
+     */
+    public int getNumCellsPerColumn() {
+        return numCells;
+    }
+    
+    /**
+     * Returns the {@link Cell} with the least number of {@link DistalDendrite}s.
+     * 
+     * @param c         the connections state of the temporal memory
+     * @param random
+     * @return
+     */
+    public Cell getLeastUsedCell(Connections c, Random random) {
+        List<Cell> cells = getCells();
+        List<Cell> leastUsedCells = new ArrayList<Cell>();
+        int minNumSegments = Integer.MAX_VALUE;
+        
+        for(Cell cell : cells) {
+            int numSegments = cell.getSegments(c).size();
+            
+            if(numSegments < minNumSegments) {
+                minNumSegments = numSegments;
+                leastUsedCells = new ArrayList<Cell>();
+            }
+            
+            if(numSegments == minNumSegments) {
+                leastUsedCells.add(cell);
+            }
+        }
+        int index = random.nextInt(leastUsedCells.size());
+        Collections.sort(leastUsedCells);
+        return leastUsedCells.get(index); 
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return "Column: idx=" + index;
+    }
 }
