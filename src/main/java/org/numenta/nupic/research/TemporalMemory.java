@@ -354,17 +354,10 @@ public class TemporalMemory {
      *
      * - for each prev predictive cell
      *   - if in active column
-<<<<<<< HEAD
      *     - mark it as active
      *     - mark it as winner cell
      *     - mark column as predicted
      *     
-=======
-     *   - mark it as active
-     *   - mark it as winner cell
-     *   - mark column as predicted
-     *   
->>>>>>> upstream/master
      * @param c                     ComputeCycle interim values container
      * @param prevPredictiveCells   predictive {@link Cell}s predictive cells in t-1
      * @param activeColumns         active columns in t
@@ -388,30 +381,18 @@ public class TemporalMemory {
      * - for each unpredicted active column
      *   - mark all cells as active
      *   - mark the best matching cell as winner cell
-<<<<<<< HEAD
      *     - (learning)
      *       - if it has no matching segment
      *         - (optimization) if there are prev winner cells
      *           - add a segment to it
      *       - mark the segment as learning
-=======
-     *   - (learning)
-     *     - if it has no matching segment
-     *       - (optimization) if there are prev winner cells
-     *         - add a segment to it
-     *     - mark the segment as learning
->>>>>>> upstream/master
      * 
      * @param cycle                         ComputeCycle interim values container
      * @param c                             Connections temporal memory state
      * @param activeColumns                 active columns in t
      * @param predictedColumns              predicted columns in t
      * @param prevActiveSynapsesForSegment      LinkedHashMap of previously active segments which
-<<<<<<< HEAD
      *                                      have had synapses marked as active in t-1     
-=======
-     *                                      have had synapses marked as active in t-1    
->>>>>>> upstream/master
      */
     public void burstColumns(ComputeCycle cycle, Connections c, Set<Column> activeColumns, Set<Column> predictedColumns, 
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
@@ -449,17 +430,10 @@ public class TemporalMemory {
      *   - strengthen active synapses
      *   - weaken inactive synapses
      *   - if learning segment
-<<<<<<< HEAD
-     *     - add some synapses to the segment
-     *       - subsample from prev winner cells
-     * </pre>     
-     *       
-=======
      *   - add some synapses to the segment
      *     - subsample from prev winner cells
      * </pre>    
      *     
->>>>>>> upstream/master
      * @param c                             the Connections state of the temporal memory
      * @param prevActiveSegments
      * @param learningSegments
