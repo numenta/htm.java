@@ -119,7 +119,7 @@ public class SpatialPooler {
      */
     public void updateInhibitionRadius(SpatialLattice l) {
         if(l.getGlobalInhibition()) {
-            l.setInhibitionRadius(l.getMemory().getMaxIndex());
+            l.setInhibitionRadius(ArrayUtils.max(l.getColumnDimensions()));
             return;
         }
         
@@ -145,7 +145,7 @@ public class SpatialPooler {
      * @param l
      * @return
      */
-    public static double avgColumnsPerInput(SpatialLattice l) {
+    public double avgColumnsPerInput(SpatialLattice l) {
         int[] colDim = Arrays.copyOf(l.getColumnDimensions(), l.getColumnDimensions().length);
         int[] inputDim = Arrays.copyOf(l.getInputDimensions(), l.getInputDimensions().length);
         double[] columnsPerInput = ArrayUtils.divide(

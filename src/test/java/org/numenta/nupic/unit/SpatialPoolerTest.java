@@ -99,11 +99,6 @@ public class SpatialPoolerTest {
     }
     
     @Test
-    public void testUpdateInhibitionRadius() {
-    	
-    }
-    
-    @Test
     public void testMapPotential1D() {
     	defaultSetup();
         parameters.setInputDimensions(new int[] { 10 });
@@ -261,6 +256,65 @@ public class SpatialPoolerTest {
         	double connectedSpan = sp.avgConnectedSpanForColumnND(mem, i);
         	assertEquals(trueAvgConnectedSpan[i], connectedSpan, 0);
         }
+    }
+    
+    @Test
+    public void testUpdateInhibitionRadius() {
+    	defaultSetup();
+    	initSP();
+    	 
+    	//Test global inhibition case
+    	mem.setGlobalInhibition(true);
+    	mem.setColumnDimensions(new int[] { 57, 31, 2 });
+    	mem.initMatrices();
+    	sp.updateInhibitionRadius(mem);
+    	assertEquals(57, mem.getInhibitionRadius());
+    	
+    	// ((3 * 4) - 1) / 2 => round up
+    	SpatialPooler mock = new SpatialPooler() {
+    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    			return 3;
+    		}
+    		
+    		public double avgColumnsPerInput(SpatialLattice l) {
+    			return 4;
+    		}
+    	};
+    	mem.setGlobalInhibition(false);
+    	sp = mock;
+    	sp.updateInhibitionRadius(mem);
+    	assertEquals(6, mem.getInhibitionRadius());
+    	
+    	//Test clipping at 1.0
+    	mock = new SpatialPooler() {
+    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    			return 0.5;
+    		}
+    		
+    		public double avgColumnsPerInput(SpatialLattice l) {
+    			return 1.2;
+    		}
+    	};
+    	mem.setGlobalInhibition(false);
+    	sp = mock;
+    	sp.updateInhibitionRadius(mem);
+    	assertEquals(1, mem.getInhibitionRadius());
+    	
+    	//Test rounding up
+    	mock = new SpatialPooler() {
+    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    			return 2.4;
+    		}
+    		
+    		public double avgColumnsPerInput(SpatialLattice l) {
+    			return 2;
+    		}
+    	};
+    	mem.setGlobalInhibition(false);
+    	sp = mock;
+    	//((2 * 2.4) - 1) / 2.0 => round up
+    	sp.updateInhibitionRadius(mem);
+    	assertEquals(2, mem.getInhibitionRadius());
     }
     
     /**
