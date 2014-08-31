@@ -99,6 +99,51 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testMapColumn() {
+    	// Test 1D
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 4 });
+    	parameters.setInputDimensions(new int[] { 10 });
+    	initSP();
+    	
+    	assertEquals(0, sp.mapColumn(mem, 0));
+    	assertEquals(3, sp.mapColumn(mem, 1));
+    	assertEquals(6, sp.mapColumn(mem, 2));
+    	assertEquals(9, sp.mapColumn(mem, 3));
+    	
+    	// Test 1D with same dimension of columns and inputs
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 4 });
+    	parameters.setInputDimensions(new int[] { 4 });
+    	initSP();
+    	
+    	assertEquals(0, sp.mapColumn(mem, 0));
+    	assertEquals(1, sp.mapColumn(mem, 1));
+    	assertEquals(2, sp.mapColumn(mem, 2));
+    	assertEquals(3, sp.mapColumn(mem, 3));
+    	
+    	// Test 1D with same dimensions of length 1
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 1 });
+    	parameters.setInputDimensions(new int[] { 1 });
+    	initSP();
+    	
+    	assertEquals(0, sp.mapColumn(mem, 0));
+    	
+    	// Test 2D
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 12, 4 });
+    	parameters.setInputDimensions(new int[] { 20, 10 });
+    	initSP();
+    	
+    	assertEquals(0, sp.mapColumn(mem, 0));
+    	assertEquals(10, sp.mapColumn(mem, 4));
+    	assertEquals(13, sp.mapColumn(mem, 5));
+    	assertEquals(19, sp.mapColumn(mem, 7));
+    	assertEquals(199, sp.mapColumn(mem, 47));
+    }
+    
+    @Test
     public void testMapPotential1D() {
     	defaultSetup();
         parameters.setInputDimensions(new int[] { 10 });

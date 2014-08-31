@@ -309,7 +309,7 @@ public class SpatialPooler {
      * @return              A boolean value indicating that boundaries should be
      *                      ignored.
      */
-    public static int mapColumn(Lattice l, int columnIndex) {
+    public int mapColumn(Lattice l, int columnIndex) {
         int[] columnCoords = l.getMemory().computeCoordinates(columnIndex);
         double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
         double[] ratios = ArrayUtils.divide(
