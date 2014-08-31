@@ -105,17 +105,45 @@ public class SpatialLattice extends Lattice {
     private double[] minActiveDutyCycles;
     private double[] boostFactors;
     
+    
     /**
-     * Constructs a new {@code SpatialLattice}
+     * Instantiates a new {@code SpatialLattice}
+     */
+    public SpatialLattice() {
+    	this(null);
+    }
+    
+    /**
+     * Constructs a new {@code SpatialLattice}. If the specified {@link Parameters}
+     * object is null, this constructor merely instantiates an unconfigured lattice.
      */
     public SpatialLattice(Parameters p) {
-        super();
-        
-        if(p != null) {
+    	this(null, p);
+    }
+    
+    public SpatialLattice(SpatialPooler sp, Parameters p) {
+    	if(p != null) {
             Parameters.apply(this, p);
+        }else{
+        	return;
         }
+    	
+    	if(sp != null) {
         
-        memory = new SparseObjectMatrix<Column>(columnDimensions);
+	        //Init the static data structures
+	        initMatrices();
+	        
+	        //Configure potential pools and support settings
+	        connectAndConfigureInputs(sp);
+    	}
+        
+        if(getVerbosity() > 0) {
+            printParameters();
+        }
+    }
+    
+    public void initMatrices() {
+    	memory = new SparseObjectMatrix<Column>(columnDimensions);
         inputMatrix = new SparseBinaryMatrix(inputDimensions);
         
         for(int i = 0;i < inputDimensions.length;i++) {
@@ -129,12 +157,6 @@ public class SpatialLattice extends Lattice {
         
         permanences = new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } );
         
-        tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
-        for(int i = 0;i < numColumns;i++) {
-            for(int j = 0;j < numInputs;j++) {
-                tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
-            }
-        }
         /**
          * 'connectedSynapses' is a similar matrix to 'permanences'
          * (rows represent cortical columns, columns represent input bits) whose
@@ -146,27 +168,33 @@ public class SpatialLattice extends Lattice {
         connectedSynapses = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
         
         connectedCounts = new int[numColumns];
-        // Initialize the set of permanence values for each column. Ensure that
+        
+        tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        for(int i = 0;i < numColumns;i++) {
+            for(int j = 0;j < numInputs;j++) {
+                tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
+            }
+        }
+    }
+    
+    public void connectAndConfigureInputs(SpatialPooler sp) {
+    	 // Initialize the set of permanence values for each column. Ensure that
         // each column is connected to enough input bits to allow it to be
         // activated.
         for(int i = 0;i < numColumns;i++) {
-            int[] potential = SpatialPooler.mapPotential(this, 0, true);
+            int[] potential = sp.mapPotential(this, i, true);
             potentialPools.set(i, potential);
-            double[] perm = SpatialPooler.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
-            SpatialPooler.updatePermanencesForColumn(this, perm, i, true);
+            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
+            sp.updatePermanencesForColumn(this, perm, i, true);
         }
+        
+        sp.updateInhibitionRadius(this);
         
         overlapDutyCycles = new double[numColumns];
         activeDutyCycles = new double[numColumns];
         minOverlapDutyCycles = new double[numColumns];
         minActiveDutyCycles = new double[numColumns];
         boostFactors = new double[numColumns];
-        
-        SpatialPooler.updateInhibitionRadius(this);
-        
-        if(getVerbosity() > 0) {
-            printParameters();
-        }
     }
     
     /**
@@ -225,12 +253,20 @@ public class SpatialLattice extends Lattice {
         return numInputs;
     }
     
+    public void setNumInputs(int n) {
+    	this.numInputs = n;
+    }
+    
     /**
      * Returns the product of the column dimensions 
      * @return  the product of the column dimensions 
      */
     public int getNumColumns() {
         return numColumns;
+    }
+    
+    public void setNumColumns(int n) {
+    	this.numColumns = n;
     }
     
     /**

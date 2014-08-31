@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 
 import org.junit.Test;
@@ -66,7 +67,7 @@ public class SpatialPoolerTest {
     
     private void initSP() {
         sp = new SpatialPooler();
-        mem = new SpatialLattice(parameters);
+        mem = new SpatialLattice(sp, parameters);
     }
     
     @Test
@@ -97,6 +98,171 @@ public class SpatialPoolerTest {
         assertEquals(5, mem.getNumColumns());
     }
     
+    @Test
+    public void testUpdateInhibitionRadius() {
+    	
+    }
+    
+    @Test
+    public void testMapPotential1D() {
+    	defaultSetup();
+        parameters.setInputDimensions(new int[] { 10 });
+        parameters.setColumnDimensions(new int[] { 4 });
+        parameters.setPotentialRadius(2);
+        parameters.setPotentialPct(1);
+        initSP();
+        
+        assertEquals(10, mem.getInputDimensions()[0]);
+        assertEquals(4, mem.getColumnDimensions()[0]);
+        assertEquals(2, mem.getPotentialRadius());
+        
+        // Test without wrapAround and potentialPct = 1
+        int[] expected = new int[] { 0, 1, 2 };
+        int[] mask = sp.mapPotential(mem, 0, false);
+        assertTrue(Arrays.equals(expected, mask));
+        
+        expected = new int[] { 4, 5, 6, 7, 8 };
+        mask = sp.mapPotential(mem, 2, false);
+        assertTrue(Arrays.equals(expected, mask));
+        
+        // Test with wrapAround and potentialPct = 1        
+        expected = new int[] { 0, 1, 2, 8, 9 };
+        mask = sp.mapPotential(mem, 0, true);
+        assertTrue(Arrays.equals(expected, mask));
+        
+        expected = new int[] { 0, 1, 7, 8, 9 };
+        mask = sp.mapPotential(mem, 3, true);
+        assertTrue(Arrays.equals(expected, mask));
+        
+        // Test with wrapAround and potentialPct < 1
+        parameters.setPotentialPct(0.5);
+        initSP();
+        
+        int[] supersetMask = new int[] { 0, 1, 2, 8, 9 }; 
+        mask = sp.mapPotential(mem, 0, true);
+        assertEquals(mask.length, 3);
+        TIntArrayList unionList = new TIntArrayList(supersetMask);
+        unionList.addAll(mask);
+        int[] unionMask = ArrayUtils.unique(unionList.toArray());
+        assertTrue(Arrays.equals(unionMask, supersetMask));
+    }
+    
+    @Test
+    public void testMapPotential2D() {
+    	defaultSetup();
+        parameters.setInputDimensions(new int[] { 5, 10 });
+        parameters.setColumnDimensions(new int[] { 2, 4 });
+        parameters.setPotentialRadius(1);
+        parameters.setPotentialPct(1);
+        initSP();
+        
+        //Test without wrapAround
+        int[] mask = sp.mapPotential(mem, 0, false);
+        TIntHashSet trueIndices = new TIntHashSet(new int[] { 0, 1, 10, 11 });
+        TIntHashSet maskSet = new TIntHashSet(mask);
+        assertTrue(trueIndices.equals(maskSet));
+        
+        trueIndices.clear();
+        maskSet.clear();
+        trueIndices.addAll(new int[] { 5, 6, 7, 15, 16, 17 });
+        mask = sp.mapPotential(mem, 2, false);
+        maskSet.addAll(mask);
+        assertTrue(trueIndices.equals(maskSet));
+        
+        //Test with wrapAround
+        trueIndices.clear();
+        maskSet.clear();
+        trueIndices.addAll(new int[] { 49, 9, 19, 40, 0, 10, 41, 1, 11 });
+        mask = sp.mapPotential(mem, 0, true);
+        maskSet.addAll(mask);
+        assertTrue(trueIndices.equals(maskSet));
+        
+        trueIndices.clear();
+        maskSet.clear();
+        trueIndices.addAll(new int[] { 48, 8, 18, 49, 9, 19, 40, 0, 10 });
+        mask = sp.mapPotential(mem, 3, true);
+        maskSet.addAll(mask);
+        assertTrue(trueIndices.equals(maskSet));
+    }
+    
+    @Test
+    public void testMapPotential1Column1Input() {
+    	defaultSetup();
+        parameters.setInputDimensions(new int[] { 1 });
+        parameters.setColumnDimensions(new int[] { 1 });
+        parameters.setPotentialRadius(2);
+        parameters.setPotentialPct(1);
+        initSP();
+        
+        //Test without wrapAround and potentialPct = 1
+        int[] expectedMask = new int[] { 0 }; 
+        int[] mask = sp.mapPotential(mem, 0, false);
+        TIntHashSet trueIndices = new TIntHashSet(expectedMask);
+        TIntHashSet maskSet = new TIntHashSet(mask);
+        // The *position* of the one "on" bit expected. 
+        // Python version returns [1] which is the on bit in the zero'th position
+        assertTrue(trueIndices.equals(maskSet));
+    }
+    
+    @Test
+    public void testAvgConnectedSpanForColumnND() {
+    	defaultSetup();
+    	parameters = null;
+    	initSP();
+    	
+    	int[] inputDimensions = new int[] { 4, 4, 2, 5 };
+        mem.setInputDimensions(inputDimensions);
+        mem.setColumnDimensions(new int[] { 5 });
+        mem.initMatrices();
+        
+        TIntArrayList connected = new TIntArrayList();
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 1 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 2, 1, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 0, 1, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 3 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 2, 1, 0 }, false));
+        connected.sort(0, connected.size());
+        //[ 45  46  48 105 125 145]
+        mem.getConnectedSynapses().set(0, connected.toArray());
+        
+        connected.clear();
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 0, 1, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 0, 0, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 0, 0, 0 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 0, 1, 0 }, false));
+        connected.sort(0, connected.size());
+        //[ 80  85 120 125]
+        mem.getConnectedSynapses().set(1, connected.toArray());
+        
+        connected.clear();
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 1, 4 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 0, 3 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 0, 1 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 0, 2 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 1, 1 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 1 }, false));
+        connected.sort(0, connected.size());
+        //[  1   3   6   9  42 156]
+        mem.getConnectedSynapses().set(2, connected.toArray());
+        
+        connected.clear();
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 4 }, false));
+        connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 0, 0 }, false));
+        connected.sort(0, connected.size());
+        //[  0 159]
+        mem.getConnectedSynapses().set(3, connected.toArray());
+        
+        //[]
+        mem.getConnectedSynapses().set(4, new int[0]);
+        
+        double[] trueAvgConnectedSpan = new double[] { 11.0/4d, 6.0/4d, 14.0/4d, 15.0/4d, 0d };
+        for(int i = 0;i < mem.getNumColumns();i++) {
+        	double connectedSpan = sp.avgConnectedSpanForColumnND(mem, i);
+        	assertEquals(trueAvgConnectedSpan[i], connectedSpan, 0);
+        }
+    }
+    
     /**
      * As coded in the Python test
      */
@@ -109,7 +275,7 @@ public class SpatialPoolerTest {
         initSP();
         
         ////////////////////// Test not part of Python port /////////////////////
-        int[] result = SpatialPooler.getNeighborsND(mem, 2, 3, true).toArray();
+        int[] result = sp.getNeighborsND(mem, 2, 3, true).toArray();
         int[] expected = new int[] { 
             0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
             13, 14, 15, 16, 17, 18, 19, 30, 31, 32, 33, 
@@ -130,7 +296,7 @@ public class SpatialPoolerTest {
         int y = 3;
         int z = 2;
         int columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
-        int[] neighbors = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        int[] neighbors = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         String expect = "[18, 19, 20, 21, 22, 23, 32, 33, 34, 36, 37, 46, 47, 48, 49, 50, 51]";
         assertEquals(expect, ArrayUtils.print1DArray(neighbors));
         
@@ -146,7 +312,7 @@ public class SpatialPoolerTest {
         y = 0;
         z = 3;
         columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
-        neighbors = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        neighbors = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         expect = "[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 24, 25, 26, "
                 + "27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 51, "
                 + "52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 69, 70, 71, 72, 73, 74, "
@@ -177,7 +343,7 @@ public class SpatialPoolerTest {
         y = 6;
         z = 2;
         columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x, w });
-        neighbors = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        neighbors = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         
         TIntHashSet trueNeighbors = new TIntHashSet();
         for(int i = -radius;i <= radius;i++) {
@@ -207,7 +373,7 @@ public class SpatialPoolerTest {
         sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 });
         radius = 1;
         columnIndex = 3;
-        int[] mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        int[] mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         TIntArrayList msk = new TIntArrayList(mask);
         TIntArrayList neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -223,7 +389,7 @@ public class SpatialPoolerTest {
         sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 });
         radius = 2;
         columnIndex = 3;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -239,7 +405,7 @@ public class SpatialPoolerTest {
         sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 });
         radius = 2;
         columnIndex = 0;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -255,7 +421,7 @@ public class SpatialPoolerTest {
         sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 });
         radius = 20;
         columnIndex = 6;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -283,7 +449,7 @@ public class SpatialPoolerTest {
         }
         radius = 1;
         columnIndex = 3*5 + 2;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -311,7 +477,7 @@ public class SpatialPoolerTest {
         }
         radius = 2;
         columnIndex = 3*5 + 2;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -339,7 +505,7 @@ public class SpatialPoolerTest {
         }
         radius = 7;
         columnIndex = 3*5 + 2;
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);
@@ -367,7 +533,7 @@ public class SpatialPoolerTest {
         }
         radius = 1;
         columnIndex = sbm.getMaxIndex();
-        mask = SpatialPooler.getNeighborsND(mem, columnIndex, radius, true).toArray();
+        mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
         msk = new TIntArrayList(mask);
         neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
         neg.removeAll(msk);

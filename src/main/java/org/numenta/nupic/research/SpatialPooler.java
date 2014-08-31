@@ -44,7 +44,6 @@ public class SpatialPooler {
     }
     
     /**
-<<<<<<< HEAD
      * This is the primary public method of the SpatialPooler class. This
      * function takes a input vector and outputs the indices of the active columns.
      * If 'learn' is set to True, this method also updates the permanences of the
@@ -89,10 +88,10 @@ public class SpatialPooler {
      * @param columnIndex   the current column for which to avg.
      * @return
      */
-    public static double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
         int[] dimensions = l.getInputDimensions();
         int[] connected = l.getConnectedSynapses().getObject(columnIndex);
-        if(connected.length == 0) return 0;
+        if(connected == null || connected.length == 0) return 0;
         
         int[] maxCoord = new int[l.getInputDimensions().length];
         int[] minCoord = new int[l.getInputDimensions().length];
@@ -118,7 +117,7 @@ public class SpatialPooler {
      * 
      * @param l
      */
-    public static void updateInhibitionRadius(SpatialLattice l) {
+    public void updateInhibitionRadius(SpatialLattice l) {
         if(l.getGlobalInhibition()) {
             l.setInhibitionRadius(l.getMemory().getMaxIndex());
             return;
@@ -155,8 +154,6 @@ public class SpatialPooler {
     }
     
     /**
-=======
->>>>>>> upstream/master
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
      * 'self._stimulusThreshold' overlaps in order to be considered during the
@@ -169,7 +166,7 @@ public class SpatialPooler {
      * @param perm
      * @param mask
      */
-    public static void raisePermanenceToThreshold(SpatialLattice l, double[] perm, int[] mask) {
+    public void raisePermanenceToThreshold(SpatialLattice l, double[] perm, int[] mask) {
         ArrayUtils.clip(perm, l.getSynPermMin(), l.getSynPermMax());
         while(true) {
             int numConnected = ArrayUtils.valueGreaterCount(l.getSynPermConnected(), perm);
@@ -212,7 +209,7 @@ public class SpatialPooler {
      *                      a connected state. Should be set to 'false' when a direct
      *                      assignment is required.
      */
-    public static void updatePermanencesForColumn(SpatialLattice l, double[] perm, int columnIndex, boolean raisePerm) {
+    public void updatePermanencesForColumn(SpatialLattice l, double[] perm, int columnIndex, boolean raisePerm) {
         int[] maskPotential = l.getPotentialPools().getObject(columnIndex); 
         if(raisePerm) {
             raisePermanenceToThreshold(l, perm, maskPotential);
@@ -268,20 +265,13 @@ public class SpatialPooler {
      * 
      * @param l                 the {@link SpatialLattice} which is the memory model
      * @param potentialPool     An array specifying the potential pool of the column.
-<<<<<<< HEAD
      *                          Permanence values will only be generated for input bits
      *                          corresponding to indices for which the mask value is 1.
      * @param connectedPct      A value between 0 or 1 specifying the percent of the input
      *                          bits that will start off in a connected state.
-=======
-     *                      Permanence values will only be generated for input bits
-     *                      corresponding to indices for which the mask value is 1.
-     * @param connectedPct      A value between 0 or 1 specifying the percent of the input
-     *                      bits that will start off in a connected state.
->>>>>>> upstream/master
      * @return
      */
-    public static double[] initPermanence(SpatialLattice l, TIntHashSet potentialPool, double connectedPct) {
+    public double[] initPermanence(SpatialLattice l, TIntHashSet potentialPool, double connectedPct) {
         int len = l.getNumInputs();
         double[] perm = new double[len];
         Arrays.fill(perm, 0);
@@ -315,15 +305,9 @@ public class SpatialPooler {
      *   returns input index 8. 
      *   
      * @param columnIndex   The index identifying a column in the permanence, potential
-<<<<<<< HEAD
      *                      and connectivity matrices.
      * @return              A boolean value indicating that boundaries should be
      *                      ignored.
-=======
-     *                  and connectivity matrices.
-     * @return              A boolean value indicating that boundaries should be
-     *                  ignored.
->>>>>>> upstream/master
      */
     public static int mapColumn(Lattice l, int columnIndex) {
         int[] columnCoords = l.getMemory().computeCoordinates(columnIndex);
@@ -331,7 +315,7 @@ public class SpatialPooler {
         double[] ratios = ArrayUtils.divide(
             colCoords, ArrayUtils.toDoubleArray(l.getColumnDimensions()), 0, -1);
         double[] inputCoords = ArrayUtils.multiply(
-                ArrayUtils.toDoubleArray(l.getInputDimensions()), ratios, -1, 0);
+            ArrayUtils.toDoubleArray(l.getInputDimensions()), ratios, -1, 0);
         int[] inputCoordInts = ArrayUtils.toIntArray(inputCoords);
         int inputIndex = l.getInputMatrix().computeIndex(inputCoordInts);
         return inputIndex;
@@ -364,7 +348,7 @@ public class SpatialPooler {
      *                      ignored.
      * @return
      */
-    public static int[] mapPotential(SpatialLattice l, int columnIndex, boolean wrapAround) {
+    public int[] mapPotential(SpatialLattice l, int columnIndex, boolean wrapAround) {
         int inputIndex = mapColumn(l, columnIndex);
         
         TIntArrayList indices = getNeighborsND(l, inputIndex, l.getPotentialRadius(), wrapAround);
@@ -403,7 +387,7 @@ public class SpatialPooler {
      *               
      * @return              a list of the flat indices of these columns
      */
-    public static TIntArrayList getNeighborsND(SpatialLattice l, int columnIndex, int radius, boolean wrapAround) {
+    public TIntArrayList getNeighborsND(SpatialLattice l, int columnIndex, int radius, boolean wrapAround) {
         final int[] dimensions = l.getInputDimensions();
         int[] columnCoords = l.getInputMatrix().computeCoordinates(columnIndex);
         List<int[]> dimensionCoords = new ArrayList<int[]>();

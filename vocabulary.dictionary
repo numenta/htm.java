@@ -8,3 +8,5 @@ permanences
 dendrite
 verbosity
 int
+unconfigured
+init

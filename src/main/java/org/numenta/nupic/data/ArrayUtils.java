@@ -174,8 +174,10 @@ public class ArrayUtils {
                 "The dividend array and the divisor array must be the same length");
         }
         double[] quotient = new double[dividend.length];
+        double denom = 1;
         for(int i = 0;i < dividend.length;i++) {
-            quotient[i] = (dividend[i] + dividendAdjustment) / (divisor[i] + divisorAdjustment);
+            quotient[i] = (dividend[i] + dividendAdjustment) / 
+            	((denom = divisor[i] + divisorAdjustment) == 0 ? 1 : denom); //Protect against division by 0
         }
         return quotient;
     }
@@ -261,6 +263,34 @@ public class ArrayUtils {
             arr[i] += amount;
         }
         return arr;
+    }
+    
+    /**
+     * Returns the sum of all contents in the specified array.
+     * @param array
+     * @return
+     */
+    public static int sum(int[] array) {
+    	int sum = 0;
+    	for(int i = 0;i < array.length;i++) {
+    		sum += array[i];
+    	}
+    	return sum;
+    }
+    
+    /**
+     * Sparse or due to the arrays containing the indexes of "on bits",
+     * the <em>or</em> of which is equal to the mere combination of the two
+     * arguments - eliminating duplicates and sorting.
+     * 
+     * @param arg1
+     * @param arg2
+     * @return
+     */
+    public static int[] sparseBinaryOr(int[] arg1, int[] arg2) {
+    	TIntArrayList t = new TIntArrayList(arg1);
+    	t.addAll(arg2);
+    	return unique(t.toArray());
     }
     
     /**
