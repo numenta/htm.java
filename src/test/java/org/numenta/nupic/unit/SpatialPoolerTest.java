@@ -317,6 +317,41 @@ public class SpatialPoolerTest {
     	assertEquals(2, mem.getInhibitionRadius());
     }
     
+    @Test
+    public void testAvgColumnsPerInput() {
+    	defaultSetup();
+    	initSP();
+    	 
+    	mem.setColumnDimensions(new int[] { 2, 2, 2, 2 });
+    	mem.setInputDimensions(new int[] { 4, 4, 4, 4 });
+    	assertEquals(0.5, sp.avgColumnsPerInput(mem), 0);
+    	
+    	mem.setColumnDimensions(new int[] { 2, 2, 2, 2 });
+    	mem.setInputDimensions(new int[] { 7, 5, 1, 3 });
+    	double trueAvgColumnPerInput = (2.0/7 + 2.0/5 + 2.0/1 + 2/3.0) / 4.0d;
+    	assertEquals(trueAvgColumnPerInput, sp.avgColumnsPerInput(mem), 0);
+    	
+    	mem.setColumnDimensions(new int[] { 3, 3 });
+    	mem.setInputDimensions(new int[] { 3, 3 });
+    	trueAvgColumnPerInput = 1;
+    	assertEquals(trueAvgColumnPerInput, sp.avgColumnsPerInput(mem), 0);
+    	
+    	mem.setColumnDimensions(new int[] { 25 });
+    	mem.setInputDimensions(new int[] { 5 });
+    	trueAvgColumnPerInput = 5;
+    	assertEquals(trueAvgColumnPerInput, sp.avgColumnsPerInput(mem), 0);
+    	
+    	mem.setColumnDimensions(new int[] { 3, 3, 3, 5, 5, 6, 6 });
+    	mem.setInputDimensions(new int[] { 3, 3, 3, 5, 5, 6, 6 });
+    	trueAvgColumnPerInput = 1;
+    	assertEquals(trueAvgColumnPerInput, sp.avgColumnsPerInput(mem), 0);
+    	
+    	mem.setColumnDimensions(new int[] { 3, 6, 9, 12 });
+    	mem.setInputDimensions(new int[] { 3, 3, 3 , 3 });
+    	trueAvgColumnPerInput = 2.5;
+    	assertEquals(trueAvgColumnPerInput, sp.avgColumnsPerInput(mem), 0);
+    }
+    
     /**
      * As coded in the Python test
      */

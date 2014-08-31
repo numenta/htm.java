@@ -243,7 +243,7 @@ public class ArrayUtils {
      * @return
      */
     public static double average(double[] arr) {
-        int sum = 0;
+        double sum = 0;
         for(int i = 0;i < arr.length;i++) {
             sum += arr[i];
         }
