@@ -73,8 +73,8 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         //Basic first order sequences
         initTM();
         
-        assertEquals(0.05, tm.getPermanenceDecrement(), .001);
-        assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+        assertEquals(0.05, connections.getPermanenceDecrement(), .001);
+        assertEquals(0.1, connections.getPermanenceIncrement(), .001);
         
         finishSetUp(new ConsecutivePatternMachine(6, 1));
         
@@ -104,8 +104,8 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertEquals(0.05, tm.getPermanenceDecrement(), .001);
-        assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+        assertEquals(0.05, connections.getPermanenceDecrement(), .001);
+        assertEquals(0.1, connections.getPermanenceIncrement(), .001);
         
         finishSetUp(new ConsecutivePatternMachine(6, 1));
         
@@ -154,8 +154,8 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertEquals(0.05, tm.getPermanenceDecrement(), .001);
-        assertEquals(0.1, tm.getPermanenceIncrement(), .001);
+        assertEquals(0.05, connections.getPermanenceDecrement(), .001);
+        assertEquals(0.1, connections.getPermanenceIncrement(), .001);
         
         finishSetUp(new ConsecutivePatternMachine(6, 1));
         
@@ -185,9 +185,9 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertEquals(0.05, tm.getPermanenceDecrement(), .001);
-        assertEquals(0.1, tm.getPermanenceIncrement(), .001);
-        assertTrue(Arrays.equals(new int[] { 2 }, tm.getColumnDimensions()));
+        assertEquals(0.05, connections.getPermanenceDecrement(), .001);
+        assertEquals(0.1, connections.getPermanenceIncrement(), .001);
+        assertTrue(Arrays.equals(new int[] { 2 }, connections.getColumnDimensions()));
         
         finishSetUp(new ConsecutivePatternMachine(2, 1));
         
@@ -213,9 +213,9 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertEquals(0.05, tm.getPermanenceDecrement(), .001);
-        assertEquals(0.1, tm.getPermanenceIncrement(), .001);
-        assertTrue(Arrays.equals(new int[] { 2 }, tm.getColumnDimensions()));
+        assertEquals(0.05, connections.getPermanenceDecrement(), .001);
+        assertEquals(0.1, connections.getPermanenceIncrement(), .001);
+        assertTrue(Arrays.equals(new int[] { 2 }, connections.getColumnDimensions()));
         
         finishSetUp(new ConsecutivePatternMachine(2, 1));
         
@@ -241,7 +241,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertTrue(Arrays.equals(new int[] { 3 }, tm.getColumnDimensions()));
+        assertTrue(Arrays.equals(new int[] { 3 }, connections.getColumnDimensions()));
         
         finishSetUp(new ConsecutivePatternMachine(3, 1));
         
@@ -272,7 +272,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        assertTrue(Arrays.equals(new int[] { 1 }, tm.getColumnDimensions()));
+        assertTrue(Arrays.equals(new int[] { 1 }, connections.getColumnDimensions()));
         
         finishSetUp(new ConsecutivePatternMachine(1, 1));
         

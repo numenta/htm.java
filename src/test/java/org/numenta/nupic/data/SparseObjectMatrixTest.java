@@ -29,7 +29,7 @@ public class SparseObjectMatrixTest {
 
     @Test
     public void testGetDimensionMultiples() {
-        SparseMatrix sm = new SparseObjectMatrix<TestObject>(new int[] { 4 });
+        SparseMatrix<TestObject> sm = new SparseObjectMatrix<TestObject>(new int[] { 4 });
         int[] dm = sm.getDimensionMultiples();
         assertEquals(1, dm.length);
         assertEquals(1, dm[0]);
@@ -98,7 +98,7 @@ public class SparseObjectMatrixTest {
      */
     @Test
     public void testComputeIndex() {
-        SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
+        SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
         
         int index = l.computeIndex(new int[] { 0, 2, 2 });
         assertEquals(10, index);
@@ -113,7 +113,7 @@ public class SparseObjectMatrixTest {
     @Test
     public void testComputeIndex_ColumnMajor() {
         // Column major
-        SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
+        SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
                 
         int index = l.computeIndex(new int[] { 2, 2, 0 });
         assertEquals(10, index);
@@ -127,7 +127,7 @@ public class SparseObjectMatrixTest {
      */
     @Test
     public void testComputeCoordinates() {
-        SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
+        SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 2, 4, 4 });
         int[] coordinates = l.computeCoordinates(27);
         assertEquals(1, coordinates[0]);
         assertEquals(2, coordinates[1]);
@@ -139,7 +139,7 @@ public class SparseObjectMatrixTest {
      */
     @Test
     public void testComputeCoordinates_ColumnMajor() {
-        SparseMatrix l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
+        SparseMatrix<TestObject> l = new SparseObjectMatrix<TestObject>(new int[] { 4, 4, 2 }, true);
         int[] coordinates = l.computeCoordinates(27);
         assertEquals(3, coordinates[0]);
         assertEquals(2, coordinates[1]);

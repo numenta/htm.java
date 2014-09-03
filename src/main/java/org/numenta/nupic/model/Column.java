@@ -44,6 +44,7 @@ public class Column {
     private final int index;
     /** Configuration of cell count */
     private final int numCells;
+    private ProximalDendrite dendrite;
     
     private Cell[] cells;
     
@@ -60,6 +61,7 @@ public class Column {
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
         }
+        dendrite = new ProximalDendrite();
     }
     
     /**
@@ -114,7 +116,7 @@ public class Column {
             
             if(numSegments < minNumSegments) {
                 minNumSegments = numSegments;
-                leastUsedCells = new ArrayList<Cell>();
+                leastUsedCells.clear();
             }
             
             if(numSegments == minNumSegments) {

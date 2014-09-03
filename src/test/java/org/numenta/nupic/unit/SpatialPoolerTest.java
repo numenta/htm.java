@@ -33,6 +33,8 @@ import java.util.EnumMap;
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
+import org.numenta.nupic.data.SparseMatrix;
+import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.research.SpatialLattice;
@@ -673,6 +675,40 @@ public class SpatialPoolerTest {
         neg.removeAll(msk);
         assertTrue(sbm.all(mask));
         assertFalse(sbm.any(neg));
+    }
+    
+    @Test
+    public void testRaisePermanenceThreshold() {
+    	defaultSetup();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setSynPermConnected(0.1);
+    	parameters.setStimulusThreshold(3);
+    	parameters.setSynPermBelowStimulusInc(0.01);
+    	initSP();
+    	
+    	SparseObjectMatrix<double[]> objMatrix = new SparseObjectMatrix<double[]>(new int[] { 5, 5 });
+    	mem.setPermanences(objMatrix);
+    	objMatrix.set(0, new double[] { 0.0, 0.11, 0.095, 0.092, 0.01 });
+    	objMatrix.set(1, new double[] { 0.12, 0.15, 0.02, 0.12, 0.09 });
+    	objMatrix.set(2, new double[] { 0.51, 0.081, 0.025, 0.089, 0.31 });
+    	objMatrix.set(3, new double[] { 0.18, 0.0601, 0.11, 0.011, 0.03 });
+    	objMatrix.set(4, new double[] { 0.011, 0.011, 0.011, 0.011, 0.011 });
+    	
+    	mem.setConnectedSysnapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
+    	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();
+    	syns.set(0, new int[] { 0, 1, 0, 0, 0 });
+    	syns.set(1, new int[] { 1, 1, 0, 1, 0 });
+    	syns.set(2, new int[] { 1, 0, 0, 0, 1 });
+    	syns.set(3, new int[] { 1, 0, 1, 0, 0 });
+    	syns.set(4, new int[] { 0, 0, 0, 0, 0 });
+    	
+    	mem.setConnectedCounts(new int[] { 1, 3, 2, 2, 0 });
+    	
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		
+    		//sp.raisePermanenceToThreshold(mem, mem.getPermanences().get(0), mask);
+    	}
     }
 
     /**

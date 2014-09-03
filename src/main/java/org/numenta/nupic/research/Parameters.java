@@ -69,6 +69,7 @@ public class Parameters {
         SYN_PERM_INACTIVE_DEC("synPermInactiveDec", 0.01, false),
         SYN_PERM_ACTIVE_INC("synPermActiveInc", 0.1, false),
         SYN_PERM_CONNECTED("synPermConnected", 0.10, false),
+        SYN_PERM_BELOW_STIMULUS("synPermBelowStimulusInc", 0.01, false),
         MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", 0.001, false),
         MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001, false),
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000, false),
@@ -141,6 +142,7 @@ public class Parameters {
     private double synPermInactiveDec = 0.01;
     private double synPermActiveInc = 0.10;
     private double synPermConnected = 0.10;
+    private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
     private double dutyCyclePeriod = 1000;
@@ -193,19 +195,19 @@ public class Parameters {
     
     /**
      * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link TemporalMemory}
+     * {@link Connections}
      * 
-     * @param tm
+     * @param cn
      * @param p
      */
-    public static void apply(TemporalMemory tm, Parameters p) {
+    public static void apply(Connections cn, Parameters p) {
         try {
             for(Parameters.KEY key : p.paramMap.keySet()) {
                 switch(key){
                     case RANDOM: {
-                        Field f = tm.getClass().getDeclaredField(key.fieldName);
+                        Field f = cn.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
-                        f.set(tm, p.random);
+                        f.set(cn, p.random);
                         
                         f = p.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
@@ -214,9 +216,9 @@ public class Parameters {
                         break;
                     }
                     default: {
-                        Field f = tm.getClass().getDeclaredField(key.fieldName);
+                        Field f = cn.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
-                        f.set(tm, p.paramMap.get(key));
+                        f.set(cn, p.paramMap.get(key));
                         
                         f = p.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
@@ -565,6 +567,15 @@ public class Parameters {
     public void setSynPermConnected(double synPermConnected) {
         this.synPermConnected = synPermConnected;
         getMap().put(KEY.SYN_PERM_CONNECTED, synPermConnected);
+    }
+    
+    /**
+     * Sets the increment of synapse permanences below the stimulus
+     * threshold
+     * @param inc
+     */
+    public void setSynPermBelowStimulusInc(double inc) {
+    	this.synPermBelowStimulusInc = inc;
     }
 
     /**

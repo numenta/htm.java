@@ -28,6 +28,7 @@ import java.util.Set;
 import org.numenta.nupic.data.PatternMachine;
 import org.numenta.nupic.data.SequenceMachine;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
+import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.TemporalMemory;
 
@@ -40,6 +41,7 @@ import org.numenta.nupic.research.TemporalMemory;
  */
 public abstract class AbstractTemporalMemoryTest {
     protected TemporalMemory tm;
+    protected Connections connections;
     protected PatternMachine patternMachine;
     protected SequenceMachine sequenceMachine;
     protected TemporalMemoryTestMachine tmTestMachine;
@@ -55,10 +57,11 @@ public abstract class AbstractTemporalMemoryTest {
      */
     protected void initTM() {
         tm = new TemporalMemory();
+        connections = new Connections();
         if(parameters != null && parameters.getMap().size() > 0) {
-            Parameters.apply(tm, parameters);
+            Parameters.apply(connections, parameters);
         }
-        tm.init();
+        tm.init(connections);
     }
     
     /**
@@ -77,7 +80,7 @@ public abstract class AbstractTemporalMemoryTest {
     protected void finishSetUp(PatternMachine patternMachine) {
         this.patternMachine = patternMachine;
         this.sequenceMachine = new SequenceMachine(patternMachine);
-        this.tmTestMachine = new TemporalMemoryTestMachine(tm);
+        this.tmTestMachine = new TemporalMemoryTestMachine(tm, connections);
     }
     
     /**

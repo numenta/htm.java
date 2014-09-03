@@ -9,6 +9,15 @@ import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Lattice;
 
+
+/**
+ * Encapsulates memory and state for the {@link SpatialPooler}. This class holds all
+ * settings and parameters acted upon by the SpatialPooler, and is passed in to the
+ * functional methods - in this way, the state and functions of the SpatialPooler 
+ * can be separate making it easier to isolate state for concurrency.
+ * @author metaware
+ *
+ */
 public class SpatialLattice extends Lattice {
     
     private int potentialRadius = 16;
@@ -59,7 +68,7 @@ public class SpatialLattice extends Lattice {
     private SparseObjectMatrix<int[]> potentialPools;
     /**
      * Initialize the permanences for each column. Similar to the
-     * 'self._potentialPools', the permanences are stored in a matrix whose rows
+     * 'potentialPools', the permanences are stored in a matrix whose rows
      * represent the cortical columns, and whose columns represent the input
      * bits. If self._permanences[i][j] = 0.2, then the synapse connecting
      * cortical column 'i' to input bit 'j'  has a permanence of 0.2. Here we
@@ -75,18 +84,18 @@ public class SpatialLattice extends Lattice {
      */
     private SparseDoubleMatrix tieBreaker;
     /**
-     * 'self._connectedSynapses' is a similar matrix to 'self._permanences'
+     * 'connectedSynapses' is a similar matrix to 'permanences'
      * (rows represent cortical columns, columns represent input bits) whose
      * entries represent whether the cortical column is connected to the input
      * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-     * this information is readily available from the 'self._permanence' matrix,
+     * this information is readily available from the 'permanence' matrix,
      * it is stored separately for efficiency purposes.
      */
     private SparseObjectMatrix<int[]> connectedSynapses;
     /** 
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
-     * information is readily available from 'self._connectedSynapses', it is
+     * information is readily available from 'connectedSynapses', it is
      * stored separately for efficiency purposes.
      */
     private int[] connectedCounts = new int[numColumns];
@@ -107,7 +116,11 @@ public class SpatialLattice extends Lattice {
     
     
     /**
-     * Instantiates a new {@code SpatialLattice}
+     * Instantiates a new {@code SpatialLattice} with default parameter settings
+     * and no connection configuration to input bits.
+     * 
+     * @see #SpatialLattice(Parameters)
+     * @see #SpatialLattice(SpatialPooler, Parameters)
      */
     public SpatialLattice() {
     	this(null);
@@ -116,11 +129,30 @@ public class SpatialLattice extends Lattice {
     /**
      * Constructs a new {@code SpatialLattice}. If the specified {@link Parameters}
      * object is null, this constructor merely instantiates an unconfigured lattice.
+     * 
+     * @param p		a {@link Parameters} object containing parameter settings.
+     * 
+     * @see #SpatialLattice(SpatialPooler, Parameters)
      */
     public SpatialLattice(Parameters p) {
     	this(null, p);
     }
     
+    /**
+     * Constructs a new {@code SpatialLattice}. If the specified {@link SpatialPooler} 
+     * argument is null, this constructor merely uses the specified {@link Parameters}
+     * object to initialize the lattice with initial values, but does not attempt to 
+     * initialize the connection state (state and structures which define this lattice's
+     * relationship to its input).
+     * 
+     * The specified SpatialPooler carries no state therefore it is not altered by this
+     * constructor. The specified instance is merely used to invoke methods on this lattice
+     * in order to initialize the internal state of this lattice memory according to the 
+     * algorithms of the pooler.
+     * 
+     * @param sp	an instance of {@link SpatialPooler} to use for configuration
+     * @param p		a {@link Parameters} object containing parameter settings.
+     */
     public SpatialLattice(SpatialPooler sp, Parameters p) {
     	if(p != null) {
             Parameters.apply(this, p);
@@ -178,7 +210,7 @@ public class SpatialLattice extends Lattice {
     }
     
     public void connectAndConfigureInputs(SpatialPooler sp) {
-    	 // Initialize the set of permanence values for each column. Ensure that
+    	// Initialize the set of permanence values for each column. Ensure that
         // each column is connected to enough input bits to allow it to be
         // activated.
         for(int i = 0;i < numColumns;i++) {
@@ -340,8 +372,8 @@ public class SpatialLattice extends Lattice {
      * 
      * @param s the {@link SparseDoubleMatrix}
      */
-    public void setPermanences(SparseObjectMatrix<double[]> s) {
-        this.permanences = s;
+    public void setPermanences(SparseMatrix<double[]> s) {
+        this.permanences = (SparseObjectMatrix<double[]>)s;
     }
     
     /**
@@ -356,8 +388,8 @@ public class SpatialLattice extends Lattice {
      * Sets the {@link SparseObjectMatrix} representing the connected synapses.
      * @param s
      */
-    public void setConnectedSysnapses(SparseObjectMatrix<int[]> s) {
-        this.connectedSynapses = s;
+    public void setConnectedSysnapses(SparseMatrix<int[]> s) {
+        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
     }
     
     /**
