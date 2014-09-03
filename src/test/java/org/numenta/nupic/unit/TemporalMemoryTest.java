@@ -167,7 +167,7 @@ public class TemporalMemoryTest {
             assertEquals(i, activeCells.get(i).getIndex());
         }
         assertEquals(0, winnerCells.get(0).getIndex());
-        assertEquals(6, winnerCells.get(1).getIndex());
+        assertEquals(5, winnerCells.get(1).getIndex());
         
         assertEquals(dd, learningSegments.get(0));
         //Test that one of the learning Dendrites was created during call to burst...
@@ -411,11 +411,11 @@ public class TemporalMemoryTest {
         
         result = tm.getBestMatchingCell(cn, cn.getColumn(3), activeSegments);
         assertNull(result[0]);
-        assertEquals(119, ((Cell)result[1]).getIndex());
+        assertEquals(107, ((Cell)result[1]).getIndex());
         
         result = tm.getBestMatchingCell(cn, cn.getColumn(999), activeSegments);
         assertNull(result[0]);
-        assertEquals(31969, ((Cell)result[1]).getIndex());
+        assertEquals(31993, ((Cell)result[1]).getIndex());
         
     }
     
@@ -651,15 +651,15 @@ public class TemporalMemoryTest {
         
         List<Cell> learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 2, winnerCells, cn.getRandom()));
         assertEquals(2, learnCells.size());
-        assertTrue(learnCells.contains(cn.getCell(4)));
-        assertTrue(learnCells.contains(cn.getCell(58)));
+        assertTrue(learnCells.contains(cn.getCell(47)));
+        assertTrue(learnCells.contains(cn.getCell(93)));
         
         learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 100, winnerCells, cn.getRandom()));
         assertEquals(4, learnCells.size());
-        assertEquals(58, learnCells.get(0).getIndex());
-        assertEquals(93, learnCells.get(1).getIndex());
-        assertEquals(4, learnCells.get(2).getIndex());
-        assertEquals(47, learnCells.get(3).getIndex());
+        assertEquals(93, learnCells.get(0).getIndex());
+        assertEquals(58, learnCells.get(1).getIndex());
+        assertEquals(47, learnCells.get(2).getIndex());
+        assertEquals(4, learnCells.get(3).getIndex());
         
         learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 0, winnerCells, cn.getRandom()));
         assertEquals(0, learnCells.size());
