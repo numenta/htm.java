@@ -155,7 +155,7 @@ public class SpatialLattice extends Lattice {
      */
     public SpatialLattice(SpatialPooler sp, Parameters p) {
     	if(p != null) {
-            Parameters.apply(this, p);
+ //           Parameters.apply(this, p);
         }else{
         	return;
         }
@@ -213,20 +213,20 @@ public class SpatialLattice extends Lattice {
     	// Initialize the set of permanence values for each column. Ensure that
         // each column is connected to enough input bits to allow it to be
         // activated.
-        for(int i = 0;i < numColumns;i++) {
-            int[] potential = sp.mapPotential(this, i, true);
-            potentialPools.set(i, potential);
-            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
-            sp.updatePermanencesForColumn(this, perm, i, true);
-        }
-        
-        sp.updateInhibitionRadius(this);
-        
-        overlapDutyCycles = new double[numColumns];
-        activeDutyCycles = new double[numColumns];
-        minOverlapDutyCycles = new double[numColumns];
-        minActiveDutyCycles = new double[numColumns];
-        boostFactors = new double[numColumns];
+//        for(int i = 0;i < numColumns;i++) {
+//            int[] potential = sp.mapPotential(this, i, true);
+//            potentialPools.set(i, potential);
+//            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
+//            sp.updatePermanencesForColumn(this, perm, i, true);
+//        }
+//        
+//        sp.updateInhibitionRadius(this);
+//        
+//        overlapDutyCycles = new double[numColumns];
+//        activeDutyCycles = new double[numColumns];
+//        minOverlapDutyCycles = new double[numColumns];
+//        minActiveDutyCycles = new double[numColumns];
+//        boostFactors = new double[numColumns];
     }
     
     /**

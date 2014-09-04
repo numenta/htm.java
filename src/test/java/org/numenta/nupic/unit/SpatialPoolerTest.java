@@ -33,8 +33,8 @@ import java.util.EnumMap;
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.research.SpatialLattice;
@@ -43,7 +43,7 @@ import org.numenta.nupic.research.SpatialPooler;
 public class SpatialPoolerTest {
     private Parameters parameters;
     private SpatialPooler sp;
-    private SpatialLattice mem;
+    private Connections mem;
     
     public void defaultSetup() {
         parameters = new Parameters();
@@ -69,7 +69,10 @@ public class SpatialPoolerTest {
     
     private void initSP() {
         sp = new SpatialPooler();
-        mem = new SpatialLattice(sp, parameters);
+        mem = new Connections();
+        Parameters.apply(mem, parameters);
+        mem.initMatrices();
+        mem.connectAndConfigureInputs(sp);
     }
     
     @Test
@@ -248,14 +251,13 @@ public class SpatialPoolerTest {
     
     @Test
     public void testAvgConnectedSpanForColumnND() {
-    	defaultSetup();
-    	parameters = null;
-    	initSP();
+    	sp = new SpatialPooler();
+    	mem = new Connections();
     	
     	int[] inputDimensions = new int[] { 4, 4, 2, 5 };
         mem.setInputDimensions(inputDimensions);
         mem.setColumnDimensions(new int[] { 5 });
-        mem.initMatrices();
+        mem.initMatrices(); 
         
         TIntArrayList connected = new TIntArrayList();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 0 }, false));
@@ -313,17 +315,16 @@ public class SpatialPoolerTest {
     	//Test global inhibition case
     	mem.setGlobalInhibition(true);
     	mem.setColumnDimensions(new int[] { 57, 31, 2 });
-    	mem.initMatrices();
     	sp.updateInhibitionRadius(mem);
     	assertEquals(57, mem.getInhibitionRadius());
     	
     	// ((3 * 4) - 1) / 2 => round up
     	SpatialPooler mock = new SpatialPooler() {
-    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    		public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
     			return 3;
     		}
     		
-    		public double avgColumnsPerInput(SpatialLattice l) {
+    		public double avgColumnsPerInput(Connections c) {
     			return 4;
     		}
     	};
@@ -334,11 +335,11 @@ public class SpatialPoolerTest {
     	
     	//Test clipping at 1.0
     	mock = new SpatialPooler() {
-    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    		public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
     			return 0.5;
     		}
     		
-    		public double avgColumnsPerInput(SpatialLattice l) {
+    		public double avgColumnsPerInput(Connections c) {
     			return 1.2;
     		}
     	};
@@ -349,11 +350,11 @@ public class SpatialPoolerTest {
     	
     	//Test rounding up
     	mock = new SpatialPooler() {
-    		public double avgConnectedSpanForColumnND(SpatialLattice l, int columnIndex) {
+    		public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
     			return 2.4;
     		}
     		
-    		public double avgColumnsPerInput(SpatialLattice l) {
+    		public double avgColumnsPerInput(Connections c) {
     			return 2;
     		}
     	};

@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.research;
 
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -31,6 +33,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.data.MersenneTwister;
+import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
@@ -158,6 +161,8 @@ public class Connections {
     protected int[] columnDimensions = new int[] { 2048 };
     /** Total number of cells per column */
     protected int cellsPerColumn = 32;
+    /** What will comprise the Layer input. Input (i.e. from encoder) */
+    protected int[] inputDimensions = new int[] { 32, 32 };
     /** 
      * If the number of active connected synapses on a segment 
      * is at least this threshold, the segment is said to be active.
@@ -194,7 +199,7 @@ public class Connections {
      * are decremented during learning.
      */
     private double permanenceDecrement = 0.10;
-    
+    /** The main data structure containing columns, cells, and synapses */
     private SparseObjectMatrix<Column> memory;
     
     private Cell[] cells;
@@ -221,7 +226,79 @@ public class Connections {
      * Constructs a new {@code Connections} object. Use
      * 
      */
-    public Connections() {}
+    public Connections() {
+    	this(null);
+    }
+    
+    public Connections(SpatialPooler sp) {
+    	if(sp != null) {
+            
+	        //Init the static data structures
+	        initMatrices();
+	        
+	        //Configure potential pools and support settings
+	        connectAndConfigureInputs(sp);
+    	}
+        
+        if(getVerbosity() > 0) {
+            printParameters();
+        }
+    }
+    
+    public void initMatrices() {
+    	memory = new SparseObjectMatrix<Column>(columnDimensions);
+        inputMatrix = new SparseBinaryMatrix(inputDimensions);
+        
+        for(int i = 0;i < inputDimensions.length;i++) {
+            numInputs *= inputDimensions[i];
+        }
+        for(int i = 0;i < columnDimensions.length;i++) {
+            numColumns *= columnDimensions[i];
+        }
+        
+        potentialPools = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
+        
+        permanences = new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } );
+        
+        /**
+         * 'connectedSynapses' is a similar matrix to 'permanences'
+         * (rows represent cortical columns, columns represent input bits) whose
+         * entries represent whether the cortical column is connected to the input
+         * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+         * this information is readily available from the 'permanences' matrix,
+         * it is stored separately for efficiency purposes.
+         */
+        connectedSynapses = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
+        
+        connectedCounts = new int[numColumns];
+        
+        tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        for(int i = 0;i < numColumns;i++) {
+            for(int j = 0;j < numInputs;j++) {
+                tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
+            }
+        }
+    }
+    
+    public void connectAndConfigureInputs(SpatialPooler sp) {
+    	// Initialize the set of permanence values for each column. Ensure that
+        // each column is connected to enough input bits to allow it to be
+        // activated.
+        for(int i = 0;i < numColumns;i++) {
+            int[] potential = sp.mapPotential(this, i, true);
+            potentialPools.set(i, potential);
+            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
+            sp.updatePermanencesForColumn(this, perm, i, true);
+        }
+        
+        sp.updateInhibitionRadius(this);
+        
+        overlapDutyCycles = new double[numColumns];
+        activeDutyCycles = new double[numColumns];
+        minOverlapDutyCycles = new double[numColumns];
+        minActiveDutyCycles = new double[numColumns];
+        boostFactors = new double[numColumns];
+    }
     
     /**
      * Clears all state.
@@ -1081,6 +1158,30 @@ public class Connections {
      */
     public int[] getColumnDimensions() {
         return this.columnDimensions;
+    }
+    
+    /**
+     * A list representing the dimensions of the input
+     * vector. Format is [height, width, depth, ...], where
+     * each value represents the size of the dimension. For a
+     * topology of one dimension with 100 inputs use 100, or
+     * [100]. For a two dimensional topology of 10x5 use
+     * [10,5].
+     * 
+     * @param inputDimensions
+     */
+    public void setInputDimensions(int[] inputDimensions) {
+        this.inputDimensions = inputDimensions;
+    }
+    
+    /**
+     * Returns the configured input dimensions
+     *
+     * @return the configured input dimensions
+     * @see {@link #setInputDimensions(int[])}
+     */
+    public int[] getInputDimensions() {
+        return inputDimensions;
     }
 
     /**
