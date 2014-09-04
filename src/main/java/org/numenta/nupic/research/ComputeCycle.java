@@ -60,13 +60,13 @@ public class ComputeCycle {
      * @param   c       the current connections state of the TemporalMemory
      */
     public ComputeCycle(Connections c) {
-        this.activeCells = new LinkedHashSet<Cell>(c.activeCells());
-        this.winnerCells = new LinkedHashSet<Cell>(c.winnerCells());
-        this.predictiveCells = new LinkedHashSet<Cell>(c.predictiveCells());
-        this.predictedColumns = new LinkedHashSet<Column>(c.predictedColumns());
-        this.activeSegments = new LinkedHashSet<DistalDendrite>(c.activeSegments());
-        this.learningSegments = new LinkedHashSet<DistalDendrite>(c.learningSegments());
-        this.activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>(c.activeSynapsesForSegment());
+        this.activeCells = new LinkedHashSet<Cell>(c.getActiveCells());
+        this.winnerCells = new LinkedHashSet<Cell>(c.getWinnerCells());
+        this.predictiveCells = new LinkedHashSet<Cell>(c.getPredictiveCells());
+        this.predictedColumns = new LinkedHashSet<Column>(c.getPredictedColumns());
+        this.activeSegments = new LinkedHashSet<DistalDendrite>(c.getActiveSegments());
+        this.learningSegments = new LinkedHashSet<DistalDendrite>(c.getLearningSegments());
+        this.activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>(c.getActiveSynapsesForSegment());
     }
     
     /**

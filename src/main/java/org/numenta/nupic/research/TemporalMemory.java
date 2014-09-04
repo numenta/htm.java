@@ -21,14 +21,13 @@
  */
 package org.numenta.nupic.research;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
+import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -41,252 +40,34 @@ import org.numenta.nupic.model.Synapse;
  * @author David Ray
  */
 public class TemporalMemory {
-    /** Total number of columns */
-    protected int[] columnDimensions = new int[] { 2048 };
-    /** Total number of cells per column */
-    protected int cellsPerColumn = 32;
-    /** 
-     * If the number of active connected synapses on a segment 
-     * is at least this threshold, the segment is said to be active.
-     */
-    private int activationThreshold = 13;
-    /**
-     * Radius around cell from which it can
-     * sample to form distal {@link DistalDendrite} connections.
-     */
-    @SuppressWarnings("unused")
-    private int learningRadius = 2048;
-    /**
-     * If the number of synapses active on a segment is at least this
-     * threshold, it is selected as the best matching
-     * cell in a bursting column.
-     */
-    private int minThreshold = 10;
-    /** The maximum number of synapses added to a segment during learning. */
-    private int maxNewSynapseCount = 20;
-    /** Initial permanence of a new synapse */
-    private double initialPermanence = 0.21;
-    /**
-     * If the permanence value for a synapse
-     * is greater than this value, it is said
-     * to be connected.
-     */
-    private double connectedPermanence = 0.50;
-    /** 
-     * Amount by which permanences of synapses
-     * are incremented during learning.
-     */
-    private double permanenceIncrement = 0.10;
-    /** 
-     * Amount by which permanences of synapses
-     * are decremented during learning.
-     */
-    private double permanenceDecrement = 0.10;
-    /**
-     * The connection data state for this {@code TemporalMemory}
-     */
-    private Connections connections = new Connections();
-    
-    
-    private Cell[] cells;
-    
-    private List<Column> columns = new ArrayList<Column>(columnDimensions[0]);
-    
     
     /**
      * Constructs a new {@code TemporalMemory}
      */
     public TemporalMemory() {
-        this(null);
-    }
-    
-    /**
-     * Constructs a new {@code TemporalMemory} from a configured
-     * {@link Parameters} object.
-     * @param params
-     */
-    public TemporalMemory(Parameters params) {
-        if(params != null) {
-            Parameters.apply(this, params);
-        }
+     
     }
     
     /**
      * Builds the grid of {@link Cell}s and  {@link Column}s
+     * 
+     * @param	c		{@link Connections} object
      */
-    public void init() {
-        cells = new Cell[columnDimensions[0] * cellsPerColumn];
+    public void init(Connections c) {
+    	SparseObjectMatrix<Column> matrix = new SparseObjectMatrix<Column>(c.getColumnDimensions());
+    	int numColumns = matrix.getMaxIndex() + 1;
+    	int cellsPerColumn = c.getCellsPerColumn();
+        Cell[] cells = new Cell[numColumns * cellsPerColumn];
         
-        for(int i = 0;i < columnDimensions[0];i++) {
+        for(int i = 0;i < numColumns;i++) {
             Column column = new Column(cellsPerColumn, i);
-            columns.add(column);
             for(int j = 0;j < cellsPerColumn;j++) {
                 cells[i * cellsPerColumn + j] = column.getCell(j);
             }
+            matrix.set(i, column);
         }
-    }
-    
-    /**
-     * Returns the seeded random number generator.
-     * @return
-     */
-    public Random getRandom() {
-        return connections.random();
-    }
-    
-    /**
-     * Returns the column at the specified index.
-     * @param index
-     * @return
-     */
-    public Column getColumn(int index) {
-        return columns.get(index);
-    }
-    
-    /**
-     * Sets the number of {@link Column}.
-     * 
-     * @param columnDimensions
-     */
-    public void setColumnDimensions(int[] columnDimensions) {
-        this.columnDimensions = columnDimensions;
-    }
-    
-    /**
-     * Gets the number of {@link Column}.
-     * 
-     * @return columnDimensions
-     */
-    public int[] getColumnDimensions() {
-        return this.columnDimensions;
-    }
-
-    /**
-     * Sets the number of {@link Cell}s per {@link Column}
-     * @param cellsPerColumn
-     */
-    public void setCellsPerColumn(int cellsPerColumn) {
-        this.cellsPerColumn = cellsPerColumn;
-    }
-    
-    /**
-     * Gets the number of {@link Cells} per {@link Column}.
-     * 
-     * @return cellsPerColumn
-     */
-    public int getCellsPerColumn() {
-        return this.cellsPerColumn;
-    }
-
-    /**
-     * Sets the activation threshold.
-     * 
-     * If the number of active connected synapses on a segment 
-     * is at least this threshold, the segment is said to be active.
-     * 
-     * @param activationThreshold
-     */
-    public void setActivationThreshold(int activationThreshold) {
-        this.activationThreshold = activationThreshold;
-    }
-
-    /**
-     * Radius around cell from which it can
-     * sample to form distal dendrite connections.
-     * 
-     * @param   learningRadius
-     */
-    public void setLearningRadius(int learningRadius) {
-        this.learningRadius = learningRadius;
-    }
-
-    /**
-     * If the number of synapses active on a segment is at least this
-     * threshold, it is selected as the best matching
-     * cell in a bursing column.
-     * 
-     * @param   minThreshold
-     */
-    public void setMinThreshold(int minThreshold) {
-        this.minThreshold = minThreshold;
-    }
-
-    /** 
-     * The maximum number of synapses added to a segment during learning. 
-     * 
-     * @param   maxNewSynapseCount
-     */
-    public void setMaxNewSynapseCount(int maxNewSynapseCount) {
-        this.maxNewSynapseCount = maxNewSynapseCount;
-    }
-
-    /** 
-     * Seed for random number generator 
-     * 
-     * @param   seed
-     */
-    public void setSeed(int seed) {
-        connections.setSeed(seed);
-    }
-    
-    /** 
-     * Initial permanence of a new synapse 
-     * 
-     * @param   
-     */
-    public void setInitialPermanence(double initialPermanence) {
-        this.initialPermanence = initialPermanence;
-    }
-    
-    /**
-     * If the permanence value for a synapse
-     * is greater than this value, it is said
-     * to be connected.
-     * 
-     * @param connectedPermanence
-     */
-    public void setConnectedPermanence(double connectedPermanence) {
-        this.connectedPermanence = connectedPermanence;
-    }
-
-    /** 
-     * Amount by which permanences of synapses
-     * are incremented during learning.
-     * 
-     * @param   permanenceIncrement
-     */
-    public void setPermanenceIncrement(double permanenceIncrement) {
-        this.permanenceIncrement = permanenceIncrement;
-    }
-    
-    /** 
-     * Amount by which permanences of synapses
-     * are incremented during learning.
-     * 
-     * @param   permanenceIncrement
-     */
-    public double getPermanenceIncrement() {
-        return this.permanenceIncrement;
-    }
-
-    /** 
-     * Amount by which permanences of synapses
-     * are decremented during learning.
-     * 
-     * @param   permanenceDecrement
-     */
-    public void setPermanenceDecrement(double permanenceDecrement) {
-        this.permanenceDecrement = permanenceDecrement;
-    }
-    
-    /** 
-     * Amount by which permanences of synapses
-     * are decremented during learning.
-     * 
-     * @param   permanenceDecrement
-     */
-    public double getPermanenceDecrement() {
-        return this.permanenceDecrement;
+        c.setMemory(matrix);
+        c.setCells(cells);
     }
     
     /////////////////////////// CORE FUNCTIONS /////////////////////////////
@@ -294,12 +75,13 @@ public class TemporalMemory {
     /**
      * Feeds input record through TM, performing inferencing and learning
      * 
+     * @param connections		the connection memory
      * @param activeColumns     direct proximal dendrite input
      * @param learn             learning mode flag
      * @return                  {@link ComputeCycle} container for one cycle of inference values.
      */
-    public ComputeCycle compute(int[] activeColumns, boolean learn) {
-        ComputeCycle result = computeFn(connections, getColumns(activeColumns), new LinkedHashSet<Cell>(connections.predictiveCells), 
+    public ComputeCycle compute(Connections connections, int[] activeColumns, boolean learn) {
+        ComputeCycle result = computeFn(connections, connections.getColumnSet(activeColumns), new LinkedHashSet<Cell>(connections.predictiveCells), 
             new LinkedHashSet<DistalDendrite>(connections.activeSegments), new LinkedHashMap<DistalDendrite, Set<Synapse>>(connections.activeSynapsesForSegment), 
                 new LinkedHashSet<Cell>(connections.winnerCells), learn);
         
@@ -342,7 +124,7 @@ public class TemporalMemory {
         
         cycle.activeSynapsesForSegment = computeActiveSynapses(c, cycle.activeCells);
         
-        computePredictiveCells(cycle, cycle.activeSynapsesForSegment);
+        computePredictiveCells(c, cycle, cycle.activeSynapsesForSegment);
         
         return cycle;
     }
@@ -435,15 +217,18 @@ public class TemporalMemory {
      * </pre>    
      *     
      * @param c                             the Connections state of the temporal memory
-     * @param prevActiveSegments
-     * @param learningSegments
-     * @param prevActiveSynapseSegments
-     * @param winnerCells
-     * @param prevWinnerCells
-     */
+     * @param prevActiveSegments			the Set of segments active in the previous cycle.
+     * @param learningSegments				the Set of segments marked as learning {@link #burstColumns(ComputeCycle, Connections, Set, Set, Map)}
+     * @param prevActiveSynapseSegments		the map of segments which were previously active to their associated {@link Synapse}s.
+     * @param winnerCells					the Set of all winning cells ({@link Cell}s with the most active synapses)
+     * @param prevWinnerCells				the Set of cells which were winners during the last compute cycle
+     */	
     public void learnOnSegments(Connections c, Set<DistalDendrite> prevActiveSegments, Set<DistalDendrite> learningSegments,
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapseSegments, Set<Cell> winnerCells, Set<Cell> prevWinnerCells) {
         
+    	double permanenceIncrement = c.getPermanenceIncrement();
+    	double permanenceDecrement = c.getPermanenceDecrement();
+    		
         List<DistalDendrite> prevAndLearning = new ArrayList<DistalDendrite>(prevActiveSegments);
         prevAndLearning.addAll(learningSegments);
         
@@ -458,10 +243,10 @@ public class TemporalMemory {
             }
             
             if(isLearningSegment) {
-                int n = maxNewSynapseCount - activeSynapses.size();
+                int n = c.getMaxNewSynapseCount() - activeSynapses.size();
                 Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.random);
                 for(Cell sourceCell : learnCells) {
-                    dd.createSynapse(c, sourceCell, initialPermanence, c.synapseCounter);
+                    dd.createSynapse(c, sourceCell, c.getInitialPermanence(), c.synapseCounter);
                     c.synapseCounter += 1;
                 }
             }
@@ -478,12 +263,13 @@ public class TemporalMemory {
      *   - mark the cell as predictive
      * 
      * @param c                 the Connections state of the temporal memory
+     * @param cycle				the state during the current compute cycle
      * @param activeSegments
      */
-    public void computePredictiveCells(ComputeCycle cycle, Map<DistalDendrite, Set<Synapse>> activeDendrites) {
+    public void computePredictiveCells(Connections c, ComputeCycle cycle, Map<DistalDendrite, Set<Synapse>> activeDendrites) {
         for(DistalDendrite dd : activeDendrites.keySet()) {
-            Set<Synapse> connectedActive = dd.getConnectedActiveSynapses(activeDendrites, connectedPermanence);
-            if(connectedActive.size() >= activationThreshold) {
+            Set<Synapse> connectedActive = dd.getConnectedActiveSynapses(activeDendrites, c.getConnectedPermanence());
+            if(connectedActive.size() >= c.getActivationThreshold()) {
                 cycle.activeSegments.add(dd);
                 cycle.predictiveCells.add(dd.getParentCell());
             }
@@ -517,9 +303,9 @@ public class TemporalMemory {
     /**
      * Called to start the input of a new sequence.
      * 
-     * @param   c   the Connections state of the temporal memory
+     * @param   connections   the Connections state of the temporal memory
      */
-    public void reset() {
+    public void reset(Connections connections) {
         connections.activeCells.clear();
         connections.predictiveCells.clear();
         connections.activeSegments.clear();
@@ -527,107 +313,19 @@ public class TemporalMemory {
         connections.winnerCells.clear();
     }
     
-    //////////////////////// RESULT FUNCTIONS ///////////////////////
-    public Connections getConnections() {
-        return this.connections;
-    }
-    /**
-     * Returns the current {@link Set} of active cells
-     * 
-     * @return  the current {@link Set} of active cells
-     */
-    public Set<Cell> getActiveCells() {
-        return connections.activeCells();
-    }
-    
-    /**
-     * Returns the current {@link Set} of winner cells
-     * 
-     * @return  the current {@link Set} of winner cells
-     */
-    public Set<Cell> getWinnerCells() {
-        return connections.winnerCells();
-    }
-    
-    /**
-     * Returns the {@link Set} of predictive cells.
-     * @return
-     */
-    public Set<Cell> getPredictiveCells() {
-        return connections.predictiveCells();
-    }
-    
-    /**
-     * Returns the current {@link Set} of predicted columns
-     * 
-     * @return  the current {@link Set} of predicted columns
-     */
-    public Set<Column> getPredictedColumns() {
-        return connections.predictedColumns();
-    }
-    
-    /**
-     * Returns the Set of learning {@link DistalDendrite}s
-     * @return
-     */
-    public Set<DistalDendrite> getLearningSegments() {
-        return connections.learningSegments();
-    }
-    
-    /**
-     * Returns the Set of active {@link DistalDendrite}s
-     * @return
-     */
-    public Set<DistalDendrite> getActiveSegments() {
-        return connections.activeSegments();
-    }
-    
-    /**
-     * Returns a mapping of synapses that have become active to their
-     * segments.
-     * 
-     * @return
-     */
-    public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
-        return connections.activeSynapsesForSegment();
-    }
     
     /////////////////////////// HELPER FUNCTIONS ///////////////////////////
     
-    public List<Integer> asCellIndexes(Collection<Cell> cells) {
-        List<Integer> ints = new ArrayList<Integer>();
-        for(Cell cell : cells) {
-            ints.add(cell.getIndex());
-        }
-        
-        return ints;
-    }
-    
-    public List<Integer> asColumnIndexes(Collection<Column> columns) {
-        List<Integer> ints = new ArrayList<Integer>();
-        for(Column col : columns) {
-            ints.add(col.getIndex());
-        }
-        
-        return ints;
-    }
-    
-    public List<Cell> asCellObjects(Collection<Integer> cells) {
-        List<Cell> objs = new ArrayList<Cell>();
-        for(int i : cells) {
-            objs.add(this.cells[i]);
-        }
-        return objs;
-    }
-    
-    public List<Column> asColumnObjects(Collection<Integer> cols) {
-        List<Column> objs = new ArrayList<Column>();
-        for(int i : cols) {
-            objs.add(this.columns.get(i));
-        }
-        return objs;
-    }
-    
+    /**
+     * Gets the cell with the best matching segment
+     * (see `TM.getBestMatchingSegment`) that has the largest number of active
+     * synapses of all best matching segments.
+     * 
+     * @param c									encapsulated memory and state
+     * @param column							{@link Column} within which to search for best cell
+     * @param prevActiveSynapsesForSegment		a {@link DistalDendrite}'s previously active {@link Synapse}s
+     * @return		an object array whose first index contains a segment, and the second contains a cell
+     */
     public Object[] getBestMatchingCell(Connections c, Column column, Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
         Object[] retVal = new Object[2];
         Cell bestCell = null;
@@ -646,7 +344,7 @@ public class TemporalMemory {
         }
         
         if(bestCell == null) {
-            bestCell = column.getLeastUsedCell(c, c.random());
+            bestCell = column.getLeastUsedCell(c, c.getRandom());
         }
         
         retVal[0] = bestSegment;
@@ -654,8 +352,17 @@ public class TemporalMemory {
         return retVal;
     }
     
+    /**
+     * Gets the segment on a cell with the largest number of activate synapses,
+     * including all synapses with non-zero permanences.
+     * 
+     * @param c									encapsulated memory and state
+     * @param column							{@link Column} within which to search for best cell
+     * @param activeSynapseSegments				a {@link DistalDendrite}'s active {@link Synapse}s
+     * @return	the best segment
+     */
     public DistalDendrite getBestMatchingSegment(Connections c, Cell cell, Map<DistalDendrite, Set<Synapse>> activeSynapseSegments) {
-        int maxSynapses = minThreshold;
+        int maxSynapses = c.getMinThreshold();
         DistalDendrite bestSegment = null;
         for(DistalDendrite dd : cell.getSegments(c)) {
             Set<Synapse> activeSyns = dd.getConnectedActiveSynapses(activeSynapseSegments, 0);
@@ -671,11 +378,12 @@ public class TemporalMemory {
      * Returns the column index given the cells per column and
      * the cell index passed in.
      * 
-     * @param cellIndex
+     * @param c				{@link Connections} memory
+     * @param cellIndex		the index where the requested cell resides
      * @return
      */
-    protected int columnForCell(int cellIndex) {
-        return cellIndex / cellsPerColumn;
+    protected int columnForCell(Connections c, int cellIndex) {
+        return cellIndex / c.getCellsPerColumn();
     }
     
     /**
@@ -683,21 +391,22 @@ public class TemporalMemory {
      * @param index
      * @return
      */
-    public Cell getCell(int index) {
-        return cells[index];
+    public Cell getCell(Connections c, int index) {
+        return c.getCells()[index];
     }
     
     /**
      * Returns a {@link LinkedHashSet} of {@link Cell}s from a 
      * sorted array of cell indexes.
      *  
+     * @param`c				the {@link Connections} object
      * @param cellIndexes   indexes of the {@link Cell}s to return
      * @return
      */
-    public LinkedHashSet<Cell> getCells(int[] cellIndexes) {
-        LinkedHashSet<Cell> cellSet = new LinkedHashSet<Cell>();
+    public LinkedHashSet<Cell> getCells(Connections c, int[] cellIndexes) {
+    	LinkedHashSet<Cell> cellSet = new LinkedHashSet<Cell>();
         for(int cell : cellIndexes) {
-            cellSet.add(cells[cell]);
+            cellSet.add(getCell(c, cell));
         }
         return cellSet;
     }
@@ -709,12 +418,8 @@ public class TemporalMemory {
      * @param cellIndexes   indexes of the {@link Column}s to return
      * @return
      */
-    public LinkedHashSet<Column> getColumns(int[] columnIndexes) {
-        LinkedHashSet<Column> columnSet = new LinkedHashSet<Column>();
-        for(int column : columnIndexes) {
-            columnSet.add(columns.get(column));
-        }
-        return columnSet;
+    public LinkedHashSet<Column> getColumns(Connections c, int[] columnIndexes) {
+    	return c.getColumnSet(columnIndexes);
     }
     
     /**
@@ -725,6 +430,7 @@ public class TemporalMemory {
      * @param minuend
      * @param subtrahend
      * @return
+     * @deprecated
      */
     public List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
         ArrayList<Integer> sList = new ArrayList<Integer>(minuend);

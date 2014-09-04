@@ -76,7 +76,7 @@ public class DistalDendrite {
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
         Synapse s = new Synapse(c, sourceCell, this, permanence, index);
-        c.synapses(this).add(s);
+        c.getSynapses(this).add(s);
         return s;
     }
     
@@ -87,7 +87,7 @@ public class DistalDendrite {
      * @return
      */
     public List<Synapse> getAllSynapses(Connections c) {
-        return c.synapses(this);
+        return c.getSynapses(this);
     }
     
     /**
@@ -125,7 +125,7 @@ public class DistalDendrite {
      * @param permanenceDecrement   the increment by which permanences are decreased.
      */
     public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
-        for(Synapse synapse : c.synapses(this)) {
+        for(Synapse synapse : c.getSynapses(this)) {
             double permanence = synapse.getPermanence();
             if(activeSynapses.contains(synapse)) {
                 permanence += permanenceIncrement;
@@ -153,7 +153,7 @@ public class DistalDendrite {
     public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
         //Create a list of cells that aren't already synapsed to this segment
         Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
-        for(Synapse synapse : c.synapses(this)) {
+        for(Synapse synapse : c.getSynapses(this)) {
             Cell sourceCell = synapse.getSourceCell();
             if(candidates.contains(sourceCell)) {
                 candidates.remove(sourceCell);

@@ -35,7 +35,9 @@ import org.numenta.nupic.model.Lattice;
  * 
  * @author David Ray
  * 
+ * @see SpatialPooler
  * @see TemporalMemory
+ * @see Connections
  * @see ComputeCycle
  */
 @SuppressWarnings("unused")
@@ -45,44 +47,43 @@ public class Parameters {
      */
     public enum KEY { 
         /////////// Temporal Memory Parameters ///////////
-        COLUMN_DIMENSIONS("columnDimensions", new int[] { 2048 }, true),
-        CELLS_PER_COLUMN("cellsPerColumn", 32, false),
-        ACTIVATION_THRESHOLD("activationThreshold", 13, false),
-        LEARNING_RADIUS("learningRadius", 2048, false),
-        MIN_THRESHOLD("minThreshold", 10, false),
-        MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", 20, false),
-        INITIAL_PERMANENCE("initialPermanence", 0.21, false),
-        CONNECTED_PERMANENCE("connectedPermanence", 0.5, false),
-        PERMANENCE_INCREMENT("permanenceIncrement", 0.10, false), 
-        PERMANENCE_DECREMENT("permanenceDecrement", 0.10, false),
-        RANDOM("random", -1, false),
-        SEED("seed", 42, false),
+        COLUMN_DIMENSIONS("columnDimensions", new int[] { 2048 }),
+        CELLS_PER_COLUMN("cellsPerColumn", 32),
+        ACTIVATION_THRESHOLD("activationThreshold", 13),
+        LEARNING_RADIUS("learningRadius", 2048),
+        MIN_THRESHOLD("minThreshold", 10),
+        MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", 20),
+        INITIAL_PERMANENCE("initialPermanence", 0.21),
+        CONNECTED_PERMANENCE("connectedPermanence", 0.5),
+        PERMANENCE_INCREMENT("permanenceIncrement", 0.10), 
+        PERMANENCE_DECREMENT("permanenceDecrement", 0.10),
+        RANDOM("random", -1),
+        SEED("seed", 42),
         
         /////////// Spatial Pooler Parameters ///////////
-        INPUT_DIMENSIONS("inputDimensions", new int[] { 64 }, true),
-        POTENTIAL_RADIUS("potentialRadius", 16, false),
-        POTENTIAL_PCT("potentialPct", 0.5, false),
-        GLOBAL_INHIBITIONS("globalInhibition", false, false),
-        LOCAL_AREA_DENSITY("localAreaDensity", -1.0, false),
-        NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", 10, false),
-        STIMULUS_THRESHOLD("stimulusThreshold", 0, false),
-        SYN_PERM_INACTIVE_DEC("synPermInactiveDec", 0.01, false),
-        SYN_PERM_ACTIVE_INC("synPermActiveInc", 0.1, false),
-        SYN_PERM_CONNECTED("synPermConnected", 0.10, false),
-        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", 0.001, false),
-        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001, false),
-        DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000, false),
-        MAX_BOOST("maxBoost", 10, false),
-        SP_VERBOSITY("spVerbosity", 0, false);
+        INPUT_DIMENSIONS("inputDimensions", new int[] { 64 }),
+        POTENTIAL_RADIUS("potentialRadius", 16),
+        POTENTIAL_PCT("potentialPct", 0.5),
+        GLOBAL_INHIBITIONS("globalInhibition", false),
+        LOCAL_AREA_DENSITY("localAreaDensity", -1.0),
+        NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", 10),
+        STIMULUS_THRESHOLD("stimulusThreshold", 0),
+        SYN_PERM_INACTIVE_DEC("synPermInactiveDec", 0.01),
+        SYN_PERM_ACTIVE_INC("synPermActiveInc", 0.1),
+        SYN_PERM_CONNECTED("synPermConnected", 0.10),
+        SYN_PERM_BELOW_STIMULUS("synPermBelowStimulusInc", 0.01),
+        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", 0.001),
+        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001),
+        DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000),
+        MAX_BOOST("maxBoost", 10),
+        SP_VERBOSITY("spVerbosity", 0);
         
         private String fieldName;
         private Object fieldValue;
-        private boolean isDimensional;
         
-        private KEY(String fieldName, Object fieldValue, boolean isDimensional) {
+        private KEY(String fieldName, Object fieldValue) {
             this.fieldName = fieldName;
             this.fieldValue = fieldValue;
-            this.isDimensional = isDimensional;
         }
     };
     
@@ -141,6 +142,7 @@ public class Parameters {
     private double synPermInactiveDec = 0.01;
     private double synPermActiveInc = 0.10;
     private double synPermConnected = 0.10;
+    private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
     private double dutyCyclePeriod = 1000;
@@ -155,14 +157,69 @@ public class Parameters {
     
     public Parameters() {}
     
-    public Parameters(int[] columnDimensions, int cellsPerColumn,
-            int activationThreshold, int learningRadius, int minThreshold,
+    /**
+     * Sets up default parameters for both the {@link SpatialPooler} and the 
+     * {@link TemporalMemory}
+     * 
+     * @param inputDimensions
+     * @param columnDimensions
+     * @param cellsPerColumn
+     * @param potentialRadius
+     * @param potentialPct
+     * @param globalInhibition
+     * @param localAreaDensity
+     * @param numActiveColumnsPerInhArea
+     * @param stimulusThreshold
+     * @param synPermInactiveDec
+     * @param synPermActiveInc
+     * @param synPermConnected
+     * @param synPermBelowStimulusInc
+     * @param minPctOverlapDutyCycles
+     * @param minPctActiveDutyCycles
+     * @param dutyCyclePeriod
+     * @param maxBoost
+     * @param activationThreshold
+     * @param learningRadius
+     * @param minThreshold
+     * @param maxNewSynapseCount
+     * @param seed
+     * @param initialPermanence
+     * @param connectedPermanence
+     * @param permanenceIncrement
+     * @param permanenceDecrement
+     * @param random
+     */
+    public Parameters(int[] inputDimensions, int[] columnDimensions, int cellsPerColumn,
+    		int potentialRadius/*SP*/, double potentialPct/*SP*/, boolean globalInhibition/*SP*/,
+    		double localAreaDensity/*SP*/, double numActiveColumnsPerInhArea/*SP*/, double stimulusThreshold/*SP*/,
+    		double synPermInactiveDec/*SP*/, double synPermActiveInc/*SP*/, double synPermConnected/*SP*/,
+    		double synPermBelowStimulusInc/*SP*/, double minPctOverlapDutyCycles/*SP*/, double minPctActiveDutyCycles/*SP*/,
+            double dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold, int learningRadius, int minThreshold,
             int maxNewSynapseCount, int seed, double initialPermanence,
             double connectedPermanence, double permanenceIncrement,
             double permanenceDecrement, Random random) {
         super();
+        
+        //SpatialPooler 
+        setInputDimensions(inputDimensions);
         setColumnDimensions(columnDimensions);
         setCellsPerColumn(cellsPerColumn);
+        setPotentialRadius(potentialRadius);
+        setPotentialPct(potentialPct);
+        setGlobalInhibition(globalInhibition);
+        setLocalAreaDensity(localAreaDensity);
+        setNumActiveColumnsPerInhArea(numActiveColumnsPerInhArea);
+        setStimulusThreshold(stimulusThreshold);
+        setSynPermInactiveDec(synPermInactiveDec);
+        setSynPermActiveInc(synPermActiveInc);
+        setSynPermConnected(synPermConnected);
+        setSynPermBelowStimulusInc(synPermBelowStimulusInc);
+        setMinPctOverlapDutyCycle(minPctOverlapDutyCycles);
+        setMinPctActiveDutyCycle(minPctActiveDutyCycles);
+        setDutyCyclePeriod(dutyCyclePeriod);
+        setMaxBoost(maxBoost);
+        
+        //TemporalMemory
         setActivationThreshold(activationThreshold);
         setLearningRadius(learningRadius);
         setMinThreshold(minThreshold);
@@ -173,6 +230,42 @@ public class Parameters {
         setPermanenceIncrement(permanenceIncrement);
         setPermanenceDecrement(permanenceDecrement);
         setRandom(random);
+    }
+    
+    /**
+     * Copy constructor for convenience
+     * @param other
+     */
+    public Parameters(Parameters other) {
+    	setInputDimensions(other.inputDimensions);
+        setColumnDimensions(other.columnDimensions);
+        setCellsPerColumn(other.cellsPerColumn);
+        setPotentialRadius(other.potentialRadius);
+        setPotentialPct(other.potentialPct);
+        setGlobalInhibition(other.globalInhibition);
+        setLocalAreaDensity(other.localAreaDensity);
+        setNumActiveColumnsPerInhArea(other.numActiveColumnsPerInhArea);
+        setStimulusThreshold(other.stimulusThreshold);
+        setSynPermInactiveDec(other.synPermInactiveDec);
+        setSynPermActiveInc(other.synPermActiveInc);
+        setSynPermConnected(other.synPermConnected);
+        setSynPermBelowStimulusInc(other.synPermBelowStimulusInc);
+        setMinPctOverlapDutyCycle(other.minPctOverlapDutyCycles);
+        setMinPctActiveDutyCycle(other.minPctActiveDutyCycles);
+        setDutyCyclePeriod(other.dutyCyclePeriod);
+        setMaxBoost(other.maxBoost);
+        
+        //TemporalMemory
+        setActivationThreshold(other.activationThreshold);
+        setLearningRadius(other.learningRadius);
+        setMinThreshold(other.minThreshold);
+        setMaxNewSynapseCount(other.maxNewSynapseCount);
+        setSeed(other.seed);
+        setInitialPermanence(other.initialPermanence);
+        setConnectedPermanence(other.connectedPermanence);
+        setPermanenceIncrement(other.permanenceIncrement);
+        setPermanenceDecrement(other.permanenceDecrement);
+        setRandom(other.random);
     }
     
     /**
@@ -193,19 +286,19 @@ public class Parameters {
     
     /**
      * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link TemporalMemory}
+     * {@link Connections}
      * 
-     * @param tm
+     * @param cn
      * @param p
      */
-    public static void apply(TemporalMemory tm, Parameters p) {
+    public static void apply(Connections cn, Parameters p) {
         try {
             for(Parameters.KEY key : p.paramMap.keySet()) {
                 switch(key){
                     case RANDOM: {
-                        Field f = tm.getClass().getDeclaredField(key.fieldName);
+                        Field f = cn.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
-                        f.set(tm, p.random);
+                        f.set(cn, p.random);
                         
                         f = p.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
@@ -214,9 +307,9 @@ public class Parameters {
                         break;
                     }
                     default: {
-                        Field f = tm.getClass().getDeclaredField(key.fieldName);
+                    	Field f = cn.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
-                        f.set(tm, p.paramMap.get(key));
+                        f.set(cn, p.paramMap.get(key));
                         
                         f = p.getClass().getDeclaredField(key.fieldName);
                         f.setAccessible(true);
@@ -231,51 +324,6 @@ public class Parameters {
         }
     }
     
-    /**
-     * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link Lattice}
-     * 
-     * @param l     a given {@link Lattice}
-     * @param p
-     */
-    public static void apply(Lattice l, Parameters p) {
-        try {
-            for(Parameters.KEY key : p.paramMap.keySet()) {
-                switch(key){
-                    case RANDOM: {
-                        Field f = l.getClass().getDeclaredField(key.fieldName);
-                        f.setAccessible(true);
-                        f.set(l, p.random);
-                        
-                        f = p.getClass().getDeclaredField(key.fieldName);
-                        f.setAccessible(true);
-                        f.set(p, p.random);
-                        
-                        break;
-                    }
-                    default: {
-                        Field f = null;
-                        try {
-                            f = l.getClass().getDeclaredField(key.fieldName);
-                        }catch(Exception e) {
-                             f = l.getClass().getSuperclass().getDeclaredField(key.fieldName);
-                        }
-                        f.setAccessible(true);
-                        f.set(l, p.paramMap.get(key));
-                        
-                        f = p.getClass().getDeclaredField(key.fieldName);
-                        f.setAccessible(true);
-                        f.set(p, p.paramMap.get(key));
-                        
-                        break;
-                    }
-                }
-            }
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Returns the seeded random number generator.
      * @param   r   the generator to use.
@@ -566,6 +614,15 @@ public class Parameters {
         this.synPermConnected = synPermConnected;
         getMap().put(KEY.SYN_PERM_CONNECTED, synPermConnected);
     }
+    
+    /**
+     * Sets the increment of synapse permanences below the stimulus
+     * threshold
+     * @param inc
+     */
+    public void setSynPermBelowStimulusInc(double inc) {
+    	this.synPermBelowStimulusInc = inc;
+    }
 
     /**
      * A number between 0 and 1.0, used to set a floor on
@@ -653,14 +710,33 @@ public class Parameters {
         this.spVerbosity = spVerbosity;
         getMap().put(KEY.SP_VERBOSITY, spVerbosity);
     }
-
+    
     /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n")
+        sb.append("{ Spatial\n")
+        .append("\t").append("inputDimensions :  ").append(inputDimensions).append("\n")
+        .append("\t").append("potentialRadius :  ").append(potentialRadius).append("\n")
+        .append("\t").append("potentialPct :  ").append(potentialPct).append("\n")
+        .append("\t").append("globalInhibition :  ").append(globalInhibition).append("\n")
+        .append("\t").append("localAreaDensity :  ").append(localAreaDensity).append("\n")
+        .append("\t").append("numActiveColumnsPerInhArea :  ").append(numActiveColumnsPerInhArea).append("\n")
+        .append("\t").append("stimulusThreshold :  ").append(stimulusThreshold).append("\n")
+        .append("\t").append("synPermInactiveDec :  ").append(synPermInactiveDec).append("\n")
+        .append("\t").append("synPermActiveInc :  ").append(synPermActiveInc).append("\n")
+        .append("\t").append("synPermConnected :  ").append(synPermConnected).append("\n")
+        .append("\t").append("synPermBelowStimulusInc :  ").append(synPermBelowStimulusInc).append("\n")
+        .append("\t").append("minPctOverlapDutyCycles :  ").append(minPctOverlapDutyCycles).append("\n")
+        .append("\t").append("minPctActiveDutyCycles :  ").append(minPctActiveDutyCycles).append("\n")
+        .append("\t").append("dutyCyclePeriod :  ").append(dutyCyclePeriod).append("\n")
+        .append("\t").append("maxBoost :  ").append(maxBoost).append("\n")
+        .append("\t").append("spVerbosity :  ").append(spVerbosity).append("\n")
+        .append("}\n\n")
+        
+        .append("{ Temporal\n")
         .append("\t").append("activationThreshold :  ").append(activationThreshold).append("\n")
         .append("\t").append("cellsPerColumn :  ").append(cellsPerColumn).append("\n")
         .append("\t").append("columnDimensions :  ").append(columnDimensions).append("\n")

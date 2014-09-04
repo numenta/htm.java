@@ -73,7 +73,7 @@ public class Cell implements Comparable<Cell> {
      * @param s
      */
     public void addReceptorSynapse(Connections c, Synapse s) {
-        c.receptorSynapses(this).add(s);
+        c.getReceptorSynapses(this).add(s);
     }
     
     /**
@@ -85,7 +85,7 @@ public class Cell implements Comparable<Cell> {
      *          as their source cells.
      */
     public Set<Synapse> getReceptorSynapses(Connections c) {
-        return c.receptorSynapses(this);
+        return c.getReceptorSynapses(this);
     }
     
     /**
@@ -97,7 +97,7 @@ public class Cell implements Comparable<Cell> {
      */
     public DistalDendrite createSegment(Connections c, int index) {
         DistalDendrite dd = new DistalDendrite(this, index);
-        c.segments(this).add(dd);
+        c.getSegments(this).add(dd);
         
         return dd;
     }
@@ -109,7 +109,7 @@ public class Cell implements Comparable<Cell> {
      * @return  a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      */
     public List<DistalDendrite> getSegments(Connections c) {
-        return c.segments(this);
+        return c.getSegments(this);
     }
     
     /**

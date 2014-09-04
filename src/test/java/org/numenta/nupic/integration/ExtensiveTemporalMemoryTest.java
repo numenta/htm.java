@@ -157,9 +157,6 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         List<Set<Integer>> sequence = sequenceMachine.generateFromNumbers(numberList);
         sequence.add(SequenceMachine.NONE);
         
-        System.out.println("testB1 numbers = " + numberList);
-        System.out.println("testB1 sequence = " + sequence);
-        
         feedTM(sequence, true, 1);
         
         DetailedResults results = feedTM(sequence, false, 1);

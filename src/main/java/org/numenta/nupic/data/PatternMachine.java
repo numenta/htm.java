@@ -225,9 +225,6 @@ public class PatternMachine {
         int len = population.size();
         for(int i = 0;i < num;i++) {
             int j = (int)(random.nextDouble() * (len - i));
-            if(i == 17 || j == 14) {
-                System.out.println("what happens here");
-            }
             retVal.add(population.get(j));
             population.set(j, population.get(len - i - 1));
         }
