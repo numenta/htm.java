@@ -45,6 +45,10 @@
 				<artifactId>coveralls-maven-plugin</artifactId>
 				<version>2.2.0</version>
 				<configuration>
+					<format>xml</format>
+					<maxmem>256m</maxmem>
+					<aggregate>true</aggregate>
+					<sourceEncoding>UTF-8</sourceEncoding>
 					<repoToken>gWODAiN95fSX3NuVOedJPP8Xeng01sawX</repoToken>
 				</configuration>
 			</plugin>
@@ -98,6 +102,13 @@
 						<groupId>org.eluder.coveralls</groupId>
 						<artifactId>coveralls-maven-plugin</artifactId>
 						<version>2.2.0</version>
+						<configuration>
+							<format>xml</format>
+							<maxmem>256m</maxmem>
+							<aggregate>true</aggregate>
+							<sourceEncoding>UTF-8</sourceEncoding>
+							<repoToken>gWODAiN95fSX3NuVOedJPP8Xeng01sawX</repoToken>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
