@@ -1,9 +1,4 @@
 language: java
 
-before_script:
-  - python etc/travis-sonatype.py
-
-script: python etc/travis-build.py --settings ~/.m2/sonatype.xml
-
 after_success:
   - mvn jacoco:report coveralls:jacoco
