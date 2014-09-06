@@ -1,5 +1,4 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'maven'
 
 sourceCompatibility = 1.7
 version = '0.20'
