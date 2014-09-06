@@ -1,4 +1,4 @@
 language: java
 
 after_success:
-  - mvn jacoco:report coveralls:jacoco
+  - mvn cobertura:cobertera coveralls:cobertura
