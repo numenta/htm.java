@@ -37,6 +37,11 @@
 	          <repoToken>gWODAiN95fSX3NuVOedJPP8Xeng01sawX</repoToken>
 	      </configuration>
 	  </plugin>
+	  <plugin>
+		  <groupId>org.jacoco</groupId>
+		  <artifactId>jacoco-maven-plugin</artifactId>
+		  <version>0.7.2-SNAPSHOT</version>
+	  </plugin>
     </plugins>
   </build>
   <dependencies>
