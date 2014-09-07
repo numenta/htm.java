@@ -3,4 +3,4 @@ language: java
 after_success:
   - sudo chown ${USER} /home/travis/build/numenta
   - whoami
-  - sudo mvn cobertura:cobertura coveralls:cobertura
+  - mvn cobertura:cobertura coveralls:cobertura
