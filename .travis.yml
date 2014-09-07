@@ -2,5 +2,5 @@ language: java
 
 after_success:
   - sudo chown -R ${USER} /home/travis/build/numenta
-  - pwd
+  - mkdir -p target/site/cobertura
   - mvn cobertura:cobertura coveralls:cobertura
