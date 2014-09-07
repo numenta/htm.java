@@ -1,4 +1,4 @@
 language: java
 
 after_success:
-  - mvn cobertura:cobertura coveralls:cobertura
+  - sudo mvn cobertura:cobertura coveralls:cobertura
