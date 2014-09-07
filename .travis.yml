@@ -1,6 +1,6 @@
 language: java
 
 after_success:
-  - sudo chown ${USER} /home/travis/build/numenta
+  - sudo chown -R ${USER} /home/travis/build/numenta
   - whoami
   - mvn cobertura:cobertura coveralls:cobertura
