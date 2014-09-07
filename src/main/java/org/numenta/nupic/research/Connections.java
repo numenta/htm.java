@@ -945,12 +945,36 @@ public class Connections {
 		this.overlapDutyCycles = overlapDutyCycles;
 	}
 
+	/**
+	 * Returns the dense (size=numColumns) array of duty cycle stats. 
+	 * @return	the dense array of active duty cycle values.
+	 */
 	public double[] getActiveDutyCycles() {
 		return activeDutyCycles;
 	}
 
+	/**
+	 * Sets the dense (size=numColumns) array of duty cycle stats. 
+	 * @param activeDutyCycles
+	 */
 	public void setActiveDutyCycles(double[] activeDutyCycles) {
 		this.activeDutyCycles = activeDutyCycles;
+	}
+	
+	/**
+	 * Applies the dense array values which aren't -1 to the array containing
+	 * the active duty cycles of the column corresponding to the index specified.
+	 * The length of the specified array must be as long as the configured number
+	 * of columns of this {@code Connections}' column configuration.
+	 * 
+	 * @param	denseActiveDutyCycles	a dense array containing values to set.
+	 */
+	public void updateActiveDutyCycles(double[] denseActiveDutyCycles) {
+		for(int i = 0;i < denseActiveDutyCycles.length;i++) {
+			if(denseActiveDutyCycles[i] != -1) {
+				activeDutyCycles[i] = denseActiveDutyCycles[i];
+			}
+		}
 	}
 
 	public double[] getMinOverlapDutyCycles() {

@@ -149,6 +149,40 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testStripNeverLearned() {
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 6 });
+    	parameters.setInputDimensions(new int[] { 9 });
+    	initSP();
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0.5, 0.1, 0, 0.2, 0.4, 0 });
+    	int[] activeColumns = new int[] { 0, 1, 2, 4 };
+    	TIntArrayList stripped = sp.stripNeverLearned(mem, activeColumns);
+    	TIntArrayList trueStripped = new TIntArrayList(new int[] { 0, 1, 4 });
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0.9, 0, 0, 0, 0.4, 0.3 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList(new int[] { 0, 4, 5 });
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0, 0, 0, 0, 0, 0 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList();
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 1, 1, 1, 1, 1, 1 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList(ArrayUtils.range(0,  6));
+    	assertEquals(trueStripped, stripped);
+    	
+    	
+    }
+    
+    @Test
     public void testMapPotential1D() {
     	defaultSetup();
         parameters.setInputDimensions(new int[] { 10 });
