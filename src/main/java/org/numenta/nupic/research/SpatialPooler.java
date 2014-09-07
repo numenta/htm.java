@@ -50,7 +50,7 @@ public class SpatialPooler {
      * columns. 
      * 
      * @param l
-     * @param inputVector       A <del>numpy</del> array of 0's and 1's that comprises the input to
+     * @param inputVector       An array of 0's and 1's that comprises the input to
      *                          the spatial pooler. The array will be treated as a one
      *                          dimensional array, therefore the dimensions of the array
      *                          do not have to match the exact dimensions specified in the
