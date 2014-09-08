@@ -27,6 +27,16 @@ import gnu.trove.list.array.TIntArrayList;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
+/**
+ * Allows storage of array data in sparse form, meaning that the indexes
+ * of the data stored are maintained while empty indexes are not. This allows
+ * savings in memory and computational efficiency because iterative algorithms
+ * need only query indexes containing valid data.
+ * 
+ * @author David Ray
+ *
+ * @param <T>
+ */
 public abstract class SparseMatrix<T> {
     
     protected int[] dimensionMultiples;
@@ -39,6 +49,16 @@ public abstract class SparseMatrix<T> {
         this(dimensions, false);
     }
     
+    /**
+     * Constructs a new {@code SparseMatrix} object to be configured with specified
+     * dimensions and major ordering.
+     * 
+     * @param dimensions				the dimensions of this sparse array	
+     * @param useColumnMajorOrdering	flag indicating whether to use column ordering or
+     * 									row major ordering. if false (the default), then row
+     * 									major ordering will be used. If true, then column major
+     * 									ordering will be used.
+     */
     public SparseMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         this.dimensions = dimensions;
         this.numDimensions = dimensions.length;

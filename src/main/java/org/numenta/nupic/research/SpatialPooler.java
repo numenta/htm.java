@@ -33,6 +33,7 @@ import java.util.List;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.ArrayUtils.Condition;
 import org.numenta.nupic.data.SparseMatrix;
+import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Lattice;
 
 
@@ -77,6 +78,31 @@ public class SpatialPooler {
         
         updateBookeepingVars(c, learn);
         calculateOverlap(c, inputVector);
+    }
+    
+    /**
+     * Removes the set of columns who have never been active from the set of
+     * active columns selected in the inhibition round. Such columns cannot
+     * represent learned pattern and are therefore meaningless if only inference
+     * is required.
+     *  
+     * @param activeColumns	An array containing the indices of the active columns
+     * @return	a list of columns with a chance of activation
+     */
+    public TIntArrayList stripNeverLearned(Connections c, int[] activeColumns) {
+    	TIntHashSet active = new TIntHashSet(activeColumns);
+    	TIntHashSet aboveZero = new TIntHashSet();
+    	int numCols = c.getNumColumns();
+    	double[] colDutyCycles = c.getActiveDutyCycles();
+    	for(int i = 0;i < numCols;i++) {
+    		if(colDutyCycles[i] <= 0) {
+    			aboveZero.add(i);
+    		}
+    	}
+    	active.removeAll(aboveZero);
+    	TIntArrayList l = new TIntArrayList(active);
+    	l.sort();
+    	return l;
     }
     
     /**
@@ -456,7 +482,7 @@ public class SpatialPooler {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        //c.conn
+        SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
         return null;
     }
 }

@@ -112,35 +112,6 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
-     * Uses reflection to create and fill a dynamically created multidimensional array.
-     * 
-     * @param f                 the {@link TypeFactory}
-     * @param dimensionIndex    the current index into <em>this class's</em> configured dimensions array
-     *                          <em>*NOT*</em> the dimensions used as this method's argument    
-     * @param dimensions        the array specifying remaining dimensions to create
-     * @param count             the current dimensional size
-     * @param arr               the array to fill
-     * @return a dynamically created multidimensional array
-     */
-//  @SuppressWarnings("unchecked")
-//  @Override
-//  protected <T> Object[] fill(TypeFactory<T> f, int dimensionIndex, int[] dimensions, int count, Object[] arr) {
-//      if(dimensions.length == 1) {
-//          for(int i = 0;i < count;i++) {
-//              arr[i] = f.make(dimensionIndex);
-//          }
-//          return arr;
-//      }else{
-//          for(int i = 0;i < count;i++) {
-//              int[] inner = copyInnerArray(dimensions);
-//              T[] r = (T[])Array.newInstance(f.typeClass(), inner);
-//              arr[i] = (Object[])fill(f, dimensionIndex + 1, inner, this.dimensions[dimensionIndex + 1], r);
-//          }
-//          return (T[])arr;
-//      }
-//  }
-    
-    /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
      * the inputMatrix with the contents of this matrix; returning this matrix
      * as the result.
@@ -157,7 +128,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     
     /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
-     * the inputMatrix with the contents of this matrix; returning this matrix
+     * the sparse list with the contents of this matrix; returning this matrix
      * as the result.
      * 
      * @param onBitIndexes  the matrix containing the "on" bits to or
@@ -171,7 +142,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     
     /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
-     * the inputMatrix with the contents of this matrix; returning this matrix
+     * the sparse array with the contents of this matrix; returning this matrix
      * as the result.
      * 
      * @param onBitIndexes  the int array containing the "on" bits to or

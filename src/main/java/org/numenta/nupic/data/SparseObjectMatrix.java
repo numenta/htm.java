@@ -24,6 +24,16 @@ package org.numenta.nupic.data;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+/**
+ * Allows storage of array data in sparse form, meaning that the indexes
+ * of the data stored are maintained while empty indexes are not. This allows
+ * savings in memory and computational efficiency because iterative algorithms
+ * need only query indexes containing valid data.
+ * 
+ * @author David Ray
+ *
+ * @param <T>
+ */
 public class SparseObjectMatrix<T> extends SparseMatrix<T> {
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
     

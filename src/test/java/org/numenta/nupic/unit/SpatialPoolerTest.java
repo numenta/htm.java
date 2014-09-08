@@ -103,6 +103,20 @@ public class SpatialPoolerTest {
         assertEquals(5, mem.getNumColumns());
     }
     
+    /**
+     * Checks that feeding in the same input vector leads to polarized
+     * permanence values: either zeros or ones, but no fractions
+     */
+    @Test
+    public void testCompute1() {
+        defaultSetup();
+        initSP();
+        
+        SparseObjectMatrix<int[]> s = mem.getPotentialPools();
+        
+        System.out.println(s);
+    }
+    
     @Test
     public void testMapColumn() {
     	// Test 1D
@@ -146,6 +160,40 @@ public class SpatialPoolerTest {
     	assertEquals(13, sp.mapColumn(mem, 5));
     	assertEquals(19, sp.mapColumn(mem, 7));
     	assertEquals(199, sp.mapColumn(mem, 47));
+    }
+    
+    @Test
+    public void testStripNeverLearned() {
+    	defaultSetup();
+    	parameters.setColumnDimensions(new int[] { 6 });
+    	parameters.setInputDimensions(new int[] { 9 });
+    	initSP();
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0.5, 0.1, 0, 0.2, 0.4, 0 });
+    	int[] activeColumns = new int[] { 0, 1, 2, 4 };
+    	TIntArrayList stripped = sp.stripNeverLearned(mem, activeColumns);
+    	TIntArrayList trueStripped = new TIntArrayList(new int[] { 0, 1, 4 });
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0.9, 0, 0, 0, 0.4, 0.3 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList(new int[] { 0, 4, 5 });
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 0, 0, 0, 0, 0, 0 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList();
+    	assertEquals(trueStripped, stripped);
+    	
+    	mem.updateActiveDutyCycles(new double[] { 1, 1, 1, 1, 1, 1 });
+    	activeColumns = ArrayUtils.range(0,  6);
+    	stripped = sp.stripNeverLearned(mem, activeColumns);
+    	trueStripped = new TIntArrayList(ArrayUtils.range(0,  6));
+    	assertEquals(trueStripped, stripped);
+    	
+    	
     }
     
     @Test
@@ -712,15 +760,5 @@ public class SpatialPoolerTest {
     	}
     }
 
-    /**
-     * Checks that feeding in the same input vector leads to polarized
-     * permanence values: either zeros or ones, but no fractions
-     */
-    @Test
-    public void testCompute1() {
-        defaultSetup();
-        parameters.setPotentialRadius(5);
-        initSP();
-    }
-
+    
 }
