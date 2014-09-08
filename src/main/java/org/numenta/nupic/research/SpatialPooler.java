@@ -33,6 +33,7 @@ import java.util.List;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.ArrayUtils.Condition;
 import org.numenta.nupic.data.SparseMatrix;
+import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Lattice;
 
 
@@ -481,7 +482,7 @@ public class SpatialPooler {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        //c.conn
+        SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
         return null;
     }
 }

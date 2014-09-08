@@ -103,6 +103,20 @@ public class SpatialPoolerTest {
         assertEquals(5, mem.getNumColumns());
     }
     
+    /**
+     * Checks that feeding in the same input vector leads to polarized
+     * permanence values: either zeros or ones, but no fractions
+     */
+    @Test
+    public void testCompute1() {
+        defaultSetup();
+        initSP();
+        
+        SparseObjectMatrix<int[]> s = mem.getPotentialPools();
+        
+        System.out.println(s);
+    }
+    
     @Test
     public void testMapColumn() {
     	// Test 1D
@@ -746,15 +760,5 @@ public class SpatialPoolerTest {
     	}
     }
 
-    /**
-     * Checks that feeding in the same input vector leads to polarized
-     * permanence values: either zeros or ones, but no fractions
-     */
-    @Test
-    public void testCompute1() {
-        defaultSetup();
-        parameters.setPotentialRadius(5);
-        initSP();
-    }
-
+    
 }
