@@ -167,7 +167,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
-     * Returns true if the on bits of the specified matrix are
+     * Returns true if the on bits of the specified list are
      * matched by the on bits of this matrix. It is allowed that 
      * this matrix have more on bits than the specified matrix.
      * 
@@ -179,7 +179,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
-     * Returns true if the on bits of the specified matrix are
+     * Returns true if the on bits of the specified array are
      * matched by the on bits of this matrix. It is allowed that 
      * this matrix have more on bits than the specified matrix.
      * 

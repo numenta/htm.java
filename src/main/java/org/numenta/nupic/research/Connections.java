@@ -43,7 +43,7 @@ import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 
 /**
- * Represents the definition of the interconnected structural state of the {@link SpatialPooler} and 
+ * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
  * {@link TemporalMemory} as well as the state of all support structures 
  * (i.e. Cells, Columns, Segments, Synapses etc.)
  */
@@ -226,78 +226,14 @@ public class Connections {
      * Constructs a new {@code Connections} object. Use
      * 
      */
-    public Connections() {
-    	this(null);
-    }
+    public Connections() {}
     
-    public Connections(SpatialPooler sp) {
-    	if(sp != null) {
-            
-	        //Init the static data structures
-	        initMatrices();
-	        
-	        //Configure potential pools and support settings
-	        connectAndConfigureInputs(sp);
-    	}
-        
-        if(getVerbosity() > 0) {
-            printParameters();
-        }
-    }
-    
-    public void initMatrices() {
-    	memory = new SparseObjectMatrix<Column>(columnDimensions);
-        inputMatrix = new SparseBinaryMatrix(inputDimensions);
-        
-        for(int i = 0;i < inputDimensions.length;i++) {
-            numInputs *= inputDimensions[i];
-        }
-        for(int i = 0;i < columnDimensions.length;i++) {
-            numColumns *= columnDimensions[i];
-        }
-        
-        potentialPools = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
-        
-        permanences = new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } );
-        
-        /**
-         * 'connectedSynapses' is a similar matrix to 'permanences'
-         * (rows represent cortical columns, columns represent input bits) whose
-         * entries represent whether the cortical column is connected to the input
-         * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-         * this information is readily available from the 'permanences' matrix,
-         * it is stored separately for efficiency purposes.
-         */
-        connectedSynapses = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
-        
-        connectedCounts = new int[numColumns];
-        
-        tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
-        for(int i = 0;i < numColumns;i++) {
-            for(int j = 0;j < numInputs;j++) {
-                tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
-            }
-        }
-    }
-    
-    public void connectAndConfigureInputs(SpatialPooler sp) {
-    	// Initialize the set of permanence values for each column. Ensure that
-        // each column is connected to enough input bits to allow it to be
-        // activated.
-        for(int i = 0;i < numColumns;i++) {
-            int[] potential = sp.mapPotential(this, i, true);
-            potentialPools.set(i, potential);
-            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
-            sp.updatePermanencesForColumn(this, perm, i, true);
-        }
-        
-        sp.updateInhibitionRadius(this);
-        
-        overlapDutyCycles = new double[numColumns];
-        activeDutyCycles = new double[numColumns];
-        minOverlapDutyCycles = new double[numColumns];
-        minActiveDutyCycles = new double[numColumns];
-        boostFactors = new double[numColumns];
+    /**
+     * Returns the configured initial connected percent.
+     * @return
+     */
+    public double getInitConnectedPct() {
+    	return this.initConnectedPct;
     }
     
     /**
@@ -550,8 +486,14 @@ public class Connections {
     }
     
     /**
-     * Sets the {@link SparseObjectMatrix} representing the connected synapses.
-     * @param s
+     * 'connectedSynapses' is a similar matrix to 'permanences'
+     * (rows represent cortical columns, columns represent input bits) whose
+     * entries represent whether the cortical column is connected to the input
+     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+     * this information is readily available from the 'permanences' matrix,
+     * it is stored separately for efficiency purposes.
+     * 
+     * @param	s	in this case the sparse matrix
      */
     public void setConnectedSysnapses(SparseMatrix<int[]> s) {
         this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
@@ -571,6 +513,25 @@ public class Connections {
      */
     public void setConnectedCounts(int[] counts) {
         this.connectedCounts = counts;
+    }
+    
+    /**
+     * Sets the array holding the random noise added to proximal dendrite overlaps.
+     * 
+     * @param tieBreaker	random values to help break ties
+     */
+    public void setTieBreaker(SparseDoubleMatrix tieBreaker) {
+    	this.tieBreaker = tieBreaker;
+    }
+    
+    /**
+     * Returns the array holding random values used to add to overlap scores
+     * to break ties.
+     * 
+     * @return
+     */
+    public SparseDoubleMatrix getTieBreaker() {
+    	return tieBreaker;
     }
     
     /**
@@ -893,9 +854,19 @@ public class Connections {
     }
     
     /**
+     * Sets the {@link SparseObjectMatrix} which holds the mapping
+     * of column indexes to their lists of potential inputs. 
+     * 
+     * @param pools		{@link SparseObjectMatrix} which holds the pools.
+     */
+    public void setPotentialPools(SparseObjectMatrix<int[]> pools) {
+    	this.potentialPools = pools;
+    }
+    
+    /**
      * Returns the {@link SparseObjectMatrix} which holds the mapping
      * of column indexes to their lists of potential inputs.
-     * @return
+     * @return	the potential pools
      */
     public SparseObjectMatrix<int[]> getPotentialPools() {
         return this.potentialPools;

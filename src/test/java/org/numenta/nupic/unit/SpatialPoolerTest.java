@@ -37,7 +37,6 @@ import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
-import org.numenta.nupic.research.SpatialLattice;
 import org.numenta.nupic.research.SpatialPooler;
 
 public class SpatialPoolerTest {
@@ -45,7 +44,7 @@ public class SpatialPoolerTest {
     private SpatialPooler sp;
     private Connections mem;
     
-    public void defaultSetup() {
+    public void setupParameters() {
         parameters = new Parameters();
         EnumMap<Parameters.KEY, Object> p = parameters.getMap();
         p.put(KEY.INPUT_DIMENSIONS, new int[] { 9 });
@@ -71,13 +70,12 @@ public class SpatialPoolerTest {
         sp = new SpatialPooler();
         mem = new Connections();
         Parameters.apply(mem, parameters);
-        mem.initMatrices();
-        mem.connectAndConfigureInputs(sp);
+        sp.init(mem);
     }
     
     @Test
     public void confirmSPConstruction() {
-        defaultSetup();
+        setupParameters();
         
         initSP();
         
@@ -109,7 +107,7 @@ public class SpatialPoolerTest {
      */
     @Test
     public void testCompute1() {
-        defaultSetup();
+        setupParameters();
         initSP();
         
         SparseObjectMatrix<int[]> s = mem.getPotentialPools();
@@ -120,7 +118,7 @@ public class SpatialPoolerTest {
     @Test
     public void testMapColumn() {
     	// Test 1D
-    	defaultSetup();
+    	setupParameters();
     	parameters.setColumnDimensions(new int[] { 4 });
     	parameters.setInputDimensions(new int[] { 10 });
     	initSP();
@@ -131,7 +129,7 @@ public class SpatialPoolerTest {
     	assertEquals(9, sp.mapColumn(mem, 3));
     	
     	// Test 1D with same dimension of columns and inputs
-    	defaultSetup();
+    	setupParameters();
     	parameters.setColumnDimensions(new int[] { 4 });
     	parameters.setInputDimensions(new int[] { 4 });
     	initSP();
@@ -142,7 +140,7 @@ public class SpatialPoolerTest {
     	assertEquals(3, sp.mapColumn(mem, 3));
     	
     	// Test 1D with same dimensions of length 1
-    	defaultSetup();
+    	setupParameters();
     	parameters.setColumnDimensions(new int[] { 1 });
     	parameters.setInputDimensions(new int[] { 1 });
     	initSP();
@@ -150,7 +148,7 @@ public class SpatialPoolerTest {
     	assertEquals(0, sp.mapColumn(mem, 0));
     	
     	// Test 2D
-    	defaultSetup();
+    	setupParameters();
     	parameters.setColumnDimensions(new int[] { 12, 4 });
     	parameters.setInputDimensions(new int[] { 20, 10 });
     	initSP();
@@ -164,7 +162,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testStripNeverLearned() {
-    	defaultSetup();
+    	setupParameters();
     	parameters.setColumnDimensions(new int[] { 6 });
     	parameters.setInputDimensions(new int[] { 9 });
     	initSP();
@@ -198,7 +196,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testMapPotential1D() {
-    	defaultSetup();
+    	setupParameters();
         parameters.setInputDimensions(new int[] { 10 });
         parameters.setColumnDimensions(new int[] { 4 });
         parameters.setPotentialRadius(2);
@@ -242,7 +240,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testMapPotential2D() {
-    	defaultSetup();
+    	setupParameters();
         parameters.setInputDimensions(new int[] { 5, 10 });
         parameters.setColumnDimensions(new int[] { 2, 4 });
         parameters.setPotentialRadius(1);
@@ -280,7 +278,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testMapPotential1Column1Input() {
-    	defaultSetup();
+    	setupParameters();
         parameters.setInputDimensions(new int[] { 1 });
         parameters.setColumnDimensions(new int[] { 1 });
         parameters.setPotentialRadius(2);
@@ -305,7 +303,7 @@ public class SpatialPoolerTest {
     	int[] inputDimensions = new int[] { 4, 4, 2, 5 };
         mem.setInputDimensions(inputDimensions);
         mem.setColumnDimensions(new int[] { 5 });
-        mem.initMatrices(); 
+        sp.initMatrices(mem); 
         
         TIntArrayList connected = new TIntArrayList();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 0 }, false));
@@ -357,7 +355,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testUpdateInhibitionRadius() {
-    	defaultSetup();
+    	setupParameters();
     	initSP();
     	 
     	//Test global inhibition case
@@ -415,7 +413,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testAvgColumnsPerInput() {
-    	defaultSetup();
+    	setupParameters();
     	initSP();
     	 
     	mem.setColumnDimensions(new int[] { 2, 2, 2, 2 });
@@ -454,7 +452,7 @@ public class SpatialPoolerTest {
     @Test
     public void testGetNeighborsND() {
         //This setup isn't relevant to this test
-        defaultSetup();
+        setupParameters();
         parameters.setInputDimensions(new int[] { 9, 5 });
         parameters.setColumnDimensions(new int[] { 5, 5 });
         initSP();
@@ -471,7 +469,7 @@ public class SpatialPoolerTest {
         }
         /////////////////////////////////////////////////////////////////////////
         
-        defaultSetup();
+        setupParameters();
         int[] dimensions = new int[] { 5, 7, 2 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -487,7 +485,7 @@ public class SpatialPoolerTest {
         
         /////////////////////////////////////////
         
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 5, 7, 9 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -517,7 +515,7 @@ public class SpatialPoolerTest {
         
         /////////////////////////////////////////
         
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 5, 10, 7, 6 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -550,7 +548,7 @@ public class SpatialPoolerTest {
         
         /////////////////////////////////////////
         //Tests from getNeighbors1D from Python unit test
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
@@ -566,7 +564,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //////
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
@@ -582,7 +580,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Wrap around
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
@@ -598,7 +596,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Radius too big
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
@@ -614,7 +612,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //These are all the same tests from 2D
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -642,7 +640,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         ////////
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -670,7 +668,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Radius too big
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -698,7 +696,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Wrap-around
-        defaultSetup();
+        setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
@@ -728,7 +726,7 @@ public class SpatialPoolerTest {
     
     @Test
     public void testRaisePermanenceThreshold() {
-    	defaultSetup();
+    	setupParameters();
     	parameters.setInputDimensions(new int[] { 5 });
     	parameters.setColumnDimensions(new int[] { 5 });
     	parameters.setSynPermConnected(0.1);

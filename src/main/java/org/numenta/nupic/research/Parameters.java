@@ -27,7 +27,6 @@ import java.util.Random;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Lattice;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}

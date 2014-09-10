@@ -32,16 +32,99 @@ import java.util.List;
 
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.ArrayUtils.Condition;
+import org.numenta.nupic.data.SparseBinaryMatrix;
+import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.model.Lattice;
+import org.numenta.nupic.model.Column;
 
 
 
 public class SpatialPooler {
+    /**
+     * Constructs a new {@code SpatialPooler}
+     */
+    public SpatialPooler() {}
     
-    public SpatialPooler() {
+    /**
+     * Initializes the specified {@link Connections} object which contains
+     * the memory and structural anatomy this spatial pooler uses to implement
+     * its algorithms.
+     * 
+     * @param c		a {@link Connections} object
+     */
+    public void init(Connections c) {
+    	initMatrices(c);
+    	connectAndConfigureInputs(c);
+    }
+    
+    /**
+     * Called to initialize the structural anatomy with configured values and prepare
+     * the anatomical entities for activation.
+     * 
+     * @param c
+     */
+    public void initMatrices(Connections c) {
+    	int[] inputDimensions = c.getInputDimensions();
+    	int[] columnDimensions = c.getColumnDimensions();
+    	
+    	c.setMemory(new SparseObjectMatrix<Column>(c.getColumnDimensions()));
+        c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
         
+        int numInputs = 1;
+        int numColumns = 1;
+        for(int i = 0;i < inputDimensions.length;i++) {
+            numInputs *= inputDimensions[i];
+        }
+        for(int i = 0;i < columnDimensions.length;i++) {
+            numColumns *= columnDimensions[i];
+        }
+        c.setNumInputs(numInputs);
+        c.setNumColumns(numColumns);
+        
+        c.setPotentialPools(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+        
+        c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
+        
+        c.setConnectedSysnapses(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+        
+        c.setConnectedCounts(new int[numColumns]);
+        
+        SparseDoubleMatrix tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        for(int i = 0;i < numColumns;i++) {
+            for(int j = 0;j < numInputs;j++) {
+                tieBreaker.set(new int[] { i, j }, 0.01 * c.getRandom().nextDouble());
+            }
+        }
+        c.setTieBreaker(tieBreaker);
+    }
+    
+    /**
+     * Step two of pooler initialization kept separate from initialization
+     * of static members so that they may be set at a different point in 
+     * the initialization (as sometimes needed by tests).
+     * 
+     * @param c		the {@link Connections} memory
+     */
+    public void connectAndConfigureInputs(Connections c) {
+    	// Initialize the set of permanence values for each column. Ensure that
+        // each column is connected to enough input bits to allow it to be
+        // activated.
+    	int numColumns = c.getNumColumns();
+        for(int i = 0;i < numColumns;i++) {
+            int[] potential = mapPotential(c, i, true);
+            c.getPotentialPools().set(i, potential);
+            double[] perm = initPermanence(c, new TIntHashSet(potential), c.getInitConnectedPct());
+            updatePermanencesForColumn(c, perm, i, true);
+        }
+        
+        updateInhibitionRadius(c);
+        
+        c.setOverlapDutyCycles(new double[numColumns]);
+        c.setActiveDutyCycles(new double[numColumns]);
+        c.setMinOverlapDutyCycles(new double[numColumns]);
+        c.setMinActiveDutyCycles(new double[numColumns]);
+        c.setBoostFactors(new double[numColumns]);
     }
     
     /**
@@ -110,7 +193,7 @@ public class SpatialPooler {
      * This value is used to calculate the inhibition radius. This variation of
      * the function supports arbitrary column dimensions.
      *  
-     * @param l             the {@link SpatialLattice} (spatial pooler memory)
+     * @param c             the {@link Connections} (spatial pooler memory)
      * @param columnIndex   the current column for which to avg.
      * @return
      */
@@ -216,7 +299,7 @@ public class SpatialPooler {
      * the number of input bits each column is connected to). Every method wishing
      * to modify the permanence matrix should do so through this method.
      * 
-     * @param l                 the {@link Lattice} which is the memory modec.
+     * @param c                 the {@link Connections} which is the memory modec.
      * @param perm              An array of permanence values for a column. The array is
      *                          "dense", i.e. it contains an entry for each input bit, even
      *                          if the permanence value is 0.
@@ -289,7 +372,7 @@ public class SpatialPooler {
      * at the particular index in the array, and the column represented by
      * the 'index' parameter.
      * 
-     * @param l                 the {@link SpatialLattice} which is the memory model
+     * @param c                 the {@link Connections} which is the memory model
      * @param potentialPool     An array specifying the potential pool of the column.
      *                          Permanence values will only be generated for input bits
      *                          corresponding to indices for which the mask value is 1.
@@ -367,7 +450,7 @@ public class SpatialPooler {
      *   '1's, where the exact indices are to be determined by the mapping from
      *   1-D index to 2-D position.
      * 
-     * @param   l           {@link SpatialLattice} the main memory model
+     * @param c	            {@link Connections} the main memory model
      * @param index         The index identifying a column in the permanence, potential
      *                      and connectivity matrices.
      * @param wrapAround    A boolean value indicating that boundaries should be
@@ -455,7 +538,7 @@ public class SpatialPooler {
     /**
      * Updates counter instance variables each cycle.
      *  
-     * @param l         the {@link SpatialLattice} memory encapsulation
+     * @param c         the {@link Connections} memory encapsulation
      * @param learn     a boolean value indicating whether learning should be
      *                  performed. Learning entails updating the  permanence
      *                  values of the synapses, and hence modifying the 'state'
