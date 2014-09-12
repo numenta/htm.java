@@ -38,9 +38,17 @@ import org.numenta.nupic.research.TemporalMemory;
  */
 public class Synapse {
     private Cell sourceCell;
-    private DistalDendrite segment;
+    private Segment segment;
     private double permanence;
     private int index;
+    /** The connection index of the input vector */
+    private int inputIndex;
+    
+    
+    /**
+     * Constructor used when setting parameters later.
+     */
+    public Synapse() {}
     
     /**
      * Constructs a new {@code Synapse}
@@ -50,28 +58,59 @@ public class Synapse {
      * @param segment       the owning dendritic segment
      * @param permanence    this {@code Synapse}'s permanence
      * @param index         this {@code Synapse}'s index
+     * @param inputIndex	this {@code Synapse}'s obverse input vector connection bit
      */
-    public Synapse(Connections c, Cell sourceCell, DistalDendrite segment, double permanence, int index) {
+    public Synapse(Connections c, Cell sourceCell, Segment segment, double permanence, int index, int inputIndex) {
         this.sourceCell = sourceCell;
         this.segment = segment;
         this.permanence = permanence;
         this.index = index;
+        this.inputIndex = inputIndex;
         
-        sourceCell.addReceptorSynapse(c, this);
+        // If this isn't a synapse on a proximal dendrite
+        if(sourceCell != null) {
+        	sourceCell.addReceptorSynapse(c, this);
+        }
     }
     
+    /**
+     * Returns this {@code Synapse}'s degree of connectedness.
+     * @return
+     */
     public double getPermanence() {
         return permanence;
     }
     
+    /**
+     * Sets this {@code Synapse}'s degree of connectedness.
+     * @param perm
+     */
     public void setPermanence(double perm) {
         this.permanence = perm;
     }
     
-    public DistalDendrite getSegment() {
+    /**
+     * Returns the owning dendritic segment
+     * @return
+     */
+    public Segment getSegment() {
         return segment;
     }
     
+    /**
+     * Returns the index of the input bit this {@code Synapse} 
+     * is connected to.
+     * 
+     * @return
+     */
+    public int getInputIndex() {
+    	return inputIndex;
+    }
+    
+    /**
+     * Returns the containing {@link Cell} 
+     * @return
+     */
     public Cell getSourceCell() {
         return sourceCell;
     }

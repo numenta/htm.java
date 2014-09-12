@@ -21,8 +21,6 @@
  */
 package org.numenta.nupic.research;
 
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -32,14 +30,16 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import javax.swing.text.Segment;
+
 import org.numenta.nupic.data.MersenneTwister;
-import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Synapse;
 
 /**
@@ -97,7 +97,7 @@ public class Connections {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-    private SparseObjectMatrix<int[]> potentialPools;
+    private SparseObjectMatrix<List<Synapse>> potentialPools;
     /**
      * Initialize the permanences for each column. Similar to the
      * 'potentialPools', the permanences are stored in a matrix whose rows
@@ -139,6 +139,8 @@ public class Connections {
      * average number of connected synapses per column.
      */
     private int inhibitionRadius = 0;
+    
+    private int proximalSynapseCounter = 0;
     
     private double[] overlapDutyCycles;
     private double[] activeDutyCycles;
@@ -859,7 +861,7 @@ public class Connections {
      * 
      * @param pools		{@link SparseObjectMatrix} which holds the pools.
      */
-    public void setPotentialPools(SparseObjectMatrix<int[]> pools) {
+    public void setPotentialPools(SparseObjectMatrix<List<Synapse>> pools) {
     	this.potentialPools = pools;
     }
     
@@ -868,7 +870,7 @@ public class Connections {
      * of column indexes to their lists of potential inputs.
      * @return	the potential pools
      */
-    public SparseObjectMatrix<int[]> getPotentialPools() {
+    public SparseObjectMatrix<List<Synapse>> getPotentialPools() {
         return this.potentialPools;
     }
     
@@ -970,6 +972,14 @@ public class Connections {
 
 	public void setBoostFactors(double[] boostFactors) {
 		this.boostFactors = boostFactors;
+	}
+	
+	/**
+	 * Returns the current count of {@link Synapse}s for {@link ProximalDendrite}s.
+	 * @return
+	 */
+	public int getProxSynCount() {
+		return proximalSynapseCounter;
 	}
 
 	/**
@@ -1126,6 +1136,25 @@ public class Connections {
         }
         
         return retVal;
+    }
+    
+    /**
+     * Returns the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     * 
+     * @param segment   the {@link ProximalDendrite} used as a key.
+     * @return          the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     */
+    public List<Synapse> getSynapses(ProximalDendrite segment) {
+    	if(segment == null) {
+            throw new IllegalArgumentException("Segment was null");
+        }
+    	
+    	List<Synapse> synapses = null;
+    	if((synapses = potentialPools.getObject(segment.getIndex())) == null) {
+            potentialPools.set(segment.getIndex(), synapses = new ArrayList<Synapse>());
+        }
+        
+        return synapses;
     }
     
     /**

@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.research;
 
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -36,10 +37,28 @@ import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.data.TypeFactory;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.Synapse;
 
 
-
+/**
+ * in charge of handling the relationships between the columns of a region 
+ * and the inputs bits. The primary public interface to this function is the 
+ * "compute" method, which takes in an input vector and returns a list of 
+ * activeColumns columns.
+ * Example Usage:
+ * >
+ * > SpatialPooler sp = SpatialPooler();
+ * > Connections c = new Connections();
+ * > sp.init(c);
+ * > for line in file:
+ * >   inputVector = numpy.array(line)
+ * >   sp.compute(inputVector)
+ * 
+ * @author David Ray
+ *
+ */
 public class SpatialPooler {
     /**
      * Constructs a new {@code SpatialPooler}
@@ -64,25 +83,29 @@ public class SpatialPooler {
      * 
      * @param c
      */
-    public void initMatrices(Connections c) {
-    	int[] inputDimensions = c.getInputDimensions();
-    	int[] columnDimensions = c.getColumnDimensions();
-    	
-    	c.setMemory(new SparseObjectMatrix<Column>(c.getColumnDimensions()));
+    public void initMatrices(final Connections c) {
+    	SparseObjectMatrix<Column> mem = c.getMemory();
+    	c.setMemory(mem == null ? 
+    		mem = new SparseObjectMatrix<Column>(c.getColumnDimensions()) : mem);
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
         
-        int numInputs = 1;
-        int numColumns = 1;
-        for(int i = 0;i < inputDimensions.length;i++) {
-            numInputs *= inputDimensions[i];
-        }
-        for(int i = 0;i < columnDimensions.length;i++) {
-            numColumns *= columnDimensions[i];
-        }
+        //Calculate numInputs and numColumns
+        int numInputs = c.getInputMatrix().getMaxIndex() + 1;
+        int numColumns = c.getMemory().getMaxIndex() + 1;
         c.setNumInputs(numInputs);
         c.setNumColumns(numColumns);
         
-        c.setPotentialPools(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+        //Fill the sparse matrix with column objects
+        TypeFactory<Column> factory = new TypeFactory<Column>() {
+        	int index = 0;
+        	@Override public Column make(int... args) { return new Column(c.getCellsPerColumn(), index++); }
+        	@Override public Class<Column> typeClass() { return Column.class; }
+        };
+        Column[] columns = new SparseObjectMatrix<Column>(
+        	new int[] { numColumns }).asDense(factory);
+        for(int i = 0;i < numColumns;i++) { mem.set(i, columns[i]); }
+        
+        c.setPotentialPools(new SparseObjectMatrix<List<Synapse>>(new int[] { numColumns, numInputs } ));
         
         c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
         
@@ -113,9 +136,11 @@ public class SpatialPooler {
     	int numColumns = c.getNumColumns();
         for(int i = 0;i < numColumns;i++) {
             int[] potential = mapPotential(c, i, true);
-            c.getPotentialPools().set(i, potential);
+            //c.getPotentialPools().set(i, potential);
+            c.getColumn(i).createPotentialPool(c, potential);
+            System.out.println("i = " + i);
             double[] perm = initPermanence(c, new TIntHashSet(potential), c.getInitConnectedPct());
-            updatePermanencesForColumn(c, perm, i, true);
+            updatePermanencesForColumn(c, perm, c.getColumn(i), true);
         }
         
         updateInhibitionRadius(c);
@@ -132,8 +157,6 @@ public class SpatialPooler {
      * function takes a input vector and outputs the indices of the active columns.
      * If 'learn' is set to True, this method also updates the permanences of the
      * columns. 
-     * 
-     * @param l
      * @param inputVector       An array of 0's and 1's that comprises the input to
      *                          the spatial pooler. The array will be treated as a one
      *                          dimensional array, therefore the dimensions of the array
@@ -143,18 +166,19 @@ public class SpatialPooler {
      *                          match the number of bits specified by the call to the
      *                          constructor. Therefore there must be a '0' or '1' in the
      *                          array for every input bit.
+     * @param activeArray       An array whose size is equal to the number of columns.
+     *                          Before the function returns this array will be populated
+     *                          with 1's at the indices of the active columns, and 0's
+     *                          everywhere else.
      * @param learn             A boolean value indicating whether learning should be
      *                          performed. Learning entails updating the  permanence
      *                          values of the synapses, and hence modifying the 'state'
      *                          of the modec. Setting learning to 'off' freezes the SP
      *                          and has many uses. For example, you might want to feed in
      *                          various inputs and examine the resulting SDR's.
-     * @param activeArray       An array whose size is equal to the number of columns.
-     *                          Before the function returns this array will be populated
-     *                          with 1's at the indices of the active columns, and 0's
-     *                          everywhere else.
+     * @param l
      */
-    public void compute(Connections c, int[] inputVector, boolean learn, int[] activeArray) {
+    public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn) {
         if(inputVector.length != c.getNumInputs()) {
             throw new IllegalArgumentException("Input array must be same size as the defined number of inputs");
         }
@@ -273,9 +297,8 @@ public class SpatialPooler {
      * 
      * @param l
      * @param perm
-     * @param mask
      */
-    public void raisePermanenceToThreshold(Connections c, double[] perm, int[] mask) {
+    public void raisePermanenceToThreshold(Connections c, double[] perm) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         while(true) {
             int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
@@ -309,19 +332,19 @@ public class SpatialPooler {
      *                          should be raised until a minimum number are synapses are in
      *                          a connected state. Should be set to 'false' when a direct
      *                          assignment is required.
-     *                      "dense", i.e. it contains an entry for each input bit, even
-     *                      if the permanence value is 0.
+     *                      	"dense", i.e. it contains an entry for each input bit, even
+     *                      	if the permanence value is 0.
      * @param columnIndex       The index identifying a column in the permanence, potential
-     *                      and connectivity matrices
+     *                      	and connectivity matrices
      * @param raisePerm         a boolean value indicating whether the permanence values
-     *                      should be raised until a minimum number are synapses are in
-     *                      a connected state. Should be set to 'false' when a direct
-     *                      assignment is required.
+     *                      	should be raised until a minimum number are synapses are in
+     *                      	a connected state. Should be set to 'false' when a direct
+     *                      	assignment is required.
      */
-    public void updatePermanencesForColumn(Connections c, double[] perm, int columnIndex, boolean raisePerm) {
-        int[] maskPotential = c.getPotentialPools().getObject(columnIndex); 
+    public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
+    	int columnIndex = column.getIndex();
         if(raisePerm) {
-            raisePermanenceToThreshold(c, perm, maskPotential);
+            raisePermanenceToThreshold(c, perm);
         }
         
         ArrayUtils.lessThanXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
@@ -332,7 +355,8 @@ public class SpatialPooler {
                 newConnected.add(i);
             }
         }
-        c.getPermanences().set(c.getPermanences().computeCoordinates(columnIndex), perm);
+        column.setProximalPermanences(c, perm);
+        //c.getPermanences().set(columnIndex, perm);
         c.getConnectedSynapses().set(columnIndex, newConnected.toArray());
         c.getConnectedCounts()[columnIndex] = newConnected.size();
     }
@@ -381,19 +405,18 @@ public class SpatialPooler {
      * @return
      */
     public double[] initPermanence(Connections c, TIntHashSet potentialPool, double connectedPct) {
-        int len = c.getNumInputs();
-        double[] perm = new double[len];
+        double[] perm = new double[c.getNumInputs()];
         Arrays.fill(perm, 0);
-        for(int i = 0;i < len;i++) {
-            if(!potentialPool.contains(i)) continue;
-            
-            if(c.getRandom().nextDouble() <= connectedPct) {
-                perm[i] = initPermConnected(c);
+        int idx = 0;
+        for(TIntIterator i = potentialPool.iterator();i.hasNext();) {
+        	idx = i.next();
+        	if(c.getRandom().nextDouble() <= connectedPct) {
+                perm[idx] = initPermConnected(c);
             }else{
-                perm[i] = initPermNonConnected(c);
+                perm[idx] = initPermNonConnected(c);
             }
-            
-            perm[i] = perm[i] < c.getSynPermTrimThreshold() ? 0 : perm[i];
+        	
+        	perm[idx] = perm[idx] < c.getSynPermTrimThreshold() ? 0 : perm[idx];
         }
         
         return perm;

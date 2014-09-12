@@ -40,7 +40,7 @@ import org.numenta.nupic.research.Connections;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class DistalDendrite {
+public class DistalDendrite extends Segment {
     private Cell cell;
     private int index;
     
@@ -75,7 +75,7 @@ public class DistalDendrite {
      * @return
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
-        Synapse s = new Synapse(c, sourceCell, this, permanence, index);
+        Synapse s = new Synapse(c, sourceCell, this, permanence, index, 0);
         c.getSynapses(this).add(s);
         return s;
     }

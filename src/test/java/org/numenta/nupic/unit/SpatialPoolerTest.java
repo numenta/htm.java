@@ -29,11 +29,13 @@ import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
@@ -110,7 +112,7 @@ public class SpatialPoolerTest {
         setupParameters();
         initSP();
         
-        SparseObjectMatrix<int[]> s = mem.getPotentialPools();
+        SparseObjectMatrix<List<Synapse>> s = mem.getPotentialPools();
         
         System.out.println(s);
     }
