@@ -96,25 +96,6 @@ public class ArrayUtils {
     }
     
     /**
-     * Implemented to be used as arguments in other operations.
-     * see {@link ArrayUtils#retainLogicalAnd(int[], Condition[])};
-     * {@link ArrayUtils#retainLogicalAnd(double[], Condition[])}.
-     */
-    public static interface Condition {
-        /**
-         * Convenience adapter to remove verbosity
-         * @author metaware
-         *
-         */
-        public class Adapter implements Condition {
-            public boolean eval(int n) { return false; }
-            public boolean eval(double d) { return false; }
-        }
-        public boolean eval(int n);
-        public boolean eval(double d);
-    }
-    
-    /**
      * Returns an array of values that test true for all of the 
      * specified {@link Condition}s.
      * 
@@ -122,7 +103,7 @@ public class ArrayUtils {
      * @param conditions
      * @return
      */
-    public static int[] retainLogicalAnd(int[] values, Condition[] conditions) {
+    public static int[] retainLogicalAnd(int[] values, Condition<?>[] conditions) {
         TIntArrayList l = new TIntArrayList();
         for(int i = 0;i < values.length;i++) {
             boolean result = true;
@@ -142,7 +123,7 @@ public class ArrayUtils {
      * @param conditions
      * @return
      */
-    public static double[] retainLogicalAnd(double[] values, Condition[] conditions) {
+    public static double[] retainLogicalAnd(double[] values, Condition<?>[] conditions) {
         TDoubleArrayList l = new TDoubleArrayList();
         for(int i = 0;i < values.length;i++) {
             boolean result = true;
@@ -503,6 +484,88 @@ public class ArrayUtils {
     }
     
     /**
+     * Raises the values at the indexes specified by the amount specified.
+     * @param amount        the amount to raise the values
+     * @param values        the values to raise
+     */
+    public static void raiseValuesBy(double amount, double[] values, int[] indexesToRaise) {
+        for(int i = 0;i < indexesToRaise.length;i++) {
+            values[indexesToRaise[i]] += amount;
+        }
+    }
+    
+    /**
+     * Raises the values at the indicated indexes, by the amount specified
+     * @param amount
+     * @param indexes
+     * @param values
+     */
+    public static void raiseIndicatedValuesBy(double amount, int[] indexes, double[] values) {
+    	for(int i = 0;i < indexes.length;i++) {
+            values[indexes[i]] += amount;
+        }
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(double[] d, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = d.length;
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(d[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(List<T> l, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = l.size();
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(l.get(i))) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(T[] t, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	for(int i = 0;i < t.length;i++) {
+    		if(c.eval(t[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
      * Makes all values in the specified array which are less than or equal to the specified
      * "x" value, equal to the specified "y".
      * @param array
@@ -582,5 +645,35 @@ public class ArrayUtils {
             }
         }
         return min;
+    }
+    
+    /**
+     * Returns a copy of the specified integer array in 
+     * reverse order
+     * 
+     * @param d
+     * @return
+     */
+    public static int[] reverse(int[] d) {
+    	int[] ret = new int[d.length];
+    	for(int i = 0, j = d.length - 1;j >= 0;i++,j--) {
+    		ret[i] = d[j];
+    	}
+    	return ret;
+    }
+    
+    /**
+     * Returns a copy of the specified double array in 
+     * reverse order
+     * 
+     * @param d
+     * @return
+     */
+    public static double[] reverse(double[] d) {
+    	double[] ret = new double[d.length];
+    	for(int i = 0, j = d.length - 1;j >= 0;i++,j--) {
+    		ret[i] = d[j];
+    	}
+    	return ret;
     }
 }

@@ -32,14 +32,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.numenta.nupic.data.ArrayUtils;
-import org.numenta.nupic.data.ArrayUtils.Condition;
+import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.data.TypeFactory;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.model.Pool;
 
 
 /**
@@ -105,7 +105,7 @@ public class SpatialPooler {
         	new int[] { numColumns }).asDense(factory);
         for(int i = 0;i < numColumns;i++) { mem.set(i, columns[i]); }
         
-        c.setPotentialPools(new SparseObjectMatrix<List<Synapse>>(new int[] { numColumns, numInputs } ));
+        c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));//new int[] { numColumns, numInputs } ));
         
         c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
         
@@ -136,11 +136,10 @@ public class SpatialPooler {
     	int numColumns = c.getNumColumns();
         for(int i = 0;i < numColumns;i++) {
             int[] potential = mapPotential(c, i, true);
-            //c.getPotentialPools().set(i, potential);
-            c.getColumn(i).createPotentialPool(c, potential);
-            System.out.println("i = " + i);
-            double[] perm = initPermanence(c, new TIntHashSet(potential), c.getInitConnectedPct());
-            updatePermanencesForColumn(c, perm, c.getColumn(i), true);
+            Column column = c.getColumn(i);
+            c.getPotentialPools().set(i, column.createPotentialPool(c, potential));
+            double[] perm = initPermanence(c, new TIntHashSet(potential), i, c.getInitConnectedPct());
+            updatePermanencesForColumn(c, perm, column, true);
         }
         
         updateInhibitionRadius(c);
@@ -298,12 +297,13 @@ public class SpatialPooler {
      * @param l
      * @param perm
      */
-    public void raisePermanenceToThreshold(Connections c, double[] perm) {
+    public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         while(true) {
             int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
             if(numConnected >= c.getStimulusThreshold()) return;
-            
+            //Skipping version of "raiseValuesBy" that uses the maskPotential until bug #1322 is fixed
+            //in NuPIC - for now increment all bits until numConnected >= stimulusThreshold
             ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
         }
     }
@@ -322,7 +322,7 @@ public class SpatialPooler {
      * the number of input bits each column is connected to). Every method wishing
      * to modify the permanence matrix should do so through this method.
      * 
-     * @param c                 the {@link Connections} which is the memory modec.
+     * @param c                 the {@link Connections} which is the memory model.
      * @param perm              An array of permanence values for a column. The array is
      *                          "dense", i.e. it contains an entry for each input bit, even
      *                          if the permanence value is 0.
@@ -341,10 +341,15 @@ public class SpatialPooler {
      *                      	a connected state. Should be set to 'false' when a direct
      *                      	assignment is required.
      */
+    private static final Condition<Double> permUpdateCondition = new Condition.Adapter<Double>() { 
+    	@Override
+		public boolean eval(Double d) { return d > 0; } 
+    };
     public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
-    	int columnIndex = column.getIndex();
+    	double[] d = c.getPotentialPools().getObject(column.getIndex()).getPermanences();
+    	int[] maskPotential = ArrayUtils.where(d, permUpdateCondition);
         if(raisePerm) {
-            raisePermanenceToThreshold(c, perm);
+            raisePermanenceToThreshold(c, perm, maskPotential);
         }
         
         ArrayUtils.lessThanXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
@@ -357,6 +362,7 @@ public class SpatialPooler {
         }
         column.setProximalPermanences(c, perm);
         //c.getPermanences().set(columnIndex, perm);
+        int columnIndex = column.getIndex();
         c.getConnectedSynapses().set(columnIndex, newConnected.toArray());
         c.getConnectedCounts()[columnIndex] = newConnected.size();
     }
@@ -404,7 +410,7 @@ public class SpatialPooler {
      *                          bits that will start off in a connected state.
      * @return
      */
-    public double[] initPermanence(Connections c, TIntHashSet potentialPool, double connectedPct) {
+    public double[] initPermanence(Connections c, TIntHashSet potentialPool, int index, double connectedPct) {
         double[] perm = new double[c.getNumInputs()];
         Arrays.fill(perm, 0);
         int idx = 0;
@@ -418,7 +424,7 @@ public class SpatialPooler {
         	
         	perm[idx] = perm[idx] < c.getSynPermTrimThreshold() ? 0 : perm[idx];
         }
-        
+        c.getColumn(index).setProximalPermanences(c, perm);
         return perm;
     }
     

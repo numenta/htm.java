@@ -75,8 +75,9 @@ public class DistalDendrite extends Segment {
      * @return
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
-        Synapse s = new Synapse(c, sourceCell, this, permanence, index, 0);
-        c.getSynapses(this).add(s);
+    	Pool pool = new Pool(1);
+    	Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index);
+    	pool.addPermanence(s, permanence);
         return s;
     }
     

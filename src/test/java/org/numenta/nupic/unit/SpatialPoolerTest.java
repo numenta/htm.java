@@ -29,13 +29,12 @@ import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.List;
 
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
@@ -49,7 +48,7 @@ public class SpatialPoolerTest {
     public void setupParameters() {
         parameters = new Parameters();
         EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.INPUT_DIMENSIONS, new int[] { 9 });
+        p.put(KEY.INPUT_DIMENSIONS, new int[] { 5 });
         p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });
         p.put(KEY.POTENTIAL_RADIUS, 3);
         p.put(KEY.POTENTIAL_PCT, 0.5);
@@ -81,7 +80,7 @@ public class SpatialPoolerTest {
         
         initSP();
         
-        assertEquals(9, mem.getInputDimensions()[0]);
+        assertEquals(5, mem.getInputDimensions()[0]);
         assertEquals(5, mem.getColumnDimensions()[0]);
         assertEquals(3, mem.getPotentialRadius());
         assertEquals(0.5, mem.getPotentialPct(), 0);
@@ -99,7 +98,7 @@ public class SpatialPoolerTest {
         assertEquals(42, mem.getSeed());
         assertEquals(0, mem.getSpVerbosity());
         
-        assertEquals(9, mem.getNumInputs());
+        assertEquals(5, mem.getNumInputs());
         assertEquals(5, mem.getNumColumns());
     }
     
@@ -112,7 +111,7 @@ public class SpatialPoolerTest {
         setupParameters();
         initSP();
         
-        SparseObjectMatrix<List<Synapse>> s = mem.getPotentialPools();
+        SparseObjectMatrix<Pool> s = mem.getPotentialPools();
         
         System.out.println(s);
     }
@@ -736,13 +735,14 @@ public class SpatialPoolerTest {
     	parameters.setSynPermBelowStimulusInc(0.01);
     	initSP();
     	
+    	//We set the values on the Connections permanences here just for illustration
     	SparseObjectMatrix<double[]> objMatrix = new SparseObjectMatrix<double[]>(new int[] { 5, 5 });
-    	mem.setPermanences(objMatrix);
     	objMatrix.set(0, new double[] { 0.0, 0.11, 0.095, 0.092, 0.01 });
     	objMatrix.set(1, new double[] { 0.12, 0.15, 0.02, 0.12, 0.09 });
     	objMatrix.set(2, new double[] { 0.51, 0.081, 0.025, 0.089, 0.31 });
     	objMatrix.set(3, new double[] { 0.18, 0.0601, 0.11, 0.011, 0.03 });
     	objMatrix.set(4, new double[] { 0.011, 0.011, 0.011, 0.011, 0.011 });
+    	mem.setPermanences(objMatrix);
     	
     	mem.setConnectedSysnapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
     	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();
@@ -754,9 +754,22 @@ public class SpatialPoolerTest {
     	
     	mem.setConnectedCounts(new int[] { 1, 3, 2, 2, 0 });
     	
+    	double[][] truePermanences = new double[][] { 
+    		{0.01, 0.12, 0.105, 0.102, 0.02},  		// incremented once
+            {0.12, 0.15, 0.02, 0.12, 0.09},  		// no change
+            {0.53, 0.101, 0.045, 0.109, 0.33},  	// increment twice
+            {0.22, 0.1001, 0.15, 0.051, 0.07},  	// increment four times
+            {0.101, 0.101, 0.101, 0.101, 0.101}};	// increment 9 times
+    	
+    	//FORGOT TO SET PERMANENCES ABOVE - DON'T USE mem.setPermanences() 
+    	int[] indices = mem.getMemory().getSparseIndices();
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		
-    		//sp.raisePermanenceToThreshold(mem, mem.getPermanences().get(0), mask);
+    		double[] perm = objMatrix.getObject(i);//mem.getPotentialPools().getObject(i).getPermanences();
+    		sp.raisePermanenceToThreshold(mem, perm, indices);
+    		System.out.println(Arrays.toString(perm));
+    		for(int j = 0;j < perm.length;j++) {
+    			assertEquals(truePermanences[i][j], perm[j], 0.001);
+    		}
     	}
     }
 

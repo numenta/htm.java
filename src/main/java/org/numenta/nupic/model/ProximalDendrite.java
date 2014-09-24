@@ -6,6 +6,7 @@ import org.numenta.nupic.research.Connections;
 
 public class ProximalDendrite extends Segment {
 	private int index;
+	private Pool pool;
 	
 	/**
 	 * 
@@ -22,10 +23,13 @@ public class ProximalDendrite extends Segment {
 	 * @param c					the {@link Connections} memory
 	 * @param inputIndexes		indexes specifying the input vector bit
 	 */
-	public void createPool(Connections c, int[] inputIndexes) {
+	public Pool createPool(Connections c, int[] inputIndexes) {
+		pool = new Pool(inputIndexes.length);
 		for(int i = 0;i < inputIndexes.length;i++) {
-			createSynapse(c, c.getSynapses(this), null, 0, i, inputIndexes[i]);
+			pool.addConnection(inputIndexes[i]);
+			pool.addPermanence(createSynapse(c, c.getSynapses(this), null, pool, i), 0);
 		}
+		return pool;
 	}
 	
 	/**

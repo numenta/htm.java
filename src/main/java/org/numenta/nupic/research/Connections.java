@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.swing.text.Segment;
-
 import org.numenta.nupic.data.MersenneTwister;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
@@ -39,7 +37,9 @@ import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
+import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 
 /**
@@ -97,7 +97,7 @@ public class Connections {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-    private SparseObjectMatrix<List<Synapse>> potentialPools;
+    private SparseObjectMatrix<Pool> potentialPools;
     /**
      * Initialize the permanences for each column. Similar to the
      * 'potentialPools', the permanences are stored in a matrix whose rows
@@ -212,7 +212,7 @@ public class Connections {
     protected Map<Cell, Set<Synapse>> receptorSynapses;
     
     protected Map<Cell, List<DistalDendrite>> segments;
-    protected Map<DistalDendrite, List<Synapse>> synapses;
+    protected Map<Segment, List<Synapse>> synapses;
     
     /** Helps index each new Segment */
     protected int segmentCounter = 0;
@@ -460,23 +460,26 @@ public class Connections {
     }
     
     /**
-     * Returns the {@link SparseObjectMatrix} representing the 
+     * Returns a double[] representing the 
      * proximal dendrite permanence values.
      * 
-     * @return  the {@link SparseDoubleMatrix}
+     * @return  the array of permanences
      */
-    public SparseObjectMatrix<double[]> getPermanences() {
-        return permanences;
-    }
+     public double[] getPermanences(int columnIndex) {
+    	 return potentialPools.getObject(columnIndex).getPermanences();
+     }
     
     /**
      * Sets the {@link SparseObjectMatrix} which represents the 
      * proximal dendrite permanence values.
      * 
-     * @param s the {@link SparseDoubleMatrix}
+     * @param s the {@link SparseObjectMatrix}
      */
-    public void setPermanences(SparseMatrix<double[]> s) {
-        this.permanences = (SparseObjectMatrix<double[]>)s;
+    public void setPermanences(SparseObjectMatrix<double[]> s) {
+    	for(int idx : s.getSparseIndices()) {
+    		memory.getObject(idx).setProximalPermanences(
+    			this, s.getObject(idx));
+    	}
     }
     
     /**
@@ -861,7 +864,7 @@ public class Connections {
      * 
      * @param pools		{@link SparseObjectMatrix} which holds the pools.
      */
-    public void setPotentialPools(SparseObjectMatrix<List<Synapse>> pools) {
+    public void setPotentialPools(SparseObjectMatrix<Pool> pools) {
     	this.potentialPools = pools;
     }
     
@@ -870,7 +873,7 @@ public class Connections {
      * of column indexes to their lists of potential inputs.
      * @return	the potential pools
      */
-    public SparseObjectMatrix<List<Synapse>> getPotentialPools() {
+    public SparseObjectMatrix<Pool> getPotentialPools() {
         return this.potentialPools;
     }
     
@@ -1127,7 +1130,7 @@ public class Connections {
         }
         
         if(synapses == null) {
-            synapses = new LinkedHashMap<DistalDendrite, List<Synapse>>();
+            synapses = new LinkedHashMap<Segment, List<Synapse>>();
         }
         
         List<Synapse> retVal = null;
@@ -1149,12 +1152,16 @@ public class Connections {
             throw new IllegalArgumentException("Segment was null");
         }
     	
-    	List<Synapse> synapses = null;
-    	if((synapses = potentialPools.getObject(segment.getIndex())) == null) {
-            potentialPools.set(segment.getIndex(), synapses = new ArrayList<Synapse>());
+    	if(synapses == null) {
+            synapses = new LinkedHashMap<Segment, List<Synapse>>();
         }
         
-        return synapses;
+        List<Synapse> retVal = null;
+        if((retVal = synapses.get(segment)) == null) {
+            synapses.put(segment, retVal = new ArrayList<Synapse>());
+        }
+        
+        return retVal;
     }
     
     /**

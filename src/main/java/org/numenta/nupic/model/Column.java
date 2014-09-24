@@ -135,8 +135,8 @@ public class Column {
      * @param c						the {@link Connections} memory
      * @param inputVectorIndexes	indexes specifying the input vector bit
      */
-    public void createPotentialPool(Connections c, int[] inputVectorIndexes) {
-    	proximalDendrite.createPool(c, inputVectorIndexes);
+    public Pool createPotentialPool(Connections c, int[] inputVectorIndexes) {
+    	return proximalDendrite.createPool(c, inputVectorIndexes);
     }
     
     /**
