@@ -406,15 +406,23 @@ public class SpatialPooler {
      * @param potentialPool     An array specifying the potential pool of the column.
      *                          Permanence values will only be generated for input bits
      *                          corresponding to indices for which the mask value is 1.
+     * @param index				the index of the column being initialized
      * @param connectedPct      A value between 0 or 1 specifying the percent of the input
      *                          bits that will start off in a connected state.
      * @return
      */
     public double[] initPermanence(Connections c, int[] potentialPool, int index, double connectedPct) {
+    	int count = (int)Math.round((double)potentialPool.length * connectedPct);
+        TIntHashSet pick = new TIntHashSet();
+        while(pick.size() < count) {
+        	int randIdx = c.random.nextInt(potentialPool.length);
+        	pick.add(potentialPool[randIdx]);
+        }
+        
         double[] perm = new double[c.getNumInputs()];
         Arrays.fill(perm, 0);
         for(int idx : potentialPool) {
-        	if(c.getRandom().nextDouble() <= connectedPct) {
+        	if(pick.contains(idx)) {
                 perm[idx] = initPermConnected(c);
             }else{
                 perm[idx] = initPermNonConnected(c);
