@@ -715,7 +715,7 @@ public class Connections {
     public double getSynPermBelowStimulusInc() {
         return synPermBelowStimulusInc;
     }
-
+    
     /**
      * A number between 0 and 1.0, used to set a floor on
      * how often a column should have at least

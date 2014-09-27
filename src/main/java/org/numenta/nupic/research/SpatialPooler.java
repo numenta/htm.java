@@ -138,7 +138,7 @@ public class SpatialPooler {
             int[] potential = mapPotential(c, i, true);
             Column column = c.getColumn(i);
             c.getPotentialPools().set(i, column.createPotentialPool(c, potential));
-            double[] perm = initPermanence(c, new TIntHashSet(potential), i, c.getInitConnectedPct());
+            double[] perm = initPermanence(c, potential, i, c.getInitConnectedPct());
             updatePermanencesForColumn(c, perm, column, true);
         }
         
@@ -343,7 +343,7 @@ public class SpatialPooler {
      */
     private static final Condition<Double> permUpdateCondition = new Condition.Adapter<Double>() { 
     	@Override
-		public boolean eval(Double d) { return d > 0; } 
+		public boolean eval(double d) { return d > 0; } 
     };
     public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
     	double[] d = c.getPotentialPools().getObject(column.getIndex()).getPermanences();
@@ -410,12 +410,10 @@ public class SpatialPooler {
      *                          bits that will start off in a connected state.
      * @return
      */
-    public double[] initPermanence(Connections c, TIntHashSet potentialPool, int index, double connectedPct) {
+    public double[] initPermanence(Connections c, int[] potentialPool, int index, double connectedPct) {
         double[] perm = new double[c.getNumInputs()];
         Arrays.fill(perm, 0);
-        int idx = 0;
-        for(TIntIterator i = potentialPool.iterator();i.hasNext();) {
-        	idx = i.next();
+        for(int idx : potentialPool) {
         	if(c.getRandom().nextDouble() <= connectedPct) {
                 perm[idx] = initPermConnected(c);
             }else{
@@ -451,10 +449,14 @@ public class SpatialPooler {
         int[] columnCoords = c.getMemory().computeCoordinates(columnIndex);
         double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
         double[] ratios = ArrayUtils.divide(
-            colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, -1);
+            colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
         double[] inputCoords = ArrayUtils.multiply(
-            ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, -1, 0);
-        int[] inputCoordInts = ArrayUtils.toIntArray(inputCoords);
+            ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
+        inputCoords = ArrayUtils.d_add(inputCoords, 
+        	ArrayUtils.multiply(ArrayUtils.divide(
+        		ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
+        			0.5));
+        int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
         int inputIndex = c.getInputMatrix().computeIndex(inputCoordInts);
         return inputIndex;
     }

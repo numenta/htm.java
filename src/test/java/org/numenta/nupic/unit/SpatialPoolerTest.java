@@ -48,10 +48,10 @@ public class SpatialPoolerTest {
     public void setupParameters() {
         parameters = new Parameters();
         EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.INPUT_DIMENSIONS, new int[] { 5 });
-        p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });
-        p.put(KEY.POTENTIAL_RADIUS, 3);
-        p.put(KEY.POTENTIAL_PCT, 0.5);
+        p.put(KEY.INPUT_DIMENSIONS, new int[] { 5 });//5
+        p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
+        p.put(KEY.POTENTIAL_RADIUS, 3);//3
+        p.put(KEY.POTENTIAL_PCT, 0.5);//0.5
         p.put(KEY.GLOBAL_INHIBITIONS, false);
         p.put(KEY.LOCAL_AREA_DENSITY, -1.0);
         p.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3);
@@ -121,13 +121,13 @@ public class SpatialPoolerTest {
     	// Test 1D
     	setupParameters();
     	parameters.setColumnDimensions(new int[] { 4 });
-    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setInputDimensions(new int[] { 12 });
     	initSP();
     	
-    	assertEquals(0, sp.mapColumn(mem, 0));
-    	assertEquals(3, sp.mapColumn(mem, 1));
-    	assertEquals(6, sp.mapColumn(mem, 2));
-    	assertEquals(9, sp.mapColumn(mem, 3));
+    	assertEquals(1, sp.mapColumn(mem, 0));
+    	assertEquals(4, sp.mapColumn(mem, 1));
+    	assertEquals(7, sp.mapColumn(mem, 2));
+    	assertEquals(10, sp.mapColumn(mem, 3));
     	
     	// Test 1D with same dimension of columns and inputs
     	setupParameters();
@@ -151,14 +151,14 @@ public class SpatialPoolerTest {
     	// Test 2D
     	setupParameters();
     	parameters.setColumnDimensions(new int[] { 12, 4 });
-    	parameters.setInputDimensions(new int[] { 20, 10 });
+    	parameters.setInputDimensions(new int[] { 36, 12 });
     	initSP();
     	
-    	assertEquals(0, sp.mapColumn(mem, 0));
-    	assertEquals(10, sp.mapColumn(mem, 4));
-    	assertEquals(13, sp.mapColumn(mem, 5));
-    	assertEquals(19, sp.mapColumn(mem, 7));
-    	assertEquals(199, sp.mapColumn(mem, 47));
+    	assertEquals(13, sp.mapColumn(mem, 0));
+    	assertEquals(49, sp.mapColumn(mem, 4));
+    	assertEquals(52, sp.mapColumn(mem, 5));
+    	assertEquals(58, sp.mapColumn(mem, 7));
+    	assertEquals(418, sp.mapColumn(mem, 47));
     }
     
     @Test
@@ -198,31 +198,31 @@ public class SpatialPoolerTest {
     @Test
     public void testMapPotential1D() {
     	setupParameters();
-        parameters.setInputDimensions(new int[] { 10 });
+        parameters.setInputDimensions(new int[] { 12 });
         parameters.setColumnDimensions(new int[] { 4 });
         parameters.setPotentialRadius(2);
         parameters.setPotentialPct(1);
         initSP();
         
-        assertEquals(10, mem.getInputDimensions()[0]);
+        assertEquals(12, mem.getInputDimensions()[0]);
         assertEquals(4, mem.getColumnDimensions()[0]);
         assertEquals(2, mem.getPotentialRadius());
         
         // Test without wrapAround and potentialPct = 1
-        int[] expected = new int[] { 0, 1, 2 };
+        int[] expected = new int[] { 0, 1, 2, 3 };
         int[] mask = sp.mapPotential(mem, 0, false);
         assertTrue(Arrays.equals(expected, mask));
         
-        expected = new int[] { 4, 5, 6, 7, 8 };
+        expected = new int[] { 5, 6, 7, 8, 9 };
         mask = sp.mapPotential(mem, 2, false);
         assertTrue(Arrays.equals(expected, mask));
         
         // Test with wrapAround and potentialPct = 1        
-        expected = new int[] { 0, 1, 2, 8, 9 };
+        expected = new int[] { 0, 1, 2, 3, 11 };
         mask = sp.mapPotential(mem, 0, true);
         assertTrue(Arrays.equals(expected, mask));
         
-        expected = new int[] { 0, 1, 7, 8, 9 };
+        expected = new int[] { 0, 8, 9, 10, 11 };
         mask = sp.mapPotential(mem, 3, true);
         assertTrue(Arrays.equals(expected, mask));
         
@@ -230,7 +230,7 @@ public class SpatialPoolerTest {
         parameters.setPotentialPct(0.5);
         initSP();
         
-        int[] supersetMask = new int[] { 0, 1, 2, 8, 9 }; 
+        int[] supersetMask = new int[] { 0, 1, 2, 3, 11 }; 
         mask = sp.mapPotential(mem, 0, true);
         assertEquals(mask.length, 3);
         TIntArrayList unionList = new TIntArrayList(supersetMask);
@@ -242,7 +242,7 @@ public class SpatialPoolerTest {
     @Test
     public void testMapPotential2D() {
     	setupParameters();
-        parameters.setInputDimensions(new int[] { 5, 10 });
+        parameters.setInputDimensions(new int[] { 6, 12 });
         parameters.setColumnDimensions(new int[] { 2, 4 });
         parameters.setPotentialRadius(1);
         parameters.setPotentialPct(1);
@@ -250,13 +250,13 @@ public class SpatialPoolerTest {
         
         //Test without wrapAround
         int[] mask = sp.mapPotential(mem, 0, false);
-        TIntHashSet trueIndices = new TIntHashSet(new int[] { 0, 1, 10, 11 });
+        TIntHashSet trueIndices = new TIntHashSet(new int[] { 0, 1, 2, 12, 13, 14, 24, 25, 26 });
         TIntHashSet maskSet = new TIntHashSet(mask);
         assertTrue(trueIndices.equals(maskSet));
         
         trueIndices.clear();
         maskSet.clear();
-        trueIndices.addAll(new int[] { 5, 6, 7, 15, 16, 17 });
+        trueIndices.addAll(new int[] { 6, 7, 8, 18, 19, 20, 30, 31, 32 });
         mask = sp.mapPotential(mem, 2, false);
         maskSet.addAll(mask);
         assertTrue(trueIndices.equals(maskSet));
@@ -264,14 +264,26 @@ public class SpatialPoolerTest {
         //Test with wrapAround
         trueIndices.clear();
         maskSet.clear();
-        trueIndices.addAll(new int[] { 49, 9, 19, 40, 0, 10, 41, 1, 11 });
+        parameters.setPotentialRadius(2);
+        initSP();
+        trueIndices.addAll(
+        	new int[] { 0, 1, 2, 3, 11, 
+        				12, 13, 14, 15, 23,
+        				24, 25, 26, 27, 35, 
+        				36, 37, 38, 39, 47, 
+        				60, 61, 62, 63, 71 });
         mask = sp.mapPotential(mem, 0, true);
         maskSet.addAll(mask);
         assertTrue(trueIndices.equals(maskSet));
         
         trueIndices.clear();
         maskSet.clear();
-        trueIndices.addAll(new int[] { 48, 8, 18, 49, 9, 19, 40, 0, 10 });
+        trueIndices.addAll(
+        	new int[] { 0, 8, 9, 10, 11, 
+        				12, 20, 21, 22, 23, 
+        				24, 32, 33, 34, 35, 
+        				36, 44, 45, 46, 47, 
+        				60, 68, 69, 70, 71 });
         mask = sp.mapPotential(mem, 3, true);
         maskSet.addAll(mask);
         assertTrue(trueIndices.equals(maskSet));
@@ -770,6 +782,26 @@ public class SpatialPoolerTest {
     		for(int j = 0;j < perm.length;j++) {
     			assertEquals(truePermanences[i][j], perm[j], 0.001);
     		}
+    	}
+    }
+    
+    @Test
+    public void testUpdatePermanencesForColumn() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setSynPermTrimThreshold(0.05);
+    	initSP();
+    	
+    	double[][] permanences = new double[][] {
+    		{-0.10, 0.500, 0.400, 0.010, 0.020},
+	        {0.300, 0.010, 0.020, 0.120, 0.090},
+	        {0.070, 0.050, 1.030, 0.190, 0.060},
+	        {0.180, 0.090, 0.110, 0.010, 0.030},
+	        {0.200, 0.101, 0.050, -0.09, 1.100}};
+    
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
     	}
     }
 

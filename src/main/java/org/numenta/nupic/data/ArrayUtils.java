@@ -190,6 +190,22 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a new array containing the result of multiplying
+     * each index of the specified array by the 2nd parameter.
+     * 
+     * @param array
+     * @param d
+     * @return
+     */
+    public static double[] multiply(double[] array, double d) {
+    	double[] product = new double[array.length];
+    	for(int i = 0;i < array.length;i++) {
+    		product[i] = array[i] * d;
+    	}
+    	return product;
+    }
+    
+    /**
      * Returns an integer array containing the result of subtraction
      * operations between corresponding indexes of the specified arrays.
      * 
@@ -244,6 +260,22 @@ public class ArrayUtils {
             arr[i] += amount;
         }
         return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount at the same
+     * index
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_add(double[] arr, double[] amount) {
+    	 for(int i = 0;i < arr.length;i++) {
+             arr[i] += amount[i];
+         }
+         return arr;
     }
     
     /**
@@ -446,10 +478,43 @@ public class ArrayUtils {
      * @param min       the minimum value
      * @param max       the maximum value
      */
-    public static void clip(double[] values, double min, double max) {
+    public static double[] clip(double[] values, double min, double max) {
         for(int i = 0;i < values.length;i++) {
             values[i] = Math.min(1, Math.max(0, values[i]));
         }
+        return values;
+    }
+    
+    /**
+     * Ensures that each entry in the specified array has a min value
+     * equal to or greater than the min at the specified index and a maximum value less
+     * than or equal to the max at the specified index.
+     * 
+     * @param values    the values to clip
+     * @param min       the minimum value
+     * @param max       the maximum value
+     */
+    public static int[] clip(int[] values, int[] min, int[] max) {
+        for(int i = 0;i < values.length;i++) {
+            values[i] = Math.max(min[i], Math.min(max[i],values[i]));
+        }
+        return values;
+    }
+    
+    /**
+     * Ensures that each entry in the specified array has a min value
+     * equal to or greater than the min at the specified index and a maximum value less
+     * than or equal to the max at the specified index.
+     * 
+     * @param values    the values to clip
+     * @param max       the minimum value
+     * @param adj       the adjustment amount
+     */
+    public static int[] clip(int[] values,int[] max, int adj) {
+        for(int i = 0;i < values.length;i++) {
+        	values[i] = Math.max(0, Math.min(max[i] + adj,values[i]));
+        }
+        return values;
     }
     
     /**
