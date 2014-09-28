@@ -793,6 +793,8 @@ public class SpatialPoolerTest {
     	parameters.setSynPermTrimThreshold(0.05);
     	initSP();
     	
+    	System.out.println("synPermConnected = " + mem.getSynPermConnected());
+    	
     	double[][] permanences = new double[][] {
     		{-0.10, 0.500, 0.400, 0.010, 0.020},
 	        {0.300, 0.010, 0.020, 0.120, 0.090},
@@ -802,6 +804,7 @@ public class SpatialPoolerTest {
     
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
+    		System.out.println(Arrays.toString(mem.getPermanences(i)));
     	}
     }
 
