@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
@@ -316,7 +317,7 @@ public class SpatialPoolerTest {
     	int[] inputDimensions = new int[] { 4, 4, 2, 5 };
         mem.setInputDimensions(inputDimensions);
         mem.setColumnDimensions(new int[] { 5 });
-        sp.initMatrices(mem); 
+        sp.initMatrices(mem);
         
         TIntArrayList connected = new TIntArrayList();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 1, 0, 1, 0 }, false));
@@ -327,7 +328,9 @@ public class SpatialPoolerTest {
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 2, 1, 0 }, false));
         connected.sort(0, connected.size());
         //[ 45  46  48 105 125 145]
-        mem.getConnectedSynapses().set(0, connected.toArray());
+        //mem.getConnectedSynapses().set(0, connected.toArray());
+        mem.getPotentialPools().set(0, new Pool(4));
+        mem.getColumn(0).setProximalConnectedSynapses(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 0, 1, 0 }, false));
@@ -336,7 +339,9 @@ public class SpatialPoolerTest {
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 0, 1, 0 }, false));
         connected.sort(0, connected.size());
         //[ 80  85 120 125]
-        mem.getConnectedSynapses().set(1, connected.toArray());
+        //mem.getConnectedSynapses().set(1, connected.toArray());
+        mem.getPotentialPools().set(1, new Pool(4));
+        mem.getColumn(1).setProximalConnectedSynapses(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 1, 4 }, false));
@@ -347,17 +352,23 @@ public class SpatialPoolerTest {
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 1 }, false));
         connected.sort(0, connected.size());
         //[  1   3   6   9  42 156]
-        mem.getConnectedSynapses().set(2, connected.toArray());
+        //mem.getConnectedSynapses().set(2, connected.toArray());
+        mem.getPotentialPools().set(2, new Pool(4));
+        mem.getColumn(2).setProximalConnectedSynapses(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 4 }, false));
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 0, 0 }, false));
         connected.sort(0, connected.size());
         //[  0 159]
-        mem.getConnectedSynapses().set(3, connected.toArray());
+        //mem.getConnectedSynapses().set(3, connected.toArray());
+        mem.getPotentialPools().set(3, new Pool(4));
+        mem.getColumn(3).setProximalConnectedSynapses(mem, connected.toArray());
         
         //[]
-        mem.getConnectedSynapses().set(4, new int[0]);
+        connected.clear();
+        mem.getPotentialPools().set(4, new Pool(4));
+        mem.getColumn(4).setProximalConnectedSynapses(mem, connected.toArray());
         
         double[] trueAvgConnectedSpan = new double[] { 11.0/4d, 6.0/4d, 14.0/4d, 15.0/4d, 0d };
         for(int i = 0;i < mem.getNumColumns();i++) {
@@ -745,6 +756,12 @@ public class SpatialPoolerTest {
     	parameters.setSynPermConnected(0.1);
     	parameters.setStimulusThreshold(3);
     	parameters.setSynPermBelowStimulusInc(0.01);
+    	//The following parameter is not set to "1" in the Python version
+    	//This is necessary to reproduce the test conditions of having as
+    	//many pool members as Input Bits, which would never happen under
+    	//normal circumstances because we want to enforce sparsity
+    	parameters.setPotentialPct(1);
+    	
     	initSP();
     	
     	//We set the values on the Connections permanences here just for illustration
@@ -756,13 +773,13 @@ public class SpatialPoolerTest {
     	objMatrix.set(4, new double[] { 0.011, 0.011, 0.011, 0.011, 0.011 });
     	mem.setPermanences(objMatrix);
     	
-    	mem.setConnectedSysnapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
-    	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();
-    	syns.set(0, new int[] { 0, 1, 0, 0, 0 });
-    	syns.set(1, new int[] { 1, 1, 0, 1, 0 });
-    	syns.set(2, new int[] { 1, 0, 0, 0, 1 });
-    	syns.set(3, new int[] { 1, 0, 1, 0, 0 });
-    	syns.set(4, new int[] { 0, 0, 0, 0, 0 });
+//    	mem.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
+//    	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();
+//    	syns.set(0, new int[] { 0, 1, 0, 0, 0 });
+//    	syns.set(1, new int[] { 1, 1, 0, 1, 0 });
+//    	syns.set(2, new int[] { 1, 0, 0, 0, 1 });
+//    	syns.set(3, new int[] { 1, 0, 1, 0, 0 });
+//    	syns.set(4, new int[] { 0, 0, 0, 0, 0 });
     	
     	mem.setConnectedCounts(new int[] { 1, 3, 2, 2, 0 });
     	
@@ -776,7 +793,7 @@ public class SpatialPoolerTest {
     	//FORGOT TO SET PERMANENCES ABOVE - DON'T USE mem.setPermanences() 
     	int[] indices = mem.getMemory().getSparseIndices();
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perm = objMatrix.getObject(i);//mem.getPotentialPools().getObject(i).getPermanences();
+    		double[] perm = mem.getPotentialPools().getObject(i).getPermanences();
     		sp.raisePermanenceToThreshold(mem, perm, indices);
     		System.out.println(Arrays.toString(perm));
     		for(int j = 0;j < perm.length;j++) {
@@ -791,21 +808,41 @@ public class SpatialPoolerTest {
     	parameters.setInputDimensions(new int[] { 5 });
     	parameters.setColumnDimensions(new int[] { 5 });
     	parameters.setSynPermTrimThreshold(0.05);
+    	//The following parameter is not set to "1" in the Python version
+    	//This is necessary to reproduce the test conditions of having as
+    	//many pool members as Input Bits, which would never happen under
+    	//normal circumstances because we want to enforce sparsity
+    	parameters.setPotentialPct(1);
     	initSP();
-    	
-    	System.out.println("synPermConnected = " + mem.getSynPermConnected());
-    	
+
     	double[][] permanences = new double[][] {
     		{-0.10, 0.500, 0.400, 0.010, 0.020},
 	        {0.300, 0.010, 0.020, 0.120, 0.090},
 	        {0.070, 0.050, 1.030, 0.190, 0.060},
 	        {0.180, 0.090, 0.110, 0.010, 0.030},
 	        {0.200, 0.101, 0.050, -0.09, 1.100}};
+    	
+    	int[][] trueConnectedSynapses = new int[][] {
+            {0, 1, 1, 0, 0},
+            {1, 0, 0, 1, 0},
+            {0, 0, 1, 1, 0},
+            {1, 0, 1, 0, 0},
+            {1, 1, 0, 0, 1}};
+    	
+    	int[] trueConnectedCounts = new int[] {2, 2, 2, 2, 3};
     
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
-    		System.out.println(Arrays.toString(mem.getPermanences(i)));
+    		int[] dense = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesDense(mem);
+    		int[] sparse = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesSparse(mem);
+            System.out.println(Arrays.toString(mem.getPermanences(i)));
+            System.out.println(Arrays.toString(sparse));
+//    		System.out.println(Arrays.toString(
+//    			mem.getPotentialPools().getObject(i).getSparseConnections()));
+    		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}
+    	
+    	assertEquals(Arrays.toString(trueConnectedCounts), Arrays.toString(mem.getConnectedCounts()));
     }
 
     

@@ -130,6 +130,14 @@ public class Column {
     }
     
     /**
+     * Returns this {@code Column}'s single {@link ProximalDendrite}
+     * @return
+     */
+    public ProximalDendrite getProximalDendrite() {
+    	return proximalDendrite;
+    }
+    
+    /**
      * Delegates the potential synapse creation to the one {@link ProximalDendrite}.
      * 
      * @param c						the {@link Connections} memory
@@ -147,6 +155,16 @@ public class Column {
      */
     public void setProximalPermanences(Connections c, double[] permanences) {
     	proximalDendrite.setPermanences(c, permanences);
+    }
+    
+    /**
+     * Delegates the call to set synapse connected indexes to this 
+     * {@code Column}'s {@link ProximalDendrite}
+     * @param c
+     * @param connections
+     */
+    public void setProximalConnectedSynapses(Connections c, int[] connections) {
+    	proximalDendrite.setConnectedSynapses(c, connections);
     }
     
     /**

@@ -123,7 +123,7 @@ public class Connections {
      * this information is readily available from the 'permanence' matrix,
      * it is stored separately for efficiency purposes.
      */
-    private SparseObjectMatrix<int[]> connectedSynapses;
+    //private SparseObjectMatrix<int[]> connectedSynapses;
     /** 
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
@@ -207,7 +207,7 @@ public class Connections {
     private Cell[] cells;
 
     
-    ///////////////////////   Structural element state /////////////////////
+    ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
     protected Map<Cell, Set<Synapse>> receptorSynapses;
     
@@ -486,9 +486,9 @@ public class Connections {
      * Returns the {@link SparseObjectMatrix} that represents the connected synapses.
      * @return
      */
-    public SparseObjectMatrix<int[]> getConnectedSynapses() {
-        return connectedSynapses;
-    }
+//    public SparseObjectMatrix<int[]> getConnectedSynapses() {
+//        return connectedSynapses;
+//    }
     
     /**
      * 'connectedSynapses' is a similar matrix to 'permanences'
@@ -500,9 +500,9 @@ public class Connections {
      * 
      * @param	s	in this case the sparse matrix
      */
-    public void setConnectedSysnapses(SparseMatrix<int[]> s) {
-        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
-    }
+//    public void setConnectedSynapses(SparseMatrix<int[]> s) {
+//        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
+//    }
     
     /**
      * Returns the indexed count of connected synapses per column.

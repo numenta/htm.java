@@ -107,9 +107,9 @@ public class SpatialPooler {
         
         c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));//new int[] { numColumns, numInputs } ));
         
-        c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
-        
-        c.setConnectedSysnapses(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+//        c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
+//        
+//        c.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
         
         c.setConnectedCounts(new int[numColumns]);
         
@@ -222,7 +222,7 @@ public class SpatialPooler {
      */
     public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
         int[] dimensions = c.getInputDimensions();
-        int[] connected = c.getConnectedSynapses().getObject(columnIndex);
+        int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);//c.getConnectedSynapses().getObject(columnIndex);
         if(connected == null || connected.length == 0) return 0;
         
         int[] maxCoord = new int[c.getInputDimensions().length];
@@ -304,7 +304,7 @@ public class SpatialPooler {
             if(numConnected >= c.getStimulusThreshold()) return;
             //Skipping version of "raiseValuesBy" that uses the maskPotential until bug #1322 is fixed
             //in NuPIC - for now increment all bits until numConnected >= stimulusThreshold
-            ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+            ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm, maskPotential);
         }
     }
     
@@ -341,13 +341,8 @@ public class SpatialPooler {
      *                      	a connected state. Should be set to 'false' when a direct
      *                      	assignment is required.
      */
-    private static final Condition<Double> permUpdateCondition = new Condition.Adapter<Double>() { 
-    	@Override
-		public boolean eval(double d) { return d > 0; } 
-    };
     public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
-    	double[] d = c.getPotentialPools().getObject(column.getIndex()).getPermanences();
-    	int[] maskPotential = ArrayUtils.where(d, permUpdateCondition);
+    	int[] maskPotential = c.getPotentialPools().getObject(column.getIndex()).getSparseConnections();
         if(raisePerm) {
             raisePermanenceToThreshold(c, perm, maskPotential);
         }
@@ -363,7 +358,7 @@ public class SpatialPooler {
         column.setProximalPermanences(c, perm);
         //c.getPermanences().set(columnIndex, perm);
         int columnIndex = column.getIndex();
-        c.getConnectedSynapses().set(columnIndex, newConnected.toArray());
+        column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
         c.getConnectedCounts()[columnIndex] = newConnected.size();
     }
     
@@ -380,6 +375,11 @@ public class SpatialPooler {
      */
     public static double initPermConnected(Connections c) {
         double p = c.getSynPermConnected() + c.getRandom().nextDouble() * c.getSynPermActiveInc() / 4.0;
+        
+        // Note from Python implementation on conditioning below:
+        // Ensure we don't have too much unnecessary precision. A full 64 bits of
+        // precision causes numerical stability issues across platforms and across
+        // implementations
         p = ((int)(p * 100000)) / 100000.0d;
         return p;
     }
@@ -392,6 +392,11 @@ public class SpatialPooler {
      */
     public static double initPermNonConnected(Connections c) {
         double p = c.getSynPermConnected() * c.getRandom().nextDouble();
+        
+        // Note from Python implementation on conditioning below:
+        // Ensure we don't have too much unnecessary precision. A full 64 bits of
+        // precision causes numerical stability issues across platforms and across
+        // implementations
         p = ((int)(p * 100000)) / 100000.0d;
         return p;
     }
@@ -552,10 +557,10 @@ public class SpatialPooler {
                 curRange = range;
                 curRange = ArrayUtils.retainLogicalAnd(range, 
                     new Condition[] {
-                        new Condition.Adapter() {
+                        new Condition.Adapter<Integer>() {
                             @Override public boolean eval(int n) { return n >= 0; }
                         },
-                        new Condition.Adapter() {
+                        new Condition.Adapter<Integer>() {
                             @Override public boolean eval(int n) { return n < dimensions[idx]; }
                         }
                     }
@@ -604,7 +609,7 @@ public class SpatialPooler {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
+        //SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
         return null;
     }
 }

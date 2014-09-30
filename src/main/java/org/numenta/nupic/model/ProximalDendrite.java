@@ -32,6 +32,10 @@ public class ProximalDendrite extends Segment {
 		return pool;
 	}
 	
+	public void clearSynapses(Connections c) {
+		c.getSynapses(this).clear();
+	}
+	
 	/**
 	 * Returns this {@link ProximalDendrite}'s index.
 	 * @return
@@ -41,7 +45,10 @@ public class ProximalDendrite extends Segment {
 	}
 	
 	/**
-	 * Sets the permanences for each {@link Synapse}
+	 * Sets the permanences for each {@link Synapse}. The number of synapses
+	 * is set by the potentialPct variable which determines the number of input
+	 * bits a given column will be "attached" to which is the same number as the
+	 * number of {@link Synapse}s
 	 * 
 	 * @param c			the {@link Connections} memory
 	 * @param perms		the floating point degree of connectedness
@@ -52,5 +59,32 @@ public class ProximalDendrite extends Segment {
 		for(Synapse s : synapses) {
 			s.setPermanence(perms[i++]);
 		}
+	}
+	
+	/**
+	 * Sets the input vector synapse indexes which are connected (>= synPermConnected)
+	 * @param c
+	 * @param connectedIndexes
+	 */
+	public void setConnectedSynapses(Connections c, int[] connectedIndexes) {
+		c.getPotentialPools().getObject(index).setConnections(connectedIndexes);
+	}
+	
+	/**
+	 * Returns an array of synapse indexes as a dense binary array.
+	 * @param c
+	 * @return
+	 */
+	public int[] getConnectedSynapsesDense(Connections c) {
+		return c.getPotentialPools().getObject(index).getDenseConnections(c);
+	}
+	
+	/**
+	 * Returns an sparse array of synapse indexes representing the connected bits.
+	 * @param c
+	 * @return
+	 */
+	public int[] getConnectedSynapsesSparse(Connections c) {
+		return c.getPotentialPools().getObject(index).getSparseConnections();
 	}
 }

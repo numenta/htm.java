@@ -1,5 +1,7 @@
 package org.numenta.nupic.model;
 
+import java.util.Arrays;
+
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -114,7 +116,16 @@ public class Pool {
 	}
 	
 	public void setConnection(int synapseIndex, int connection) {
-		
+		synapseConnections.set(synapseIndex, connection);
+	}
+	
+	public void setConnections(int[] connections) {
+		synapseConnections.clear();
+		synapseConnections.addAll(connections);
+	}
+	
+	public void clearConnections() {
+		synapseConnections.clear();
 	}
 	
 	/**
@@ -144,7 +155,24 @@ public class Pool {
 	 * Returns an array of input bit indexes.
 	 * @return
 	 */
-	public int[] getConnections() {
+	public int[] getSparseConnections() {
 		return synapseConnections.toArray();
+	}
+	
+	/**
+	 * Returns the a dense array representing the potential pool bits
+	 * with the connected bits set to 1.
+	 * @param c
+	 * @return
+	 */
+	public int[] getDenseConnections(Connections c) {
+		int[] retVal = new int[size];
+		Arrays.fill(retVal, 0);
+		for(int i = 0;i < size;i++) {
+			if(synapsePermanences[i] >= c.getSynPermConnected()) {
+				retVal[i] = 1;
+			}
+		}
+		return retVal;
 	}
 }
