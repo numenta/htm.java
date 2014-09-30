@@ -834,11 +834,6 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
     		int[] dense = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesDense(mem);
-    		int[] sparse = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesSparse(mem);
-            System.out.println(Arrays.toString(mem.getPermanences(i)));
-            System.out.println(Arrays.toString(sparse));
-//    		System.out.println(Arrays.toString(
-//    			mem.getPotentialPools().getObject(i).getSparseConnections()));
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}
     	

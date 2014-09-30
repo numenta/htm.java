@@ -109,7 +109,7 @@ public class Connections {
      * structure. This permanence matrix is only allowed to have non-zero
      * elements where the potential pool is non-zero.
      */
-    private SparseObjectMatrix<double[]> permanences;
+//    private SparseObjectMatrix<double[]> permanences;
     /**
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.

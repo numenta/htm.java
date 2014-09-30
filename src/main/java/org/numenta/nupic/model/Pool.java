@@ -115,15 +115,21 @@ public class Pool {
 		synapseConnections.set(synapseIndexes.get(s), connection);
 	}
 	
-	public void setConnection(int synapseIndex, int connection) {
-		synapseConnections.set(synapseIndex, connection);
-	}
-	
+	/**
+	 * Updates the entire pool with the indexes currently qualifying
+	 * as connected.
+	 * 
+	 * @param connections
+	 */
 	public void setConnections(int[] connections) {
 		synapseConnections.clear();
 		synapseConnections.addAll(connections);
 	}
 	
+	/**
+	 * Clears the indexes of connected synapses in preparation
+	 * for an entire update.
+	 */
 	public void clearConnections() {
 		synapseConnections.clear();
 	}

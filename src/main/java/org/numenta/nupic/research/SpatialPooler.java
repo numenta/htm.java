@@ -21,7 +21,6 @@
  */
 package org.numenta.nupic.research;
 
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -586,7 +585,7 @@ public class SpatialPooler {
      * @param learn     a boolean value indicating whether learning should be
      *                  performed. Learning entails updating the  permanence
      *                  values of the synapses, and hence modifying the 'state'
-     *                  of the modec. setting learning to 'off' might be useful
+     *                  of the model. setting learning to 'off' might be useful
      *                  for indicating separate training vs. testing sets.
      */
     public void updateBookeepingVars(Connections c, boolean learn) {
