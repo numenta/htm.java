@@ -603,12 +603,46 @@ public class SpatialPooler {
      *  
      * @param l
      * @param inputVector   a <del>numpy</del> array of 0's and 1's that comprises the input to
-                            the spatial pooler.
+     *                       the spatial pooler.
      * @return
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
         //SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
         return null;
+    }
+    
+    /**
+     * Performs inhibition. This method calculates the necessary values needed to
+     * actually perform inhibition and then delegates the task of picking the
+     * active columns to helper functions.
+     * 
+     * @param c			the {@link Connections} matrix
+     * @param overlaps	an array containing the overlap score for each  column.
+     *              	The overlap score for a column is defined as the number
+     *              	of synapses in a "connected state" (connected synapses)
+     *              	that are connected to input bits which are turned on.
+     * @return
+     */
+    public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
+    	int numCols = c.getNumColumns();
+    	int[] activeColumns = new int[numCols];
+    	Arrays.fill(activeColumns, 0);
+    	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
+    	for(int i = 0;i < numCols;i++) {
+    		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getInhibitionRadius(), false);
+    		double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
+    		int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
+    		int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
+    		if(numBigger < numActive) {
+    			activeColumns[i] = 1;
+    			overlaps[i] += addToWinners;
+    		}
+    	}
+    	return ArrayUtils.where(activeColumns, new Condition.Adapter<Integer>() {
+    		@Override public boolean eval(int n) {
+				return n > 0;
+			}
+    	});
     }
 }

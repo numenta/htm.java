@@ -64,6 +64,7 @@ public class Parameters {
         POTENTIAL_RADIUS("potentialRadius", 16),
         POTENTIAL_PCT("potentialPct", 0.5),
         GLOBAL_INHIBITIONS("globalInhibition", false),
+        INHIBITION_RADIUS("inhibitionRadius", 0),
         LOCAL_AREA_DENSITY("localAreaDensity", -1.0),
         NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", 10),
         STIMULUS_THRESHOLD("stimulusThreshold", 0),
@@ -134,6 +135,7 @@ public class Parameters {
     
     private int[] inputDimensions = new int[] { 32, 32 };
     private int potentialRadius = 16;
+    private int inhibitionRadius = 0;
     private double potentialPct = 0.5;
     private boolean globalInhibition = false;
     private double localAreaDensity = -1.0;
@@ -486,6 +488,20 @@ public class Parameters {
     public void setPotentialRadius(int potentialRadius) {
         this.potentialRadius = potentialRadius;
         getMap().put(KEY.POTENTIAL_RADIUS, potentialRadius);
+    }
+    
+    /** 
+     * The inhibition radius determines the size of a column's local
+     * neighborhood. of a column. A cortical column must overcome the overlap
+     * score of columns in his neighborhood in order to become actives. This
+     * radius is updated every learning round. It grows and shrinks with the
+     * average number of connected synapses per column.
+     * 
+     * @param	inhibitionRadius	the local group size
+     */
+    public void setInhibitionRadius(int inhibitionRadius) {
+    	this.inhibitionRadius = inhibitionRadius;
+    	getMap().put(KEY.INHIBITION_RADIUS, inhibitionRadius);
     }
 
     /**
