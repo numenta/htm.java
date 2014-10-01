@@ -44,29 +44,36 @@ public class TemporalMemory {
     /**
      * Constructs a new {@code TemporalMemory}
      */
-    public TemporalMemory() {
-     
-    }
+    public TemporalMemory() {}
     
     /**
-     * Builds the grid of {@link Cell}s and  {@link Column}s
+     * Uses the specified {@link Connections} object to Build the structural 
+     * anatomy needed by this {@code TemporalMemory} to implement its algorithms.
      * 
      * @param	c		{@link Connections} object
      */
     public void init(Connections c) {
-    	SparseObjectMatrix<Column> matrix = new SparseObjectMatrix<Column>(c.getColumnDimensions());
+    	SparseObjectMatrix<Column> matrix = c.getMemory() == null ?
+    		new SparseObjectMatrix<Column>(c.getColumnDimensions()) :
+    			c.getMemory();
+    	c.setMemory(matrix);
+    	
     	int numColumns = matrix.getMaxIndex() + 1;
     	int cellsPerColumn = c.getCellsPerColumn();
         Cell[] cells = new Cell[numColumns * cellsPerColumn];
         
+        //Used as flag to determine if Column objects have been created.
+        Column colZero = matrix.getObject(0);
         for(int i = 0;i < numColumns;i++) {
-            Column column = new Column(cellsPerColumn, i);
+            Column column = colZero == null ? 
+            	new Column(cellsPerColumn, i) : matrix.getObject(i);
             for(int j = 0;j < cellsPerColumn;j++) {
                 cells[i * cellsPerColumn + j] = column.getCell(j);
             }
-            matrix.set(i, column);
+            //If columns have not been previously configured
+            if(colZero == null) matrix.set(i, column);
         }
-        c.setMemory(matrix);
+        //Only the TemporalMemory initializes cells so no need to test 
         c.setCells(cells);
     }
     
@@ -291,7 +298,7 @@ public class TemporalMemory {
             for(Synapse s : cell.getReceptorSynapses(c)) {
                 Set<Synapse> set = null;
                 if((set = activesSynapses.get(s.getSegment())) == null) {
-                    activesSynapses.put(s.getSegment(), set = new LinkedHashSet<Synapse>());
+                    activesSynapses.put((DistalDendrite)s.getSegment(), set = new LinkedHashSet<Synapse>());
                 }
                 set.add(s);
             }

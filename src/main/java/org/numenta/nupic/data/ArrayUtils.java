@@ -96,25 +96,6 @@ public class ArrayUtils {
     }
     
     /**
-     * Implemented to be used as arguments in other operations.
-     * see {@link ArrayUtils#retainLogicalAnd(int[], Condition[])};
-     * {@link ArrayUtils#retainLogicalAnd(double[], Condition[])}.
-     */
-    public static interface Condition {
-        /**
-         * Convenience adapter to remove verbosity
-         * @author metaware
-         *
-         */
-        public class Adapter implements Condition {
-            public boolean eval(int n) { return false; }
-            public boolean eval(double d) { return false; }
-        }
-        public boolean eval(int n);
-        public boolean eval(double d);
-    }
-    
-    /**
      * Returns an array of values that test true for all of the 
      * specified {@link Condition}s.
      * 
@@ -122,7 +103,7 @@ public class ArrayUtils {
      * @param conditions
      * @return
      */
-    public static int[] retainLogicalAnd(int[] values, Condition[] conditions) {
+    public static int[] retainLogicalAnd(int[] values, Condition<?>[] conditions) {
         TIntArrayList l = new TIntArrayList();
         for(int i = 0;i < values.length;i++) {
             boolean result = true;
@@ -142,7 +123,7 @@ public class ArrayUtils {
      * @param conditions
      * @return
      */
-    public static double[] retainLogicalAnd(double[] values, Condition[] conditions) {
+    public static double[] retainLogicalAnd(double[] values, Condition<?>[] conditions) {
         TDoubleArrayList l = new TDoubleArrayList();
         for(int i = 0;i < values.length;i++) {
             boolean result = true;
@@ -209,6 +190,22 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a new array containing the result of multiplying
+     * each index of the specified array by the 2nd parameter.
+     * 
+     * @param array
+     * @param d
+     * @return
+     */
+    public static double[] multiply(double[] array, double d) {
+    	double[] product = new double[array.length];
+    	for(int i = 0;i < array.length;i++) {
+    		product[i] = array[i] * d;
+    	}
+    	return product;
+    }
+    
+    /**
      * Returns an integer array containing the result of subtraction
      * operations between corresponding indexes of the specified arrays.
      * 
@@ -263,6 +260,22 @@ public class ArrayUtils {
             arr[i] += amount;
         }
         return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount at the same
+     * index
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_add(double[] arr, double[] amount) {
+    	 for(int i = 0;i < arr.length;i++) {
+             arr[i] += amount[i];
+         }
+         return arr;
     }
     
     /**
@@ -465,10 +478,43 @@ public class ArrayUtils {
      * @param min       the minimum value
      * @param max       the maximum value
      */
-    public static void clip(double[] values, double min, double max) {
+    public static double[] clip(double[] values, double min, double max) {
         for(int i = 0;i < values.length;i++) {
             values[i] = Math.min(1, Math.max(0, values[i]));
         }
+        return values;
+    }
+    
+    /**
+     * Ensures that each entry in the specified array has a min value
+     * equal to or greater than the min at the specified index and a maximum value less
+     * than or equal to the max at the specified index.
+     * 
+     * @param values    the values to clip
+     * @param min       the minimum value
+     * @param max       the maximum value
+     */
+    public static int[] clip(int[] values, int[] min, int[] max) {
+        for(int i = 0;i < values.length;i++) {
+            values[i] = Math.max(min[i], Math.min(max[i],values[i]));
+        }
+        return values;
+    }
+    
+    /**
+     * Ensures that each entry in the specified array has a min value
+     * equal to or greater than the min at the specified index and a maximum value less
+     * than or equal to the max at the specified index.
+     * 
+     * @param values    the values to clip
+     * @param max       the minimum value
+     * @param adj       the adjustment amount
+     */
+    public static int[] clip(int[] values,int[] max, int adj) {
+        for(int i = 0;i < values.length;i++) {
+        	values[i] = Math.max(0, Math.min(max[i] + adj,values[i]));
+        }
+        return values;
     }
     
     /**
@@ -500,6 +546,88 @@ public class ArrayUtils {
         for(int i = 0;i < values.length;i++) {
             values[i] += amount;
         }
+    }
+    
+    /**
+     * Raises the values at the indexes specified by the amount specified.
+     * @param amount        the amount to raise the values
+     * @param values        the values to raise
+     */
+    public static void raiseValuesBy(double amount, double[] values, int[] indexesToRaise) {
+        for(int i = 0;i < indexesToRaise.length;i++) {
+            values[indexesToRaise[i]] += amount;
+        }
+    }
+    
+    /**
+     * Raises the values at the indicated indexes, by the amount specified
+     * @param amount
+     * @param indexes
+     * @param values
+     */
+    public static void raiseIndicatedValuesBy(double amount, int[] indexes, double[] values) {
+    	for(int i = 0;i < indexes.length;i++) {
+            values[indexes[i]] += amount;
+        }
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(double[] d, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = d.length;
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(d[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(List<T> l, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = l.size();
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(l.get(i))) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(T[] t, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	for(int i = 0;i < t.length;i++) {
+    		if(c.eval(t[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
     }
     
     /**
@@ -582,5 +710,35 @@ public class ArrayUtils {
             }
         }
         return min;
+    }
+    
+    /**
+     * Returns a copy of the specified integer array in 
+     * reverse order
+     * 
+     * @param d
+     * @return
+     */
+    public static int[] reverse(int[] d) {
+    	int[] ret = new int[d.length];
+    	for(int i = 0, j = d.length - 1;j >= 0;i++,j--) {
+    		ret[i] = d[j];
+    	}
+    	return ret;
+    }
+    
+    /**
+     * Returns a copy of the specified double array in 
+     * reverse order
+     * 
+     * @param d
+     * @return
+     */
+    public static double[] reverse(double[] d) {
+    	double[] ret = new double[d.length];
+    	for(int i = 0, j = d.length - 1;j >= 0;i++,j--) {
+    		ret[i] = d[j];
+    	}
+    	return ret;
     }
 }

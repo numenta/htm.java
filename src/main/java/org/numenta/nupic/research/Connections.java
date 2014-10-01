@@ -21,8 +21,6 @@
  */
 package org.numenta.nupic.research;
 
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -33,17 +31,19 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.data.MersenneTwister;
-import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Pool;
+import org.numenta.nupic.model.ProximalDendrite;
+import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 
 /**
- * Represents the definition of the interconnected structural state of the {@link SpatialPooler} and 
+ * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
  * {@link TemporalMemory} as well as the state of all support structures 
  * (i.e. Cells, Columns, Segments, Synapses etc.)
  */
@@ -97,7 +97,7 @@ public class Connections {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-    private SparseObjectMatrix<int[]> potentialPools;
+    private SparseObjectMatrix<Pool> potentialPools;
     /**
      * Initialize the permanences for each column. Similar to the
      * 'potentialPools', the permanences are stored in a matrix whose rows
@@ -109,7 +109,7 @@ public class Connections {
      * structure. This permanence matrix is only allowed to have non-zero
      * elements where the potential pool is non-zero.
      */
-    private SparseObjectMatrix<double[]> permanences;
+//    private SparseObjectMatrix<double[]> permanences;
     /**
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
@@ -123,7 +123,7 @@ public class Connections {
      * this information is readily available from the 'permanence' matrix,
      * it is stored separately for efficiency purposes.
      */
-    private SparseObjectMatrix<int[]> connectedSynapses;
+    //private SparseObjectMatrix<int[]> connectedSynapses;
     /** 
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
@@ -139,6 +139,8 @@ public class Connections {
      * average number of connected synapses per column.
      */
     private int inhibitionRadius = 0;
+    
+    private int proximalSynapseCounter = 0;
     
     private double[] overlapDutyCycles;
     private double[] activeDutyCycles;
@@ -205,12 +207,12 @@ public class Connections {
     private Cell[] cells;
 
     
-    ///////////////////////   Structural element state /////////////////////
+    ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
     protected Map<Cell, Set<Synapse>> receptorSynapses;
     
     protected Map<Cell, List<DistalDendrite>> segments;
-    protected Map<DistalDendrite, List<Synapse>> synapses;
+    protected Map<Segment, List<Synapse>> synapses;
     
     /** Helps index each new Segment */
     protected int segmentCounter = 0;
@@ -226,78 +228,14 @@ public class Connections {
      * Constructs a new {@code Connections} object. Use
      * 
      */
-    public Connections() {
-    	this(null);
-    }
+    public Connections() {}
     
-    public Connections(SpatialPooler sp) {
-    	if(sp != null) {
-            
-	        //Init the static data structures
-	        initMatrices();
-	        
-	        //Configure potential pools and support settings
-	        connectAndConfigureInputs(sp);
-    	}
-        
-        if(getVerbosity() > 0) {
-            printParameters();
-        }
-    }
-    
-    public void initMatrices() {
-    	memory = new SparseObjectMatrix<Column>(columnDimensions);
-        inputMatrix = new SparseBinaryMatrix(inputDimensions);
-        
-        for(int i = 0;i < inputDimensions.length;i++) {
-            numInputs *= inputDimensions[i];
-        }
-        for(int i = 0;i < columnDimensions.length;i++) {
-            numColumns *= columnDimensions[i];
-        }
-        
-        potentialPools = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
-        
-        permanences = new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } );
-        
-        /**
-         * 'connectedSynapses' is a similar matrix to 'permanences'
-         * (rows represent cortical columns, columns represent input bits) whose
-         * entries represent whether the cortical column is connected to the input
-         * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-         * this information is readily available from the 'permanences' matrix,
-         * it is stored separately for efficiency purposes.
-         */
-        connectedSynapses = new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } );
-        
-        connectedCounts = new int[numColumns];
-        
-        tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
-        for(int i = 0;i < numColumns;i++) {
-            for(int j = 0;j < numInputs;j++) {
-                tieBreaker.set(new int[] { i, j }, 0.01 * random.nextDouble());
-            }
-        }
-    }
-    
-    public void connectAndConfigureInputs(SpatialPooler sp) {
-    	// Initialize the set of permanence values for each column. Ensure that
-        // each column is connected to enough input bits to allow it to be
-        // activated.
-        for(int i = 0;i < numColumns;i++) {
-            int[] potential = sp.mapPotential(this, i, true);
-            potentialPools.set(i, potential);
-            double[] perm = sp.initPermanence(this, new TIntHashSet(potential), initConnectedPct);
-            sp.updatePermanencesForColumn(this, perm, i, true);
-        }
-        
-        sp.updateInhibitionRadius(this);
-        
-        overlapDutyCycles = new double[numColumns];
-        activeDutyCycles = new double[numColumns];
-        minOverlapDutyCycles = new double[numColumns];
-        minActiveDutyCycles = new double[numColumns];
-        boostFactors = new double[numColumns];
+    /**
+     * Returns the configured initial connected percent.
+     * @return
+     */
+    public double getInitConnectedPct() {
+    	return this.initConnectedPct;
     }
     
     /**
@@ -522,40 +460,49 @@ public class Connections {
     }
     
     /**
-     * Returns the {@link SparseObjectMatrix} representing the 
+     * Returns a double[] representing the 
      * proximal dendrite permanence values.
      * 
-     * @return  the {@link SparseDoubleMatrix}
+     * @return  the array of permanences
      */
-    public SparseObjectMatrix<double[]> getPermanences() {
-        return permanences;
-    }
+     public double[] getPermanences(int columnIndex) {
+    	 return potentialPools.getObject(columnIndex).getPermanences();
+     }
     
     /**
      * Sets the {@link SparseObjectMatrix} which represents the 
      * proximal dendrite permanence values.
      * 
-     * @param s the {@link SparseDoubleMatrix}
+     * @param s the {@link SparseObjectMatrix}
      */
-    public void setPermanences(SparseMatrix<double[]> s) {
-        this.permanences = (SparseObjectMatrix<double[]>)s;
+    public void setPermanences(SparseObjectMatrix<double[]> s) {
+    	for(int idx : s.getSparseIndices()) {
+    		memory.getObject(idx).setProximalPermanences(
+    			this, s.getObject(idx));
+    	}
     }
     
     /**
      * Returns the {@link SparseObjectMatrix} that represents the connected synapses.
      * @return
      */
-    public SparseObjectMatrix<int[]> getConnectedSynapses() {
-        return connectedSynapses;
-    }
+//    public SparseObjectMatrix<int[]> getConnectedSynapses() {
+//        return connectedSynapses;
+//    }
     
     /**
-     * Sets the {@link SparseObjectMatrix} representing the connected synapses.
-     * @param s
+     * 'connectedSynapses' is a similar matrix to 'permanences'
+     * (rows represent cortical columns, columns represent input bits) whose
+     * entries represent whether the cortical column is connected to the input
+     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
+     * this information is readily available from the 'permanences' matrix,
+     * it is stored separately for efficiency purposes.
+     * 
+     * @param	s	in this case the sparse matrix
      */
-    public void setConnectedSysnapses(SparseMatrix<int[]> s) {
-        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
-    }
+//    public void setConnectedSynapses(SparseMatrix<int[]> s) {
+//        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
+//    }
     
     /**
      * Returns the indexed count of connected synapses per column.
@@ -571,6 +518,25 @@ public class Connections {
      */
     public void setConnectedCounts(int[] counts) {
         this.connectedCounts = counts;
+    }
+    
+    /**
+     * Sets the array holding the random noise added to proximal dendrite overlaps.
+     * 
+     * @param tieBreaker	random values to help break ties
+     */
+    public void setTieBreaker(SparseDoubleMatrix tieBreaker) {
+    	this.tieBreaker = tieBreaker;
+    }
+    
+    /**
+     * Returns the array holding random values used to add to overlap scores
+     * to break ties.
+     * 
+     * @return
+     */
+    public SparseDoubleMatrix getTieBreaker() {
+    	return tieBreaker;
     }
     
     /**
@@ -749,7 +715,7 @@ public class Connections {
     public double getSynPermBelowStimulusInc() {
         return synPermBelowStimulusInc;
     }
-
+    
     /**
      * A number between 0 and 1.0, used to set a floor on
      * how often a column should have at least
@@ -893,11 +859,21 @@ public class Connections {
     }
     
     /**
+     * Sets the {@link SparseObjectMatrix} which holds the mapping
+     * of column indexes to their lists of potential inputs. 
+     * 
+     * @param pools		{@link SparseObjectMatrix} which holds the pools.
+     */
+    public void setPotentialPools(SparseObjectMatrix<Pool> pools) {
+    	this.potentialPools = pools;
+    }
+    
+    /**
      * Returns the {@link SparseObjectMatrix} which holds the mapping
      * of column indexes to their lists of potential inputs.
-     * @return
+     * @return	the potential pools
      */
-    public SparseObjectMatrix<int[]> getPotentialPools() {
+    public SparseObjectMatrix<Pool> getPotentialPools() {
         return this.potentialPools;
     }
     
@@ -999,6 +975,14 @@ public class Connections {
 
 	public void setBoostFactors(double[] boostFactors) {
 		this.boostFactors = boostFactors;
+	}
+	
+	/**
+	 * Returns the current count of {@link Synapse}s for {@link ProximalDendrite}s.
+	 * @return
+	 */
+	public int getProxSynCount() {
+		return proximalSynapseCounter;
 	}
 
 	/**
@@ -1146,7 +1130,30 @@ public class Connections {
         }
         
         if(synapses == null) {
-            synapses = new LinkedHashMap<DistalDendrite, List<Synapse>>();
+            synapses = new LinkedHashMap<Segment, List<Synapse>>();
+        }
+        
+        List<Synapse> retVal = null;
+        if((retVal = synapses.get(segment)) == null) {
+            synapses.put(segment, retVal = new ArrayList<Synapse>());
+        }
+        
+        return retVal;
+    }
+    
+    /**
+     * Returns the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     * 
+     * @param segment   the {@link ProximalDendrite} used as a key.
+     * @return          the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     */
+    public List<Synapse> getSynapses(ProximalDendrite segment) {
+    	if(segment == null) {
+            throw new IllegalArgumentException("Segment was null");
+        }
+    	
+    	if(synapses == null) {
+            synapses = new LinkedHashMap<Segment, List<Synapse>>();
         }
         
         List<Synapse> retVal = null;

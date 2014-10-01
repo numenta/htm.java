@@ -26,9 +26,17 @@ import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Represents a connection with varying strength which when above 
- * a configured threshold represents a valid connection. This class
- * may hold state because its scope is limited to a given {@link Thread}'s
- * {@link Connections} object.
+ * a configured threshold represents a valid connection. 
+ * 
+ * IMPORTANT: 	For DistalDendrites, there is only one synapse per pool, so the
+ * 				synapse's index doesn't really matter (in terms of tracking its
+ * 				order within the pool. In that case, the index is a global counter
+ * 				of all distal dendrite synapses.
+ * 
+ * 				For ProximalDendrites, there are many synapses within a pool, and in
+ * 				that case, the index specifies the synapse's sequence order within
+ * 				the pool object, and may be referenced by that index.
+ *    
  * 
  * @author Chetan Surpur
  * @author David Ray
@@ -38,9 +46,15 @@ import org.numenta.nupic.research.TemporalMemory;
  */
 public class Synapse {
     private Cell sourceCell;
-    private DistalDendrite segment;
-    private double permanence;
+    private Segment segment;
+    private Pool pool;
     private int index;
+    
+    
+    /**
+     * Constructor used when setting parameters later.
+     */
+    public Synapse() {}
     
     /**
      * Constructs a new {@code Synapse}
@@ -48,30 +62,67 @@ public class Synapse {
      * @param c             the connections state of the temporal memory
      * @param sourceCell    the {@link Cell} which will activate this {@code Synapse}
      * @param segment       the owning dendritic segment
-     * @param permanence    this {@code Synapse}'s permanence
+     * @param pool		    this {@link Pool} of which this synapse is a member
      * @param index         this {@code Synapse}'s index
      */
-    public Synapse(Connections c, Cell sourceCell, DistalDendrite segment, double permanence, int index) {
+    public Synapse(Connections c, Cell sourceCell, Segment segment, Pool pool, int index) {
         this.sourceCell = sourceCell;
         this.segment = segment;
-        this.permanence = permanence;
+        this.pool = pool;
         this.index = index;
         
-        sourceCell.addReceptorSynapse(c, this);
+        // If this isn't a synapse on a proximal dendrite
+        if(sourceCell != null) {
+        	sourceCell.addReceptorSynapse(c, this);
+        }
     }
     
+    /**
+     * Returns this {@code Synapse}'s index.
+     * @return
+     */
+    public int getIndex() {
+    	return index;
+    }
+    
+    /**
+     * Returns this {@code Synapse}'s degree of connectedness.
+     * @return
+     */
     public double getPermanence() {
-        return permanence;
+        return pool.getPermanence(this);
     }
     
+    /**
+     * Sets this {@code Synapse}'s degree of connectedness.
+     * @param perm
+     */
     public void setPermanence(double perm) {
-        this.permanence = perm;
+        pool.setPermanence(this, perm);
     }
     
-    public DistalDendrite getSegment() {
+    /**
+     * Returns the owning dendritic segment
+     * @return
+     */
+    public Segment getSegment() {
         return segment;
     }
     
+    /**
+     * Returns the index of the input bit this {@code Synapse} 
+     * is connected to.
+     * 
+     * @return
+     */
+    public int getConnection() {
+    	return pool.getConnection(this);
+    }
+    
+    /**
+     * Returns the containing {@link Cell} 
+     * @return
+     */
     public Cell getSourceCell() {
         return sourceCell;
     }

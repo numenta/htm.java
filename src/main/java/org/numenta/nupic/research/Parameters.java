@@ -27,7 +27,6 @@ import java.util.Random;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Lattice;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -72,6 +71,7 @@ public class Parameters {
         SYN_PERM_ACTIVE_INC("synPermActiveInc", 0.1),
         SYN_PERM_CONNECTED("synPermConnected", 0.10),
         SYN_PERM_BELOW_STIMULUS("synPermBelowStimulusInc", 0.01),
+        SYN_PERM_TRIM_THRESHOLD("synPermTrimThreshold", 0.5),
         MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", 0.001),
         MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001),
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000),
@@ -141,6 +141,7 @@ public class Parameters {
     private double stimulusThreshold = 0;
     private double synPermInactiveDec = 0.01;
     private double synPermActiveInc = 0.10;
+    private double synPermTrimThreshold = synPermActiveInc / 2.0;
     private double synPermConnected = 0.10;
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
@@ -622,6 +623,16 @@ public class Parameters {
      */
     public void setSynPermBelowStimulusInc(double inc) {
     	this.synPermBelowStimulusInc = inc;
+    	getMap().put(KEY.SYN_PERM_BELOW_STIMULUS, synPermBelowStimulusInc);
+    }
+    
+    /**
+     * 
+     * @param threshold
+     */
+    public void setSynPermTrimThreshold(double threshold) {
+    	this.synPermTrimThreshold = threshold;
+    	getMap().put(KEY.SYN_PERM_TRIM_THRESHOLD, synPermTrimThreshold);
     }
 
     /**

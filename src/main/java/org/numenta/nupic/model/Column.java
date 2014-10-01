@@ -44,7 +44,8 @@ public class Column {
     private final int index;
     /** Configuration of cell count */
     private final int numCells;
-    private ProximalDendrite dendrite;
+    /** Connects {@link SpatialPooler} input pools */
+    private ProximalDendrite proximalDendrite;
     
     private Cell[] cells;
     
@@ -61,7 +62,7 @@ public class Column {
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
         }
-        dendrite = new ProximalDendrite();
+        proximalDendrite = new ProximalDendrite(index);
     }
     
     /**
@@ -126,6 +127,44 @@ public class Column {
         int index = random.nextInt(leastUsedCells.size());
         Collections.sort(leastUsedCells);
         return leastUsedCells.get(index); 
+    }
+    
+    /**
+     * Returns this {@code Column}'s single {@link ProximalDendrite}
+     * @return
+     */
+    public ProximalDendrite getProximalDendrite() {
+    	return proximalDendrite;
+    }
+    
+    /**
+     * Delegates the potential synapse creation to the one {@link ProximalDendrite}.
+     * 
+     * @param c						the {@link Connections} memory
+     * @param inputVectorIndexes	indexes specifying the input vector bit
+     */
+    public Pool createPotentialPool(Connections c, int[] inputVectorIndexes) {
+    	return proximalDendrite.createPool(c, inputVectorIndexes);
+    }
+    
+    /**
+     * Sets the permanences on the {@link ProximalDendrite} {@link Synapse}s
+     * 
+     * @param c				the {@link Connections} memory object
+     * @param permanences	floating point degree of connectedness
+     */
+    public void setProximalPermanences(Connections c, double[] permanences) {
+    	proximalDendrite.setPermanences(c, permanences);
+    }
+    
+    /**
+     * Delegates the call to set synapse connected indexes to this 
+     * {@code Column}'s {@link ProximalDendrite}
+     * @param c
+     * @param connections
+     */
+    public void setProximalConnectedSynapses(Connections c, int[] connections) {
+    	proximalDendrite.setConnectedSynapses(c, connections);
     }
     
     /**
