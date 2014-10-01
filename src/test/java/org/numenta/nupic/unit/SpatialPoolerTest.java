@@ -310,6 +310,46 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testInhibitColumnsLocal() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 10 });
+    	parameters.setInhibitionRadius(2);
+    	initSP();
+    	
+    	double density = 0.5;
+    	double[] overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
+    	int[] trueActive = new int[] {1, 2, 5, 6, 9};
+    	int[] active = sp.inhibitColumnsLocal(mem, overlaps, density);
+    	assertTrue(Arrays.equals(trueActive, active));
+    	
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 10 });
+    	parameters.setInhibitionRadius(3);
+    	initSP();
+    	mem.setInhibitionRadius(3);
+    	overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
+    	trueActive = new int[] { 1, 2, 5, 6 };
+    	active = sp.inhibitColumnsLocal(mem, overlaps, density);
+    	//Commented out in Python version because it is wrong?
+    	//assertTrue(Arrays.equals(trueActive, active));
+    	
+    	// Test add to winners
+    	density = 0.3333;
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 10 });
+    	parameters.setInhibitionRadius(3);
+    	initSP();
+    	mem.setInhibitionRadius(3);
+    	overlaps = new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    	trueActive = new int[] { 0, 1, 4, 5, 8 };
+    	active = sp.inhibitColumnsLocal(mem, overlaps, density);
+    	assertTrue(Arrays.equals(trueActive, active));
+    }
+    
+    @Test
     public void testAvgConnectedSpanForColumnND() {
     	sp = new SpatialPooler();
     	mem = new Connections();

@@ -600,6 +600,26 @@ public class ArrayUtils {
      * @param c			the condition used to test each value
      * @return
      */
+    public static <T> int[] where(int[] d, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = d.length;
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(d[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
     public static <T> int[] where(List<T> l, Condition<T> c) {
     	TIntArrayList retVal = new TIntArrayList();
     	int len = l.size();
@@ -695,6 +715,37 @@ public class ArrayUtils {
             }
         }
         return max;
+    }
+    
+    /**
+     * Returns the maximum value in the specified array
+     * @param array
+     * @return
+     */
+    public static double max(double[] array) {
+        double max = Double.MIN_VALUE;
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+    
+    /**
+     * Returns a new array containing the items specified from
+     * the source array by the indexes specified.
+     * 
+     * @param source
+     * @param indexes
+     * @return
+     */
+    public static double[] sub(double[] source, int[] indexes) {
+    	double[] retVal = new double[indexes.length];
+    	for(int i = 0;i < indexes.length;i++) {
+    		retVal[i] = source[indexes[i]];
+    	}
+    	return retVal;
     }
     
     /**
