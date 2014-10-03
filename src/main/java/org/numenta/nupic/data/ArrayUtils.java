@@ -3,6 +3,7 @@ package org.numenta.nupic.data;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.lang.reflect.Array;
@@ -470,6 +471,20 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a double[] filled with random doubles of the specified size.
+     * @param sampleSize
+     * @param random
+     * @return
+     */
+    public static double[] sample(int sampleSize, Random random) {
+    	double[] sample = new double[sampleSize];
+    	for(int i = 0;i < sampleSize;i++) {
+    		sample[i] = random.nextDouble();
+    	}
+    	return sample;
+    }
+    
+    /**
      * Ensures that each entry in the specified array has a min value
      * equal to or greater than the specified min and a maximum value less
      * than or equal to the specified max.
@@ -538,6 +553,32 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns an array containing the n greatest values.
+     * @param array
+     * @param n
+     * @return
+     */
+    public static int[] nGreatest(double[] array, int n) { 
+    	TDoubleIntHashMap places = new TDoubleIntHashMap();
+    	int i;
+    	double key;
+	    for(int j = 1; j < array.length; j++) { 
+	        key = array[j];
+	        for(i = j - 1;i >= 0 && array[i] < key; i--) {
+	            array[i + 1] = array[i];
+	        }
+	        array[i + 1] = key;
+	        places.put(key, j);
+	    }
+	    System.out.println(Arrays.toString(array));
+	    int[] retVal = new int[n];
+	    for(i = 0;i < n;i++) {
+	    	retVal[i] = places.get(array[i]);
+	    }
+	    return retVal;
+    }
+    
+    /**
      * Raises the values in the specified array by the amount specified
      * @param amount        the amount to raise the values
      * @param values        the values to raise
@@ -565,7 +606,7 @@ public class ArrayUtils {
      * @param indexes
      * @param values
      */
-    public static void raiseIndicatedValuesBy(double amount, int[] indexes, double[] values) {
+    public static void raiseValuesBy(int amount, int[] indexes, int[] values) {
     	for(int i = 0;i < indexes.length;i++) {
             values[indexes[i]] += amount;
         }
@@ -581,6 +622,26 @@ public class ArrayUtils {
      * @return
      */
     public static <T> int[] where(double[] d, Condition<T> c) {
+    	TIntArrayList retVal = new TIntArrayList();
+    	int len = d.length;
+    	for(int i = 0;i < len;i++) {
+    		if(c.eval(d[i])) {
+    			retVal.add(i);
+    		}
+    	}
+    	return retVal.toArray();
+    }
+    
+    /**
+     * Scans the specified values and applies the {@link Condition} to each
+     * value, returning the indexes of the values where the condition evaluates
+     * to true.
+     * 
+     * @param values	the values to test
+     * @param c			the condition used to test each value
+     * @return
+     */
+    public static <T> int[] where(int[] d, Condition<T> c) {
     	TIntArrayList retVal = new TIntArrayList();
     	int len = d.length;
     	for(int i = 0;i < len;i++) {
@@ -695,6 +756,37 @@ public class ArrayUtils {
             }
         }
         return max;
+    }
+    
+    /**
+     * Returns the maximum value in the specified array
+     * @param array
+     * @return
+     */
+    public static double max(double[] array) {
+        double max = Double.MIN_VALUE;
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+    
+    /**
+     * Returns a new array containing the items specified from
+     * the source array by the indexes specified.
+     * 
+     * @param source
+     * @param indexes
+     * @return
+     */
+    public static double[] sub(double[] source, int[] indexes) {
+    	double[] retVal = new double[indexes.length];
+    	for(int i = 0;i < indexes.length;i++) {
+    		retVal[i] = source[indexes[i]];
+    	}
+    	return retVal;
     }
     
     /**

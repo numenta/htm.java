@@ -33,7 +33,6 @@ import java.util.List;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.data.TypeFactory;
@@ -112,11 +111,9 @@ public class SpatialPooler {
         
         c.setConnectedCounts(new int[numColumns]);
         
-        SparseDoubleMatrix tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        double[] tieBreaker = new double[numColumns];
         for(int i = 0;i < numColumns;i++) {
-            for(int j = 0;j < numInputs;j++) {
-                tieBreaker.set(new int[] { i, j }, 0.01 * c.getRandom().nextDouble());
-            }
+            tieBreaker[i] = 0.01 * c.getRandom().nextDouble();
         }
         c.setTieBreaker(tieBreaker);
     }
@@ -603,12 +600,104 @@ public class SpatialPooler {
      *  
      * @param l
      * @param inputVector   a <del>numpy</del> array of 0's and 1's that comprises the input to
-                            the spatial pooler.
+     *                       the spatial pooler.
      * @return
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
         //SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
         return null;
+    }
+    
+    /**
+     * Performs inhibition. This method calculates the necessary values needed to
+     * actually perform inhibition and then delegates the task of picking the
+     * active columns to helper functions.
+     * 
+     * @param c				the {@link Connections} matrix
+     * @param overlaps		an array containing the overlap score for each  column.
+     *              		The overlap score for a column is defined as the number
+     *              		of synapses in a "connected state" (connected synapses)
+     *              		that are connected to input bits which are turned on.
+     * @return
+     */
+    public int[] inhibitColumns(Connections c, double[] overlaps) {
+    	overlaps = Arrays.copyOf(overlaps, overlaps.length);
+    	
+    	double density;
+    	double inhibitionArea = 0;
+    	if((density = c.getLocalAreaDensity()) <= 0) {
+    		inhibitionArea = Math.pow(2 * c.getInhibitionRadius() + 1, c.getColumnDimensions().length);
+    		inhibitionArea = Math.min(c.getNumColumns(), inhibitionArea);
+    		density = ((double)c.getNumActiveColumnsPerInhArea()) / inhibitionArea;
+    		density = Math.min(density, 0.5);
+    	}
+    	
+    	//Add our fixed little bit of random noise to the scores to help break ties.
+    	ArrayUtils.d_add(overlaps, c.getTieBreaker());
+    	
+    	if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
+    		return inhibitColumnsGlobal(c, overlaps, density);
+    	}
+    	return inhibitColumnsLocal(c, overlaps, density);
+    }
+    
+    /**
+     * Perform global inhibition. Performing global inhibition entails picking the
+     * top 'numActive' columns with the highest overlap score in the entire
+     * region. At most half of the columns in a local neighborhood are allowed to
+     * be active.
+     * 
+     * @param c				the {@link Connections} matrix
+     * @param overlaps		an array containing the overlap score for each  column.
+     *              		The overlap score for a column is defined as the number
+     *              		of synapses in a "connected state" (connected synapses)
+     *              		that are connected to input bits which are turned on.
+     * @param density		The fraction of columns to survive inhibition.
+     * 
+     * @return
+     */
+    public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
+    	int numCols = c.getNumColumns();
+    	int numActive = (int)(density * numCols);
+    	int[] activeColumns = new int[numCols];
+    	Arrays.fill(activeColumns, 0);
+    	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
+    	Arrays.sort(winners);
+    	return winners;
+    }
+    
+    /**
+     * Performs inhibition. This method calculates the necessary values needed to
+     * actually perform inhibition and then delegates the task of picking the
+     * active columns to helper functions.
+     * 
+     * @param c			the {@link Connections} matrix
+     * @param overlaps	an array containing the overlap score for each  column.
+     *              	The overlap score for a column is defined as the number
+     *              	of synapses in a "connected state" (connected synapses)
+     *              	that are connected to input bits which are turned on.
+     * @return
+     */
+    public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
+    	int numCols = c.getNumColumns();
+    	int[] activeColumns = new int[numCols];
+    	Arrays.fill(activeColumns, 0);
+    	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
+    	for(int i = 0;i < numCols;i++) {
+    		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getInhibitionRadius(), false);
+    		double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
+    		int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
+    		int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
+    		if(numBigger < numActive) {
+    			activeColumns[i] = 1;
+    			overlaps[i] += addToWinners;
+    		}
+    	}
+    	return ArrayUtils.where(activeColumns, new Condition.Adapter<Integer>() {
+    		@Override public boolean eval(int n) {
+				return n > 0;
+			}
+    	});
     }
 }
