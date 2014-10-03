@@ -31,7 +31,6 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.data.MersenneTwister;
-import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
@@ -114,7 +113,7 @@ public class Connections {
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
      */
-    private SparseDoubleMatrix tieBreaker;
+    private double[] tieBreaker;
     /**
      * 'connectedSynapses' is a similar matrix to 'permanences'
      * (rows represent cortical columns, columns represent input bits) whose
@@ -525,7 +524,7 @@ public class Connections {
      * 
      * @param tieBreaker	random values to help break ties
      */
-    public void setTieBreaker(SparseDoubleMatrix tieBreaker) {
+    public void setTieBreaker(double[] tieBreaker) {
     	this.tieBreaker = tieBreaker;
     }
     
@@ -535,7 +534,7 @@ public class Connections {
      * 
      * @return
      */
-    public SparseDoubleMatrix getTieBreaker() {
+    public double[] getTieBreaker() {
     	return tieBreaker;
     }
     

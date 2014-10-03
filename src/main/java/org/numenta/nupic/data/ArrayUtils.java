@@ -3,6 +3,7 @@ package org.numenta.nupic.data;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.lang.reflect.Array;
@@ -470,6 +471,20 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a double[] filled with random doubles of the specified size.
+     * @param sampleSize
+     * @param random
+     * @return
+     */
+    public static double[] sample(int sampleSize, Random random) {
+    	double[] sample = new double[sampleSize];
+    	for(int i = 0;i < sampleSize;i++) {
+    		sample[i] = random.nextDouble();
+    	}
+    	return sample;
+    }
+    
+    /**
      * Ensures that each entry in the specified array has a min value
      * equal to or greater than the specified min and a maximum value less
      * than or equal to the specified max.
@@ -538,6 +553,32 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns an array containing the n greatest values.
+     * @param array
+     * @param n
+     * @return
+     */
+    public static int[] nGreatest(double[] array, int n) { 
+    	TDoubleIntHashMap places = new TDoubleIntHashMap();
+    	int i;
+    	double key;
+	    for(int j = 1; j < array.length; j++) { 
+	        key = array[j];
+	        for(i = j - 1;i >= 0 && array[i] < key; i--) {
+	            array[i + 1] = array[i];
+	        }
+	        array[i + 1] = key;
+	        places.put(key, j);
+	    }
+	    System.out.println(Arrays.toString(array));
+	    int[] retVal = new int[n];
+	    for(i = 0;i < n;i++) {
+	    	retVal[i] = places.get(array[i]);
+	    }
+	    return retVal;
+    }
+    
+    /**
      * Raises the values in the specified array by the amount specified
      * @param amount        the amount to raise the values
      * @param values        the values to raise
@@ -565,7 +606,7 @@ public class ArrayUtils {
      * @param indexes
      * @param values
      */
-    public static void raiseIndicatedValuesBy(double amount, int[] indexes, double[] values) {
+    public static void raiseValuesBy(int amount, int[] indexes, int[] values) {
     	for(int i = 0;i < indexes.length;i++) {
             values[indexes[i]] += amount;
         }
