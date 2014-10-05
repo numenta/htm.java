@@ -709,7 +709,7 @@ public class Parameters {
         this.dutyCyclePeriod = dutyCyclePeriod;
         getMap().put(KEY.DUTY_CYCLE_PERIOD, dutyCyclePeriod);
     }
-
+    
     /**
      * The maximum overlap boost factor. Each column's
      * overlap gets multiplied by a boost factor

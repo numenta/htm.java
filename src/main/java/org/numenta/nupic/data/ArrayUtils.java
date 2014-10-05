@@ -7,6 +7,9 @@ import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -160,6 +163,37 @@ public class ArrayUtils {
         for(int i = 0;i < dividend.length;i++) {
             quotient[i] = (dividend[i] + dividendAdjustment) / 
             	((denom = divisor[i] + divisorAdjustment) == 0 ? 1 : denom); //Protect against division by 0
+            System.out.println("div " + i + " " + quotient[i]);
+        }
+        return quotient;
+    }
+    
+    /**
+     * Returns an array whose members are the quotient of the dividend array
+     * values and the divisor array values.
+     * 
+     * @param dividend
+     * @param divisor
+     * @param dividend adjustment
+     * @param divisor adjustment
+     * 
+     * @return
+     * @throws  IllegalArgumentException    if the two argument arrays are not the same length
+     */
+    public static double[] roundDivide(double[] dividend, double[] divisor, int scale) {
+        
+        if(dividend.length != divisor.length) {
+            throw new IllegalArgumentException(
+                "The dividend array and the divisor array must be the same length");
+        }
+        double[] quotient = new double[dividend.length];
+        for(int i = 0;i < dividend.length;i++) {
+//        	BigDecimal num = new BigDecimal(dividend[i]);
+//        	BigDecimal den = new BigDecimal(divisor[i] == 0 ? 1 : divisor[i]); //Protect against division by 0
+//            quotient[i] = num.divide(den, )
+        	quotient[i] = (dividend[i]) / (divisor[i] == 0 ? 1 : divisor[i]); //Protect against division by 0
+        	quotient[i] = new BigDecimal(quotient[i]).round(new MathContext(scale, RoundingMode.HALF_UP)).doubleValue();
+        	System.out.println("div " + i + " " + quotient[i]);
         }
         return quotient;
     }
@@ -186,6 +220,7 @@ public class ArrayUtils {
         double[] product = new double[multiplicand.length];
         for(int i = 0;i < multiplicand.length;i++) {
             product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
+            System.out.println("mult " + i + " " + product[i]);
         }
         return product;
     }
@@ -275,6 +310,21 @@ public class ArrayUtils {
     public static double[] d_add(double[] arr, double[] amount) {
     	 for(int i = 0;i < arr.length;i++) {
              arr[i] += amount[i];
+         }
+         return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_add(double[] arr, double amount) {
+    	 for(int i = 0;i < arr.length;i++) {
+             arr[i] += amount;
          }
          return arr;
     }
@@ -411,7 +461,7 @@ public class ArrayUtils {
      * @param resultList            the container of the final list of coordinates
      * @return                      meaningless for the caller but is of interim significance during the recursion
      */
-     private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
+    private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
         TIntList coords, List<int[]> dimensionIndexes, List<TIntList> resultList) {
         
         //Return null if we've added all indexes for each dimension
@@ -445,16 +495,30 @@ public class ArrayUtils {
         //Return null if we've added all indexes for each dimension
         return null;
     }
+     
+    /**
+     * Sets the values in the specified values array at the indexes specified,
+     * to the value "setTo".
+     * 
+     * @param values		the values to alter if at the specified indexes.
+     * @param indexes		the indexes of the values array to alter
+     * @param setTo			the value to set at the specified indexes.
+     */
+    public static void setIndexesTo(double[] values, int[] indexes, double setTo) {
+    	for(int i = 0;i < indexes.length;i++) {
+    		values[indexes[i]] = setTo;
+    	}
+    }
 
-     /**
-      * Returns a random, sorted, and  unique array of the specified sample size of 
-      * selections from the specified list of choices.
-      * 
-      * @param sampleSize   the number of selections in the returned sample
-      * @param choices      the list of choices to select from
-      * @param random       a random number generator
-      * @return a sample of numbers of the specified size
-      */
+    /**
+     * Returns a random, sorted, and  unique array of the specified sample size of 
+     * selections from the specified list of choices.
+     * 
+     * @param sampleSize   the number of selections in the returned sample
+     * @param choices      the list of choices to select from
+     * @param random       a random number generator
+     * @return a sample of numbers of the specified size
+     */
     public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
         TIntHashSet temp = new TIntHashSet();
         int upperBound = choices.size();

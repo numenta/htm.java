@@ -482,6 +482,63 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testUpdateBoostFactors() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 6/*Don't care*/ });
+    	parameters.setColumnDimensions(new int[] { 6 });
+    	parameters.setMaxBoost(10.0);
+    	initSP();
+    	
+    	double[] minActiveDutyCycles = new double[6];
+    	Arrays.fill(minActiveDutyCycles, 0.000001D);
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	
+    	double[] activeDutyCycles = new double[] { 0.1, 0.3, 0.02, 0.04, 0.7, 0.12 };
+    	mem.setActiveDutyCycles(activeDutyCycles);
+    	
+    	double[] trueBoostFactors = new double[] { 1, 1, 1, 1, 1, 1 };
+    	sp.updateBoostFactors(mem);
+    	double[] boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+    	minActiveDutyCycles = new double[] { 0.1, 0.3, 0.02, 0.04, 0.7, 0.12 };
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	Arrays.fill(mem.getBoostFactors(), 0);
+    	sp.updateBoostFactors(mem);
+    	boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+    	minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	activeDutyCycles = new double[] { 0.01, 0.02, 0.002, 0.003, 0.07, 0.012 };
+    	mem.setActiveDutyCycles(activeDutyCycles);
+    	trueBoostFactors = new double[] { 9.1, 9.1, 9.1, 9.1, 9.1, 9.1 };
+    	sp.updateBoostFactors(mem);
+    	boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+		minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
+		mem.setMinActiveDutyCycles(minActiveDutyCycles);
+		Arrays.fill(activeDutyCycles, 0);
+		mem.setActiveDutyCycles(activeDutyCycles);
+		Arrays.fill(trueBoostFactors, 10.0);
+		sp.updateBoostFactors(mem);
+		boostFactors = mem.getBoostFactors();
+		for(int i = 0;i < boostFactors.length;i++) {
+			assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+		}
+    }
+    
+    @Test
     public void testAvgConnectedSpanForColumnND() {
     	sp = new SpatialPooler();
     	mem = new Connections();
