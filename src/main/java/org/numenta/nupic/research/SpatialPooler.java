@@ -33,7 +33,6 @@ import java.util.List;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseDoubleMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.data.TypeFactory;
@@ -112,13 +111,23 @@ public class SpatialPooler {
         
         c.setConnectedCounts(new int[numColumns]);
         
-        SparseDoubleMatrix tieBreaker = new SparseDoubleMatrix(new int[] { numColumns, numInputs } );
+        double[] tieBreaker = new double[numColumns];
         for(int i = 0;i < numColumns;i++) {
-            for(int j = 0;j < numInputs;j++) {
-                tieBreaker.set(new int[] { i, j }, 0.01 * c.getRandom().nextDouble());
-            }
+            tieBreaker[i] = 0.01 * c.getRandom().nextDouble();
         }
         c.setTieBreaker(tieBreaker);
+        
+        //Initialize state meta-management statistics
+        c.setOverlapDutyCycles(new double[numColumns]);
+        Arrays.fill(c.getOverlapDutyCycles(), 0);
+        c.setActiveDutyCycles(new double[numColumns]);
+        Arrays.fill(c.getActiveDutyCycles(), 0);
+        c.setMinOverlapDutyCycles(new double[numColumns]);
+        Arrays.fill(c.getOverlapDutyCycles(), 0);
+        c.setMinActiveDutyCycles(new double[numColumns]);
+        Arrays.fill(c.getMinActiveDutyCycles(), 0);
+        c.setBoostFactors(new double[numColumns]);
+        Arrays.fill(c.getBoostFactors(), 0);
     }
     
     /**
@@ -142,12 +151,6 @@ public class SpatialPooler {
         }
         
         updateInhibitionRadius(c);
-        
-        c.setOverlapDutyCycles(new double[numColumns]);
-        c.setActiveDutyCycles(new double[numColumns]);
-        c.setMinOverlapDutyCycles(new double[numColumns]);
-        c.setMinActiveDutyCycles(new double[numColumns]);
-        c.setBoostFactors(new double[numColumns]);
     }
     
     /**
@@ -617,6 +620,67 @@ public class SpatialPooler {
      * actually perform inhibition and then delegates the task of picking the
      * active columns to helper functions.
      * 
+<<<<<<< HEAD
+=======
+     * @param c				the {@link Connections} matrix
+     * @param overlaps		an array containing the overlap score for each  column.
+     *              		The overlap score for a column is defined as the number
+     *              		of synapses in a "connected state" (connected synapses)
+     *              		that are connected to input bits which are turned on.
+     * @return
+     */
+    public int[] inhibitColumns(Connections c, double[] overlaps) {
+    	overlaps = Arrays.copyOf(overlaps, overlaps.length);
+    	
+    	double density;
+    	double inhibitionArea = 0;
+    	if((density = c.getLocalAreaDensity()) <= 0) {
+    		inhibitionArea = Math.pow(2 * c.getInhibitionRadius() + 1, c.getColumnDimensions().length);
+    		inhibitionArea = Math.min(c.getNumColumns(), inhibitionArea);
+    		density = ((double)c.getNumActiveColumnsPerInhArea()) / inhibitionArea;
+    		density = Math.min(density, 0.5);
+    	}
+    	
+    	//Add our fixed little bit of random noise to the scores to help break ties.
+    	ArrayUtils.d_add(overlaps, c.getTieBreaker());
+    	
+    	if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
+    		return inhibitColumnsGlobal(c, overlaps, density);
+    	}
+    	return inhibitColumnsLocal(c, overlaps, density);
+    }
+    
+    /**
+     * Perform global inhibition. Performing global inhibition entails picking the
+     * top 'numActive' columns with the highest overlap score in the entire
+     * region. At most half of the columns in a local neighborhood are allowed to
+     * be active.
+     * 
+     * @param c				the {@link Connections} matrix
+     * @param overlaps		an array containing the overlap score for each  column.
+     *              		The overlap score for a column is defined as the number
+     *              		of synapses in a "connected state" (connected synapses)
+     *              		that are connected to input bits which are turned on.
+     * @param density		The fraction of columns to survive inhibition.
+     * 
+     * @return
+     */
+    public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
+    	int numCols = c.getNumColumns();
+    	int numActive = (int)(density * numCols);
+    	int[] activeColumns = new int[numCols];
+    	Arrays.fill(activeColumns, 0);
+    	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
+    	Arrays.sort(winners);
+    	return winners;
+    }
+    
+    /**
+     * Performs inhibition. This method calculates the necessary values needed to
+     * actually perform inhibition and then delegates the task of picking the
+     * active columns to helper functions.
+     * 
+>>>>>>> SpatialPooler_Ongoing_Dev
      * @param c			the {@link Connections} matrix
      * @param overlaps	an array containing the overlap score for each  column.
      *              	The overlap score for a column is defined as the number
@@ -644,5 +708,52 @@ public class SpatialPooler {
 				return n > 0;
 			}
     	});
+    }
+    
+    /**
+     * Update the boost factors for all columns. The boost factors are used to
+     * increase the overlap of inactive columns to improve their chances of
+     * becoming active. and hence encourage participation of more columns in the
+     * learning process. This is a line defined as: y = mx + b boost =
+     * (1-maxBoost)/minDuty * dutyCycle + maxFiringBoost. Intuitively this means
+     * that columns that have been active enough have a boost factor of 1, meaning
+     * their overlap is not boosted. Columns whose active duty cycle drops too much
+     * below that of their neighbors are boosted depending on how infrequently they
+     * have been active. The more infrequent, the more they are boosted. The exact
+     * boost factor is linearly interpolated between the points (dutyCycle:0,
+     * boost:maxFiringBoost) and (dutyCycle:minDuty, boost:1.0).
+	 * 
+     *         boostFactor
+     *             ^
+     * maxBoost _  |
+     *             |\
+     *             | \
+     *       1  _  |  \ _ _ _ _ _ _ _
+     *             |
+     *             +--------------------> activeDutyCycle
+     *                |
+     *         minActiveDutyCycle
+     */
+    public void updateBoostFactors(Connections c) {
+    	//Indexes of values > 0
+    	int[] mask = ArrayUtils.where(c.getMinActiveDutyCycles(), new Condition.Adapter<Object>() {
+    		@Override public boolean eval(double d) { return d > 0; }
+    	});
+ 
+    	final double[] activeDutyCycles = c.getActiveDutyCycles();
+    	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
+    	
+    	double[] numerator = new double[mask.length];
+    	Arrays.fill(numerator, 1 - c.getMaxBoost());
+    	double[] boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
+    	boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
+    	boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
+    	
+    	ArrayUtils.setIndexesTo(boostInterim, ArrayUtils.where(activeDutyCycles, new Condition.Adapter<Object>() {
+    		int i = 0;
+    		@Override public boolean eval(double d) { return d > minActiveDutyCycles[i++]; }
+    	}), 1.0d);
+    	
+    	c.setBoostFactors(boostInterim);
     }
 }

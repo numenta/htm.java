@@ -3,9 +3,13 @@ package org.numenta.nupic.data;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -164,6 +168,32 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns an array whose members are the quotient of the dividend array
+     * values and the divisor array values.
+     * 
+     * @param dividend
+     * @param divisor
+     * @param dividend adjustment
+     * @param divisor adjustment
+     * 
+     * @return
+     * @throws  IllegalArgumentException    if the two argument arrays are not the same length
+     */
+    public static double[] roundDivide(double[] dividend, double[] divisor, int scale) {
+        
+        if(dividend.length != divisor.length) {
+            throw new IllegalArgumentException(
+                "The dividend array and the divisor array must be the same length");
+        }
+        double[] quotient = new double[dividend.length];
+        for(int i = 0;i < dividend.length;i++) {
+        	quotient[i] = (dividend[i]) / (divisor[i] == 0 ? 1 : divisor[i]); //Protect against division by 0
+        	quotient[i] = new BigDecimal(quotient[i]).round(new MathContext(scale, RoundingMode.HALF_UP)).doubleValue();
+        }
+        return quotient;
+    }
+    
+    /**
      * Returns an array whose members are the product of the multiplicand array
      * values and the factor array values.
      * 
@@ -274,6 +304,21 @@ public class ArrayUtils {
     public static double[] d_add(double[] arr, double[] amount) {
     	 for(int i = 0;i < arr.length;i++) {
              arr[i] += amount[i];
+         }
+         return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_add(double[] arr, double amount) {
+    	 for(int i = 0;i < arr.length;i++) {
+             arr[i] += amount;
          }
          return arr;
     }
@@ -410,7 +455,7 @@ public class ArrayUtils {
      * @param resultList            the container of the final list of coordinates
      * @return                      meaningless for the caller but is of interim significance during the recursion
      */
-     private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
+    private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
         TIntList coords, List<int[]> dimensionIndexes, List<TIntList> resultList) {
         
         //Return null if we've added all indexes for each dimension
@@ -444,16 +489,30 @@ public class ArrayUtils {
         //Return null if we've added all indexes for each dimension
         return null;
     }
+     
+    /**
+     * Sets the values in the specified values array at the indexes specified,
+     * to the value "setTo".
+     * 
+     * @param values		the values to alter if at the specified indexes.
+     * @param indexes		the indexes of the values array to alter
+     * @param setTo			the value to set at the specified indexes.
+     */
+    public static void setIndexesTo(double[] values, int[] indexes, double setTo) {
+    	for(int i = 0;i < indexes.length;i++) {
+    		values[indexes[i]] = setTo;
+    	}
+    }
 
-     /**
-      * Returns a random, sorted, and  unique array of the specified sample size of 
-      * selections from the specified list of choices.
-      * 
-      * @param sampleSize   the number of selections in the returned sample
-      * @param choices      the list of choices to select from
-      * @param random       a random number generator
-      * @return a sample of numbers of the specified size
-      */
+    /**
+     * Returns a random, sorted, and  unique array of the specified sample size of 
+     * selections from the specified list of choices.
+     * 
+     * @param sampleSize   the number of selections in the returned sample
+     * @param choices      the list of choices to select from
+     * @param random       a random number generator
+     * @return a sample of numbers of the specified size
+     */
     public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
         TIntHashSet temp = new TIntHashSet();
         int upperBound = choices.size();
@@ -467,6 +526,20 @@ public class ArrayUtils {
         TIntArrayList al = new TIntArrayList(temp);
         al.sort();
         return al.toArray();
+    }
+    
+    /**
+     * Returns a double[] filled with random doubles of the specified size.
+     * @param sampleSize
+     * @param random
+     * @return
+     */
+    public static double[] sample(int sampleSize, Random random) {
+    	double[] sample = new double[sampleSize];
+    	for(int i = 0;i < sampleSize;i++) {
+    		sample[i] = random.nextDouble();
+    	}
+    	return sample;
     }
     
     /**
@@ -538,6 +611,32 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns an array containing the n greatest values.
+     * @param array
+     * @param n
+     * @return
+     */
+    public static int[] nGreatest(double[] array, int n) { 
+    	TDoubleIntHashMap places = new TDoubleIntHashMap();
+    	int i;
+    	double key;
+	    for(int j = 1; j < array.length; j++) { 
+	        key = array[j];
+	        for(i = j - 1;i >= 0 && array[i] < key; i--) {
+	            array[i + 1] = array[i];
+	        }
+	        array[i + 1] = key;
+	        places.put(key, j);
+	    }
+	    
+	    int[] retVal = new int[n];
+	    for(i = 0;i < n;i++) {
+	    	retVal[i] = places.get(array[i]);
+	    }
+	    return retVal;
+    }
+    
+    /**
      * Raises the values in the specified array by the amount specified
      * @param amount        the amount to raise the values
      * @param values        the values to raise
@@ -565,7 +664,7 @@ public class ArrayUtils {
      * @param indexes
      * @param values
      */
-    public static void raiseIndicatedValuesBy(double amount, int[] indexes, double[] values) {
+    public static void raiseValuesBy(int amount, int[] indexes, int[] values) {
     	for(int i = 0;i < indexes.length;i++) {
             values[indexes[i]] += amount;
         }

@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
@@ -112,9 +111,6 @@ public class SpatialPoolerTest {
         setupParameters();
         initSP();
         
-        SparseObjectMatrix<Pool> s = mem.getPotentialPools();
-        
-        System.out.println(s);
     }
     
     @Test
@@ -309,14 +305,147 @@ public class SpatialPoolerTest {
         assertTrue(trueIndices.equals(maskSet));
     }
     
+    //////////////////////////////////////////////////////////////
+    /**
+     * Local test apparatus for {@link #testInhibitColumns()}
+     */
+    boolean globalCalled = false;
+    boolean localCalled = false;
+    double _density = 0;
+	public void reset() {
+		this.globalCalled = false;
+		this.localCalled = false;
+		this._density = 0;
+	}
+	public void setGlobalCalled(boolean b) {
+		this.globalCalled = b;
+	}
+	public void setLocalCalled(boolean b) {
+		this.localCalled = b;
+	}
+	//////////////////////////////////////////////////////////////
+	
+    @Test
+    public void testInhibitColumns() {
+    	setupParameters();
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setInhibitionRadius(10);
+    	initSP();
+    	
+    	//Mocks to test which method gets called
+    	SpatialPooler inhibitColumnsGlobal = new SpatialPooler() {
+    		@Override public int[] inhibitColumnsGlobal(Connections c, double[] overlap, double density) {
+    			setGlobalCalled(true);
+    			_density = density;
+    			return new int[] { 1 };
+    		}
+    	};
+    	SpatialPooler inhibitColumnsLocal = new SpatialPooler() {
+    		@Override public int[] inhibitColumnsLocal(Connections c, double[] overlap, double density) {
+    			setLocalCalled(true);
+    			_density = density;
+    			return new int[] { 2 };
+    		}
+    	};
+    	
+    	double[] overlaps = ArrayUtils.sample(mem.getNumColumns(), mem.getRandom());
+    	mem.setNumActiveColumnsPerInhArea(5);
+    	mem.setLocalAreaDensity(0.1);
+    	mem.setGlobalInhibition(true);
+    	mem.setInhibitionRadius(5);
+    	double trueDensity = mem.getLocalAreaDensity();
+    	inhibitColumnsGlobal.inhibitColumns(mem, overlaps);
+    	assertTrue(globalCalled);
+    	assertTrue(!localCalled);
+    	assertEquals(trueDensity, _density, .01d);
+    	
+    	//////
+    	reset();
+    	parameters.setInputDimensions(new int[] { 50, 10 });
+    	parameters.setColumnDimensions(new int[] { 50, 10 });
+    	parameters.setGlobalInhibition(false);
+    	parameters.setLocalAreaDensity(0.1);
+    	initSP();
+    	//Internally calculated during init, to overwrite we put after init
+    	parameters.setInhibitionRadius(7);
+    	
+    	double[] tieBreaker = new double[500];
+    	Arrays.fill(tieBreaker, 0);
+    	mem.setTieBreaker(tieBreaker);
+    	overlaps = ArrayUtils.sample(mem.getNumColumns(), mem.getRandom());
+    	inhibitColumnsLocal.inhibitColumns(mem, overlaps);
+    	trueDensity = mem.getLocalAreaDensity();
+    	assertTrue(!globalCalled);
+    	assertTrue(localCalled);
+    	assertEquals(trueDensity, _density, .01d);
+    	
+    	//////
+    	reset();
+    	parameters.setInputDimensions(new int[] { 100, 10 });
+    	parameters.setColumnDimensions(new int[] { 100, 10 });
+    	parameters.setGlobalInhibition(false);
+    	parameters.setLocalAreaDensity(-1);
+    	parameters.setNumActiveColumnsPerInhArea(3);
+    	initSP();
+    	
+    	//Internally calculated during init, to overwrite we put after init
+    	mem.setInhibitionRadius(4);
+    	tieBreaker = new double[1000];
+    	Arrays.fill(tieBreaker, 0);
+    	mem.setTieBreaker(tieBreaker);
+    	overlaps = ArrayUtils.sample(mem.getNumColumns(), mem.getRandom());
+    	inhibitColumnsLocal.inhibitColumns(mem, overlaps);
+    	trueDensity = 3.0 / 81.0;
+    	assertTrue(!globalCalled);
+    	assertTrue(localCalled);
+    	assertEquals(trueDensity, _density, .01d);
+    	
+    	//////
+    	reset();
+    	parameters.setInputDimensions(new int[] { 100, 10 });
+    	parameters.setColumnDimensions(new int[] { 100, 10 });
+    	parameters.setGlobalInhibition(false);
+    	parameters.setLocalAreaDensity(-1);
+    	parameters.setNumActiveColumnsPerInhArea(7);
+    	initSP();
+    	
+    	//Internally calculated during init, to overwrite we put after init
+    	mem.setInhibitionRadius(1);
+    	tieBreaker = new double[1000];
+    	Arrays.fill(tieBreaker, 0);
+    	mem.setTieBreaker(tieBreaker);
+    	overlaps = ArrayUtils.sample(mem.getNumColumns(), mem.getRandom());
+    	inhibitColumnsLocal.inhibitColumns(mem, overlaps);
+    	trueDensity = 0.5;
+    	assertTrue(!globalCalled);
+    	assertTrue(localCalled);
+    	assertEquals(trueDensity, _density, .01d);
+    	
+    }
+    
+    @Test
+    public void testInhibitColumnsGlobal() {
+    	setupParameters();
+    	parameters.setColumnDimensions(new int[] { 10 });
+    	initSP();
+    	//Internally calculated during init, to overwrite we put after init
+    	parameters.setInhibitionRadius(2);
+    	double density = 0.3;
+    	double[] overlaps = new double[] { 1, 2, 1, 4, 8, 3, 12, 5, 4, 1 };
+    	int[] active = sp.inhibitColumnsGlobal(mem, overlaps, density);
+    	int[] trueActive = new int[] { 4, 6, 7 };
+    	assertTrue(Arrays.equals(trueActive, active));
+    }
+    
     @Test
     public void testInhibitColumnsLocal() {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 10 });
     	parameters.setColumnDimensions(new int[] { 10 });
-    	parameters.setInhibitionRadius(2);
     	initSP();
     	
+    	//Internally calculated during init, to overwrite we put after init
+    	mem.setInhibitionRadius(2);
     	double density = 0.5;
     	double[] overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
     	int[] trueActive = new int[] {1, 2, 5, 6, 9};
@@ -326,8 +455,8 @@ public class SpatialPoolerTest {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 10 });
     	parameters.setColumnDimensions(new int[] { 10 });
-    	parameters.setInhibitionRadius(3);
     	initSP();
+    	//Internally calculated during init, to overwrite we put after init
     	mem.setInhibitionRadius(3);
     	overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
     	trueActive = new int[] { 1, 2, 5, 6 };
@@ -340,13 +469,70 @@ public class SpatialPoolerTest {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 10 });
     	parameters.setColumnDimensions(new int[] { 10 });
-    	parameters.setInhibitionRadius(3);
     	initSP();
+    	//Internally calculated during init, to overwrite we put after init
     	mem.setInhibitionRadius(3);
     	overlaps = new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     	trueActive = new int[] { 0, 1, 4, 5, 8 };
     	active = sp.inhibitColumnsLocal(mem, overlaps, density);
     	assertTrue(Arrays.equals(trueActive, active));
+    }
+    
+    @Test
+    public void testUpdateBoostFactors() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 6/*Don't care*/ });
+    	parameters.setColumnDimensions(new int[] { 6 });
+    	parameters.setMaxBoost(10.0);
+    	initSP();
+    	
+    	double[] minActiveDutyCycles = new double[6];
+    	Arrays.fill(minActiveDutyCycles, 0.000001D);
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	
+    	double[] activeDutyCycles = new double[] { 0.1, 0.3, 0.02, 0.04, 0.7, 0.12 };
+    	mem.setActiveDutyCycles(activeDutyCycles);
+    	
+    	double[] trueBoostFactors = new double[] { 1, 1, 1, 1, 1, 1 };
+    	sp.updateBoostFactors(mem);
+    	double[] boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+    	minActiveDutyCycles = new double[] { 0.1, 0.3, 0.02, 0.04, 0.7, 0.12 };
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	Arrays.fill(mem.getBoostFactors(), 0);
+    	sp.updateBoostFactors(mem);
+    	boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+    	minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
+    	mem.setMinActiveDutyCycles(minActiveDutyCycles);
+    	activeDutyCycles = new double[] { 0.01, 0.02, 0.002, 0.003, 0.07, 0.012 };
+    	mem.setActiveDutyCycles(activeDutyCycles);
+    	trueBoostFactors = new double[] { 9.1, 9.1, 9.1, 9.1, 9.1, 9.1 };
+    	sp.updateBoostFactors(mem);
+    	boostFactors = mem.getBoostFactors();
+    	for(int i = 0;i < boostFactors.length;i++) {
+    		assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+    	}
+    	
+    	////////////////
+		minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
+		mem.setMinActiveDutyCycles(minActiveDutyCycles);
+		Arrays.fill(activeDutyCycles, 0);
+		mem.setActiveDutyCycles(activeDutyCycles);
+		Arrays.fill(trueBoostFactors, 10.0);
+		sp.updateBoostFactors(mem);
+		boostFactors = mem.getBoostFactors();
+		for(int i = 0;i < boostFactors.length;i++) {
+			assertEquals(trueBoostFactors[i], boostFactors[i], 0.1D);
+		}
     }
     
     @Test
@@ -835,7 +1021,7 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perm = mem.getPotentialPools().getObject(i).getPermanences();
     		sp.raisePermanenceToThreshold(mem, perm, indices);
-    		System.out.println(Arrays.toString(perm));
+    		
     		for(int j = 0;j < perm.length;j++) {
     			assertEquals(truePermanences[i][j], perm[j], 0.001);
     		}

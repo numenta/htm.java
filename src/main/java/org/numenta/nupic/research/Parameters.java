@@ -709,7 +709,7 @@ public class Parameters {
         this.dutyCyclePeriod = dutyCyclePeriod;
         getMap().put(KEY.DUTY_CYCLE_PERIOD, dutyCyclePeriod);
     }
-
+    
     /**
      * The maximum overlap boost factor. Each column's
      * overlap gets multiplied by a boost factor
@@ -749,6 +749,7 @@ public class Parameters {
         .append("\t").append("potentialRadius :  ").append(potentialRadius).append("\n")
         .append("\t").append("potentialPct :  ").append(potentialPct).append("\n")
         .append("\t").append("globalInhibition :  ").append(globalInhibition).append("\n")
+        .append("\t").append("inhibitionRadius :  ").append(inhibitionRadius).append("\n")
         .append("\t").append("localAreaDensity :  ").append(localAreaDensity).append("\n")
         .append("\t").append("numActiveColumnsPerInhArea :  ").append(numActiveColumnsPerInhArea).append("\n")
         .append("\t").append("stimulusThreshold :  ").append(stimulusThreshold).append("\n")
