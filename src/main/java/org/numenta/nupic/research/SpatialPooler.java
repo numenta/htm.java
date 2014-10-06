@@ -620,8 +620,6 @@ public class SpatialPooler {
      * actually perform inhibition and then delegates the task of picking the
      * active columns to helper functions.
      * 
-<<<<<<< HEAD
-=======
      * @param c				the {@link Connections} matrix
      * @param overlaps		an array containing the overlap score for each  column.
      *              		The overlap score for a column is defined as the number
@@ -680,7 +678,6 @@ public class SpatialPooler {
      * actually perform inhibition and then delegates the task of picking the
      * active columns to helper functions.
      * 
->>>>>>> SpatialPooler_Ongoing_Dev
      * @param c			the {@link Connections} matrix
      * @param overlaps	an array containing the overlap score for each  column.
      *              	The overlap score for a column is defined as the number
