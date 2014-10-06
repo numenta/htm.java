@@ -604,6 +604,23 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testBumpUpWeakColumns() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 8 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+        initSP();
+    	
+    	mem.setSynPermBelowStimulusInc(0.01);
+    	mem.setSynPermTrimThreshold(0.05);
+    	mem.setOverlapDutyCycles(new double[] { 0, 0.009, 0.1, 0.001, 0.002 });
+    	mem.setMinOverlapDutyCycles(new double[] { .01, .01, .01, .01, .01 });
+    	
+    	SparseObjectMatrix<Pool> potentialPool = new SparseObjectMatrix<Pool>(new int[] { 5 });
+    	potentialPool.set(0, new Pool(8));
+    	int[] conn = mem.getPotentialPools().getObject(0).getDenseConnections(mem);
+    }
+    
+    @Test
     public void testUpdateInhibitionRadius() {
     	setupParameters();
     	initSP();
