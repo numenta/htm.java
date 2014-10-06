@@ -706,6 +706,15 @@ public class Connections {
     }
     
     /**
+     * Sets tthe stimulus increment for synapse permanences below 
+     * the measured threshold.
+     * @param stim
+     */
+    public void setSynPermBelowStimulusInc(double stim) {
+    	this.synPermBelowStimulusInc = stim;
+    }
+    
+    /**
      * Returns the stimulus increment for synapse permanences below 
      * the measured threshold.
      * 

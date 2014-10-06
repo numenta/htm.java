@@ -3,5 +3,7 @@
 
 .gradle
 .settings
+.classpath
 /target
 /.classpath
+.classpath
