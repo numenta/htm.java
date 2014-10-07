@@ -117,7 +117,7 @@ public class Pool {
 	
 	/**
 	 * Updates the entire pool with the indexes currently qualifying
-	 * as connected.
+	 * as connected. (permanence >= synPermConnected)
 	 * 
 	 * @param connections
 	 */
