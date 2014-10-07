@@ -4,3 +4,8 @@ Allow retrieval of connected synapses - so array of connecteds will be needed bu
 Only (internally) update connected synapses array when/where permanences get adjusted above synPermConnected
 
 Most useful hierarchical view is obtained by opening the call hierarchy of Pool.setPermanence(Synapse, double)
+
+Add the inputIndex to Synapses and synapse creation methods.
+
+Redo Pool.setPermanence(Synapse, perm) method so that the index reflects
+

@@ -48,7 +48,8 @@ public class Synapse {
     private Cell sourceCell;
     private Segment segment;
     private Pool pool;
-    private int index;
+    private int synapseIndex;
+    private int inputIndex;
     
     
     /**
@@ -69,7 +70,7 @@ public class Synapse {
         this.sourceCell = sourceCell;
         this.segment = segment;
         this.pool = pool;
-        this.index = index;
+        this.synapseIndex = index;
         
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
@@ -82,7 +83,7 @@ public class Synapse {
      * @return
      */
     public int getIndex() {
-    	return index;
+    	return synapseIndex;
     }
     
     /**
@@ -131,6 +132,6 @@ public class Synapse {
      * {@inheritDoc}
      */
     public String toString() {
-        return "" + index;
+        return "" + synapseIndex;
     }
 }
