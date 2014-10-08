@@ -49,6 +49,7 @@ public class Synapse {
     private Segment segment;
     private Pool pool;
     private int index;
+    private int inputIndex;
     
     
     /**
@@ -64,12 +65,14 @@ public class Synapse {
      * @param segment       the owning dendritic segment
      * @param pool		    this {@link Pool} of which this synapse is a member
      * @param index         this {@code Synapse}'s index
+     * @param inputIndex	the index of this {@link Synapse}'s input; be it a Cell or InputVector bit.
      */
-    public Synapse(Connections c, Cell sourceCell, Segment segment, Pool pool, int index) {
+    public Synapse(Connections c, Cell sourceCell, Segment segment, Pool pool, int index, int inputIndex) {
         this.sourceCell = sourceCell;
         this.segment = segment;
         this.pool = pool;
-        this.index = index;
+        this.index++;
+        this.inputIndex = inputIndex;
         
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
@@ -83,6 +86,15 @@ public class Synapse {
      */
     public int getIndex() {
     	return index;
+    }
+    
+    /**
+     * Returns the index of this {@code Synapse}'s input item
+     * whether it is a "sourceCell" or inputVector bit.
+     * @return
+     */
+    public int getInputIndex() {
+    	return inputIndex;
     }
     
     /**
@@ -107,16 +119,6 @@ public class Synapse {
      */
     public Segment getSegment() {
         return segment;
-    }
-    
-    /**
-     * Returns the index of the input bit this {@code Synapse} 
-     * is connected to.
-     * 
-     * @return
-     */
-    public int getConnection() {
-    	return pool.getConnection(this);
     }
     
     /**

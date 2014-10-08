@@ -1,10 +1,14 @@
 package org.numenta.nupic.model;
 
-import java.util.Arrays;
-
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+
+import java.util.Arrays;
 
 import org.numenta.nupic.research.Connections;
 
@@ -27,20 +31,11 @@ public class Pool {
 	TIntArrayList synapseConnections = new TIntArrayList();
 	TObjectIntMap<Synapse> synapseIndexes = new TObjectIntHashMap<Synapse>();
 	
+	TIntObjectMap<TObjectDoubleMap<Synapse>> connectionPerms = new TIntObjectHashMap<TObjectDoubleMap<Synapse>>();
+	
 	public Pool(int size) {
 		this.size = size;
 		synapsePermanences = new double[size];
-	}
-	
-	/**
-	 * Returns the permanence value for the {@link Synapse} specified
-	 * by the synapseIndex.
-	 * 
-	 * @param synapseIndex	the index of the Synapse
-	 * @return	the permanence
-	 */
-	public double getPermanence(int synapseIndex) {
-		return synapsePermanences[synapseIndex];
 	}
 	
 	/**
@@ -72,27 +67,11 @@ public class Pool {
 			synapseIndexes.put(s, synapseIndexes.size());
 		}
 		synapsePermanences[synapseIndexes.get(s)] = permanence;
-	}
-	
-	/**
-	 * Returns the input bit connection index for the {@link Synapse} specified
-	 * by the synapseIndex.
-	 * 
-	 * @param synapseIndex	the index of the Synapse
-	 * @return	the index of the input bit
-	 */
-	public int getConnection(int synapseIndex) {
-		return synapseConnections.get(synapseIndex);
-	}
-	
-	/**
-	 * Returns the input bit connection index for the {@link Synapse} specified
-	 * 
-	 * @param s	the Synapse
-	 * @return	the index of the input bit
-	 */
-	public int getConnection(Synapse s) {
-		return synapseConnections.get(synapseIndexes.get(s));
+//		TObjectDoubleMap<Synapse> synPerm = null;
+//		if((synPerm = connectionPerms.get(s.getInputIndex())) == null) {
+//			connectionPerms.put(s.getInputIndex(), synPerm = new TObjectDoubleHashMap<Synapse>());
+//		}
+//		synPerm.put(s, permanence);
 	}
 	
 	/**

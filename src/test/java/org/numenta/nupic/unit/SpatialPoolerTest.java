@@ -1072,10 +1072,18 @@ public class SpatialPoolerTest {
             {1, 0, 1, 0, 0},
             {1, 1, 0, 0, 1}};
     	
+    	int[][] connectedDense = new int[][] {
+    		{ 1, 2 },
+    		{ 0, 3 },
+    		{ 2, 3 },
+    		{ 0, 2 },
+    		{ 0, 1, 4 }
+    	};
+    	
     	int[] trueConnectedCounts = new int[] {2, 2, 2, 2, 3};
     
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
+    		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), connectedDense[i], true);
     		int[] dense = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesDense(mem);
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}

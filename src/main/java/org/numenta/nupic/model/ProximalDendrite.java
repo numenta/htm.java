@@ -27,7 +27,7 @@ public class ProximalDendrite extends Segment {
 		pool = new Pool(inputIndexes.length);
 		for(int i = 0;i < inputIndexes.length;i++) {
 			pool.addConnection(inputIndexes[i]);
-			pool.addPermanence(createSynapse(c, c.getSynapses(this), null, pool, i), 0);
+			pool.addPermanence(createSynapse(c, c.getSynapses(this), null, pool, i, inputIndexes[i]), 0);
 		}
 		return pool;
 	}

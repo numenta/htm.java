@@ -41,7 +41,7 @@ import org.numenta.nupic.model.Pool;
 
 
 /**
- * in charge of handling the relationships between the columns of a region 
+ * Handles the relationships between the columns of a region 
  * and the inputs bits. The primary public interface to this function is the 
  * "compute" method, which takes in an input vector and returns a list of 
  * activeColumns columns.
@@ -103,11 +103,7 @@ public class SpatialPooler {
         	new int[] { numColumns }).asDense(factory);
         for(int i = 0;i < numColumns;i++) { mem.set(i, columns[i]); }
         
-        c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));//new int[] { numColumns, numInputs } ));
-        
-//        c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
-//        
-//        c.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+        c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
         
         c.setConnectedCounts(new int[numColumns]);
         
@@ -147,7 +143,7 @@ public class SpatialPooler {
             Column column = c.getColumn(i);
             c.getPotentialPools().set(i, column.createPotentialPool(c, potential));
             double[] perm = initPermanence(c, potential, i, c.getInitConnectedPct());
-            updatePermanencesForColumn(c, perm, column, true);
+            updatePermanencesForColumn(c, perm, column, potential, true);
         }
         
         updateInhibitionRadius(c);
@@ -174,7 +170,7 @@ public class SpatialPooler {
      * @param learn             A boolean value indicating whether learning should be
      *                          performed. Learning entails updating the  permanence
      *                          values of the synapses, and hence modifying the 'state'
-     *                          of the modec. Setting learning to 'off' freezes the SP
+     *                          of the model. Setting learning to 'off' freezes the SP
      *                          and has many uses. For example, you might want to feed in
      *                          various inputs and examine the resulting SDR's.
      * @param l
@@ -328,24 +324,12 @@ public class SpatialPooler {
      * @param perm              An array of permanence values for a column. The array is
      *                          "dense", i.e. it contains an entry for each input bit, even
      *                          if the permanence value is 0.
-     * @param columnIndex       The index identifying a column in the permanence, potential
-     *                          and connectivity matrices
+     * @param column		    The column in the permanence, potential and connectivity matrices
+     * @param maskPotential		The indexes of inputs in the specified {@link Column}'s pool.
      * @param raisePerm         a boolean value indicating whether the permanence values
-     *                          should be raised until a minimum number are synapses are in
-     *                          a connected state. Should be set to 'false' when a direct
-     *                          assignment is required.
-     *                      	"dense", i.e. it contains an entry for each input bit, even
-     *                      	if the permanence value is 0.
-     * @param columnIndex       The index identifying a column in the permanence, potential
-     *                      	and connectivity matrices
-     * @param raisePerm         a boolean value indicating whether the permanence values
-     *                      	should be raised until a minimum number are synapses are in
-     *                      	a connected state. Should be set to 'false' when a direct
-     *                      	assignment is required.
      */
-    public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
-    	int[] maskPotential = c.getPotentialPools().getObject(column.getIndex()).getSparseConnections();
-        if(raisePerm) {
+    public void updatePermanencesForColumn(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
+    	if(raisePerm) {
             raisePermanenceToThreshold(c, perm, maskPotential);
         }
         
