@@ -32,8 +32,11 @@ import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 
 /**
- * Container for the many {@link Set}s maintained by the {@link TemporalMemory}
- * for computation results, and interim computation results.
+ * Contains a snapshot of the state attained during one computational
+ * call to the {@link TemporalMemory}. The {@code TemporalMemory} uses
+ * data from previous compute cycles to derive new data for the current cycle
+ * through a comparison between states of those different cycles, therefore
+ * this state container is necessary.
  * 
  * @author David Ray
  */
