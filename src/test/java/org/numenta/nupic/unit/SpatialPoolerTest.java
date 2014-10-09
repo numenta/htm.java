@@ -555,8 +555,8 @@ public class SpatialPoolerTest {
         connected.sort(0, connected.size());
         //[ 45  46  48 105 125 145]
         //mem.getConnectedSynapses().set(0, connected.toArray());
-        mem.getPotentialPools().set(0, new Pool(4));
-        mem.getColumn(0).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getPotentialPools().set(0, new Pool(6));
+        mem.getColumn(0).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 0, 1, 0 }, false));
@@ -567,7 +567,7 @@ public class SpatialPoolerTest {
         //[ 80  85 120 125]
         //mem.getConnectedSynapses().set(1, connected.toArray());
         mem.getPotentialPools().set(1, new Pool(4));
-        mem.getColumn(1).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(1).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 1, 4 }, false));
@@ -580,7 +580,7 @@ public class SpatialPoolerTest {
         //[  1   3   6   9  42 156]
         //mem.getConnectedSynapses().set(2, connected.toArray());
         mem.getPotentialPools().set(2, new Pool(4));
-        mem.getColumn(2).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(2).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 4 }, false));
@@ -589,12 +589,12 @@ public class SpatialPoolerTest {
         //[  0 159]
         //mem.getConnectedSynapses().set(3, connected.toArray());
         mem.getPotentialPools().set(3, new Pool(4));
-        mem.getColumn(3).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(3).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         //[]
         connected.clear();
         mem.getPotentialPools().set(4, new Pool(4));
-        mem.getColumn(4).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(4).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         double[] trueAvgConnectedSpan = new double[] { 11.0/4d, 6.0/4d, 14.0/4d, 15.0/4d, 0d };
         for(int i = 0;i < mem.getNumColumns();i++) {
@@ -1083,6 +1083,7 @@ public class SpatialPoolerTest {
     	int[] trueConnectedCounts = new int[] {2, 2, 2, 2, 3};
     
     	for(int i = 0;i < mem.getNumColumns();i++) {
+    		mem.getColumn(i).setProximalPermanences(mem, permanences[i]);
     		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), connectedDense[i], true);
     		int[] dense = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesDense(mem);
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));

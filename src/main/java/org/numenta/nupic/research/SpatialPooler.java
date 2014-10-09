@@ -344,7 +344,7 @@ public class SpatialPooler {
         column.setProximalPermanences(c, perm);
         //c.getPermanences().set(columnIndex, perm);
         int columnIndex = column.getIndex();
-        column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
+        //column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
         c.getConnectedCounts()[columnIndex] = newConnected.size();
     }
     

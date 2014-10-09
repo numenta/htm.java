@@ -9,3 +9,10 @@ Add the inputIndex to Synapses and synapse creation methods.
 
 Redo Pool.setPermanence(Synapse, perm) method so that the index reflects
 
+TODO: separate structure from data. Ideas of what this looks like now include:
+	a.) Static (Structure)
+		Columns, Cells, ProximalDendrites, Proximal Synapses (Pool inputs too)
+	b.) Dynamic (Data)
+		DistalDentrites, Distal Synapses, permanences, duty cycles
+	c.) Parameters
+		Thresholds, inc's, dec's, radii, PotentialPct, MaxBoost, synPermConnected

@@ -459,16 +459,6 @@ public class Connections {
     }
     
     /**
-     * Returns a double[] representing the 
-     * proximal dendrite permanence values.
-     * 
-     * @return  the array of permanences
-     */
-     public double[] getPermanences(int columnIndex) {
-    	 return potentialPools.getObject(columnIndex).getPermanences();
-     }
-    
-    /**
      * Sets the {@link SparseObjectMatrix} which represents the 
      * proximal dendrite permanence values.
      * 
@@ -502,6 +492,22 @@ public class Connections {
 //    public void setConnectedSynapses(SparseMatrix<int[]> s) {
 //        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
 //    }
+    
+    /**
+     * Returns the count of {@link Synapse}s
+     * @return
+     */
+    public int getSynapseCount() {
+    	return synapseCounter;
+    }
+    
+    /**
+     * Sets the count of {@link Synapse}s
+     * @param i
+     */
+    public void setSynapseCount(int i) {
+    	this.synapseCounter = i;
+    }
     
     /**
      * Returns the indexed count of connected synapses per column.

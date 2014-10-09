@@ -163,8 +163,8 @@ public class Column {
      * @param c
      * @param connections
      */
-    public void setProximalConnectedSynapses(Connections c, int[] connections) {
-    	proximalDendrite.setConnectedSynapses(c, connections);
+    public void setProximalConnectedSynapsesForTest(Connections c, int[] connections) {
+    	proximalDendrite.setConnectedSynapsesForTest(c, connections);
     }
     
     /**

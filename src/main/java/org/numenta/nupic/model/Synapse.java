@@ -71,7 +71,7 @@ public class Synapse {
         this.sourceCell = sourceCell;
         this.segment = segment;
         this.pool = pool;
-		this.synapseIndex++;
+		this.synapseIndex = index;
         this.inputIndex = inputIndex;
         
         // If this isn't a synapse on a proximal dendrite
@@ -109,8 +109,8 @@ public class Synapse {
      * Sets this {@code Synapse}'s degree of connectedness.
      * @param perm
      */
-    public void setPermanence(double perm) {
-        pool.setPermanence(this, perm);
+    public void setPermanence(Connections c, double perm) {
+        pool.setPermanence(c, this, perm);
     }
     
     /**
