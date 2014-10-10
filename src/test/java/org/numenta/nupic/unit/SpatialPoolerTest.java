@@ -616,8 +616,13 @@ public class SpatialPoolerTest {
     	mem.setMinOverlapDutyCycles(new double[] { .01, .01, .01, .01, .01 });
     	
     	SparseObjectMatrix<Pool> potentialPool = new SparseObjectMatrix<Pool>(new int[] { 5 });
-    	potentialPool.set(0, new Pool(8));
+    	//potentialPool.set(0, new Pool(8));
     	int[] conn = mem.getPotentialPools().getObject(0).getDenseConnections(mem);
+    	System.out.println("sparse = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getSparseConnections()));
+    	System.out.println("dense = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getDenseConnections(mem)));
+    	System.out.println("sparse perms = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getSparsePermanences()));
+    	System.out.println("dense perms = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getDensePermanences(mem)));
+    	System.out.println("connected count = " + Arrays.toString(mem.getConnectedCounts()));
     }
     
     @Test
@@ -723,7 +728,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(new int[] { 9, 5 });
         parameters.setColumnDimensions(new int[] { 5, 5 });
         initSP();
-        
+        System.out.println("here 1");
         ////////////////////// Test not part of Python port /////////////////////
         int[] result = sp.getNeighborsND(mem, 2, 3, true).toArray();
         int[] expected = new int[] { 
@@ -735,7 +740,7 @@ public class SpatialPoolerTest {
             assertEquals(expected[i], result[i]);
         }
         /////////////////////////////////////////////////////////////////////////
-        
+        System.out.println("here 2");
         setupParameters();
         int[] dimensions = new int[] { 5, 7, 2 };
         parameters.setInputDimensions(dimensions);
@@ -751,7 +756,7 @@ public class SpatialPoolerTest {
         assertEquals(expect, ArrayUtils.print1DArray(neighbors));
         
         /////////////////////////////////////////
-        
+        System.out.println("here 3");
         setupParameters();
         dimensions = new int[] { 5, 7, 9 };
         parameters.setInputDimensions(dimensions);
@@ -781,12 +786,13 @@ public class SpatialPoolerTest {
         assertEquals(expect, ArrayUtils.print1DArray(neighbors));
         
         /////////////////////////////////////////
-        
+        System.out.println("here 4");
         setupParameters();
         dimensions = new int[] { 5, 10, 7, 6 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
+        System.out.println("after init");
         radius = 4;
         int w = 2;
         x = 5;
@@ -794,7 +800,7 @@ public class SpatialPoolerTest {
         z = 2;
         columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x, w });
         neighbors = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
-        
+        System.out.println("create");
         TIntHashSet trueNeighbors = new TIntHashSet();
         for(int i = -radius;i <= radius;i++) {
             for(int j = -radius;j <= radius;j++) {
@@ -809,12 +815,14 @@ public class SpatialPoolerTest {
                 }
             }
         }
+        System.out.println("compare");
         trueNeighbors.remove(columnIndex);
         int[] tneighbors = ArrayUtils.unique(trueNeighbors.toArray());
         assertEquals(ArrayUtils.print1DArray(tneighbors), ArrayUtils.print1DArray(neighbors));
         
         /////////////////////////////////////////
         //Tests from getNeighbors1D from Python unit test
+        System.out.println("here 5");
         setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
@@ -831,6 +839,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //////
+        System.out.println("here 6");
         setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
@@ -863,6 +872,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Radius too big
+        System.out.println("here 7");
         setupParameters();
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
@@ -879,6 +889,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //These are all the same tests from 2D
+        System.out.println("here 8");
         setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
@@ -907,6 +918,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         ////////
+        System.out.println("here 9");
         setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
@@ -935,6 +947,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Radius too big
+        System.out.println("here 10");
         setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
@@ -963,6 +976,7 @@ public class SpatialPoolerTest {
         assertFalse(sbm.any(neg));
         
         //Wrap-around
+        System.out.println("here 11");
         setupParameters();
         dimensions = new int[] { 6, 5 };
         parameters.setInputDimensions(dimensions);
@@ -1036,7 +1050,7 @@ public class SpatialPoolerTest {
     	//FORGOT TO SET PERMANENCES ABOVE - DON'T USE mem.setPermanences() 
     	int[] indices = mem.getMemory().getSparseIndices();
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perm = mem.getPotentialPools().getObject(i).getPermanences();
+    		double[] perm = mem.getPotentialPools().getObject(i).getSparsePermanences();
     		sp.raisePermanenceToThreshold(mem, perm, indices);
     		
     		for(int j = 0;j < perm.length;j++) {

@@ -712,7 +712,7 @@ public class Connections {
     }
     
     /**
-     * Sets tthe stimulus increment for synapse permanences below 
+     * Sets the stimulus increment for synapse permanences below 
      * the measured threshold.
      * @param stim
      */

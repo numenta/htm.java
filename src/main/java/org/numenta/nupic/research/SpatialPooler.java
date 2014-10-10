@@ -220,7 +220,7 @@ public class SpatialPooler {
      */
     public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
         int[] dimensions = c.getInputDimensions();
-        int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);//c.getConnectedSynapses().getObject(columnIndex);
+        int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);
         if(connected == null || connected.length == 0) return 0;
         
         int[] maxCoord = new int[c.getInputDimensions().length];
@@ -335,17 +335,17 @@ public class SpatialPooler {
         
         ArrayUtils.lessThanXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
-        TIntArrayList newConnected = new TIntArrayList();
-        for(int i = 0;i < perm.length;i++) {
-            if(perm[i] >= c.getSynPermConnected()) {
-                newConnected.add(i);
-            }
-        }
+//        TIntArrayList newConnected = new TIntArrayList();
+//        for(int i = 0;i < perm.length;i++) {
+//            if(perm[i] >= c.getSynPermConnected()) {
+//                newConnected.add(i);
+//            }
+//        }
         column.setProximalPermanences(c, perm);
         //c.getPermanences().set(columnIndex, perm);
-        int columnIndex = column.getIndex();
+//        int columnIndex = column.getIndex();
         //column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
-        c.getConnectedCounts()[columnIndex] = newConnected.size();
+//        c.getConnectedCounts()[columnIndex] = newConnected.size();
     }
     
     /**
@@ -429,7 +429,7 @@ public class SpatialPooler {
      * Maps a column to its respective input index, keeping to the topology of
      * the region. It takes the index of the column as an argument and determines
      * what is the index of the flattened input vector that is to be the center of
-     * the column's potential pooc. It distributes the columns over the inputs
+     * the column's potential pool. It distributes the columns over the inputs
      * uniformly. The return value is an integer representing the index of the
      * input bit. Examples of the expected output of this method:
      * * If the topology is one dimensional, and the column index is 0, this
@@ -557,7 +557,8 @@ public class SpatialPooler {
         
         List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
         TIntArrayList neighbors = new TIntArrayList(neighborList.size());
-        for(int i = 0;i < neighborList.size();i++) {
+        int size = neighborList.size();
+        for(int i = 0;i < size;i++) {
             int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i).toArray());
             if(flatIndex == columnIndex) continue;
             neighbors.add(flatIndex);

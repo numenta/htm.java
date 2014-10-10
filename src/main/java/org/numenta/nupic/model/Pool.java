@@ -1,5 +1,6 @@
 package org.numenta.nupic.model;
 
+import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TObjectDoubleMap;
@@ -27,7 +28,6 @@ import org.numenta.nupic.research.Connections;
 public class Pool {
 	int size;
 	
-	//double[] synapsePermanences;
 	TObjectDoubleMap<Synapse> synapsePermanences = new TObjectDoubleHashMap<Synapse>();
 	TIntArrayList synapseConnections = new TIntArrayList();
 	Set<Synapse> synapseOrdering = new LinkedHashSet<Synapse>();
@@ -36,7 +36,6 @@ public class Pool {
 	
 	public Pool(int size) {
 		this.size = size;
-		//synapsePermanences = new double[size];
 	}
 	
 	/**
@@ -46,7 +45,6 @@ public class Pool {
 	 * @return	the permanence
 	 */
 	public double getPermanence(Synapse s) {
-		//return synapsePermanences[synapseIndexes.get(s)];
 		return synapsePermanences.get(s);
 	}
 	
@@ -56,10 +54,6 @@ public class Pool {
 	 * @param permanence
 	 */
 	public void setPermanence(Connections c, Synapse s, double permanence) {
-//		if(!synapseIndexes.containsKey(s)) {
-//			synapseIndexes.put(s, synapseIndexes.size());
-//		}
-//		synapsePermanences[synapseIndexes.get(s)] = permanence;
 		SynapsePair synPerm = null;
 		if((synPerm = connectionPerms.get(s.getInputIndex())) == null) {
 			connectionPerms.put(s.getInputIndex(), synPerm = new SynapsePair(s, permanence));
@@ -80,42 +74,22 @@ public class Pool {
 		synapseConnections.clear();
 	}
 	
+	/**
+	 * Returns the {@link Synapse} connected to the specified input bit
+	 * index.
+	 * 
+	 * @param inputIndex	the input vector connection's index.
+	 * @return
+	 */
 	public Synapse getSynapseWithInput(int inputIndex) {
 		return connectionPerms.get(inputIndex).getSynapse();
 	}
-	
-//	/**
-//	 * Adds the input bit index for the {@link Synapse} specified by 
-//	 * the synapseIndex.
-//	 * 
-//	 * @param connection	the input bit index
-//	 */
-//	public void addConnection(int connection) {
-//		synapseConnections.add(connection);
-//	}
-//	
-//	/**
-//	 * Updates the entire pool with the indexes currently qualifying
-//	 * as connected. (permanence >= synPermConnected)
-//	 * 
-//	 * @param connections
-//	 */
-//	public void setConnections(Connections c, ProximalDendrite pd, int[] connections) {
-//		synapseConnections.clear();
-//		synapseConnections.addAll(connections);
-//		
-//		connectionPerms.clear();
-//		for(int i = 0;i < connections.length;i++) { 
-//			setPermanence(pd.createSynapse(c, c.getSynapses(pd), null, this, -1, connections[i]), c.getSynPermConnected());
-//		}
-//	}
 	
 	/**
 	 * Returns an array of permanence values
 	 * @return
 	 */
-	public double[] getPermanences() {
-		//return synapsePermanences;
+	public double[] getSparsePermanences() {
 		int i = 0;
 		double[] retVal = new double[size];
 		for(Synapse s : synapseOrdering) {
@@ -125,35 +99,54 @@ public class Pool {
 	}
 	
 	/**
+	 * Returns the a dense array representing the potential pool permanences
+	 * 
+	 * Note: Only called from tests for now...
+	 * @param c
+	 * @return
+	 */
+	public double[] getDensePermanences(Connections c) {
+		double[] retVal = new double[c.getNumInputs()];
+		Arrays.fill(retVal, 0);
+		for(int inputIndex : connectionPerms.keys()) {
+			retVal[inputIndex] = connectionPerms.get(inputIndex).getPermanence();
+		}
+		return retVal;
+	}
+	
+	/**
 	 * Returns an array of input bit indexes.
 	 * @return
 	 */
 	public int[] getSparseConnections() {
-		//return synapseConnections.toArray();
-		return connectionPerms.keys();
+		TIntList l = new TIntArrayList(connectionPerms.keys());
+		l.reverse();
+		return l.toArray();
 	}
 	
 	/**
 	 * Returns the a dense array representing the potential pool bits
-	 * with the connected bits set to 1.
+	 * with the connected bits set to 1. 
+	 * 
+	 * Note: Only called from tests for now...
 	 * @param c
 	 * @return
 	 */
 	public int[] getDenseConnections(Connections c) {
-		int[] retVal = new int[size];
+		int[] retVal = new int[c.getNumInputs()];
 		Arrays.fill(retVal, 0);
-//		for(int i = 0;i < size;i++) {
-//			if(synapsePermanences[i] >= c.getSynPermConnected()) {
-//				retVal[i] = 1;
-//			}
-//		}
-		
 		for(int inputIndex : synapseConnections.toArray()) {
 			retVal[inputIndex] = 1;
 		}
 		return retVal;
 	}
 	
+	/**
+	 * Used internally to associated a {@link Synapse} with its current
+	 * permanence value.
+	 * 
+	 * @author David Ray
+	 */
 	private class SynapsePair {
 		private Synapse synapse;
 		private double permanence;
