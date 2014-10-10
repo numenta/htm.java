@@ -158,6 +158,16 @@ public class Column {
     }
     
     /**
+     * Sets the permanences on the {@link ProximalDendrite} {@link Synapse}s
+     * 
+     * @param c				the {@link Connections} memory object
+     * @param permanences	floating point degree of connectedness
+     */
+    public void setProximalPermanencesSparse(Connections c, double[] permanences, int[] indexes) {
+    	proximalDendrite.setPermanences(c, permanences, indexes);
+    }
+    
+    /**
      * Delegates the call to set synapse connected indexes to this 
      * {@code Column}'s {@link ProximalDendrite}
      * @param c

@@ -32,6 +32,7 @@ import java.util.EnumMap;
 
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
+import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Pool;
@@ -615,14 +616,48 @@ public class SpatialPoolerTest {
     	mem.setOverlapDutyCycles(new double[] { 0, 0.009, 0.1, 0.001, 0.002 });
     	mem.setMinOverlapDutyCycles(new double[] { .01, .01, .01, .01, .01 });
     	
-    	SparseObjectMatrix<Pool> potentialPool = new SparseObjectMatrix<Pool>(new int[] { 5 });
-    	//potentialPool.set(0, new Pool(8));
-    	int[] conn = mem.getPotentialPools().getObject(0).getDenseConnections(mem);
-    	System.out.println("sparse = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getSparseConnections()));
-    	System.out.println("dense = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getDenseConnections(mem)));
-    	System.out.println("sparse perms = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getSparsePermanences()));
-    	System.out.println("dense perms = " +  Arrays.toString(mem.getPotentialPools().getObject(0).getDensePermanences(mem)));
-    	System.out.println("connected count = " + Arrays.toString(mem.getConnectedCounts()));
+    	int[][] potentialPools = new int[][] {
+			{ 1, 1, 1, 1, 0, 0, 0, 0 },
+	        { 1, 0, 0, 0, 1, 1, 0, 1 },
+	        { 0, 0, 1, 0, 1, 1, 1, 0 },
+	        { 1, 1, 1, 0, 0, 0, 1, 0 },
+	        { 1, 1, 1, 1, 1, 1, 1, 1 }
+    	};
+    	
+    	double[][] permanences = new double[][] {
+    	    { 0.200, 0.120, 0.090, 0.040, 0.000, 0.000, 0.000, 0.000 },
+	        { 0.150, 0.000, 0.000, 0.000, 0.180, 0.120, 0.000, 0.450 },
+	        { 0.000, 0.000, 0.014, 0.000, 0.032, 0.044, 0.110, 0.000 },
+	        { 0.041, 0.000, 0.000, 0.000, 0.000, 0.000, 0.178, 0.000 },
+	        { 0.100, 0.738, 0.045, 0.002, 0.050, 0.008, 0.208, 0.034 }	
+    	};
+    	
+    	double[][] truePermanences = new double[][] {
+    	    { 0.210, 0.130, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000 },
+	        { 0.160, 0.000, 0.000, 0.000, 0.190, 0.130, 0.000, 0.460 },
+	        { 0.000, 0.000, 0.014, 0.000, 0.032, 0.044, 0.110, 0.000 },
+	        { 0.051, 0.000, 0.000, 0.000, 0.000, 0.000, 0.188, 0.000 },
+	        { 0.110, 0.748, 0.055, 0.000, 0.060, 0.000, 0.218, 0.000 }	
+    	};
+    	
+    	Condition<?> cond = new Condition.Adapter<Integer>() {
+    		public boolean eval(int n) {
+    			return n == 1;
+    		}
+    	};
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		int[] indexes = ArrayUtils.where(potentialPools[i], cond);
+    		mem.getColumn(i).setProximalConnectedSynapsesForTest(mem, indexes);
+    		mem.getColumn(i).setProximalPermanences(mem, permanences[i]);
+    	}
+    	sp.bumpUpWeakColumns(mem);
+    	
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
+    		for(int j = 0;j < truePermanences[i].length;j++) {
+    			assertEquals(truePermanences[i][j], perms[j], 0.01);
+    		}
+    	}
     }
     
     @Test

@@ -68,6 +68,28 @@ public class ProximalDendrite extends Segment {
 	}
 	
 	/**
+	 * Sets the permanences for each {@link Synapse} specified by the indexes
+	 * passed in which identify the input vector indexes associated with the
+	 * {@code Synapse}. The permanences passed in are understood to be in "sparse"
+	 * format and therefore require the int array identify their corresponding
+	 * indexes.
+	 * 
+	 * Note: This is the "sparse" version of this method.
+	 * 
+	 * @param c			the {@link Connections} memory
+	 * @param perms		the floating point degree of connectedness
+	 */
+	public void setPermanences(Connections c, double[] perms, int[] inputIndexes) {
+		pool.resetConnections();
+		int connectedCount = 0;
+		for(int i = 0;i < inputIndexes.length;i++) {
+			pool.setPermanence(c, pool.getSynapseWithInput(inputIndexes[i]), perms[i]);
+			if(perms[i] >= c.getSynPermConnected()) ++connectedCount;
+		}
+		c.getConnectedCounts()[index] = connectedCount;
+	}
+	
+	/**
 	 * Sets the input vector synapse indexes which are connected (>= synPermConnected)
 	 * @param c
 	 * @param connectedIndexes

@@ -611,6 +611,26 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns the count of values in the specified array that are
+     * greater than the specified compare value
+     * 
+     * @param compare   the value to compare to
+     * @param array     the values being compared
+     * 
+     * @return  the count of values greater
+     */
+    public static int valueGreaterCountAtIndex(double compare, double[] array, int[] indexes) {
+        int count = 0;
+        for(int i = 0;i < indexes.length;i++) {
+            if(array[indexes[i]] > compare) {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+    
+    /**
      * Returns an array containing the n greatest values.
      * @param array
      * @param n

@@ -284,6 +284,32 @@ public class SpatialPooler {
     }
     
     /**
+     * This method increases the permanence values of synapses of columns whose
+     * activity level has been too low. Such columns are identified by having an
+     * overlap duty cycle that drops too much below those of their peers. The
+     * permanence values for such columns are increased.
+     *  
+     * @param c
+     */
+    public void bumpUpWeakColumns(final Connections c) {
+    	int[] weakColumns = ArrayUtils.where(c.getMemory().get1DIndexes(), new Condition.Adapter<Integer>() {
+    		@Override public boolean eval(int i) {
+    			return c.getOverlapDutyCycles()[i] < c.getMinOverlapDutyCycles()[i];
+    		}
+    	});
+    	
+    	for(int i = 0;i < weakColumns.length;i++) {
+    		Pool pool = c.getPotentialPools().getObject(weakColumns[i]);
+    		double[] perm = pool.getSparsePermanences();
+    		ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+    		int[] indexes = pool.getSparseConnections();
+    		Column col = c.getColumn(weakColumns[i]);
+    		col.setProximalPermanencesSparse(c, perm, indexes);
+    		updatePermanencesForColumnSparse(c, perm, col, indexes, true);
+    	}
+    }
+    
+    /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
      * 'self._stimulusThreshold' overlaps in order to be considered during the
@@ -298,7 +324,7 @@ public class SpatialPooler {
     public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         while(true) {
-            int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
+            int numConnected = ArrayUtils.valueGreaterCountAtIndex(c.getSynPermConnected(), perm, maskPotential);
             if(numConnected >= c.getStimulusThreshold()) return;
             //Skipping version of "raiseValuesBy" that uses the maskPotential until bug #1322 is fixed
             //in NuPIC - for now increment all bits until numConnected >= stimulusThreshold
@@ -307,10 +333,33 @@ public class SpatialPooler {
     }
     
     /**
+     * This method ensures that each column has enough connections to input bits
+     * to allow it to become active. Since a column must have at least
+     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * inhibition phase, columns without such minimal number of connections, even
+     * if all the input bits they are connected to turn on, have no chance of
+     * obtaining the minimum threshold. For such columns, the permanence values
+     * are increased until the minimum number of connections are formed.
+     * 
+     * Note: This method services the "sparse" versions of corresponding methods
+     * 
+     * @param l
+     * @param perm
+     */
+    public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
+        ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
+        while(true) {
+            int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
+            if(numConnected >= c.getStimulusThreshold()) return;
+            ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+        }
+    }
+    
+    /**
      * This method updates the permanence matrix with a column's new permanence
      * values. The column is identified by its index, which reflects the row in
-     * the matrix, and the permanence is given in 'dense' form, i.e. a full
-     * array containing all the zeros as well as the non-zero values. It is in
+     * the matrix, and the permanence is given in 'sparse' form, i.e. an array
+     * whose members are associated with specific indexes. It is in
      * charge of implementing 'clipping' - ensuring that the permanence values are
      * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
      * all permanence values below 'synPermTrimThreshold'. It also maintains
@@ -333,19 +382,36 @@ public class SpatialPooler {
             raisePermanenceToThreshold(c, perm, maskPotential);
         }
         
-        ArrayUtils.lessThanXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
+        ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
-//        TIntArrayList newConnected = new TIntArrayList();
-//        for(int i = 0;i < perm.length;i++) {
-//            if(perm[i] >= c.getSynPermConnected()) {
-//                newConnected.add(i);
-//            }
-//        }
         column.setProximalPermanences(c, perm);
-        //c.getPermanences().set(columnIndex, perm);
-//        int columnIndex = column.getIndex();
-        //column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
-//        c.getConnectedCounts()[columnIndex] = newConnected.size();
+    }
+    
+    /**
+     * This method updates the permanence matrix with a column's new permanence
+     * values. The column is identified by its index, which reflects the row in
+     * the matrix, and the permanence is given in 'sparse' form, (i.e. an array
+     * whose members are associated with specific indexes). It is in
+     * charge of implementing 'clipping' - ensuring that the permanence values are
+     * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
+     * all permanence values below 'synPermTrimThreshold'. Every method wishing
+     * to modify the permanence matrix should do so through this method.
+     * 
+     * @param c                 the {@link Connections} which is the memory model.
+     * @param perm              An array of permanence values for a column. The array is
+     *                          "sparse", i.e. it contains an entry for each input bit, even
+     *                          if the permanence value is 0.
+     * @param column		    The column in the permanence, potential and connectivity matrices
+     * @param raisePerm         a boolean value indicating whether the permanence values
+     */
+    public void updatePermanencesForColumnSparse(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
+    	if(raisePerm) {
+            raisePermanenceToThresholdSparse(c, perm);
+        }
+        
+        ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
+        ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
+        column.setProximalPermanencesSparse(c, perm, maskPotential);
     }
     
     /**
