@@ -661,6 +661,123 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testUpdateMinDutyCycleLocal() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	SpatialPooler mockSP = new SpatialPooler() {
+    		int returnIndex = 0;
+    		int[][] returnVals =  {
+				{0, 1, 2},
+				{1, 2, 3},
+				{2, 3, 4},
+				{0, 2, 3},
+				{0, 1, 3}};
+    		@Override
+    		public TIntArrayList getNeighborsND(
+    			Connections c, int columnIndex, int radius, boolean wrapAround) {
+    			return new TIntArrayList(returnVals[returnIndex++]);
+    		}
+    	};
+    	
+    	mem.setMinPctOverlapDutyCycles(0.04);
+    	mem.setOverlapDutyCycles(new double[] { 1.4, 0.5, 1.2, 0.8, 0.1 });
+    	double[] trueMinOverlapDutyCycles = new double[] {
+    		0.04*1.4, 0.04*1.2, 0.04*1.2, 0.04*1.4, 0.04*1.4 };
+    	
+    	mem.setMinPctActiveDutyCycles(0.02);
+    	mem.setActiveDutyCycles(new double[] { 0.4, 0.5, 0.2, 0.18, 0.1 });
+    	double[] trueMinActiveDutyCycles = new double[] {
+    		0.02*0.5, 0.02*0.5, 0.02*0.2, 0.02*0.4, 0.02*0.5 };
+    	
+    	double[] mins = new double[mem.getNumColumns()];
+    	Arrays.fill(mins, 0);
+    	mem.setMinOverlapDutyCycles(mins);
+    	mem.setMinActiveDutyCycles(Arrays.copyOf(mins, mins.length));
+    	mockSP.updateMinDutyCyclesLocal(mem);
+    	for(int i = 0;i < trueMinOverlapDutyCycles.length;i++) {
+    		assertEquals(trueMinOverlapDutyCycles[i], mem.getMinOverlapDutyCycles()[i], 0.01);
+    		assertEquals(trueMinActiveDutyCycles[i], mem.getMinActiveDutyCycles()[i], 0.01);
+    	}
+    	
+    	///////////////////////
+    	
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 8 });
+    	parameters.setColumnDimensions(new int[] { 8 });
+    	initSP();
+    	
+    	mockSP = new SpatialPooler() {
+    		int returnIndex = 0;
+    		int[][] returnVals =  {
+				{0, 1, 2, 3, 4},
+				{1, 2, 3, 4, 5},
+				{2, 3, 4, 6, 7},
+				{0, 2, 4, 6},
+				{1, 6},
+				{3, 5, 7},
+				{1, 4, 5, 6},
+				{2, 3, 6, 7}};
+    		@Override
+    		public TIntArrayList getNeighborsND(
+    			Connections c, int columnIndex, int radius, boolean wrapAround) {
+    			return new TIntArrayList(returnVals[returnIndex++]);
+    		}
+    	};
+    	
+    	mem.setMinPctOverlapDutyCycles(0.01);
+    	mem.setOverlapDutyCycles(new double[] { 1.2, 2.7, 0.9, 1.1, 4.3, 7.1, 2.3, 0.0 });
+    	trueMinOverlapDutyCycles = new double[] {
+    		0.01*4.3, 0.01*7.1, 0.01*4.3, 0.01*4.3, 
+    		0.01*2.7, 0.01*7.1, 0.01*7.1, 0.01*2.3 };
+    	
+    	mem.setMinPctActiveDutyCycles(0.03);
+    	mem.setActiveDutyCycles(new double[] { 0.14, 0.25, 0.125, 0.33, 0.27, 0.11, 0.76, 0.31 });
+    	trueMinActiveDutyCycles = new double[] {
+    		0.03*0.33, 0.03*0.33, 0.03*0.76, 0.03*0.76, 
+    		0.03*0.76, 0.03*0.33, 0.03*0.76, 0.03*0.76 };
+    	
+    	mins = new double[mem.getNumColumns()];
+    	Arrays.fill(mins, 0);
+    	mem.setMinOverlapDutyCycles(mins);
+    	mem.setMinActiveDutyCycles(Arrays.copyOf(mins, mins.length));
+    	mockSP.updateMinDutyCyclesLocal(mem);
+    	for(int i = 0;i < trueMinOverlapDutyCycles.length;i++) {
+//    		System.out.println(i + ") " + trueMinOverlapDutyCycles[i] + "  -  " +  mem.getMinOverlapDutyCycles()[i]);
+//    		System.out.println(i + ") " + trueMinActiveDutyCycles[i] + "  -  " +  mem.getMinActiveDutyCycles()[i]);
+    		assertEquals(trueMinOverlapDutyCycles[i], mem.getMinOverlapDutyCycles()[i], 0.01);
+    		assertEquals(trueMinActiveDutyCycles[i], mem.getMinActiveDutyCycles()[i], 0.01);
+    	}
+    }
+    
+    @Test
+    public void testUpdateMinDutyCycleGlobal() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	mem.setMinPctOverlapDutyCycles(0.01);
+    	mem.setMinPctActiveDutyCycles(0.02);
+    	mem.setOverlapDutyCycles(new double[] { 0.06, 1, 3, 6, 0.5 });
+    	mem.setActiveDutyCycles(new double[] { 0.6, 0.07, 0.5, 0.4, 0.3 });
+    	
+    	sp.updateMinDutyCyclesGlobal(mem);
+    	double[] trueMinActiveDutyCycles = new double[mem.getNumColumns()];
+    	Arrays.fill(trueMinActiveDutyCycles, 0.02*0.6);
+    	double[] trueMinOverlapDutyCycles = new double[mem.getNumColumns()];
+    	Arrays.fill(trueMinOverlapDutyCycles, 0.01*6);
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+//    		System.out.println(i + ") " + trueMinOverlapDutyCycles[i] + "  -  " +  mem.getMinOverlapDutyCycles()[i]);
+//    		System.out.println(i + ") " + trueMinActiveDutyCycles[i] + "  -  " +  mem.getMinActiveDutyCycles()[i]);
+    		assertEquals(trueMinOverlapDutyCycles[i], mem.getMinOverlapDutyCycles()[i], 0.01);
+    		assertEquals(trueMinActiveDutyCycles[i], mem.getMinActiveDutyCycles()[i], 0.01);
+    	}
+    }
+    
+    @Test
     public void testUpdateInhibitionRadius() {
     	setupParameters();
     	initSP();
