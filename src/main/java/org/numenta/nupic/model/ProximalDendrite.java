@@ -26,8 +26,9 @@ public class ProximalDendrite extends Segment {
 	public Pool createPool(Connections c, int[] inputIndexes) {
 		pool = new Pool(inputIndexes.length);
 		for(int i = 0;i < inputIndexes.length;i++) {
-			pool.addConnection(inputIndexes[i]);
-			pool.addPermanence(createSynapse(c, c.getSynapses(this), null, pool, i), 0);
+			int synCount = c.getSynapseCount();
+			pool.setPermanence(c, createSynapse(c, c.getSynapses(this), null, pool, synCount, inputIndexes[i]), 0);
+			c.setSynapseCount(synCount + 1);
 		}
 		return pool;
 	}
@@ -54,11 +55,38 @@ public class ProximalDendrite extends Segment {
 	 * @param perms		the floating point degree of connectedness
 	 */
 	public void setPermanences(Connections c, double[] perms) {
+		pool.resetConnections();
+		int connectedCount = 0;
 		List<Synapse> synapses = c.getSynapses(this);
-		int i = 0;
 		for(Synapse s : synapses) {
-			s.setPermanence(perms[i++]);
+			s.setPermanence(c, perms[s.getInputIndex()]);
+			if(perms[s.getInputIndex()] >= c.getSynPermConnected()) {
+				connectedCount++;
+			}
 		}
+		c.getConnectedCounts()[index] = connectedCount;
+	}
+	
+	/**
+	 * Sets the permanences for each {@link Synapse} specified by the indexes
+	 * passed in which identify the input vector indexes associated with the
+	 * {@code Synapse}. The permanences passed in are understood to be in "sparse"
+	 * format and therefore require the int array identify their corresponding
+	 * indexes.
+	 * 
+	 * Note: This is the "sparse" version of this method.
+	 * 
+	 * @param c			the {@link Connections} memory
+	 * @param perms		the floating point degree of connectedness
+	 */
+	public void setPermanences(Connections c, double[] perms, int[] inputIndexes) {
+		pool.resetConnections();
+		int connectedCount = 0;
+		for(int i = 0;i < inputIndexes.length;i++) {
+			pool.setPermanence(c, pool.getSynapseWithInput(inputIndexes[i]), perms[i]);
+			if(perms[i] >= c.getSynPermConnected()) ++connectedCount;
+		}
+		c.getConnectedCounts()[index] = connectedCount;
 	}
 	
 	/**
@@ -66,8 +94,9 @@ public class ProximalDendrite extends Segment {
 	 * @param c
 	 * @param connectedIndexes
 	 */
-	public void setConnectedSynapses(Connections c, int[] connectedIndexes) {
-		c.getPotentialPools().getObject(index).setConnections(connectedIndexes);
+	public void setConnectedSynapsesForTest(Connections c, int[] connectedIndexes) {
+		Pool pool = createPool(c, connectedIndexes);
+		c.getPotentialPools().set(index, pool);
 	}
 	
 	/**

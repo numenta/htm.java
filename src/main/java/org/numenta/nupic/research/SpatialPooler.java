@@ -41,7 +41,7 @@ import org.numenta.nupic.model.Pool;
 
 
 /**
- * in charge of handling the relationships between the columns of a region 
+ * Handles the relationships between the columns of a region 
  * and the inputs bits. The primary public interface to this function is the 
  * "compute" method, which takes in an input vector and returns a list of 
  * activeColumns columns.
@@ -103,11 +103,7 @@ public class SpatialPooler {
         	new int[] { numColumns }).asDense(factory);
         for(int i = 0;i < numColumns;i++) { mem.set(i, columns[i]); }
         
-        c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));//new int[] { numColumns, numInputs } ));
-        
-//        c.setPermanences(new SparseObjectMatrix<double[]>(new int[] { numColumns, numInputs } ));
-//        
-//        c.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { numColumns, numInputs } ));
+        c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
         
         c.setConnectedCounts(new int[numColumns]);
         
@@ -147,7 +143,7 @@ public class SpatialPooler {
             Column column = c.getColumn(i);
             c.getPotentialPools().set(i, column.createPotentialPool(c, potential));
             double[] perm = initPermanence(c, potential, i, c.getInitConnectedPct());
-            updatePermanencesForColumn(c, perm, column, true);
+            updatePermanencesForColumn(c, perm, column, potential, true);
         }
         
         updateInhibitionRadius(c);
@@ -174,7 +170,7 @@ public class SpatialPooler {
      * @param learn             A boolean value indicating whether learning should be
      *                          performed. Learning entails updating the  permanence
      *                          values of the synapses, and hence modifying the 'state'
-     *                          of the modec. Setting learning to 'off' freezes the SP
+     *                          of the model. Setting learning to 'off' freezes the SP
      *                          and has many uses. For example, you might want to feed in
      *                          various inputs and examine the resulting SDR's.
      * @param l
@@ -224,7 +220,7 @@ public class SpatialPooler {
      */
     public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
         int[] dimensions = c.getInputDimensions();
-        int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);//c.getConnectedSynapses().getObject(columnIndex);
+        int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);
         if(connected == null || connected.length == 0) return 0;
         
         int[] maxCoord = new int[c.getInputDimensions().length];
@@ -288,6 +284,32 @@ public class SpatialPooler {
     }
     
     /**
+     * This method increases the permanence values of synapses of columns whose
+     * activity level has been too low. Such columns are identified by having an
+     * overlap duty cycle that drops too much below those of their peers. The
+     * permanence values for such columns are increased.
+     *  
+     * @param c
+     */
+    public void bumpUpWeakColumns(final Connections c) {
+    	int[] weakColumns = ArrayUtils.where(c.getMemory().get1DIndexes(), new Condition.Adapter<Integer>() {
+    		@Override public boolean eval(int i) {
+    			return c.getOverlapDutyCycles()[i] < c.getMinOverlapDutyCycles()[i];
+    		}
+    	});
+    	
+    	for(int i = 0;i < weakColumns.length;i++) {
+    		Pool pool = c.getPotentialPools().getObject(weakColumns[i]);
+    		double[] perm = pool.getSparsePermanences();
+    		ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+    		int[] indexes = pool.getSparseConnections();
+    		Column col = c.getColumn(weakColumns[i]);
+    		col.setProximalPermanencesSparse(c, perm, indexes);
+    		updatePermanencesForColumnSparse(c, perm, col, indexes, true);
+    	}
+    }
+    
+    /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
      * 'self._stimulusThreshold' overlaps in order to be considered during the
@@ -302,7 +324,7 @@ public class SpatialPooler {
     public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         while(true) {
-            int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
+            int numConnected = ArrayUtils.valueGreaterCountAtIndex(c.getSynPermConnected(), perm, maskPotential);
             if(numConnected >= c.getStimulusThreshold()) return;
             //Skipping version of "raiseValuesBy" that uses the maskPotential until bug #1322 is fixed
             //in NuPIC - for now increment all bits until numConnected >= stimulusThreshold
@@ -311,10 +333,33 @@ public class SpatialPooler {
     }
     
     /**
+     * This method ensures that each column has enough connections to input bits
+     * to allow it to become active. Since a column must have at least
+     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * inhibition phase, columns without such minimal number of connections, even
+     * if all the input bits they are connected to turn on, have no chance of
+     * obtaining the minimum threshold. For such columns, the permanence values
+     * are increased until the minimum number of connections are formed.
+     * 
+     * Note: This method services the "sparse" versions of corresponding methods
+     * 
+     * @param l
+     * @param perm
+     */
+    public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
+        ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
+        while(true) {
+            int numConnected = ArrayUtils.valueGreaterCount(c.getSynPermConnected(), perm);
+            if(numConnected >= c.getStimulusThreshold()) return;
+            ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+        }
+    }
+    
+    /**
      * This method updates the permanence matrix with a column's new permanence
      * values. The column is identified by its index, which reflects the row in
-     * the matrix, and the permanence is given in 'dense' form, i.e. a full
-     * array containing all the zeros as well as the non-zero values. It is in
+     * the matrix, and the permanence is given in 'sparse' form, i.e. an array
+     * whose members are associated with specific indexes. It is in
      * charge of implementing 'clipping' - ensuring that the permanence values are
      * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
      * all permanence values below 'synPermTrimThreshold'. It also maintains
@@ -328,40 +373,45 @@ public class SpatialPooler {
      * @param perm              An array of permanence values for a column. The array is
      *                          "dense", i.e. it contains an entry for each input bit, even
      *                          if the permanence value is 0.
-     * @param columnIndex       The index identifying a column in the permanence, potential
-     *                          and connectivity matrices
+     * @param column		    The column in the permanence, potential and connectivity matrices
+     * @param maskPotential		The indexes of inputs in the specified {@link Column}'s pool.
      * @param raisePerm         a boolean value indicating whether the permanence values
-     *                          should be raised until a minimum number are synapses are in
-     *                          a connected state. Should be set to 'false' when a direct
-     *                          assignment is required.
-     *                      	"dense", i.e. it contains an entry for each input bit, even
-     *                      	if the permanence value is 0.
-     * @param columnIndex       The index identifying a column in the permanence, potential
-     *                      	and connectivity matrices
-     * @param raisePerm         a boolean value indicating whether the permanence values
-     *                      	should be raised until a minimum number are synapses are in
-     *                      	a connected state. Should be set to 'false' when a direct
-     *                      	assignment is required.
      */
-    public void updatePermanencesForColumn(Connections c, double[] perm, Column column, boolean raisePerm) {
-    	int[] maskPotential = c.getPotentialPools().getObject(column.getIndex()).getSparseConnections();
-        if(raisePerm) {
+    public void updatePermanencesForColumn(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
+    	if(raisePerm) {
             raisePermanenceToThreshold(c, perm, maskPotential);
         }
         
-        ArrayUtils.lessThanXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
+        ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
-        TIntArrayList newConnected = new TIntArrayList();
-        for(int i = 0;i < perm.length;i++) {
-            if(perm[i] >= c.getSynPermConnected()) {
-                newConnected.add(i);
-            }
-        }
         column.setProximalPermanences(c, perm);
-        //c.getPermanences().set(columnIndex, perm);
-        int columnIndex = column.getIndex();
-        column.getProximalDendrite().setConnectedSynapses(c, newConnected.toArray());//).set(columnIndex, newConnected.toArray());
-        c.getConnectedCounts()[columnIndex] = newConnected.size();
+    }
+    
+    /**
+     * This method updates the permanence matrix with a column's new permanence
+     * values. The column is identified by its index, which reflects the row in
+     * the matrix, and the permanence is given in 'sparse' form, (i.e. an array
+     * whose members are associated with specific indexes). It is in
+     * charge of implementing 'clipping' - ensuring that the permanence values are
+     * always between 0 and 1 - and 'trimming' - enforcing sparseness by zeroing out
+     * all permanence values below 'synPermTrimThreshold'. Every method wishing
+     * to modify the permanence matrix should do so through this method.
+     * 
+     * @param c                 the {@link Connections} which is the memory model.
+     * @param perm              An array of permanence values for a column. The array is
+     *                          "sparse", i.e. it contains an entry for each input bit, even
+     *                          if the permanence value is 0.
+     * @param column		    The column in the permanence, potential and connectivity matrices
+     * @param raisePerm         a boolean value indicating whether the permanence values
+     */
+    public void updatePermanencesForColumnSparse(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
+    	if(raisePerm) {
+            raisePermanenceToThresholdSparse(c, perm);
+        }
+        
+        ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
+        ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
+        column.setProximalPermanencesSparse(c, perm, maskPotential);
     }
     
     /**
@@ -445,7 +495,7 @@ public class SpatialPooler {
      * Maps a column to its respective input index, keeping to the topology of
      * the region. It takes the index of the column as an argument and determines
      * what is the index of the flattened input vector that is to be the center of
-     * the column's potential pooc. It distributes the columns over the inputs
+     * the column's potential pool. It distributes the columns over the inputs
      * uniformly. The return value is an integer representing the index of the
      * input bit. Examples of the expected output of this method:
      * * If the topology is one dimensional, and the column index is 0, this
@@ -573,7 +623,8 @@ public class SpatialPooler {
         
         List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
         TIntArrayList neighbors = new TIntArrayList(neighborList.size());
-        for(int i = 0;i < neighborList.size();i++) {
+        int size = neighborList.size();
+        for(int i = 0;i < size;i++) {
             int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i).toArray());
             if(flatIndex == columnIndex) continue;
             neighbors.add(flatIndex);

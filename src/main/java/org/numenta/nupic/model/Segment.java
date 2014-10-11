@@ -25,10 +25,12 @@ public abstract class Segment {
      * @param sourceCell    the source cell which will activate the new {@code Synapse}
      * @param pool		    the new {@link Synapse}'s pool for bound variables.
      * @param index         the new {@link Synapse}'s index.
+     * @param inputIndex	the index of this {@link Synapse}'s input; be it a Cell or InputVector bit.
+     * 
      * @return
      */
-    public Synapse createSynapse(Connections c, List<Synapse> syns, Cell sourceCell, Pool pool, int index) {
-        Synapse s = new Synapse(c, sourceCell, this, pool, index);
+    public Synapse createSynapse(Connections c, List<Synapse> syns, Cell sourceCell, Pool pool, int index, int inputIndex) {
+        Synapse s = new Synapse(c, sourceCell, this, pool, index, inputIndex);
         syns.add(s);
         return s;
     }

@@ -32,6 +32,7 @@ import java.util.EnumMap;
 
 import org.junit.Test;
 import org.numenta.nupic.data.ArrayUtils;
+import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Pool;
@@ -555,8 +556,8 @@ public class SpatialPoolerTest {
         connected.sort(0, connected.size());
         //[ 45  46  48 105 125 145]
         //mem.getConnectedSynapses().set(0, connected.toArray());
-        mem.getPotentialPools().set(0, new Pool(4));
-        mem.getColumn(0).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getPotentialPools().set(0, new Pool(6));
+        mem.getColumn(0).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 2, 0, 1, 0 }, false));
@@ -567,7 +568,7 @@ public class SpatialPoolerTest {
         //[ 80  85 120 125]
         //mem.getConnectedSynapses().set(1, connected.toArray());
         mem.getPotentialPools().set(1, new Pool(4));
-        mem.getColumn(1).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(1).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 0, 0, 1, 4 }, false));
@@ -580,7 +581,7 @@ public class SpatialPoolerTest {
         //[  1   3   6   9  42 156]
         //mem.getConnectedSynapses().set(2, connected.toArray());
         mem.getPotentialPools().set(2, new Pool(4));
-        mem.getColumn(2).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(2).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         connected.clear();
         connected.add(mem.getInputMatrix().computeIndex(new int[] { 3, 3, 1, 4 }, false));
@@ -589,12 +590,12 @@ public class SpatialPoolerTest {
         //[  0 159]
         //mem.getConnectedSynapses().set(3, connected.toArray());
         mem.getPotentialPools().set(3, new Pool(4));
-        mem.getColumn(3).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(3).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         //[]
         connected.clear();
         mem.getPotentialPools().set(4, new Pool(4));
-        mem.getColumn(4).setProximalConnectedSynapses(mem, connected.toArray());
+        mem.getColumn(4).setProximalConnectedSynapsesForTest(mem, connected.toArray());
         
         double[] trueAvgConnectedSpan = new double[] { 11.0/4d, 6.0/4d, 14.0/4d, 15.0/4d, 0d };
         for(int i = 0;i < mem.getNumColumns();i++) {
@@ -615,9 +616,48 @@ public class SpatialPoolerTest {
     	mem.setOverlapDutyCycles(new double[] { 0, 0.009, 0.1, 0.001, 0.002 });
     	mem.setMinOverlapDutyCycles(new double[] { .01, .01, .01, .01, .01 });
     	
-    	SparseObjectMatrix<Pool> potentialPool = new SparseObjectMatrix<Pool>(new int[] { 5 });
-    	potentialPool.set(0, new Pool(8));
-    	int[] conn = mem.getPotentialPools().getObject(0).getDenseConnections(mem);
+    	int[][] potentialPools = new int[][] {
+			{ 1, 1, 1, 1, 0, 0, 0, 0 },
+	        { 1, 0, 0, 0, 1, 1, 0, 1 },
+	        { 0, 0, 1, 0, 1, 1, 1, 0 },
+	        { 1, 1, 1, 0, 0, 0, 1, 0 },
+	        { 1, 1, 1, 1, 1, 1, 1, 1 }
+    	};
+    	
+    	double[][] permanences = new double[][] {
+    	    { 0.200, 0.120, 0.090, 0.040, 0.000, 0.000, 0.000, 0.000 },
+	        { 0.150, 0.000, 0.000, 0.000, 0.180, 0.120, 0.000, 0.450 },
+	        { 0.000, 0.000, 0.014, 0.000, 0.032, 0.044, 0.110, 0.000 },
+	        { 0.041, 0.000, 0.000, 0.000, 0.000, 0.000, 0.178, 0.000 },
+	        { 0.100, 0.738, 0.045, 0.002, 0.050, 0.008, 0.208, 0.034 }	
+    	};
+    	
+    	double[][] truePermanences = new double[][] {
+    	    { 0.210, 0.130, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000 },
+	        { 0.160, 0.000, 0.000, 0.000, 0.190, 0.130, 0.000, 0.460 },
+	        { 0.000, 0.000, 0.014, 0.000, 0.032, 0.044, 0.110, 0.000 },
+	        { 0.051, 0.000, 0.000, 0.000, 0.000, 0.000, 0.188, 0.000 },
+	        { 0.110, 0.748, 0.055, 0.000, 0.060, 0.000, 0.218, 0.000 }	
+    	};
+    	
+    	Condition<?> cond = new Condition.Adapter<Integer>() {
+    		public boolean eval(int n) {
+    			return n == 1;
+    		}
+    	};
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		int[] indexes = ArrayUtils.where(potentialPools[i], cond);
+    		mem.getColumn(i).setProximalConnectedSynapsesForTest(mem, indexes);
+    		mem.getColumn(i).setProximalPermanences(mem, permanences[i]);
+    	}
+    	sp.bumpUpWeakColumns(mem);
+    	
+    	for(int i = 0;i < mem.getNumColumns();i++) {
+    		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
+    		for(int j = 0;j < truePermanences[i].length;j++) {
+    			assertEquals(truePermanences[i][j], perms[j], 0.01);
+    		}
+    	}
     }
     
     @Test
@@ -723,7 +763,6 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(new int[] { 9, 5 });
         parameters.setColumnDimensions(new int[] { 5, 5 });
         initSP();
-        
         ////////////////////// Test not part of Python port /////////////////////
         int[] result = sp.getNeighborsND(mem, 2, 3, true).toArray();
         int[] expected = new int[] { 
@@ -735,7 +774,6 @@ public class SpatialPoolerTest {
             assertEquals(expected[i], result[i]);
         }
         /////////////////////////////////////////////////////////////////////////
-        
         setupParameters();
         int[] dimensions = new int[] { 5, 7, 2 };
         parameters.setInputDimensions(dimensions);
@@ -751,7 +789,6 @@ public class SpatialPoolerTest {
         assertEquals(expect, ArrayUtils.print1DArray(neighbors));
         
         /////////////////////////////////////////
-        
         setupParameters();
         dimensions = new int[] { 5, 7, 9 };
         parameters.setInputDimensions(dimensions);
@@ -781,12 +818,12 @@ public class SpatialPoolerTest {
         assertEquals(expect, ArrayUtils.print1DArray(neighbors));
         
         /////////////////////////////////////////
-        
         setupParameters();
         dimensions = new int[] { 5, 10, 7, 6 };
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
+        
         radius = 4;
         int w = 2;
         x = 5;
@@ -794,7 +831,6 @@ public class SpatialPoolerTest {
         z = 2;
         columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x, w });
         neighbors = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
-        
         TIntHashSet trueNeighbors = new TIntHashSet();
         for(int i = -radius;i <= radius;i++) {
             for(int j = -radius;j <= radius;j++) {
@@ -1036,7 +1072,7 @@ public class SpatialPoolerTest {
     	//FORGOT TO SET PERMANENCES ABOVE - DON'T USE mem.setPermanences() 
     	int[] indices = mem.getMemory().getSparseIndices();
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perm = mem.getPotentialPools().getObject(i).getPermanences();
+    		double[] perm = mem.getPotentialPools().getObject(i).getSparsePermanences();
     		sp.raisePermanenceToThreshold(mem, perm, indices);
     		
     		for(int j = 0;j < perm.length;j++) {
@@ -1072,10 +1108,19 @@ public class SpatialPoolerTest {
             {1, 0, 1, 0, 0},
             {1, 1, 0, 0, 1}};
     	
+    	int[][] connectedDense = new int[][] {
+    		{ 1, 2 },
+    		{ 0, 3 },
+    		{ 2, 3 },
+    		{ 0, 2 },
+    		{ 0, 1, 4 }
+    	};
+    	
     	int[] trueConnectedCounts = new int[] {2, 2, 2, 2, 3};
     
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), true);
+    		mem.getColumn(i).setProximalPermanences(mem, permanences[i]);
+    		sp.updatePermanencesForColumn(mem, permanences[i], mem.getColumn(i), connectedDense[i], true);
     		int[] dense = mem.getColumn(i).getProximalDendrite().getConnectedSynapsesDense(mem);
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}

@@ -72,12 +72,13 @@ public class DistalDendrite extends Segment {
      * @param sourceCell    the source cell which will activate the new {@code Synapse}
      * @param permanence    the new {@link Synapse}'s initial permanence.
      * @param index         the new {@link Synapse}'s index.
+     * 
      * @return
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
     	Pool pool = new Pool(1);
-    	Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index);
-    	pool.addPermanence(s, permanence);
+    	Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index, sourceCell.getIndex());
+    	pool.setPermanence(c, s, permanence);
         return s;
     }
     
@@ -136,7 +137,7 @@ public class DistalDendrite extends Segment {
             
             permanence = Math.max(0, Math.min(1.0, permanence));
             
-            synapse.setPermanence(permanence);
+            synapse.setPermanence(c, permanence);
         }
     }
     
