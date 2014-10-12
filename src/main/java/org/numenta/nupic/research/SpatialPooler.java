@@ -298,7 +298,7 @@ public class SpatialPooler {
      * calculations are averaged over all dimensions of inputs and columns. This
      * value is meaningless if global inhibition is enabled.
      * 
-     * @param l
+     * @param c		the {@link Connections} (spatial pooler memory)
      */
     public void updateInhibitionRadius(Connections c) {
         if(c.getGlobalInhibition()) {
@@ -325,7 +325,7 @@ public class SpatialPooler {
      * number of column dimensions does not match the number of input dimensions,
      * we treat the missing, or phantom dimensions as 'ones'.
      *  
-     * @param l
+     * @param c		the {@link Connections} (spatial pooler memory)
      * @return
      */
     public double avgColumnsPerInput(Connections c) {
@@ -334,6 +334,37 @@ public class SpatialPooler {
         double[] columnsPerInput = ArrayUtils.divide(
             ArrayUtils.toDoubleArray(colDim), ArrayUtils.toDoubleArray(inputDim), 0, 0);
         return ArrayUtils.average(columnsPerInput);
+    }
+    
+    /**
+     * The primary method in charge of learning. Adapts the permanence values of
+     * the synapses based on the input vector, and the chosen columns after
+     * inhibition round. Permanence values are increased for synapses connected to
+     * input bits that are turned on, and decreased for synapses connected to
+     * inputs bits that are turned off.
+     * 
+     * @param c					the {@link Connections} (spatial pooler memory)
+     * @param inputVector		a integer array that comprises the input to
+     *               			the spatial pooler. There exists an entry in the array
+     *              			for every input bit.
+     * @param activeColumns		an array containing the indices of the columns that
+     *              			survived inhibition.
+     */
+    public void adaptSynapses(Connections c, int[] inputVector, int[] activeColumns) {
+    	int[] inputIndices = ArrayUtils.where(inputVector, new Condition.Adapter<Object>() {
+    		public boolean eval(int i) { return i > 0; }
+    	});
+    	double[] permChanges = new double[c.getNumInputs()];
+    	Arrays.fill(permChanges, -1 * c.getSynPermInactiveDec());
+    	ArrayUtils.setIndexesTo(permChanges, inputIndices, c.getSynPermActiveInc());
+    	for(int i = 0;i < activeColumns.length;i++) {
+    		Pool pool = c.getPotentialPools().getObject(activeColumns[i]);
+    		double[] perm = pool.getDensePermanences(c);
+    		int[] indexes = pool.getSparseConnections();
+    		ArrayUtils.raiseValuesBy(permChanges, perm);
+    		Column col = c.getColumn(activeColumns[i]);
+    		updatePermanencesForColumn(c, perm, col, indexes, true);
+    	}
     }
     
     /**
@@ -357,7 +388,6 @@ public class SpatialPooler {
     		ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
     		int[] indexes = pool.getSparseConnections();
     		Column col = c.getColumn(weakColumns[i]);
-    		col.setProximalPermanencesSparse(c, perm, indexes);
     		updatePermanencesForColumnSparse(c, perm, col, indexes, true);
     	}
     }

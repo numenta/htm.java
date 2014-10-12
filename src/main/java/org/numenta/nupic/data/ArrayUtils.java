@@ -679,6 +679,17 @@ public class ArrayUtils {
     }
     
     /**
+     * Raises the values at the indexes specified by the amount specified.
+     * @param amount        the amount to raise the values
+     * @param values        the values to raise
+     */
+    public static void raiseValuesBy(double[] amounts, double[] values) {
+        for(int i = 0;i < values.length;i++) {
+            values[i] += amounts[i];
+        }
+    }
+    
+    /**
      * Raises the values at the indicated indexes, by the amount specified
      * @param amount
      * @param indexes

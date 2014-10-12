@@ -202,6 +202,7 @@ public class Connections {
      * are decremented during learning.
      */
     private double permanenceDecrement = 0.10;
+    
     /** The main data structure containing columns, cells, and synapses */
     private SparseObjectMatrix<Column> memory;
     

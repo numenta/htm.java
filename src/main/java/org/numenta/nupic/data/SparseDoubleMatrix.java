@@ -37,6 +37,15 @@ public class SparseDoubleMatrix extends SparseMatrix {
     }
     
     /**
+     * Returns an outer array of T values.
+     * @return
+     */
+    @Override
+    protected double[] values() {
+    	return sparseMap.values();
+    }
+    
+    /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
      * 
