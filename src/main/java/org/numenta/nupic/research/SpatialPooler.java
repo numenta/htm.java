@@ -210,6 +210,59 @@ public class SpatialPooler {
     }
     
     /**
+     * Updates the minimum duty cycles defining normal activity for a column. A
+     * column with activity duty cycle below this minimum threshold is boosted.
+     *  
+     * @param c
+     */
+    public void updateMinDutyCycles(Connections c) {
+    	if(c.getGlobalInhibition() || c.getInhibitionRadius() > c.getNumInputs()) {
+    		updateMinDutyCyclesGlobal(c);
+    	}else{
+    		updateMinDutyCyclesLocal(c);
+    	}
+    }
+    
+    /**
+     * Updates the minimum duty cycles in a global fashion. Sets the minimum duty
+     * cycles for the overlap and activation of all columns to be a percent of the
+     * maximum in the region, specified by {@link Connections#getMinOverlapDutyCycles()} and
+     * minPctActiveDutyCycle respectively. Functionality it is equivalent to
+     * {@link #updateMinDutyCyclesLocal(Connections)}, but this function exploits the globalness of the
+     * computation to perform it in a straightforward, and more efficient manner.
+     * 
+     * @param c
+     */
+    public void updateMinDutyCyclesGlobal(Connections c) {
+    	Arrays.fill(c.getMinOverlapDutyCycles(), 
+    		c.getMinPctOverlapDutyCycles() * ArrayUtils.max(c.getOverlapDutyCycles()));
+    	Arrays.fill(c.getMinActiveDutyCycles(), 
+    		c.getMinPctActiveDutyCycles() * ArrayUtils.max(c.getActiveDutyCycles()));
+    }
+    
+    /**
+     * Updates the minimum duty cycles. The minimum duty cycles are determined
+     * locally. Each column's minimum duty cycles are set to be a percent of the
+     * maximum duty cycles in the column's neighborhood. Unlike
+     * {@link #updateMinDutyCyclesGlobal(Connections)}, here the values can be 
+     * quite different for different columns.
+     * 
+     * @param c
+     */
+    public void updateMinDutyCyclesLocal(Connections c) {
+    	int len = c.getNumColumns();
+    	for(int i = 0;i < len;i++) {
+    		int[] maskNeighbors = getNeighborsND(c, i, c.getInhibitionRadius(), true).toArray();
+    		c.getMinOverlapDutyCycles()[i] = ArrayUtils.max(
+    			ArrayUtils.sub(c.getOverlapDutyCycles(), maskNeighbors)) *
+    				c.getMinPctOverlapDutyCycles();
+    		c.getMinActiveDutyCycles()[i] = ArrayUtils.max(
+    			ArrayUtils.sub(c.getActiveDutyCycles(), maskNeighbors)) *
+    				c.getMinPctActiveDutyCycles();
+    	}
+    }
+    
+    /**
      * The range of connectedSynapses per column, averaged for each dimension.
      * This value is used to calculate the inhibition radius. This variation of
      * the function supports arbitrary column dimensions.
@@ -633,6 +686,17 @@ public class SpatialPooler {
     }
     
     /**
+     * Returns true if enough rounds have passed to warrant updates of
+     * duty cycles
+     * 
+     * @param c	the {@link Connections} memory encapsulation
+     * @return
+     */
+    public boolean isUpdateRound(Connections c) {
+    	return c.getIterationNum() % c.getUpdatePeriod() == 0;
+    }
+    
+    /**
      * Updates counter instance variables each cycle.
      *  
      * @param c         the {@link Connections} memory encapsulation
@@ -655,9 +719,9 @@ public class SpatialPooler {
      * the 'stimulusThreshold' are ignored. The implementation takes advantage of
      * the SpraseBinaryMatrix class to perform this calculation efficiently.
      *  
-     * @param l
-     * @param inputVector   a <del>numpy</del> array of 0's and 1's that comprises the input to
-     *                       the spatial pooler.
+     * @param c				the {@link Connections} memory encapsulation
+     * @param inputVector   an input array of 0's and 1's that comprises the input to
+     *                      the spatial pooler.
      * @return
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {

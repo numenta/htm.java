@@ -15,4 +15,4 @@ TODO: separate structure from data. Ideas of what this looks like now include:
 	b.) Dynamic (Data)
 		DistalDentrites, Distal Synapses, permanences, duty cycles
 	c.) Parameters
-		Thresholds, inc's, dec's, radii, PotentialPct, MaxBoost, synPermConnected
+		Thresholds, inc's, dec's, radii, potentialPct, MaxBoost, synPermConnected

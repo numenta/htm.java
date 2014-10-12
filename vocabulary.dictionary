@@ -24,3 +24,5 @@ sparsity
 vs
 actives
 perm
+globalness
+numpy
