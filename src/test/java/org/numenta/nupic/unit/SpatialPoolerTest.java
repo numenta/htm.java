@@ -778,6 +778,41 @@ public class SpatialPoolerTest {
     }
     
     @Test
+    public void testIsUpdateRound() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	mem.setUpdatePeriod(50);
+    	mem.setIterationNum(1);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(39);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(50);
+    	assertTrue(sp.isUpdateRound(mem));
+    	mem.setIterationNum(1009);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(1250);
+    	assertTrue(sp.isUpdateRound(mem));
+    	
+    	mem.setUpdatePeriod(125);
+    	mem.setIterationNum(0);
+    	assertTrue(sp.isUpdateRound(mem));
+    	mem.setIterationNum(200);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(249);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(1330);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(1249);
+    	assertFalse(sp.isUpdateRound(mem));
+    	mem.setIterationNum(1375);
+    	assertTrue(sp.isUpdateRound(mem));
+    	
+    }
+    
+    @Test
     public void testUpdateInhibitionRadius() {
     	setupParameters();
     	initSP();

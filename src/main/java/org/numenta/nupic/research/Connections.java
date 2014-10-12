@@ -44,7 +44,9 @@ import org.numenta.nupic.model.Synapse;
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
  * {@link TemporalMemory} as well as the state of all support structures 
- * (i.e. Cells, Columns, Segments, Synapses etc.)
+ * (i.e. Cells, Columns, Segments, Synapses etc.). 
+ * 
+ * In the separation of data from logic, this class represents the data/state. 
  */
 public class Connections {
 	/////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
@@ -77,7 +79,7 @@ public class Connections {
     
     //Internal state
     private double version = 1.0;
-    public int interationNum = 0;
+    public int iterationNum = 0;
     public int iterationLearnNum = 0;
     
     /** A matrix representing the shape of the input. */
@@ -248,6 +250,39 @@ public class Connections {
         activeSegments.clear();
         learningSegments.clear();
         activeSynapsesForSegment.clear();
+    }
+    
+    /**
+     * Returns the cycle count.
+     * @return
+     */
+    public int getIterationNum() {
+    	return iterationNum;
+    }
+    
+    /**
+     * Sets the iteration count.
+     * @param num
+     */
+    public void setIterationNum(int num) {
+    	this.iterationNum = num;
+    }
+    
+    /**
+     * Returns the period count which is the number of cycles
+     * between meta information updates.
+     * @return
+     */
+    public int getUpdatePeriod() {
+    	return updatePeriod;
+    }
+    
+    /**
+     * Sets the update period
+     * @param period
+     */
+    public void setUpdatePeriod(int period) {
+    	this.updatePeriod = period;
     }
     
     /**

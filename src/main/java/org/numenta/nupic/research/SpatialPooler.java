@@ -686,6 +686,17 @@ public class SpatialPooler {
     }
     
     /**
+     * Returns true if enough rounds have passed to warrant updates of
+     * duty cycles
+     * 
+     * @param c	the {@link Connections} memory encapsulation
+     * @return
+     */
+    public boolean isUpdateRound(Connections c) {
+    	return c.getIterationNum() % c.getUpdatePeriod() == 0;
+    }
+    
+    /**
      * Updates counter instance variables each cycle.
      *  
      * @param c         the {@link Connections} memory encapsulation
@@ -708,9 +719,9 @@ public class SpatialPooler {
      * the 'stimulusThreshold' are ignored. The implementation takes advantage of
      * the SpraseBinaryMatrix class to perform this calculation efficiently.
      *  
-     * @param l
-     * @param inputVector   a <del>numpy</del> array of 0's and 1's that comprises the input to
-     *                       the spatial pooler.
+     * @param c				the {@link Connections} memory encapsulation
+     * @param inputVector   an input array of 0's and 1's that comprises the input to
+     *                      the spatial pooler.
      * @return
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
