@@ -73,6 +73,16 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
     }
     
     /**
+     * Returns an outer array of T values.
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	@Override
+    protected T[] values() {
+    	return (T[])sparseMap.values();
+    }
+    
+    /**
      * Returns the T at the specified index.
      * 
      * @param index     the index of the T to return

@@ -82,6 +82,15 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
+     * Returns an outer array of T values.
+     * @return
+     */
+    @Override
+    protected int[] values() {
+    	return sparseMap.values();
+    }
+    
+    /**
      * Returns the T at the specified index.
      * 
      * @param index     the index of the T to return
