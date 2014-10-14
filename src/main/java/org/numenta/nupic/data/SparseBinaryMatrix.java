@@ -24,21 +24,87 @@ package org.numenta.nupic.data;
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 @SuppressWarnings("rawtypes")
 public class SparseBinaryMatrix extends SparseMatrix {
     private TIntIntMap sparseMap = new TIntIntHashMap();
+    private TIntList trueCounts;
+    private Object backingArray;
     
     public SparseBinaryMatrix(int[] dimensions) {
-        super(dimensions, false);
+        this(dimensions, false);
     }
     
     public SparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
+        this.backingArray = Array.newInstance(int.class, dimensions);
+        this.trueCounts = new TIntArrayList(dimensions[0]);
+        for(int i = 0;i < dimensions[0];i++) {
+        	trueCounts.add(0);
+        }
+    }
+    
+    /**
+     * Called during mutation operations to simultaneously set the value
+     * on the backing array dynamically.
+     * @param o
+     * @param val
+     * @param coordinates
+     */
+    private void back(Object o, int val, int... coordinates) {
+		Object slice = o;
+		for(int i = 0;i < coordinates.length - 1;i++) {
+			slice = Array.get(slice, coordinates[i]);
+		}
+		((int[])slice)[coordinates[coordinates.length - 1]] = val;
+	}
+    
+    /**
+     * Returns the slice specified by the passed in coordinates.
+     * The array is returned as an object, therefore it is the caller's
+     * responsibility to cast the array to the appropriate dimensions.
+     * 
+     * @param coordinates	the coordinates which specify the returned array
+     * @return	the array specified
+     * @throws	IllegalArgumentException if the specified coordinates address
+     * 			an actual value instead of the array holding it.
+     */
+    public Object getSlice(int... coordinates) {
+		Object slice = backingArray;
+		for(int i = 0;i < coordinates.length;i++) {
+			Object s = Array.get(slice, coordinates[i]);
+			slice = s.getClass().isArray() ? s : s;
+		}
+		//Ensure return value is of type Array
+		if(!slice.getClass().isArray()) {
+			throw new IllegalArgumentException(
+				"This method only returns the array holding the specified index: " + 
+					Arrays.toString(coordinates));
+		}
+		
+		return slice;
+	}
+    
+    /**
+     * Fills the specified results array with the result of the 
+     * matrix vector multiplication.
+     * 
+     * @param inputVector		the right side vector
+     * @param results			the results array
+     */
+    public void rightVecSumAtNZ(int[] inputVector, int[] results) {
+    	for(int i = 0;i < dimensions[0];i++) {
+    		int[] slice = (int[])(dimensions.length > 1 ? getSlice(i) : backingArray);
+    		for(int j = 0;j < slice.length;j++) {
+    			results[i] += (inputVector[j] * slice[j]);
+    		}
+    	}
     }
     
     /**
@@ -49,20 +115,44 @@ public class SparseBinaryMatrix extends SparseMatrix {
      */
     @Override
     public SparseBinaryMatrix set(int index, int value) {
+    	int[] coordinates = computeCoordinates(index);
+        int[] slice = (int[])getSlice(coordinates[0]);
+        int currentRowCount = trueCounts.get(coordinates[0]);
+        if(value == 1) {
+        	trueCounts.set(coordinates[0], currentRowCount +
+                (slice[coordinates[1]] == 0 ? 1 : 0));
+        }else{
+        	trueCounts.set(coordinates[0], slice[coordinates[1]] == 0 ?
+        		currentRowCount : Math.max(0, currentRowCount - 1));
+        }
+        
         sparseMap.put(index, value);
+        back(backingArray, value, coordinates);
+         
         return this;
     }
     
     /**
      * Sets the value to be indexed at the index
      * computed from the specified coordinates.
-     * 
      * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param object        the object to be indexed.
      */
     @Override
-    public SparseBinaryMatrix set(int[] coordinates, int value) {
-        set(computeIndex(coordinates), value);
+    public SparseBinaryMatrix set(int value, int... coordinates) {
+    	int[] slice = (int[])getSlice(coordinates[0]);
+        int currentRowCount = trueCounts.get(coordinates[0]);
+        if(value == 1) {
+        	trueCounts.set(coordinates[0], currentRowCount +
+                (slice[coordinates[1]] == 0 ? 1 : 0));
+        }else{
+        	trueCounts.set(coordinates[0], slice[coordinates[1]] == 0 ?
+        		currentRowCount : Math.max(0, currentRowCount - 1));
+        }
+        
+        sparseMap.put(computeIndex(coordinates), value);
+        back(backingArray, value, coordinates);
+        
         return this;
     }
     
@@ -82,12 +172,86 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
+     * Sets the value at the specified index skipping the automatic
+     * truth statistic tallying of the real method.
+     * 
+     * @param index     the index the object will occupy
+     * @param object    the object to be indexed.
+     */
+    public SparseBinaryMatrix setForTest(int index, int value) {
+        sparseMap.put(index, value);         
+        return this;
+    }
+    
+    /**
+     * Sets the specified values at the specified indexes.
+     * 
+     * @param indexes   indexes of the values to be set
+     * @param values    the values to be indexed.
+     * 
+     * @return this {@code SparseMatrix} implementation
+     */
+    public SparseBinaryMatrix set(int[] indexes, int[] values, boolean isTest) { 
+        for(int i = 0;i < indexes.length;i++) {
+        	if(isTest) setForTest(indexes[i], values[i]);
+        	else set(indexes[i], values[i]);
+        }
+        return this;
+    }
+    
+    /**
+     * Returns the count of 1's set on the specified row.
+     * @param index
+     * @return
+     */
+    public int getTrueCount(int index) {
+    	return trueCounts.get(index);
+    }
+    
+    /**
+     * Sets the count of 1's on the specified row.
+     * @param index
+     * @param count
+     */
+    public void setTrueCount(int index, int count) {
+    	this.trueCounts.set(index, count);
+    }
+    
+    /**
+     * Get the true counts for all outer indexes.
+     * @return
+     */
+    public int[] getTrueCounts() {
+    	return trueCounts.toArray();
+    }
+    
+    /**
+     * Clears the true counts prior to a cycle where they're
+     * being set
+     */
+    public void clearStatistics(int row) {
+    	int[] slice = (int[])Array.get(backingArray, row);
+    	Arrays.fill(slice, 0);
+		trueCounts.set(row, 0);
+		sparseMap.put(row, 0);
+    }
+    
+    /**
      * Returns an outer array of T values.
      * @return
      */
     @Override
     protected int[] values() {
     	return sparseMap.values();
+    }
+    
+    /**
+     * Returns the int value at the index computed from the specified coordinates
+     * @param coordinates   the coordinates from which to retrieve the indexed object
+     * @return  the indexed object
+     */
+    public int getIntValue(int... coordinates) {
+    	return sparseMap.get(computeIndex(coordinates));
     }
     
     /**
@@ -99,16 +263,6 @@ public class SparseBinaryMatrix extends SparseMatrix {
     @Override
     public int getIntValue(int index) {
         return sparseMap.get(index);
-    }
-    
-    /**
-     * Returns the T at the index computed from the specified coordinates
-     * @param coordinates   the coordinates from which to retrieve the indexed object
-     * @return  the indexed object
-     */
-    @Override
-    public int getIntValue(int[] coordinates) {
-        return sparseMap.get(computeIndex(coordinates));
     }
     
     /**

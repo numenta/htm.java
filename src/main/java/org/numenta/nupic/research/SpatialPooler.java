@@ -105,7 +105,7 @@ public class SpatialPooler {
         
         c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
         
-        c.setConnectedCounts(new int[numColumns]);
+        c.setConnectedMatrix(new SparseBinaryMatrix(new int[] { numColumns, numInputs }));
         
         double[] tieBreaker = new double[numColumns];
         for(int i = 0;i < numColumns;i++) {
@@ -756,8 +756,9 @@ public class SpatialPooler {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        //SparseObjectMatrix<int[]> som = c.getConnectedSynapses();
-        return null;
+        c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
+        ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
+        return overlaps;
     }
     
     /**

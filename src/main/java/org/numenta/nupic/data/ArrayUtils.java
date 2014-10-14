@@ -807,6 +807,19 @@ public class ArrayUtils {
     }
     
     /**
+     * Makes all values in the specified array which are less than the specified
+     * "x" value, equal to the specified "y".
+     * @param array
+     * @param x     the comparison
+     * @param y     the value to set if the comparison fails
+     */
+    public static void lessThanXThanSetToY(int[] array, int x, int y) {
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] < x) array[i] = y;
+        }
+    }
+    
+    /**
      * Makes all values in the specified array which are greater than or equal to the specified
      * "x" value, equal to the specified "y".
      * @param array

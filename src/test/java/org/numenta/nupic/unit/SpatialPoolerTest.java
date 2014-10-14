@@ -657,8 +657,7 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
-    			//assertEquals(truePermanences[i][j], perms[j], 0.01);
+    			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
     }
@@ -866,7 +865,6 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
@@ -905,7 +903,6 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
@@ -1104,10 +1101,11 @@ public class SpatialPoolerTest {
         //Tests from getNeighbors1D from Python unit test
         setupParameters();
         dimensions = new int[] { 8 };
+        parameters.setColumnDimensions(dimensions);
         parameters.setInputDimensions(dimensions);
         initSP();
         SparseBinaryMatrix sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 });
+        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
         radius = 1;
         columnIndex = 3;
         int[] mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1123,7 +1121,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 });
+        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 3;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1139,7 +1137,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 });
+        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 0;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1155,7 +1153,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 });
+        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
         radius = 20;
         columnIndex = 6;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1376,8 +1374,11 @@ public class SpatialPoolerTest {
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}
     	
-    	assertEquals(Arrays.toString(trueConnectedCounts), Arrays.toString(mem.getConnectedCounts()));
+    	assertEquals(Arrays.toString(trueConnectedCounts), Arrays.toString(mem.getConnectedCounts().getTrueCounts()));
     }
 
-    
+    @Test
+    public void testCalculateOverlap() {
+    	
+    }
 }

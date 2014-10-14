@@ -126,9 +126,8 @@ public abstract class SparseMatrix<T> {
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
-     * 
-     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param object        the object to be indexed.
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * 
      * @return this {@code SparseMatrix} implementation
      */
@@ -137,24 +136,22 @@ public abstract class SparseMatrix<T> {
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
-     * 
-     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param value         the value to be indexed.
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrix<T>> S set(int[] coordinates, int value) { return null; }
+    protected <S extends SparseMatrix<T>> S set(int value, int... coordinates) { return null; }
     
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
-     * 
-     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param value         the value to be indexed.
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrix<T>> S set(int[] coordinates, double value) { return null; }
+    protected <S extends SparseMatrix<T>> S set(double value, int... coordinates) { return null; }
     
     /**
      * Returns the T at the specified index.
@@ -191,21 +188,21 @@ public abstract class SparseMatrix<T> {
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
-    protected T get(int[] coordinates) { return null; }
+    protected T get(int... coordinates) { return null; }
     
     /**
-     * Returns the T at the index computed from the specified coordinates
+     * Returns the int value at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
-    protected int getIntValue(int[] coordinates) { return -1; }
+    protected int getIntValue(int... coordinates) { return -1; }
     
     /**
-     * Returns the T at the index computed from the specified coordinates
+     * Returns the double value at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
-    protected double getDoubleValue(int[] coordinates) { return -1.0; }
+    protected double getDoubleValue(int... coordinates) { return -1.0; }
     
     /**
      * Returns a sorted array of occupied indexes.
