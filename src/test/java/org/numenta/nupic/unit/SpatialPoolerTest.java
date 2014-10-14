@@ -1635,4 +1635,51 @@ public class SpatialPoolerTest {
     	});
     	assertTrue(results.length > 0);
     }
+    
+    /**
+     * Test initial permanence generation. ensure that permanence values
+     * are only assigned to bits within a column's potential pool. 
+     */
+    @Test
+    public void testInitPermanence2() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	sp = new SpatialPooler() {
+    		public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
+    			//Mocked to do nothing as per Python version of test
+    		}
+    	};
+    	
+    	double connectedPct = 1;
+    	int[] mask = new int[] { 0, 1 };
+    	double[] perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	int[] trueConnected = new int[] { 0, 1 };
+    	Condition<?> cond = new Condition.Adapter<Object>() {
+    		public boolean eval(double d) {
+    			return d >= mem.getSynPermConnected();
+    		}
+    	};
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 4, 5, 6 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 4, 5, 6 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 8, 9 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 8, 9 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 0, 1, 2, 3, 4, 5, 6, 8, 9 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 0, 1, 2, 3, 4, 5, 6, 8, 9 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    }
 }
