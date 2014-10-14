@@ -181,7 +181,27 @@ public class SpatialPooler {
         }
         
         updateBookeepingVars(c, learn);
-        calculateOverlap(c, inputVector);
+        int[] overlaps = calculateOverlap(c, inputVector);
+        
+        double[] boostedOverlaps;
+        if(learn) {
+        	boostedOverlaps = ArrayUtils.multiply(c.getBoostFactors(), overlaps);
+        }else{
+        	boostedOverlaps = ArrayUtils.toDoubleArray(overlaps);
+        }
+        
+        int[] activeColumns = inhibitColumns(c, boostedOverlaps);
+        
+        if(learn) {
+        	adaptSynapses(c, inputVector, activeColumns);
+        	updateMinDutyCycles(c);
+        	bumpUpWeakColumns(c);
+        	updateBoostFactors(c);
+        	if(isUpdateRound(c)) {
+        		updateInhibitionRadius(c);
+        		
+        	}
+        }
     }
     
     /**
@@ -260,6 +280,34 @@ public class SpatialPooler {
     			ArrayUtils.sub(c.getActiveDutyCycles(), maskNeighbors)) *
     				c.getMinPctActiveDutyCycles();
     	}
+    }
+    
+    public void updateDutyCycles(Connections c, double[] overlaps, int[] activeColumns) {
+    	
+    }
+   
+    /**
+     * Updates a duty cycle estimate with a new value. This is a helper
+     * function that is used to update several duty cycle variables in
+     * the Column class, such as: overlapDutyCucle, activeDutyCycle,
+     * minPctDutyCycleBeforeInh, minPctDutyCycleAfterInh, etc. returns
+     * the updated duty cycle. Duty cycles are updated according to the following
+     * formula:
+     * 
+     *  
+     *            	  (period - 1)*dutyCycle + newValue
+     *	dutyCycle := ----------------------------------
+     *                        period
+	 *
+     * @param c				the {@link Connections} (spatial pooler memory)
+     * @param dutyCycles	An array containing one or more duty cycle values that need
+     *              		to be updated
+     * @param newInput		A new numerical value used to update the duty cycle
+     * @param period		The period of the duty cycle
+     * @return
+     */
+    public double[] updateDutyCyclesHelper(Connections c, double[] dutyCycles, double[] newInput, double period) {
+    	return ArrayUtils.divide(ArrayUtils.d_add(ArrayUtils.multiply(dutyCycles, period - 1), newInput), period);
     }
     
     /**
@@ -759,6 +807,16 @@ public class SpatialPooler {
         c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
         ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
         return overlaps;
+    }
+    
+    /**
+     * Return the overlap to connected counts ratio for a given column
+     * @param c
+     * @param overlaps
+     * @return
+     */
+    public double[] calculateOverlapPct(Connections c, int[] overlaps) {
+    	return ArrayUtils.divide(overlaps, c.getConnectedCounts().getTrueCounts());
     }
     
     /**
