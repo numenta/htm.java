@@ -594,6 +594,7 @@ public class SpatialPooler {
      * @param potentialPool     An array specifying the potential pool of the column.
      *                          Permanence values will only be generated for input bits
      *                          corresponding to indices for which the mask value is 1.
+     *                          WARNING: potentialPool is sparse, not an array of "1's"
      * @param index				the index of the column being initialized
      * @param connectedPct      A value between 0 or 1 specifying the percent of the input
      *                          bits that will start off in a connected state.

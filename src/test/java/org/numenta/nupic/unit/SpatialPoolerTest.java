@@ -35,6 +35,7 @@ import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.data.Condition.Adapter;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
@@ -107,7 +108,6 @@ public class SpatialPoolerTest {
      * Checks that feeding in the same input vector leads to polarized
      * permanence values: either zeros or ones, but no fractions
      */
-    //@Test
     public void testCompute1() {
         setupParameters();
         parameters.setInputDimensions(new int[] { 9 });
@@ -1579,5 +1579,60 @@ public class SpatialPoolerTest {
 		trueOverlapsPct = new double[] { 0.5, 0.5, 0.5, 0.5, 0.5 };
 		assertTrue(Arrays.equals(trueOverlaps, overlaps));
 		assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+    }
+    
+    /**
+     * test initial permanence generation. ensure that
+     * a correct amount of synapses are initialized in 
+     * a connected state, with permanence values drawn from
+     * the correct ranges
+     */
+    @Test
+    public void testInitPermanence() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	mem.setPotentialRadius(2);
+    	double connectedPct = 1;
+    	int[] mask = new int[] { 0, 1, 2, 8, 9 };
+    	double[] perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	int numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perm);
+    	assertEquals(5, numcon, 0);
+    	
+    	connectedPct = 0;
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perm);
+    	assertEquals(0, numcon, 0);
+    	
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 100 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	mem.setPotentialRadius(100);
+    	connectedPct = 0.5;
+    	mask = new int[100];
+    	for(int i = 0;i < 100;i++) mask[i] = i;
+    	final double[] perma = sp.initPermanence(mem, mask, 0, connectedPct);
+    	numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perma);
+    	assertTrue(numcon > 0);
+    	assertTrue(numcon < mem.getNumInputs());
+    	
+    	final double minThresh = mem.getSynPermActiveInc() / 2.0d;
+    	final double connThresh = mem.getSynPermConnected();
+    	double[] results = ArrayUtils.retainLogicalAnd(perma, new Condition[] {
+    		new Condition.Adapter<Object>() {
+    			public boolean eval(double d) {
+    				return d >= minThresh;
+    			}
+    		},
+    		new Condition.Adapter<Object>() {
+    			public boolean eval(double d) {
+    				return d < connThresh;
+    			}
+    		}
+    	});
+    	assertTrue(results.length > 0);
     }
 }
