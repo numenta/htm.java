@@ -179,6 +179,55 @@ public class ArrayUtils {
      * @return
      * @throws  IllegalArgumentException    if the two argument arrays are not the same length
      */
+    public static double[] divide(int[] dividend, int[] divisor) {
+        
+        if(dividend.length != divisor.length) {
+            throw new IllegalArgumentException(
+                "The dividend array and the divisor array must be the same length");
+        }
+        double[] quotient = new double[dividend.length];
+        double denom = 1;
+        for(int i = 0;i < dividend.length;i++) {
+            quotient[i] = (dividend[i]) / 
+            	(double)((denom = divisor[i]) == 0 ? 1 : denom); //Protect against division by 0
+        }
+        return quotient;
+    }
+    
+    /**
+     * Returns an array whose members are the quotient of the dividend array
+     * values and the divisor value.
+     * 
+     * @param dividend
+     * @param divisor
+     * @param dividend adjustment
+     * @param divisor adjustment
+     * 
+     * @return
+     * @throws  IllegalArgumentException    if the two argument arrays are not the same length
+     */
+    public static double[] divide(double[] dividend, double divisor) {
+        double[] quotient = new double[dividend.length];
+        double denom = 1;
+        for(int i = 0;i < dividend.length;i++) {
+            quotient[i] = (dividend[i]) / 
+            	(double)((denom = divisor) == 0 ? 1 : denom); //Protect against division by 0
+        }
+        return quotient;
+    }
+    
+    /**
+     * Returns an array whose members are the quotient of the dividend array
+     * values and the divisor array values.
+     * 
+     * @param dividend
+     * @param divisor
+     * @param dividend adjustment
+     * @param divisor adjustment
+     * 
+     * @return
+     * @throws  IllegalArgumentException    if the two argument arrays are not the same length
+     */
     public static double[] roundDivide(double[] dividend, double[] divisor, int scale) {
         
         if(dividend.length != divisor.length) {
@@ -215,6 +264,31 @@ public class ArrayUtils {
         double[] product = new double[multiplicand.length];
         for(int i = 0;i < multiplicand.length;i++) {
             product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
+        }
+        return product;
+    }
+    
+    /**
+     * Returns an array whose members are the product of the multiplicand array
+     * values and the factor array values.
+     * 
+     * @param multiplicand
+     * @param factor
+     * @param multiplicand adjustment
+     * @param factor adjustment
+     * 
+     * @return
+     * @throws  IllegalArgumentException    if the two argument arrays are not the same length
+     */
+    public static double[] multiply(double[] multiplicand, int[] factor) {
+        
+        if(multiplicand.length != factor.length) {
+            throw new IllegalArgumentException(
+                "The multiplicand array and the factor array must be the same length");
+        }
+        double[] product = new double[multiplicand.length];
+        for(int i = 0;i < multiplicand.length;i++) {
+            product[i] = (multiplicand[i]) * (factor[i]);
         }
         return product;
     }
@@ -801,6 +875,19 @@ public class ArrayUtils {
      * @param y     the value to set if the comparison fails
      */
     public static void lessThanXThanSetToY(double[] array, double x, double y) {
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] < x) array[i] = y;
+        }
+    }
+    
+    /**
+     * Makes all values in the specified array which are less than the specified
+     * "x" value, equal to the specified "y".
+     * @param array
+     * @param x     the comparison
+     * @param y     the value to set if the comparison fails
+     */
+    public static void lessThanXThanSetToY(int[] array, int x, int y) {
         for(int i = 0;i < array.length;i++) {
             if(array[i] < x) array[i] = y;
         }

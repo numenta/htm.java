@@ -48,12 +48,11 @@ public class SparseDoubleMatrix extends SparseMatrix {
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
-     * 
      * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param object        the object to be indexed.
      */
     @Override
-    public SparseDoubleMatrix set(int[] coordinates, double value) {
+    public SparseDoubleMatrix set(double value, int... coordinates) {
         set(computeIndex(coordinates), value);
         return this;
     }
@@ -75,7 +74,7 @@ public class SparseDoubleMatrix extends SparseMatrix {
      * @return  the indexed object
      */
     @Override
-    public double getDoubleValue(int[] coordinates) {
+    public double getDoubleValue(int... coordinates) {
         return sparseMap.get(computeIndex(coordinates));
     }
     

@@ -31,6 +31,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.data.MersenneTwister;
+import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
@@ -100,38 +101,17 @@ public class Connections {
      */
     private SparseObjectMatrix<Pool> potentialPools;
     /**
-     * Initialize the permanences for each column. Similar to the
-     * 'potentialPools', the permanences are stored in a matrix whose rows
-     * represent the cortical columns, and whose columns represent the input
-     * bits. If self._permanences[i][j] = 0.2, then the synapse connecting
-     * cortical column 'i' to input bit 'j'  has a permanence of 0.2. Here we
-     * also use the SparseMatrix class to reduce the memory footprint and
-     * computation time of algorithms that require iterating over the data
-     * structure. This permanence matrix is only allowed to have non-zero
-     * elements where the potential pool is non-zero.
-     */
-//    private SparseObjectMatrix<double[]> permanences;
-    /**
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
      */
     private double[] tieBreaker;
-    /**
-     * 'connectedSynapses' is a similar matrix to 'permanences'
-     * (rows represent cortical columns, columns represent input bits) whose
-     * entries represent whether the cortical column is connected to the input
-     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-     * this information is readily available from the 'permanence' matrix,
-     * it is stored separately for efficiency purposes.
-     */
-    //private SparseObjectMatrix<int[]> connectedSynapses;
     /** 
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'self._connectedSynapses'. again, while this
      * information is readily available from 'connectedSynapses', it is
      * stored separately for efficiency purposes.
      */
-    private int[] connectedCounts = new int[numColumns];
+    private SparseBinaryMatrix connectedCounts;
     /**
      * The inhibition radius determines the size of a column's local
      * neighborhood. of a column. A cortical column must overcome the overlap
@@ -549,8 +529,17 @@ public class Connections {
      * Returns the indexed count of connected synapses per column.
      * @return
      */
-    public int[] getConnectedCounts() {
+    public SparseBinaryMatrix getConnectedCounts() {
         return connectedCounts;
+    }
+    
+    /**
+     * Returns the connected count for the specified column.
+     * @param columnIndex
+     * @return
+     */
+    public int getConnectedCount(int columnIndex) {
+    	return connectedCounts.getTrueCount(columnIndex);
     }
     
     /**
@@ -558,7 +547,18 @@ public class Connections {
      * @param counts
      */
     public void setConnectedCounts(int[] counts) {
-        this.connectedCounts = counts;
+        for(int i = 0;i < counts.length;i++) {
+        	connectedCounts.setTrueCount(i, counts[i]);
+        }
+    }
+    
+    /**
+     * Sets the connected count {@link SparseBinaryMatrix}
+     * @param columnIndex
+     * @param count
+     */
+    public void setConnectedMatrix(SparseBinaryMatrix matrix) {
+    	this.connectedCounts = matrix;
     }
     
     /**

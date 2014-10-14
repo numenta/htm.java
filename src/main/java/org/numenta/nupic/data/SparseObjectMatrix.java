@@ -61,9 +61,8 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
-     * 
-     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      * @param object        the object to be indexed.
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -99,7 +98,7 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
      * @return  the indexed object
      */
     @Override
-    public T get(int[] coordinates) {
+    public T get(int... coordinates) {
         return sparseMap.get(computeIndex(coordinates));
     }
     

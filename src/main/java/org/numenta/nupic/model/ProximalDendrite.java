@@ -56,15 +56,14 @@ public class ProximalDendrite extends Segment {
 	 */
 	public void setPermanences(Connections c, double[] perms) {
 		pool.resetConnections();
-		int connectedCount = 0;
+		c.getConnectedCounts().clearStatistics(index);
 		List<Synapse> synapses = c.getSynapses(this);
 		for(Synapse s : synapses) {
 			s.setPermanence(c, perms[s.getInputIndex()]);
 			if(perms[s.getInputIndex()] >= c.getSynPermConnected()) {
-				connectedCount++;
+				c.getConnectedCounts().set(1, index, s.getInputIndex());
 			}
 		}
-		c.getConnectedCounts()[index] = connectedCount;
 	}
 	
 	/**
@@ -81,12 +80,13 @@ public class ProximalDendrite extends Segment {
 	 */
 	public void setPermanences(Connections c, double[] perms, int[] inputIndexes) {
 		pool.resetConnections();
-		int connectedCount = 0;
+		c.getConnectedCounts().clearStatistics(index);
 		for(int i = 0;i < inputIndexes.length;i++) {
 			pool.setPermanence(c, pool.getSynapseWithInput(inputIndexes[i]), perms[i]);
-			if(perms[i] >= c.getSynPermConnected()) ++connectedCount;
+			if(perms[i] >= c.getSynPermConnected()) {
+				c.getConnectedCounts().set(1, index, i);
+			}
 		}
-		c.getConnectedCounts()[index] = connectedCount;
 	}
 	
 	/**

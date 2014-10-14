@@ -35,6 +35,7 @@ import org.numenta.nupic.data.ArrayUtils;
 import org.numenta.nupic.data.Condition;
 import org.numenta.nupic.data.SparseBinaryMatrix;
 import org.numenta.nupic.data.SparseObjectMatrix;
+import org.numenta.nupic.data.Condition.Adapter;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
@@ -107,11 +108,35 @@ public class SpatialPoolerTest {
      * Checks that feeding in the same input vector leads to polarized
      * permanence values: either zeros or ones, but no fractions
      */
-    @Test
     public void testCompute1() {
         setupParameters();
-        initSP();
+        parameters.setInputDimensions(new int[] { 9 });
+        parameters.setColumnDimensions(new int[] { 5 });
+        parameters.setPotentialRadius(3);
+        parameters.setPotentialPct(0.5);
+        parameters.setGlobalInhibition(false);
+        parameters.setLocalAreaDensity(-1.0);
+        parameters.setNumActiveColumnsPerInhArea(3);
+        parameters.setStimulusThreshold(1);
+        parameters.setSynPermInactiveDec(0.01);
+        parameters.setSynPermActiveInc(0.1);
+        parameters.setMinPctOverlapDutyCycle(0.1);
+        parameters.setMinPctActiveDutyCycle(0.1);
+        parameters.setDutyCyclePeriod(10);
+        parameters.setMaxBoost(10);
+    	initSP();
         
+    	SpatialPooler mock = new SpatialPooler() {
+    		public int[] inhibitColumns(Connections c, double[] overlaps) {
+    			return new int[] { 0, 1, 2, 3, 4 };
+    		}
+    	};
+    	
+    	int[] inputVector = new int[] { 1, 0, 1, 0, 1, 0, 0, 1, 1 };
+    	int[] activeArray = new int[] { 0, 0, 0, 0, 0 };
+    	for(int i = 0;i < 20;i++) {
+    		mock.compute(mem, inputVector, activeArray, true);
+    	}
     }
     
     @Test
@@ -657,8 +682,7 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
-    			//assertEquals(truePermanences[i][j], perms[j], 0.01);
+    			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
     }
@@ -780,6 +804,51 @@ public class SpatialPoolerTest {
     	}
     }
     
+    /**
+     * Tests that duty cycles are updated properly according
+     * to the mathematical formula. also check the effects of
+     * supplying a maxPeriod to the function.
+     */
+    @Test
+    public void testUpdateDutyCycleHelper() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 5 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	double[] dc = new double[5];
+    	Arrays.fill(dc, 1000.0);
+    	double[] newvals = new double[5];
+    	int period = 1000;
+    	double[] newDc = sp.updateDutyCyclesHelper(mem, dc, newvals, period);
+    	double[] trueNewDc = new double[] { 999, 999, 999, 999, 999 };
+    	assertTrue(Arrays.equals(trueNewDc, newDc));
+    	
+    	dc = new double[5];
+    	Arrays.fill(dc, 1000.0);
+    	newvals = new double[5];
+    	Arrays.fill(newvals, 1000);
+    	period = 1000;
+    	newDc = sp.updateDutyCyclesHelper(mem, dc, newvals, period);
+    	trueNewDc = Arrays.copyOf(dc, 5);
+    	assertTrue(Arrays.equals(trueNewDc, newDc));
+    	
+    	dc = new double[5];
+    	Arrays.fill(dc, 1000.0);
+    	newvals = new double[] { 2000, 4000, 5000, 6000, 7000 };
+    	period = 1000;
+    	newDc = sp.updateDutyCyclesHelper(mem, dc, newvals, period);
+    	trueNewDc = new double[] { 1001, 1003, 1004, 1005, 1006 };
+    	assertTrue(Arrays.equals(trueNewDc, newDc));
+    	
+    	dc = new double[] { 1000, 800, 600, 400, 2000 };
+    	newvals = new double[5];
+    	period = 2;
+    	newDc = sp.updateDutyCyclesHelper(mem, dc, newvals, period);
+    	trueNewDc = new double[] { 500, 400, 300, 200, 1000 };
+    	assertTrue(Arrays.equals(trueNewDc, newDc));
+    }
+    
     @Test
     public void testIsUpdateRound() {
     	setupParameters();
@@ -866,7 +935,6 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
@@ -905,7 +973,6 @@ public class SpatialPoolerTest {
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
-    			System.out.println(truePermanences[i][j] + "  -  " +  perms[j]);
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
     	}
@@ -1104,10 +1171,11 @@ public class SpatialPoolerTest {
         //Tests from getNeighbors1D from Python unit test
         setupParameters();
         dimensions = new int[] { 8 };
+        parameters.setColumnDimensions(dimensions);
         parameters.setInputDimensions(dimensions);
         initSP();
         SparseBinaryMatrix sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 });
+        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
         radius = 1;
         columnIndex = 3;
         int[] mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1123,7 +1191,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 });
+        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 3;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1139,7 +1207,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 });
+        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 0;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1155,7 +1223,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         initSP();
         sbm = (SparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 });
+        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
         radius = 20;
         columnIndex = 6;
         mask = sp.getNeighborsND(mem, columnIndex, radius, true).toArray();
@@ -1376,8 +1444,242 @@ public class SpatialPoolerTest {
     		assertEquals(Arrays.toString(trueConnectedSynapses[i]), Arrays.toString(dense));
     	}
     	
-    	assertEquals(Arrays.toString(trueConnectedCounts), Arrays.toString(mem.getConnectedCounts()));
+    	assertEquals(Arrays.toString(trueConnectedCounts), Arrays.toString(mem.getConnectedCounts().getTrueCounts()));
     }
 
+    @Test
+    public void testCalculateOverlap() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	int[] dimensions = new int[] { 5, 10 };
+    	int[][] connectedSynapses = new int[][] {
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+    	SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+		for(int i = 0;i < sm.getDimensions()[0];i++) {
+			for(int j = 0;j < sm.getDimensions()[1];j++) {
+				sm.set(connectedSynapses[i][j], i, j);
+			}
+		}
+		
+		mem.setConnectedMatrix(sm);
+		
+		for(int i = 0;i < 5;i++) {
+			for(int j = 0;j < 10;j++) {
+				assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+			}
+		}
+		
+		int[] inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		int[] overlaps = sp.calculateOverlap(mem, inputVector);
+		int[] trueOverlaps = new int[5];
+		double[] overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+		double[] trueOverlapsPct = new double[5];
+		assertTrue(Arrays.equals(trueOverlaps, overlaps));
+		assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+		
+		/////////////////
+		
+		dimensions = new int[] { 5, 10 };
+    	connectedSynapses = new int[][] {
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+    	sm = new SparseBinaryMatrix(dimensions);
+		for(int i = 0;i < sm.getDimensions()[0];i++) {
+			for(int j = 0;j < sm.getDimensions()[1];j++) {
+				sm.set(connectedSynapses[i][j], i, j);
+			}
+		}
+		
+		mem.setConnectedMatrix(sm);
+		
+		for(int i = 0;i < 5;i++) {
+			for(int j = 0;j < 10;j++) {
+				assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+			}
+		}
+		
+		inputVector = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+		overlaps = sp.calculateOverlap(mem, inputVector);
+		trueOverlaps = new int[] { 10, 8, 6, 4, 2 };
+		overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+		trueOverlapsPct = new double[] { 1, 1, 1, 1, 1 };
+		assertTrue(Arrays.equals(trueOverlaps, overlaps));
+		assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+		
+		/////////////////
+				
+		dimensions = new int[] { 5, 10 };
+		connectedSynapses = new int[][] {
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+		    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+		sm = new SparseBinaryMatrix(dimensions);
+		for(int i = 0;i < sm.getDimensions()[0];i++) {
+			for(int j = 0;j < sm.getDimensions()[1];j++) {
+				sm.set(connectedSynapses[i][j], i, j);
+			}
+		}
+		
+		mem.setConnectedMatrix(sm);
+		
+		for(int i = 0;i < 5;i++) {
+			for(int j = 0;j < 10;j++) {
+				assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+			}
+		}
+		
+		inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+		overlaps = sp.calculateOverlap(mem, inputVector);
+		trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
+		overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+		trueOverlapsPct = new double[] { 0.1, 0.125, 1.0/6, 0.25, 0.5 };
+		assertTrue(Arrays.equals(trueOverlaps, overlaps));
+		assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+		
+		/////////////////
+	    // Zig-zag
+		dimensions = new int[] { 5, 10 };
+		connectedSynapses = new int[][] {
+			{1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+		    {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+		    {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+		    {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+		    {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+		sm = new SparseBinaryMatrix(dimensions);
+		for(int i = 0;i < sm.getDimensions()[0];i++) {
+			for(int j = 0;j < sm.getDimensions()[1];j++) {
+				sm.set(connectedSynapses[i][j], i, j);
+			}
+		}
+		
+		mem.setConnectedMatrix(sm);
+		
+		for(int i = 0;i < 5;i++) {
+			for(int j = 0;j < 10;j++) {
+				assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+			}
+		}
+		
+		inputVector = new int[] { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
+		overlaps = sp.calculateOverlap(mem, inputVector);
+		trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
+		overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+		trueOverlapsPct = new double[] { 0.5, 0.5, 0.5, 0.5, 0.5 };
+		assertTrue(Arrays.equals(trueOverlaps, overlaps));
+		assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+    }
     
+    /**
+     * test initial permanence generation. ensure that
+     * a correct amount of synapses are initialized in 
+     * a connected state, with permanence values drawn from
+     * the correct ranges
+     */
+    @Test
+    public void testInitPermanence() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	mem.setPotentialRadius(2);
+    	double connectedPct = 1;
+    	int[] mask = new int[] { 0, 1, 2, 8, 9 };
+    	double[] perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	int numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perm);
+    	assertEquals(5, numcon, 0);
+    	
+    	connectedPct = 0;
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perm);
+    	assertEquals(0, numcon, 0);
+    	
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 100 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	mem.setPotentialRadius(100);
+    	connectedPct = 0.5;
+    	mask = new int[100];
+    	for(int i = 0;i < 100;i++) mask[i] = i;
+    	final double[] perma = sp.initPermanence(mem, mask, 0, connectedPct);
+    	numcon = ArrayUtils.valueGreaterCount(mem.getSynPermConnected(), perma);
+    	assertTrue(numcon > 0);
+    	assertTrue(numcon < mem.getNumInputs());
+    	
+    	final double minThresh = mem.getSynPermActiveInc() / 2.0d;
+    	final double connThresh = mem.getSynPermConnected();
+    	double[] results = ArrayUtils.retainLogicalAnd(perma, new Condition[] {
+    		new Condition.Adapter<Object>() {
+    			public boolean eval(double d) {
+    				return d >= minThresh;
+    			}
+    		},
+    		new Condition.Adapter<Object>() {
+    			public boolean eval(double d) {
+    				return d < connThresh;
+    			}
+    		}
+    	});
+    	assertTrue(results.length > 0);
+    }
+    
+    /**
+     * Test initial permanence generation. ensure that permanence values
+     * are only assigned to bits within a column's potential pool. 
+     */
+    @Test
+    public void testInitPermanence2() {
+    	setupParameters();
+    	parameters.setInputDimensions(new int[] { 10 });
+    	parameters.setColumnDimensions(new int[] { 5 });
+    	initSP();
+    	
+    	sp = new SpatialPooler() {
+    		public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
+    			//Mocked to do nothing as per Python version of test
+    		}
+    	};
+    	
+    	double connectedPct = 1;
+    	int[] mask = new int[] { 0, 1 };
+    	double[] perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	int[] trueConnected = new int[] { 0, 1 };
+    	Condition<?> cond = new Condition.Adapter<Object>() {
+    		public boolean eval(double d) {
+    			return d >= mem.getSynPermConnected();
+    		}
+    	};
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 4, 5, 6 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 4, 5, 6 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 8, 9 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 8, 9 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    	
+    	connectedPct = 1;
+    	mask = new int[] { 0, 1, 2, 3, 4, 5, 6, 8, 9 };
+    	perm = sp.initPermanence(mem, mask, 0, connectedPct);
+    	trueConnected = new int[] { 0, 1, 2, 3, 4, 5, 6, 8, 9 };
+    	assertTrue(Arrays.equals(trueConnected, ArrayUtils.where(perm, cond)));
+    }
 }
