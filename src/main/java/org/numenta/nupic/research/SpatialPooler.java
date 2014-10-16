@@ -123,7 +123,7 @@ public class SpatialPooler {
         c.setMinActiveDutyCycles(new double[numColumns]);
         Arrays.fill(c.getMinActiveDutyCycles(), 0);
         c.setBoostFactors(new double[numColumns]);
-        Arrays.fill(c.getBoostFactors(), 0);
+        Arrays.fill(c.getBoostFactors(), 1);
     }
     
     /**
@@ -175,7 +175,7 @@ public class SpatialPooler {
      *                          various inputs and examine the resulting SDR's.
      * @param l
      */
-    public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn) {
+    public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
             throw new IllegalArgumentException("Input array must be same size as the defined number of inputs");
         }
@@ -194,13 +194,20 @@ public class SpatialPooler {
         
         if(learn) {
         	adaptSynapses(c, inputVector, activeColumns);
-        	updateMinDutyCycles(c);
+        	updateDutyCycles(c, overlaps, activeColumns);
         	bumpUpWeakColumns(c);
         	updateBoostFactors(c);
         	if(isUpdateRound(c)) {
         		updateInhibitionRadius(c);
-        		
+        		updateMinDutyCycles(c);
         	}
+        }else if(stripNeverLearned){
+        	activeColumns = stripUnlearnedColumns(c, activeColumns).toArray();
+        }
+        
+        Arrays.fill(activeArray, 0);
+        if(activeColumns.length > 0) {
+        	ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
         }
     }
     
@@ -208,12 +215,13 @@ public class SpatialPooler {
      * Removes the set of columns who have never been active from the set of
      * active columns selected in the inhibition round. Such columns cannot
      * represent learned pattern and are therefore meaningless if only inference
-     * is required.
+     * is required. This should not be done when using a random, unlearned SP
+     * since you would end up with no active columns.
      *  
      * @param activeColumns	An array containing the indices of the active columns
      * @return	a list of columns with a chance of activation
      */
-    public TIntArrayList stripNeverLearned(Connections c, int[] activeColumns) {
+    public TIntArrayList stripUnlearnedColumns(Connections c, int[] activeColumns) {
     	TIntHashSet active = new TIntHashSet(activeColumns);
     	TIntHashSet aboveZero = new TIntHashSet();
     	int numCols = c.getNumColumns();
@@ -272,7 +280,7 @@ public class SpatialPooler {
     public void updateMinDutyCyclesLocal(Connections c) {
     	int len = c.getNumColumns();
     	for(int i = 0;i < len;i++) {
-    		int[] maskNeighbors = getNeighborsND(c, i, c.getInhibitionRadius(), true).toArray();
+    		int[] maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), true).toArray();
     		c.getMinOverlapDutyCycles()[i] = ArrayUtils.max(
     			ArrayUtils.sub(c.getOverlapDutyCycles(), maskNeighbors)) *
     				c.getMinPctOverlapDutyCycles();
@@ -282,8 +290,38 @@ public class SpatialPooler {
     	}
     }
     
-    public void updateDutyCycles(Connections c, double[] overlaps, int[] activeColumns) {
+    /**
+     * Updates the duty cycles for each column. The OVERLAP duty cycle is a moving
+     * average of the number of inputs which overlapped with the each column. The
+     * ACTIVITY duty cycles is a moving average of the frequency of activation for
+     * each column.
+     * 
+     * @param c					the {@link Connections} (spatial pooler memory)
+     * @param overlaps			an array containing the overlap score for each column.
+     *              			The overlap score for a column is defined as the number
+     *              			of synapses in a "connected state" (connected synapses)
+     *              			that are connected to input bits which are turned on.
+     * @param activeColumns		An array containing the indices of the active columns,
+     *              			the sparse set of columns which survived inhibition
+     */
+    public void updateDutyCycles(Connections c, int[] overlaps, int[] activeColumns) {
+    	double[] overlapArray = new double[c.getNumColumns()];
+    	double[] activeArray = new double[c.getNumColumns()];
+    	ArrayUtils.greaterThanXThanSetToY(overlaps, 0, 1);
+    	if(activeColumns.length > 0) {
+    		ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
+    	}
     	
+    	int period = c.getDutyCyclePeriod();
+    	if(period > c.getIterationNum()) {
+    		period  = c.getIterationNum();
+    	}
+    	
+    	c.setOverlapDutyCycles(
+    		updateDutyCyclesHelper(c, c.getOverlapDutyCycles(), overlapArray, period));
+    	
+    	c.setActiveDutyCycles(
+        	updateDutyCyclesHelper(c, c.getActiveDutyCycles(), activeArray, period));
     }
    
     /**
@@ -688,7 +726,7 @@ public class SpatialPooler {
     public int[] mapPotential(Connections c, int columnIndex, boolean wrapAround) {
         int inputIndex = mapColumn(c, columnIndex);
         
-        TIntArrayList indices = getNeighborsND(c, inputIndex, c.getPotentialRadius(), wrapAround);
+        TIntArrayList indices = getNeighborsND(c, inputIndex, c.getInputMatrix(), c.getPotentialRadius(), wrapAround);
         indices.add(inputIndex);
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
@@ -707,29 +745,30 @@ public class SpatialPooler {
      * defined as those columns that are 'radius' indices away from it in each
      * dimension. The method returns a list of the flat indices of these columns.
      * 
-     * @param poolerMem     matrix configured to this {@code SpatialPooler}'s dimensions 
-     *                      for transformation work.
-     * @param columnIndex   he index identifying a column in the permanence, potential
-     *                      and connectivity matrices.
-     * @param radius        Indicates how far away from a given column are other
-     *                      columns to be considered its neighbors. In the previous 2x3
-     *                      example, each column with coordinates:
-     *                      [2+/-radius, 3+/-radius] is considered a neighbor.
-     * @param wrapAround    A boolean value indicating whether to consider columns at
-     *                      the border of a dimensions to be adjacent to columns at the
-     *                      other end of the dimension. For example, if the columns are
-     *                      laid out in one dimension, columns 1 and 10 will be
-     *                      considered adjacent if wrapAround is set to true:
-     *                      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+     * @param poolerMem     		matrix configured to this {@code SpatialPooler}'s dimensions 
+     *                      		for transformation work.
+     * @param columnIndex   		The index identifying a column in the permanence, potential
+     *                      		and connectivity matrices.
+     * @param topology    			A {@link SparseMatrix} with dimensionality info.
+     * @param inhibitionRadius      Indicates how far away from a given column are other
+     *                      		columns to be considered its neighbors. In the previous 2x3
+     *                      		example, each column with coordinates:
+     *                      		[2+/-radius, 3+/-radius] is considered a neighbor.
+     * @param wrapAround    		A boolean value indicating whether to consider columns at
+     *                      		the border of a dimensions to be adjacent to columns at the
+     *                      		other end of the dimension. For example, if the columns are
+     *                      		laid out in one dimension, columns 1 and 10 will be
+     *                      		considered adjacent if wrapAround is set to true:
+     *                      		[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
      *               
      * @return              a list of the flat indices of these columns
      */
-    public TIntArrayList getNeighborsND(Connections c, int columnIndex, int radius, boolean wrapAround) {
-        final int[] dimensions = c.getInputDimensions();
-        int[] columnCoords = c.getInputMatrix().computeCoordinates(columnIndex);
+    public TIntArrayList getNeighborsND(Connections c, int columnIndex, SparseMatrix<?> topology, int inhibitionRadius, boolean wrapAround) {
+        final int[] dimensions = topology.getDimensions();
+        int[] columnCoords = topology.computeCoordinates(columnIndex);
         List<int[]> dimensionCoords = new ArrayList<int[]>();
         for(int i = 0;i < dimensions.length;i++) {
-            int[] range = ArrayUtils.range(columnCoords[i] - radius, columnCoords[i] + radius + 1);
+            int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
             int[] curRange = new int[range.length];
             
             if(wrapAround) {
@@ -786,7 +825,7 @@ public class SpatialPooler {
      *                  for indicating separate training vs. testing sets.
      */
     public void updateBookeepingVars(Connections c, boolean learn) {
-        c.iterationLearnNum += 1;
+        c.iterationNum += 1;
         if(learn) c.iterationLearnNum += 1;
     }
     
@@ -896,7 +935,9 @@ public class SpatialPooler {
     	Arrays.fill(activeColumns, 0);
     	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
     	for(int i = 0;i < numCols;i++) {
-    		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getInhibitionRadius(), false);
+    		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
+    		System.out.println("overlaps = " + Arrays.toString(overlaps));
+    		System.out.println("maskNeighbors = " + maskNeighbors);
     		double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
     		int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
     		int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
@@ -945,11 +986,16 @@ public class SpatialPooler {
     	final double[] activeDutyCycles = c.getActiveDutyCycles();
     	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
     	
-    	double[] numerator = new double[mask.length];
-    	Arrays.fill(numerator, 1 - c.getMaxBoost());
-    	double[] boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
-    	boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
-    	boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
+    	double[] boostInterim = null;
+    	if(mask.length < 1) {
+    		boostInterim = c.getBoostFactors();
+    	}else{
+	    	double[] numerator = new double[c.getNumColumns()];
+	    	Arrays.fill(numerator, 1 - c.getMaxBoost());
+	    	boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
+	    	boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
+	    	boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
+    	}
     	
     	ArrayUtils.setIndexesTo(boostInterim, ArrayUtils.where(activeDutyCycles, new Condition.Adapter<Object>() {
     		int i = 0;

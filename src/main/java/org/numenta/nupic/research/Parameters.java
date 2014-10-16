@@ -148,7 +148,7 @@ public class Parameters {
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
-    private double dutyCyclePeriod = 1000;
+    private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
     
@@ -197,7 +197,7 @@ public class Parameters {
     		double localAreaDensity/*SP*/, double numActiveColumnsPerInhArea/*SP*/, double stimulusThreshold/*SP*/,
     		double synPermInactiveDec/*SP*/, double synPermActiveInc/*SP*/, double synPermConnected/*SP*/,
     		double synPermBelowStimulusInc/*SP*/, double minPctOverlapDutyCycles/*SP*/, double minPctActiveDutyCycles/*SP*/,
-            double dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold, int learningRadius, int minThreshold,
+            int dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold, int learningRadius, int minThreshold,
             int maxNewSynapseCount, int seed, double initialPermanence,
             double connectedPermanence, double permanenceIncrement,
             double permanenceDecrement, Random random) {
@@ -705,7 +705,7 @@ public class Parameters {
      * 
      * @param dutyCyclePeriod
      */
-    public void setDutyCyclePeriod(double dutyCyclePeriod) {
+    public void setDutyCyclePeriod(int dutyCyclePeriod) {
         this.dutyCyclePeriod = dutyCyclePeriod;
         getMap().put(KEY.DUTY_CYCLE_PERIOD, dutyCyclePeriod);
     }
