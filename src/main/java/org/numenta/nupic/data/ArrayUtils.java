@@ -577,6 +577,20 @@ public class ArrayUtils {
     		values[indexes[i]] = setTo;
     	}
     }
+    
+    /**
+     * Sets the values in the specified values array at the indexes specified,
+     * to the value "setTo".
+     * 
+     * @param values		the values to alter if at the specified indexes.
+     * @param indexes		the indexes of the values array to alter
+     * @param setTo			the value to set at the specified indexes.
+     */
+    public static void setIndexesTo(int[] values, int[] indexes, int setTo) {
+    	for(int i = 0;i < indexes.length;i++) {
+    		values[indexes[i]] = setTo;
+    	}
+    }
 
     /**
      * Returns a random, sorted, and  unique array of the specified sample size of 
@@ -914,6 +928,19 @@ public class ArrayUtils {
      * @param y     the value to set if the comparison fails
      */
     public static void greaterThanXThanSetToY(double[] array, double x, double y) {
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] > x) array[i] = y;
+        }
+    }
+    
+    /**
+     * Makes all values in the specified array which are greater than the specified
+     * "x" value, equal to the specified "y".
+     * @param array
+     * @param x     the comparison
+     * @param y     the value to set if the comparison fails
+     */
+    public static void greaterThanXThanSetToY(int[] array, int x, int y) {
         for(int i = 0;i < array.length;i++) {
             if(array[i] > x) array[i] = y;
         }

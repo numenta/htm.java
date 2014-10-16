@@ -64,7 +64,7 @@ public class Connections {
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
-    private double dutyCyclePeriod = 1000;
+    private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
     
@@ -835,7 +835,7 @@ public class Connections {
      * 
      * @param dutyCyclePeriod
      */
-    public void setDutyCyclePeriod(double dutyCyclePeriod) {
+    public void setDutyCyclePeriod(int dutyCyclePeriod) {
         this.dutyCyclePeriod = dutyCyclePeriod;
     }
     
@@ -844,7 +844,7 @@ public class Connections {
      * @return  the configured duty cycle period
      * @see {@link #setDutyCyclePeriod(double)}
      */
-    public double getDutyCyclePeriod() {
+    public int getDutyCyclePeriod() {
         return dutyCyclePeriod;
     }
 
