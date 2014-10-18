@@ -1,9 +1,17 @@
+# ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 htm.java
-=======
+========
+
+* Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
+* Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.png?branch=master)](https://coveralls.io/r/numenta/htm.java?branch=master)
 
 Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
-Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
+Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the [Cortical Learning Algorithm (CLA)](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
+
+For a more detailed discussion of <b>htm.java</b> see: <BR>
+* [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
+* [Java Docs](http://www.cognitionmission.com/nupic/java/doc/)
 
 ## Goals
 
