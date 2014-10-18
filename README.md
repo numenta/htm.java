@@ -1,5 +1,5 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
-## htm.java
+### htm.java
 
 Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
