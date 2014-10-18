@@ -7,7 +7,7 @@ htm.java
 
 Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
-Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
+Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the Cortical Learning Algorithm [CLA](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
 
 ## Goals
 
