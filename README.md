@@ -2,6 +2,9 @@
 htm.java
 ========
 
+* Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
+* Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.png?branch=master)](https://coveralls.io/r/numenta/htm.java?branch=master)
+
 Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems.
