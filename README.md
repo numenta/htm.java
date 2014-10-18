@@ -9,6 +9,8 @@ Community-supported Java port of the [Numenta Platform for Intelligent Computing
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the [Cortical Learning Algorithm (CLA)](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
 
+For a more detailed discussion of ##htm.java see: [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
+
 ## Goals
 
 The primary goal of this library development is to provide a Java version of NuPIC that has a 1-to-1 correspondence to all systems, functionality and tests provided by Numenta's open source implementation; while observing the tenets, standards and conventions of Java language best practices and development.
