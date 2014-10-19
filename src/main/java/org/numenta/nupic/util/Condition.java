@@ -1,4 +1,4 @@
-package org.numenta.nupic.data;
+package org.numenta.nupic.util;
 
 /**
  * Implemented to be used as arguments in other operations.

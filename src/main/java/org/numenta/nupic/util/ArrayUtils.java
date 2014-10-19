@@ -1,4 +1,4 @@
-package org.numenta.nupic.data;
+package org.numenta.nupic.util;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;

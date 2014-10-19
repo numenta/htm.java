@@ -30,14 +30,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.numenta.nupic.data.ArrayUtils;
-import org.numenta.nupic.data.Condition;
-import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseMatrix;
-import org.numenta.nupic.data.SparseObjectMatrix;
-import org.numenta.nupic.data.TypeFactory;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.SparseMatrix;
+import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.TypeFactory;
 
 
 /**
@@ -936,8 +936,6 @@ public class SpatialPooler {
     	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
     	for(int i = 0;i < numCols;i++) {
     		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
-    		System.out.println("overlaps = " + Arrays.toString(overlaps));
-    		System.out.println("maskNeighbors = " + maskNeighbors);
     		double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
     		int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
     		int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);

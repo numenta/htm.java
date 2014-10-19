@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.numenta.nupic.util.SparseBinaryMatrix;
 
 public class SparseBinaryMatrixTest {
 

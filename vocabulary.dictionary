@@ -28,3 +28,6 @@ globalness
 numpy
 tallying
 unlearned
+vars
+maxval
+minval

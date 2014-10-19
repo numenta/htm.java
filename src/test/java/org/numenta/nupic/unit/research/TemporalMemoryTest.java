@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.unit;
+package org.numenta.nupic.unit.research;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

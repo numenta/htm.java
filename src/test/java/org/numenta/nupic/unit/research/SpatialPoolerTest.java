@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.unit;
+package org.numenta.nupic.unit.research;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,16 +31,16 @@ import java.util.Arrays;
 import java.util.EnumMap;
 
 import org.junit.Test;
-import org.numenta.nupic.data.ArrayUtils;
-import org.numenta.nupic.data.Condition;
-import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseMatrix;
-import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.SparseMatrix;
+import org.numenta.nupic.util.SparseObjectMatrix;
 
 public class SpatialPoolerTest {
     private Parameters parameters;

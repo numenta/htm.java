@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.data;
+package org.numenta.nupic.util;
 
 import java.io.*;
 

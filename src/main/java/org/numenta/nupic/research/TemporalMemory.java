@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
  * Temporal Memory implementation in Java
