@@ -13,7 +13,7 @@ public class ScalarEncoderTest {
 	}
 	@Test
 	public void test() {
-		fail("Not yet implemented");
+		
 	}
 
 }
