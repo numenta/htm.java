@@ -30,10 +30,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.numenta.nupic.data.MersenneTwister;
-import org.numenta.nupic.data.SparseBinaryMatrix;
-import org.numenta.nupic.data.SparseMatrix;
-import org.numenta.nupic.data.SparseObjectMatrix;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -41,6 +37,11 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.research.Parameters.KEY;
+import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.SparseMatrix;
+import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
@@ -187,6 +188,38 @@ public class Connections {
     private SparseObjectMatrix<Column> memory;
     
     private Cell[] cells;
+    
+    /////////////////////// Encoder Vars //////////////////////////
+    /** The number of bits that are set to encode a single value - the
+     * "width" of the output signal 
+     */
+    private int w = 0;
+    /** number of bits in the representation (must be > w) */
+    private int n = 0;
+    /** 
+     * inputs separated by more than, or equal to this distance will have non-overlapping 
+     * representations 
+     */
+    private int radius = 0;
+    /** inputs separated by more than, or equal to this distance will have different representations */
+    private int resolution  = 0;
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     */
+    private boolean periodic = true;
+    /** The minimum value of the input signal.  */
+    private int minval = 0;
+    /** The maximum value of the input signal. */
+    private int maxval = 0;
+    /** if true, non-periodic inputs smaller than minval or greater
+            than maxval will be clipped to minval/maxval */
+    private boolean clipInput;
+    /** if true, skip some safety checks (for compatibility reasons), default false */
+    private boolean forced;
+    /** Encoder name - an optional string which will become part of the description */
+    private String name;
 
     
     ///////////////////////   Structural Elements /////////////////////////
@@ -1523,5 +1556,175 @@ public class Connections {
     		retVal.add(memory.getObject(indexes[i]));
     	}
     	return retVal;
+    }
+    
+    //////////////////////////////// Encoder values ////////////////////////////////
+    /** 
+     * Sets the "w" or width of the output signal
+     * <em>Restriction:</em> w must be odd to avoid centering problems.
+     * @param w
+     */
+    public void setW(int w) {
+    	this.w = w;
+    }
+    
+    /**
+     * Returns w
+     * @return
+     */
+    public int getW() {
+    	return w;
+    }
+    
+    /**
+     * The number of bits in the output. Must be greater than or equal to w
+     * @param n
+     */
+    public void setN(int n) {
+    	this.n = n;
+    }
+    
+    /**
+     * Returns n
+     * @return
+     */
+    public int getN() {
+    	return n;
+    }
+    
+    /**
+     * The minimum value of the input signal.
+     * @param minVal
+     */
+    public void setMinVal(int minVal) {
+    	this.minval = minVal;
+    }
+    
+    /**
+     * Returns minval
+     * @return
+     */
+    public int getMinVal() {
+    	return minval;
+    }
+    
+    /**
+     * The maximum value of the input signal.
+     * @param maxVal
+     */
+    public void setMaxVal(int maxVal) {
+    	this.maxval = maxVal;
+    }
+    
+    /**
+     * Returns maxval
+     * @return
+     */
+    public int getMaxVal() {
+    	return maxval;
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have non-overlapping
+     * representations
+     * 
+     * @param radius
+     */
+    public void setRadius(int radius) {
+    	this.radius = radius;
+    }
+    
+    /**
+     * Returns the radius
+     * @return
+     */
+    public int getRadius() {
+    	return radius;
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have different
+     * representations
+     * 
+     * @param resolution
+     */
+    public void setResolution(int resolution) {
+    	this.resolution = resolution;
+    }
+    
+    /**
+     * Returns the resolution
+     * @return
+     */
+    public int getResolution() {
+    	return resolution;
+    }
+    
+    /**
+     * If true, non-periodic inputs smaller than minval or greater
+     * than maxval will be clipped to minval/maxval
+     * @param b
+     */
+    public void setClipInput(boolean b) {
+    	this.clipInput = b;
+    }
+    
+    /**
+     * Returns the clip input flag
+     * @return
+     */
+    public boolean clipInput() {
+    	return clipInput;
+    }
+    
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     * 
+     * @param b
+     */
+    public void setPeriodic(boolean b) {
+    	this.periodic = b;
+    }
+    
+    /**
+     * Returns the periodic flag
+     * @return
+     */
+    public boolean isPeriodic() {
+    	return periodic;
+    }
+    
+    /**
+     * If true, skip some safety checks (for compatibility reasons), default false 
+     * @param b
+     */
+    public void setForced(boolean b) {
+    	this.forced = b;
+    }
+    
+    /**
+     * Returns the forced flag
+     * @return
+     */
+    public boolean isForced() {
+    	return forced;
+    }
+    
+    /**
+     * An optional string which will become part of the description
+     * @param name
+     */
+    public void setName(String name) {
+    	this.name = name;
+    }
+    
+    /**
+     * Returns the optional name
+     * @return
+     */
+    public String getName() {
+    	return name;
     }
 }

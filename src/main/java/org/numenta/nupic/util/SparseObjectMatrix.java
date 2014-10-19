@@ -19,42 +19,66 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.data;
+package org.numenta.nupic.util;
 
-import gnu.trove.map.TIntDoubleMap;
-import gnu.trove.map.hash.TIntDoubleHashMap;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
-@SuppressWarnings("rawtypes")
-public class SparseDoubleMatrix extends SparseMatrix {
-    private TIntDoubleMap sparseMap = new TIntDoubleHashMap();
+/**
+ * Allows storage of array data in sparse form, meaning that the indexes
+ * of the data stored are maintained while empty indexes are not. This allows
+ * savings in memory and computational efficiency because iterative algorithms
+ * need only query indexes containing valid data.
+ * 
+ * @author David Ray
+ *
+ * @param <T>
+ */
+public class SparseObjectMatrix<T> extends SparseMatrix<T> {
+    private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
     
-    public SparseDoubleMatrix(int[] dimensions) {
+    public SparseObjectMatrix(int[] dimensions) {
         super(dimensions, false);
     }
     
-    public SparseDoubleMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+    public SparseObjectMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
+    }
+    
+    /**
+     * Sets the object to occupy the specified index.
+     * 
+     * @param index     the index the object will occupy
+     * @param object    the object to be indexed.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S extends SparseMatrix<T>> S set(int index, T object) {
+        sparseMap.put(index, (T)object);
+        return (S)this;
+    }
+    
+    /**
+     * Sets the specified object to be indexed at the index
+     * computed from the specified coordinates.
+     * @param object        the object to be indexed.
+     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S extends SparseMatrix<T>> S set(int[] coordinates, T object) {
+        set(computeIndex(coordinates), object);
+        return (S)this;
     }
     
     /**
      * Returns an outer array of T values.
      * @return
      */
-    @Override
-    protected double[] values() {
-    	return sparseMap.values();
-    }
-    
-    /**
-     * Sets the specified object to be indexed at the index
-     * computed from the specified coordinates.
-     * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
-     * @param object        the object to be indexed.
-     */
-    @Override
-    public SparseDoubleMatrix set(double value, int... coordinates) {
-        set(computeIndex(coordinates), value);
-        return this;
+    @SuppressWarnings("unchecked")
+	@Override
+    protected T[] values() {
+    	return (T[])sparseMap.values();
     }
     
     /**
@@ -64,7 +88,7 @@ public class SparseDoubleMatrix extends SparseMatrix {
      * @return  the T at the specified index.
      */
     @Override
-    public double getDoubleValue(int index) {
+    public T getObject(int index) {
         return sparseMap.get(index);
     }
     
@@ -74,7 +98,7 @@ public class SparseDoubleMatrix extends SparseMatrix {
      * @return  the indexed object
      */
     @Override
-    public double getDoubleValue(int... coordinates) {
+    public T get(int... coordinates) {
         return sparseMap.get(computeIndex(coordinates));
     }
     
@@ -86,5 +110,6 @@ public class SparseDoubleMatrix extends SparseMatrix {
     public int[] getSparseIndices() {
         return reverse(sparseMap.keys());
     }
+    
     
 }

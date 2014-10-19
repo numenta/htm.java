@@ -23,7 +23,10 @@ package org.numenta.nupic.research;
 
 import java.lang.reflect.Field;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -45,9 +48,13 @@ public class Parameters {
      * Constant values representing configuration parameters for the {@link TemporalMemory}
      */
     public enum KEY { 
-        /////////// Temporal Memory Parameters ///////////
+        /////////// Universal Parameters ///////////
         COLUMN_DIMENSIONS("columnDimensions", new int[] { 2048 }),
         CELLS_PER_COLUMN("cellsPerColumn", 32),
+        RANDOM("random", -1),
+        SEED("seed", 42),
+        
+        /////////// Temporal Memory Parameters ///////////
         ACTIVATION_THRESHOLD("activationThreshold", 13),
         LEARNING_RADIUS("learningRadius", 2048),
         MIN_THRESHOLD("minThreshold", 10),
@@ -56,8 +63,7 @@ public class Parameters {
         CONNECTED_PERMANENCE("connectedPermanence", 0.5),
         PERMANENCE_INCREMENT("permanenceIncrement", 0.10), 
         PERMANENCE_DECREMENT("permanenceDecrement", 0.10),
-        RANDOM("random", -1),
-        SEED("seed", 42),
+        TM_VERBOSITY("tmVerbosity", 0),
         
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", new int[] { 64 }),
@@ -77,11 +83,29 @@ public class Parameters {
         MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", 0.001),
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", 1000),
         MAX_BOOST("maxBoost", 10),
-        SP_VERBOSITY("spVerbosity", 0);
+        SP_VERBOSITY("spVerbosity", 0),
+        
+        //////////// Encoder Parameters ///////////
+        W("w", 0),
+        MINVAL("minval", 0),
+        MAXVAL("maxval", 0),
+        PERIODIC("periodic", false),
+        N("n", 0),
+        RADIUS("radius", 0),
+        RESOLUTION("resolution", 0),
+        NAME("name", "None"),
+        CLIP_INPUT("clipInput", false),
+        FORCED("forced", false),
+        ENC_VERBOSITY("encVerbosity", 0);
         
         private String fieldName;
         private Object fieldValue;
         
+        /**
+         * Constructs a new KEY
+         * @param fieldName
+         * @param fieldValue
+         */
         private KEY(String fieldName, Object fieldValue) {
             this.fieldName = fieldName;
             this.fieldValue = fieldValue;
@@ -131,8 +155,7 @@ public class Parameters {
      */
     private double permanenceDecrement = 0.10;
     
-    /////////////////// Spacial Pooler Params ///////////////////
-    
+    /////////////////// Spatial Pooler Vars ///////////////////
     private int[] inputDimensions = new int[] { 32, 32 };
     private int potentialRadius = 16;
     private int inhibitionRadius = 0;
@@ -152,12 +175,51 @@ public class Parameters {
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
     
+    /////////////////// Encoder Vars /////////////////////
+    /** The number of bits that are set to encode a single value - the
+     * "width" of the output signal 
+     */
+    private int w = 0;
+    /** number of bits in the representation (must be > w) */
+    private int n = 0;
+    /** 
+     * inputs separated by more than, or equal to this distance will have non-overlapping 
+     * representations 
+     */
+    private int radius = 0;
+    /** inputs separated by more than, or equal to this distance will have different representations */
+    private int resolution  = 0;
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     */
+    private boolean periodic = true;
+    /** The minimum value of the input signal.  */
+    private int minval = 0;
+    /** The maximum value of the input signal. */
+    private int maxval = 0;
+    /** if true, non-periodic inputs smaller than minval or greater
+            than maxval will be clipped to minval/maxval */
+    private boolean clipInput;
+    /** if true, skip some safety checks (for compatibility reasons), default false */
+    private boolean forced;
+    /** Encoder name - an optional string which will become part of the description */
+    private String name;
+    
+    //////////////// General ////////////////
     /** Random Number Generator */
     private Random random;
+    
     /** Map of parameters to their values */
     private EnumMap<Parameters.KEY, Object> paramMap;
     
     
+    
+    
+    /**
+     * Constructs a new {@code Parameters} object.
+     */
     public Parameters() {}
     
     /**
@@ -197,10 +259,13 @@ public class Parameters {
     		double localAreaDensity/*SP*/, double numActiveColumnsPerInhArea/*SP*/, double stimulusThreshold/*SP*/,
     		double synPermInactiveDec/*SP*/, double synPermActiveInc/*SP*/, double synPermConnected/*SP*/,
     		double synPermBelowStimulusInc/*SP*/, double minPctOverlapDutyCycles/*SP*/, double minPctActiveDutyCycles/*SP*/,
-            int dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold, int learningRadius, int minThreshold,
-            int maxNewSynapseCount, int seed, double initialPermanence,
-            double connectedPermanence, double permanenceIncrement,
-            double permanenceDecrement, Random random) {
+            int dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold/*TM*/, int learningRadius/*TM*/, int minThreshold/*TM*/,
+            int maxNewSynapseCount/*TM*/, int seed, double initialPermanence/*TM*/,
+            double connectedPermanence/*TM*/, double permanenceIncrement/*TM*/,
+            double permanenceDecrement/*TM*/, int w/*ENC*/, int n/*ENC*/, int radius/*ENC*/,
+            int resolution/*ENC*/, boolean periodic/*ENC*/, boolean clipInput/*ENC*/, boolean forced/*ENC*/,
+            int minval/*ENC*/, int maxval/*ENC*/, String name/*ENC*/, Random random) {
+    	
         super();
         
         //SpatialPooler 
@@ -269,6 +334,18 @@ public class Parameters {
         setPermanenceIncrement(other.permanenceIncrement);
         setPermanenceDecrement(other.permanenceDecrement);
         setRandom(other.random);
+        
+        //Encoder values
+        setW(other.w);
+        setN(other.n);
+        setRadius(other.radius);
+        setResolution(other.resolution);
+        setPeriodic(other.periodic);
+        setMinVal(other.minval);
+        setMaxVal(other.maxval);
+        setClipInput(other.clipInput);
+        setForced(other.forced);
+        setName(other.name);
     }
     
     /**
@@ -282,6 +359,8 @@ public class Parameters {
     public EnumMap<Parameters.KEY, Object> getMap() {
         if(paramMap == null) {
             paramMap = new EnumMap<Parameters.KEY, Object>(Parameters.KEY.class);
+            
+            
         }
         
         return paramMap;
@@ -289,7 +368,7 @@ public class Parameters {
     
     /**
      * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link Connections}
+     * {@link Connections} object. 
      * 
      * @param cn
      * @param p
@@ -311,7 +390,7 @@ public class Parameters {
                     }
                     default: {
                     	Field f = cn.getClass().getDeclaredField(key.fieldName);
-                        f.setAccessible(true);
+                    	f.setAccessible(true);
                         f.set(cn, p.paramMap.get(key));
                         
                         f = p.getClass().getDeclaredField(key.fieldName);
@@ -381,7 +460,7 @@ public class Parameters {
     /**
      * If the number of synapses active on a segment is at least this
      * threshold, it is selected as the best matching
-     * cell in a bursing column.
+     * cell in a bursting column.
      * 
      * @param   minThreshold
      */
@@ -455,7 +534,6 @@ public class Parameters {
     }
     
     ////////////////////////////// SPACIAL POOLER PARAMS //////////////////////////////////
-    
     /**
      * A list representing the dimensions of the input
      * vector. Format is [height, width, depth, ...], where
@@ -738,6 +816,106 @@ public class Parameters {
         getMap().put(KEY.SP_VERBOSITY, spVerbosity);
     }
     
+    /////////////////// Encoder Params ///////////////////
+    /** 
+     * Sets the "w" or width of the output signal
+     * <em>Restriction:</em> w must be odd to avoid centering problems.
+     * @param w
+     */
+    public void setW(int w) {
+    	this.w = w;
+    	getMap().put(KEY.W, w);
+    }
+    
+    /**
+     * The number of bits in the output. Must be greater than or equal to w
+     * @param n
+     */
+    public void setN(int n) {
+    	this.n = n;
+    	getMap().put(KEY.N, n);
+    }
+    
+    /**
+     * The minimum value of the input signal.
+     * @param minVal
+     */
+    public void setMinVal(int minVal) {
+    	this.minval = minVal;
+    	getMap().put(KEY.MINVAL, minVal);
+    }
+    
+    /**
+     * The maximum value of the input signal.
+     * @param maxVal
+     */
+    public void setMaxVal(int maxVal) {
+    	this.maxval = maxVal;
+    	getMap().put(KEY.MAXVAL, maxVal);
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have non-overlapping
+     * representations
+     * 
+     * @param radius
+     */
+    public void setRadius(int radius) {
+    	this.radius = radius;
+    	getMap().put(KEY.RADIUS, radius);
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have different
+     * representations
+     * 
+     * @param resolution
+     */
+    public void setResolution(int resolution) {
+    	this.resolution = resolution;
+    	getMap().put(KEY.RESOLUTION, resolution);
+    }
+    
+    /**
+     * If true, non-periodic inputs smaller than minval or greater
+     * than maxval will be clipped to minval/maxval
+     * @param b
+     */
+    public void setClipInput(boolean b) {
+    	this.clipInput = b;
+    	getMap().put(KEY.CLIP_INPUT, b);
+    }
+    
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     * 
+     * @param b
+     */
+    public void setPeriodic(boolean b) {
+    	this.periodic = b;
+    	getMap().put(KEY.PERIODIC, b);
+    }
+    
+    /**
+     * If true, skip some safety checks (for compatibility reasons), default false 
+     * @param b
+     */
+    public void setForced(boolean b) {
+    	this.forced = b;
+    	getMap().put(KEY.FORCED, b);
+    }
+    
+    /**
+     * An optional string which will become part of the description
+     * @param name
+     */
+    public void setName(String name) {
+    	this.name = name;
+    	getMap().put(KEY.NAME, name);
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -774,6 +952,19 @@ public class Parameters {
         .append("\t").append("minThreshold :  ").append(minThreshold).append("\n")
         .append("\t").append("permanenceIncrement :  ").append(permanenceIncrement).append("\n")
         .append("\t").append("permanenceDecrement :  ").append(permanenceDecrement).append("\n")
+        .append("}\n\n")
+        
+        .append("{ Encoder\n")
+        .append("\t").append("w :  ").append(w).append("\n")
+        .append("\t").append("n :  ").append(n).append("\n")
+        .append("\t").append("radius :  ").append(radius).append("\n")
+        .append("\t").append("resolution :  ").append(resolution).append("\n")
+        .append("\t").append("minval :  ").append(minval).append("\n")
+        .append("\t").append("maxval :  ").append(maxval).append("\n")
+        .append("\t").append("periodic :  ").append(periodic).append("\n")
+        .append("\t").append("clipInput :  ").append(clipInput).append("\n")
+        .append("\t").append("forced :  ").append(forced).append("\n")
+        .append("\t").append("name :  ").append(name).append("\n")
         .append("}\n\n");
         
         return sb.toString();

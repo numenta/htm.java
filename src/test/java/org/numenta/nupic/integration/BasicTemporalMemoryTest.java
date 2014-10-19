@@ -31,11 +31,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
-import org.numenta.nupic.data.ConsecutivePatternMachine;
-import org.numenta.nupic.data.SequenceMachine;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
+import org.numenta.nupic.util.ConsecutivePatternMachine;
+import org.numenta.nupic.util.SequenceMachine;
 
 
 /**
