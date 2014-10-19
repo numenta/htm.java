@@ -1,4 +1,4 @@
-package org.numenta.nupic.data;
+package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
