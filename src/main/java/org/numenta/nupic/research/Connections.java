@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.research;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -37,7 +39,6 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
@@ -52,7 +53,6 @@ import org.numenta.nupic.util.SparseObjectMatrix;
  */
 public class Connections {
 	/////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
-	
 	private int potentialRadius = 16;
     private double potentialPct = 0.5;
     private boolean globalInhibition = false;
@@ -196,13 +196,15 @@ public class Connections {
     private int w = 0;
     /** number of bits in the representation (must be > w) */
     private int n = 0;
+    /** the half width value */
+    private int halfWidth;
     /** 
      * inputs separated by more than, or equal to this distance will have non-overlapping 
      * representations 
      */
-    private int radius = 0;
+    private float radius = 0;
     /** inputs separated by more than, or equal to this distance will have different representations */
-    private int resolution  = 0;
+    private float resolution  = 0;
     /**
      * If true, then the input value "wraps around" such that minval = maxval
      * For a periodic value, the input must be strictly less than maxval,
@@ -220,6 +222,16 @@ public class Connections {
     private boolean forced;
     /** Encoder name - an optional string which will become part of the description */
     private String name;
+    private int padding;
+    private int nInternal;
+    private float rangeInternal;
+    private float range;
+    /** 
+     * This matrix is used for the topDownCompute. We build it the first time
+     * topDownCompute is called
+     */
+    private SparseMatrix<?> topDownMapping;
+    private TIntArrayList bucketValues;
 
     
     ///////////////////////   Structural Elements /////////////////////////
@@ -519,28 +531,6 @@ public class Connections {
     			this, s.getObject(idx));
     	}
     }
-    
-    /**
-     * Returns the {@link SparseObjectMatrix} that represents the connected synapses.
-     * @return
-     */
-//    public SparseObjectMatrix<int[]> getConnectedSynapses() {
-//        return connectedSynapses;
-//    }
-    
-    /**
-     * 'connectedSynapses' is a similar matrix to 'permanences'
-     * (rows represent cortical columns, columns represent input bits) whose
-     * entries represent whether the cortical column is connected to the input
-     * bit, i.e. its permanence value is greater than 'synPermConnected'. While
-     * this information is readily available from the 'permanences' matrix,
-     * it is stored separately for efficiency purposes.
-     * 
-     * @param	s	in this case the sparse matrix
-     */
-//    public void setConnectedSynapses(SparseMatrix<int[]> s) {
-//        this.connectedSynapses = (SparseObjectMatrix<int[]>)s;
-//    }
     
     /**
      * Returns the count of {@link Synapse}s
@@ -1577,6 +1567,124 @@ public class Connections {
     }
     
     /**
+     * Half the width
+     * @param hw
+     */
+    public void setHalfWidth(int hw) {
+    	this.halfWidth = hw;
+    }
+    
+    /**
+     * For non-periodic inputs, padding is the number of bits "outside" the range,
+     * on each side. I.e. the representation of minval is centered on some bit, and
+     * there are "padding" bits to the left of that centered bit; similarly with
+     * bits to the right of the center bit of maxval
+     * 
+     * @param padding
+     */
+    public void setPadding(int padding) {
+    	this.padding = padding;
+    }
+    
+    /**
+     * For non-periodic inputs, padding is the number of bits "outside" the range,
+     * on each side. I.e. the representation of minval is centered on some bit, and
+     * there are "padding" bits to the left of that centered bit; similarly with
+     * bits to the right of the center bit of maxval
+     *  
+     * @return
+     */
+    public int getPadding() {
+    	return padding;
+    }
+    
+    /**
+     * Sets rangeInternal
+     * @param r
+     */
+    public void setRangeInternal(float r) {
+    	this.rangeInternal = r;
+    }
+    
+    /**
+     * Returns the range internal value
+     * @return
+     */
+    public float getRangeInternal() {
+    	return rangeInternal;
+    }
+    
+    /**
+     * Sets the range
+     * @param range
+     */
+    public void setRange(float range) {
+    	this.range = range;
+    }
+    
+    /**
+     * Returns the range
+     * @return
+     */
+    public float getRange() {
+    	return range;
+    }
+    
+    /**
+     * nInternal represents the output area excluding the possible padding on each side
+     * 
+     * @param n
+     */
+    public void setNInternal(int n) {
+    	this.nInternal = n;
+    }
+    
+    /**
+     * nInternal represents the output area excluding the possible padding on each 
+     * side
+     * @return
+     */
+    public int getNInternal() {
+    	return nInternal;
+    }
+    
+    /**
+     * This matrix is used for the topDownCompute. We build it the first time
+     * topDownCompute is called
+     * 
+     * @param sm
+     */
+    public void setTopDownMapping(SparseMatrix<?> sm) {
+    	this.topDownMapping = sm;
+    }
+    
+    /**
+     * This matrix is used for the topDownCompute. We build it the first time
+     * topDownCompute is called
+     * 
+     * @return
+     */
+    public SparseMatrix<?> getTopDownMapping() {
+    	return topDownMapping;
+    }
+    
+    public void setBucketValues(TIntArrayList l) {
+    	this.bucketValues = l;
+    }
+    
+    public TIntArrayList getBucketValues() {
+    	return bucketValues;
+    }
+    
+    /**
+     * Return the half width value.
+     * @return
+     */
+    public int getHalfWidth() {
+    	return halfWidth;
+    }
+    
+    /**
      * The number of bits in the output. Must be greater than or equal to w
      * @param n
      */
@@ -1630,7 +1738,7 @@ public class Connections {
      * 
      * @param radius
      */
-    public void setRadius(int radius) {
+    public void setRadius(float radius) {
     	this.radius = radius;
     }
     
@@ -1638,7 +1746,7 @@ public class Connections {
      * Returns the radius
      * @return
      */
-    public int getRadius() {
+    public float getRadius() {
     	return radius;
     }
     
@@ -1648,7 +1756,7 @@ public class Connections {
      * 
      * @param resolution
      */
-    public void setResolution(int resolution) {
+    public void setResolution(float resolution) {
     	this.resolution = resolution;
     }
     
@@ -1656,7 +1764,7 @@ public class Connections {
      * Returns the resolution
      * @return
      */
-    public int getResolution() {
+    public float getResolution() {
     	return resolution;
     }
     
