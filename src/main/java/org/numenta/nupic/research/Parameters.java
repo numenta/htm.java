@@ -206,6 +206,8 @@ public class Parameters {
     private boolean forced;
     /** Encoder name - an optional string which will become part of the description */
     private String name;
+    /** Encoder verbosity setting */
+    private int encVerbosity = 0;
     
     //////////////// General ////////////////
     /** Random Number Generator */
