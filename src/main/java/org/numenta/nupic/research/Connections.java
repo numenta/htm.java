@@ -226,6 +226,7 @@ public class Connections {
     private int nInternal;
     private float rangeInternal;
     private float range;
+    private int encVerbosity;
     /** 
      * This matrix is used for the topDownCompute. We build it the first time
      * topDownCompute is called
@@ -1834,5 +1835,13 @@ public class Connections {
      */
     public String getName() {
     	return name;
+    }
+    
+    /**
+     * Returns the verbosity setting for an encoder.
+     * @return
+     */
+    public int getEncVerbosity() {
+    	return encVerbosity;
     }
 }

@@ -1,6 +1,10 @@
 package org.numenta.nupic.encoders;
 
+import java.util.Arrays;
+
 import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Tuple;
 
 
 /**
@@ -197,19 +201,20 @@ public class ScalarEncoder extends Encoder {
 	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, float radius, float resolution) {
 		if(n != 0) {
 			if(minVal != 0 && maxVal != 0) {
-				c.setResolution(c.getRangeInternal() / (c.getN() - c.getW()));
-			}else{
-				c.setResolution(c.getRangeInternal() / c.getN());
+			    if(!c.isPeriodic()) {
+					c.setResolution(c.getRangeInternal() / (c.getN() - c.getW()));
+				}else{
+					c.setResolution(c.getRangeInternal() / c.getN());
+				}
+				
+				c.setRadius(c.getW() * c.getResolution());
+				
+				if(c.isPeriodic()) {
+					c.setRange(c.getRangeInternal());
+				}else{
+					c.setRange(c.getRangeInternal() + c.getResolution());
+				}
 			}
-			
-			c.setRadius(c.getW() * c.getResolution());
-			
-			if(c.isPeriodic()) {
-				c.setRange(c.getRangeInternal());
-			}else{
-				c.setRange(c.getRangeInternal() + c.getResolution());
-			}
-			
 		}else{
 			if(radius != 0) {
 				c.setResolution(c.getRadius() / w);
@@ -232,6 +237,64 @@ public class ScalarEncoder extends Encoder {
 	}
 	
 	/**
+	 * Return the bit offset of the first bit to be set in the encoder output.
+     * For periodic encoders, this can be a negative number when the encoded output
+     * wraps around.
+     * 
+	 * @param c			the memory
+	 * @param input		the input data
+	 * @return			an encoded array
+	 */
+	public Integer getFirstOnBit(Connections c, double input) {
+		if(input == SENTINEL_VALUE_FOR_MISSING_DATA) {
+			return null;
+		}else{
+			if(input < c.getMinVal()) {
+				if(c.clipInput() && !c.isPeriodic()) {
+					if(c.getEncVerbosity() > 0) {
+						System.out.println("Clipped input " + c.getName() +
+							"=" + input + " to minval " + c.getMinVal());
+					}
+					input = c.getMinVal();
+				}else{
+					throw new IllegalStateException("input (" + input +") less than range (" +
+						c.getMinVal() + " - " + c.getMaxVal());
+				}
+			}
+		}
+		
+		if(c.isPeriodic()) {
+			if(input >= c.getMaxVal()) {
+				throw new IllegalStateException("input (" + input +") greater than periodic range (" +
+					c.getMinVal() + " - " + c.getMaxVal());
+			}
+		}else{
+			if(input > c.getMaxVal()) {
+				if(c.clipInput()) {
+					if(c.getEncVerbosity() > 0) {
+						System.out.println("Clipped input " + c.getName() + "=" + input + " to maxval " + c.getMaxVal());
+					}
+					
+					input = c.getMaxVal();
+				}else{
+					throw new IllegalStateException("input (" + input +") greater than periodic range (" +
+						c.getMinVal() + " - " + c.getMaxVal());
+				}
+			}
+		}
+		
+		int centerbin;
+		if(c.isPeriodic()) {
+			centerbin = (int)((int)((input - c.getMinVal()) *  c.getNInternal() / c.getRange())) + c.getPadding();
+		}else{
+			centerbin = (int)((int)(((input - c.getMinVal()) + c.getResolution()/2) / c.getResolution())) + c.getPadding();
+		}
+		
+		int minbin = centerbin - c.getHalfWidth();
+		return minbin;
+	}
+	
+	/**
 	 * Check if the settings are reasonable for the SpatialPooler to work
 	 * @param c
 	 */
@@ -243,25 +306,49 @@ public class ScalarEncoder extends Encoder {
 	}
 
 	@Override
-	protected int[] encodeIntoArray(Connections c, int[] inputData, int[] output) {
-		
-		return null;
-	}
-	
-	/**
-	 * Return the bit offset of the first bit to be set in the encoder output.
-     * For periodic encoders, this can be a negative number when the encoded output
-     * wraps around.
-     * 
-	 * @param c			the memory
-	 * @param input		the input data
-	 * @return			an encoded array
-	 */
-	public int[] getFirstOnBit(Connections c, int[] input) {
-		if(input == SENTINEL_VALUE_FOR_MISSING_DATA) {
-			return SENTINEL_VALUE_FOR_MISSING_DATA;
+	protected int[] encodeIntoArray(Connections c, double input, int[] output) {
+		if(Double.isNaN(input)) {
+			return new int[0];
 		}
-		return null;
+		
+		Integer bucketVal = getFirstOnBit(c, input);
+		if(bucketVal != null) {
+			int bucketIdx = bucketVal;
+			Arrays.fill(output, 0);
+			int minbin = bucketIdx;
+			int maxbin = minbin + 2*c.getHalfWidth();
+			if(c.isPeriodic()) {
+				if(maxbin >= c.getN()) {
+					int bottombins = maxbin - c.getN() + 1;
+					int[] range = ArrayUtils.range(0, bottombins);
+					ArrayUtils.setIndexesTo(output, range, 1);
+					maxbin = c.getN() - 1;
+				}
+				if(minbin < 0) {
+					int topbins = -minbin;
+					ArrayUtils.setIndexesTo(
+						output, ArrayUtils.range(c.getN() - topbins, c.getN()), 1);
+					minbin = 0;
+				}
+			}
+			
+			ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
+		}
+		
+		if(c.getEncVerbosity() >= 2) {
+			System.out.println("");
+			System.out.println("input: " + input);
+			System.out.println("range: " + c.getMinVal() + " - " + c.getMaxVal());
+			System.out.println("n:" + c.getN() + "w:" + c.getW() + "resolution:" + c.getResolution() +
+				"radius:" + c.getRadius() + "periodic:" + c.isPeriodic());
+			System.out.println("output: " + Arrays.toString(output));
+			System.out.println("input desc: " + decode(c, output, ""));
+		}
+		
+		return output;
 	}
 	
+	public Tuple decode(Connections c, int[] encoded, String parentFieldName) {
+		return null;
+	}
 }
