@@ -1,9 +1,12 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 
 import org.junit.Test;
 import org.numenta.nupic.encoders.Encoder;
@@ -11,6 +14,7 @@ import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
+import org.numenta.nupic.util.Tuple;
 
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
@@ -92,4 +96,30 @@ public class ScalarEncoderTest {
 		assertEquals(1.5d, mem.getRadius(), 0);
 	}
 
+	@Test
+	public void testCreateResolution() {
+		setUp();
+		initSE();
+		List<Tuple> dict = se.dict(mem);
+		
+		setUp();
+		parameters.setResolution(0.5);
+		initSE();
+		List<Tuple> compare = se.dict(mem);
+		assertEquals(dict, compare);
+		
+		setUp();
+		parameters.setRadius(1.5);
+		initSE();
+		compare = se.dict(mem);
+		assertEquals(dict, compare);
+		
+		//Negative test
+		setUp();
+		parameters.setResolution(0.5);
+		initSE();
+		mem.setName("break this");
+		compare = se.dict(mem);
+		assertFalse(dict.equals(compare));
+	}
 }

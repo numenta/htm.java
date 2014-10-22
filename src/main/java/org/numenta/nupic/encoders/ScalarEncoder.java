@@ -1,6 +1,8 @@
 package org.numenta.nupic.encoders;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.util.ArrayUtils;
@@ -198,7 +200,7 @@ public class ScalarEncoder extends Encoder {
 	 * @param radius
 	 * @param resolution
 	 */
-	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, float radius, float resolution) {
+	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, double radius, double resolution) {
 		if(n != 0) {
 			if(minVal != 0 && maxVal != 0) {
 			    if(!c.isPeriodic()) {
@@ -231,7 +233,7 @@ public class ScalarEncoder extends Encoder {
 				c.setRange(c.getRangeInternal() + c.getResolution());
 			}
 			
-			float nFloat = w * (c.getRange() / c.getRadius()) + 2 * c.getPadding();
+			double nFloat = w * (c.getRange() / c.getRadius()) + 2 * c.getPadding();
 			c.setN((int)Math.ceil(nFloat));
 		}
 	}
@@ -350,5 +352,36 @@ public class ScalarEncoder extends Encoder {
 	
 	public Tuple decode(Connections c, int[] encoded, String parentFieldName) {
 		return null;
+	}
+	
+	/**
+	 * Returns a list of {@link Tuple}s which in this case is a list of
+	 * key value parameter values for this {@code ScalarEncoder}
+	 * 
+	 * @param c		the memory
+	 * @return	a list of {@link Tuple}s
+	 */
+	public List<Tuple> dict(Connections c) {
+		List<Tuple> l = new ArrayList<Tuple>();
+		l.add(new Tuple(2, "maxval", c.getMaxVal()));
+		l.add(new Tuple(2, "bucketValues", c.getBucketValues()));
+		l.add(new Tuple(2, "nInternal", c.getNInternal()));
+		l.add(new Tuple(2, "name", c.getName()));
+		l.add(new Tuple(2, "minval", c.getMinVal()));
+		l.add(new Tuple(2, "topDownValues", c.getTopDownValues()));
+		l.add(new Tuple(2, "verbosity", c.getEncVerbosity()));
+		l.add(new Tuple(2, "clipInput", c.clipInput()));
+		l.add(new Tuple(2, "n", c.getN()));
+		l.add(new Tuple(2, "padding", c.getPadding()));
+		l.add(new Tuple(2, "range", c.getRange()));
+		l.add(new Tuple(2, "periodic", c.isPeriodic()));
+		l.add(new Tuple(2, "radius", c.getRadius()));
+		l.add(new Tuple(2, "w", c.getW()));
+		l.add(new Tuple(2, "topDownMappingM", c.getTopDownMapping()));
+		l.add(new Tuple(2, "halfwidth", c.getHalfWidth()));
+		l.add(new Tuple(2, "resolution", c.getResolution()));
+		l.add(new Tuple(2, "rangeInternal", c.getRangeInternal()));
+		
+		return l;
 	}
 }

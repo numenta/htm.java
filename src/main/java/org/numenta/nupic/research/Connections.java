@@ -202,9 +202,9 @@ public class Connections {
      * inputs separated by more than, or equal to this distance will have non-overlapping 
      * representations 
      */
-    private float radius = 0;
+    private double radius = 0;
     /** inputs separated by more than, or equal to this distance will have different representations */
-    private float resolution  = 0;
+    private double resolution  = 0;
     /**
      * If true, then the input value "wraps around" such that minval = maxval
      * For a periodic value, the input must be strictly less than maxval,
@@ -224,14 +224,15 @@ public class Connections {
     private String name;
     private int padding;
     private int nInternal;
-    private float rangeInternal;
-    private float range;
+    private double rangeInternal;
+    private double range;
     private int encVerbosity;
     /** 
      * This matrix is used for the topDownCompute. We build it the first time
      * topDownCompute is called
      */
     private SparseMatrix<?> topDownMapping;
+    private int[] topDownValues;
     private TIntArrayList bucketValues;
 
     
@@ -1611,7 +1612,7 @@ public class Connections {
      * Returns the range internal value
      * @return
      */
-    public float getRangeInternal() {
+    public double getRangeInternal() {
     	return rangeInternal;
     }
     
@@ -1619,7 +1620,7 @@ public class Connections {
      * Sets the range
      * @param range
      */
-    public void setRange(float range) {
+    public void setRange(double range) {
     	this.range = range;
     }
     
@@ -1627,7 +1628,7 @@ public class Connections {
      * Returns the range
      * @return
      */
-    public float getRange() {
+    public double getRange() {
     	return range;
     }
     
@@ -1667,6 +1668,22 @@ public class Connections {
      */
     public SparseMatrix<?> getTopDownMapping() {
     	return topDownMapping;
+    }
+    
+    /**
+     * Range of values.
+     * @param values
+     */
+    public void setTopDownValues(int[] values) {
+    	this.topDownValues = values;
+    }
+    
+    /**
+     * Returns the top down range of values
+     * @return
+     */
+    public int[] getTopDownValues() {
+    	return topDownValues;
     }
     
     public void setBucketValues(TIntArrayList l) {
@@ -1739,7 +1756,7 @@ public class Connections {
      * 
      * @param radius
      */
-    public void setRadius(float radius) {
+    public void setRadius(double radius) {
     	this.radius = radius;
     }
     
@@ -1747,7 +1764,7 @@ public class Connections {
      * Returns the radius
      * @return
      */
-    public float getRadius() {
+    public double getRadius() {
     	return radius;
     }
     
@@ -1757,7 +1774,7 @@ public class Connections {
      * 
      * @param resolution
      */
-    public void setResolution(float resolution) {
+    public void setResolution(double resolution) {
     	this.resolution = resolution;
     }
     
@@ -1765,7 +1782,7 @@ public class Connections {
      * Returns the resolution
      * @return
      */
-    public float getResolution() {
+    public double getResolution() {
     	return resolution;
     }
     
