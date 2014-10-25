@@ -186,9 +186,9 @@ public class Parameters {
      * inputs separated by more than, or equal to this distance will have non-overlapping 
      * representations 
      */
-    private int radius = 0;
+    private double radius = 0;
     /** inputs separated by more than, or equal to this distance will have different representations */
-    private int resolution  = 0;
+    private double resolution = 0;
     /**
      * If true, then the input value "wraps around" such that minval = maxval
      * For a periodic value, the input must be strictly less than maxval,
@@ -862,7 +862,7 @@ public class Parameters {
      * 
      * @param radius
      */
-    public void setRadius(int radius) {
+    public void setRadius(double radius) {
     	this.radius = radius;
     	getMap().put(KEY.RADIUS, radius);
     }
@@ -873,7 +873,7 @@ public class Parameters {
      * 
      * @param resolution
      */
-    public void setResolution(int resolution) {
+    public void setResolution(double resolution) {
     	this.resolution = resolution;
     	getMap().put(KEY.RESOLUTION, resolution);
     }

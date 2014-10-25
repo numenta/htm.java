@@ -1,16 +1,25 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
+import org.numenta.nupic.encoders.Decode;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.EncoderResult;
+import org.numenta.nupic.encoders.Ranges;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
+import org.numenta.nupic.util.Tuple;
 
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
@@ -92,4 +101,133 @@ public class ScalarEncoderTest {
 		assertEquals(1.5d, mem.getRadius(), 0);
 	}
 
+	/**
+	 * Test that we get the same encoder when we construct it using resolution
+     * instead of n
+	 */
+	@Test
+	public void testCreateResolution() {
+		setUp();
+		initSE();
+		List<Tuple> dict = se.dict(mem);
+		
+		setUp();
+		parameters.setResolution(0.5);
+		initSE();
+		List<Tuple> compare = se.dict(mem);
+		assertEquals(dict, compare);
+		
+		setUp();
+		parameters.setRadius(1.5);
+		initSE();
+		compare = se.dict(mem);
+		assertEquals(dict, compare);
+		
+		//Negative test
+		setUp();
+		parameters.setResolution(0.5);
+		initSE();
+		mem.setName("break this");
+		compare = se.dict(mem);
+		assertFalse(dict.equals(compare));
+	}
+	
+	/**
+	 * Test the input description generation, top-down compute, and bucket
+     * support on a periodic encoder
+     */
+	@Test
+	public void testDecodeAndResolution() {
+		setUp();
+		parameters.setName("scalar");
+		initSE();
+		double resolution = mem.getResolution();
+		System.out.println("resolution = " +resolution);
+		StringBuilder out = new StringBuilder();
+		for(double v = mem.getMinVal();v < mem.getMaxVal();v+=(resolution / 4.0d)) {
+			int[] output = se.encode(mem, v);
+			Decode decoded = se.decode(mem, output, "");
+			
+			System.out.println(out.append("decoding ").append(Arrays.toString(output)).append(" (").
+			append(String.format("%.6f", v)).append(")=> ").append(se.decodedToStr(decoded)));
+			out.setLength(0);
+			
+			Map<String, Ranges> fieldsMap = decoded.getFields();
+			assertEquals(1, fieldsMap.size());
+			Ranges ranges = (Ranges)new ArrayList<Ranges>(fieldsMap.values()).get(0);
+			assertEquals(1, ranges.size());
+			assertEquals(ranges.getRange(0).min(), ranges.getRange(0).max(), 0);
+			assertTrue(ranges.getRange(0).min() - v < mem.getResolution());
+			
+			EncoderResult topDown = se.topDownCompute(mem, output);
+			System.out.println("topdown => " + topDown);
+			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
+			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= mem.getResolution() / 2);
+			
+			//Test bucket support
+			int[] bucketIndices = se.getBucketIndices(mem, v);
+			System.out.println("bucket index => " + bucketIndices[0]);
+			topDown = se.getBucketInfo(mem, bucketIndices);
+			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= mem.getResolution() / 2);
+			assertEquals(topDown.get(1), se.getBucketValues(mem).toArray()[bucketIndices[0]]);
+			assertEquals(topDown.get(2), topDown.get(1));
+			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
+		}
+		
+		// -----------------------------------------------------------------------
+	    // Test the input description generation on a large number, periodic encoder
+		setUp();
+		parameters.setName("scalar");
+		parameters.setRadius(1.5);
+		parameters.setW(3);
+		parameters.setMinVal(1);
+		parameters.setMaxVal(8);
+		parameters.setPeriodic(true);
+		parameters.setForced(true);
+		initSE();
+		
+		System.out.println("\nTesting periodic encoder decoding, resolution of " + mem.getResolution());
+		
+		//Test with a "hole"
+		int[] encoded = new int[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+		Decode decoded = se.decode(mem, encoded, "");
+		Map<String, Ranges> fieldsMap = decoded.getFields();
+		assertEquals(1, fieldsMap.size());
+		assertEquals(1, decoded.getRanges("scalar").size());
+		assertEquals(decoded.getRanges("scalar").getRange(0).toString(), "[7.5, 7.5]");
+		
+		//Test with something wider than w, and with a hole, and wrapped
+		encoded = new int[] { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+		decoded = se.decode(mem, encoded, "");
+		fieldsMap = decoded.getFields();
+		assertEquals(1, fieldsMap.size());
+		assertEquals(2, decoded.getRanges("scalar").size());
+		assertEquals(decoded.getRanges("scalar").getRange(0).toString(), "[7.5, 8.0]");
+		
+		//Test with something wider than w, no hole
+		encoded = new int[] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		decoded = se.decode(mem, encoded, "");
+		fieldsMap = decoded.getFields();
+		assertEquals(1, fieldsMap.size());
+		assertEquals(1, decoded.getRanges("scalar").size());
+		assertEquals(decoded.getRanges("scalar").getRange(0).toString(), "[1.5, 2.5]");
+		
+		//Test with 2 ranges
+		encoded = new int[] { 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 };
+		decoded = se.decode(mem, encoded, "");
+		fieldsMap = decoded.getFields();
+		assertEquals(1, fieldsMap.size());
+		assertEquals(2, decoded.getRanges("scalar").size());
+		assertEquals(decoded.getRanges("scalar").getRange(0).toString(), "[1.5, 1.5]");
+		assertEquals(decoded.getRanges("scalar").getRange(1).toString(), "[5.5, 6.0]");
+		
+		//Test with 2 ranges, 1 of which is narrower than w
+		encoded = new int[] { 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 };
+		decoded = se.decode(mem, encoded, "");
+		fieldsMap = decoded.getFields();
+		assertEquals(1, fieldsMap.size());
+		assertEquals(2, decoded.getRanges("scalar").size());
+		assertEquals(decoded.getRanges("scalar").getRange(0).toString(), "[1.5, 1.5]");
+		assertEquals(decoded.getRanges("scalar").getRange(1).toString(), "[5.5, 6.0]");
+	}
 }

@@ -1,9 +1,19 @@
 package org.numenta.nupic.encoders;
 
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.array.TDoubleArrayList;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
 
@@ -198,7 +208,7 @@ public class ScalarEncoder extends Encoder {
 	 * @param radius
 	 * @param resolution
 	 */
-	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, float radius, float resolution) {
+	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, double radius, double resolution) {
 		if(n != 0) {
 			if(minVal != 0 && maxVal != 0) {
 			    if(!c.isPeriodic()) {
@@ -231,7 +241,7 @@ public class ScalarEncoder extends Encoder {
 				c.setRange(c.getRangeInternal() + c.getResolution());
 			}
 			
-			float nFloat = w * (c.getRange() / c.getRadius()) + 2 * c.getPadding();
+			double nFloat = w * (c.getRange() / c.getRadius()) + 2 * c.getPadding();
 			c.setN((int)Math.ceil(nFloat));
 		}
 	}
@@ -304,6 +314,23 @@ public class ScalarEncoder extends Encoder {
 				"Number of bits in the SDR (%d) must be greater than 2, and recommended >= 21 (use forced=True to override)");
 		}
 	}
+	
+	public int[] getBucketIndices(Connections c, double input) {
+		int minbin = getFirstOnBit(c, input);
+		
+		//For periodic encoders, the bucket index is the index of the center bit
+		int bucketIdx;
+		if(c.isPeriodic()) {
+			bucketIdx = minbin + c.getHalfWidth();
+			if(bucketIdx < 0) {
+				bucketIdx += c.getN();
+			}
+		}else{//for non-periodic encoders, the bucket index is the index of the left bit
+			bucketIdx = minbin;
+		}
+		
+		return new int[] { bucketIdx };
+	}
 
 	@Override
 	protected int[] encodeIntoArray(Connections c, double input, int[] output) {
@@ -348,7 +375,301 @@ public class ScalarEncoder extends Encoder {
 		return output;
 	}
 	
-	public Tuple decode(Connections c, int[] encoded, String parentFieldName) {
-		return null;
+	public Decode decode(Connections c, int[] encoded, String parentFieldName) {
+		// For now, we simply assume any top-down output greater than 0
+	    // is ON. Eventually, we will probably want to incorporate the strength
+	    // of each top-down output.
+		if(encoded == null || encoded.length < 1) { 
+			return null;
+		}
+		int[] tmpOutput = Arrays.copyOf(encoded, encoded.length);
+		
+		// ------------------------------------------------------------------------
+	    // First, assume the input pool is not sampled 100%, and fill in the
+	    //  "holes" in the encoded representation (which are likely to be present
+	    //  if this is a coincidence that was learned by the SP).
+
+	    // Search for portions of the output that have "holes"
+		int maxZerosInARow = c.getHalfWidth();
+		for(int i = 0;i < maxZerosInARow;i++) {
+			int[] searchStr = new int[i + 3];
+			Arrays.fill(searchStr, 1);
+			ArrayUtils.setIndexesTo(searchStr, ArrayUtils.range(1, searchStr.length - 1), 0);
+			int subLen = searchStr.length;
+			
+			// Does this search string appear in the output?
+			if(c.isPeriodic()) {
+				for(int j = 0;j < c.getN();j++) {
+					int[] outputIndices = ArrayUtils.range(j, j + subLen);
+					outputIndices = ArrayUtils.modulo(outputIndices, c.getN());
+					if(Arrays.equals(searchStr, ArrayUtils.sub(tmpOutput, outputIndices))) {
+						ArrayUtils.setIndexesTo(tmpOutput, outputIndices, 1);
+					}
+				}
+			}else{
+				for(int j = 0;j < c.getN() - subLen + 1;j++) {
+					int[] range = ArrayUtils.range(j, j + subLen);
+					if(Arrays.equals(searchStr, ArrayUtils.sub(tmpOutput, range))) {
+						ArrayUtils.setIndexesTo(tmpOutput, range, 1);
+					}
+				}
+			}
+		}
+		
+		if(c.getEncVerbosity() >= 2) {
+			System.out.println("raw output:" + Arrays.toString(
+				ArrayUtils.sub(encoded, ArrayUtils.range(0, c.getN()))));
+			System.out.println("filtered output:" + Arrays.toString(tmpOutput));
+		}
+		
+		// ------------------------------------------------------------------------
+	    // Find each run of 1's.
+		int[] nz = ArrayUtils.where(tmpOutput, new Condition.Adapter<Integer>() {
+			public boolean eval(int n) {
+				return n > 0;
+			}
+		});
+		List<Tuple> runs = new ArrayList<Tuple>(); //will be tuples of (startIdx, runLength)
+		Arrays.sort(nz);
+		int[] run = new int[] { nz[0], 1 };
+		int i = 1;
+		while(i < nz.length) {
+			if(nz[i] == run[0] + run[1]) {
+				run[1] += 1;
+			}else{
+				runs.add(new Tuple(2, run[0], run[1]));
+				run = new int[] { nz[i], 1 };
+			}
+			i += 1;
+		}
+		runs.add(new Tuple(2, run[0], run[1]));
+		
+		// If we have a periodic encoder, merge the first and last run if they
+	    // both go all the way to the edges
+		if(c.isPeriodic() && runs.size() > 1) {
+			int l = runs.size() - 1;
+			if(((Integer)runs.get(0).get(0)) == 0 && ((Integer)runs.get(l).get(0)) + ((Integer)runs.get(l).get(1)) == c.getN()) {
+				runs.set(l, new Tuple(2, 
+					(Integer)runs.get(l).get(0),  
+						((Integer)runs.get(l).get(1)) + ((Integer)runs.get(0).get(1)) ));
+				runs = runs.subList(1, runs.size());
+			}
+		}
+		
+		// ------------------------------------------------------------------------
+	    // Now, for each group of 1's, determine the "left" and "right" edges, where
+	    // the "left" edge is inset by halfwidth and the "right" edge is inset by
+	    // halfwidth.
+	    // For a group of width w or less, the "left" and "right" edge are both at
+	    // the center position of the group.
+		int left = 0;
+		int right = 0;
+		List<MinMax> ranges = new ArrayList<MinMax>();
+		for(Tuple tupleRun : runs) {
+			int start = (Integer)tupleRun.get(0);
+			int runLen = (Integer)tupleRun.get(1);
+			if(runLen <= c.getW()) {
+				left = right = start + runLen / 2;
+			}else{
+				left = start + c.getHalfWidth();
+				right = start + runLen - 1 - c.getHalfWidth();
+			}
+			
+			double inMin, inMax;
+			// Convert to input space.
+			if(!c.isPeriodic()) {
+				inMin = (left - c.getPadding()) * c.getResolution() + c.getMinVal();
+				inMax = (right - c.getPadding()) * c.getResolution() + c.getMinVal();
+			}else{
+				inMin = (left - c.getPadding()) * c.getRange() / c.getNInternal() + c.getMinVal();
+				inMax = (right - c.getPadding()) * c.getRange() / c.getNInternal() + c.getMinVal();
+			}
+			// Handle wrap-around if periodic
+			if(c.isPeriodic()) {
+				if(inMin >= c.getMaxVal()) {
+					inMin -= c.getRange();
+					inMax -= c.getRange();
+				}
+			}
+			
+			// Clip low end
+			if(inMin < c.getMinVal()) {
+				inMin = c.getMinVal();
+			}
+			if(inMax < c.getMinVal()) {
+				inMax = c.getMinVal();
+			}
+			
+			// If we have a periodic encoder, and the max is past the edge, break into
+			// 	2 separate ranges
+			if(c.isPeriodic() && inMax >= c.getMaxVal()) {
+				ranges.add(new MinMax(inMin, c.getMaxVal()));
+				ranges.add(new MinMax(c.getMinVal(), inMax - c.getRange()));
+			}else{
+				if(inMax > c.getMaxVal()) {
+					inMax = c.getMaxVal();
+				}
+				if(inMin > c.getMaxVal()) {
+					inMin = c.getMaxVal();
+				}
+				ranges.add(new MinMax(inMin, inMax));
+			}
+		}
+		
+		String desc = generateRangeDescription(ranges);
+		String fieldName;
+		// Return result
+		if(!parentFieldName.isEmpty()) {
+			fieldName = String.format("%s.%s", parentFieldName, c.getName());
+		}else{
+			fieldName = c.getName();
+		}
+		
+		Ranges inner = new Ranges(ranges, desc);
+		Map<String, Ranges> fieldsDict = new HashMap<String, Ranges>();
+		fieldsDict.put(fieldName, inner);
+		
+		return new Decode(fieldsDict, Arrays.asList(new String[] { fieldName }));
+	}
+	
+	/**
+	 * Generate description from a text description of the ranges
+	 * 
+	 * @param	ranges		A list of {@link MinMax}es.
+	 */
+	public String generateRangeDescription(List<MinMax> ranges) {
+		StringBuilder desc = new StringBuilder();
+		int numRanges = ranges.size();
+		for(int i = 0;i < numRanges;i++) {
+			if(ranges.get(i).min() != ranges.get(i).max()) {
+				desc.append(String.format("%.2f-%.2f", ranges.get(i).min(), ranges.get(i).max()));
+			}else{
+				desc.append(String.format("%.2f", ranges.get(i).min()));
+			}
+			if(i < numRanges - 1) {
+				desc.append(", ");
+			}
+		}
+		return desc.toString();
+	}
+	
+	/**
+	 * Return the internal topDownMapping matrix used for handling the
+     * bucketInfo() and topDownCompute() methods. This is a matrix, one row per
+     * category (bucket) where each row contains the encoded output for that
+     * category.
+     * 
+	 * @param c		the connections memory
+	 * @return		the internal topDownMapping
+	 */
+	public SparseObjectMatrix<int[]> getTopDownMapping(Connections c) {
+		
+		if(c.getTopDownMapping() == null) {
+			//The input scalar value corresponding to each possible output encoding
+			if(c.isPeriodic()) {
+				c.setTopDownValues(
+					ArrayUtils.arange(c.getMinVal() + c.getResolution() / 2.0, 
+						c.getMaxVal(), c.getResolution()));
+			}else{
+				//Number of values is (max-min)/resolutions
+				c.setTopDownValues(
+					ArrayUtils.arange(c.getMinVal(), c.getMaxVal() + c.getResolution() / 2.0, 
+						c.getResolution()));
+			}
+		}
+		
+		//Each row represents an encoded output pattern
+		int numCategories = c.getTopDownValues().length;
+		SparseObjectMatrix<int[]> topDownMapping;
+		c.setTopDownMapping(
+			topDownMapping = new SparseObjectMatrix<int[]>(
+				new int[] { numCategories }));
+		
+		double[] topDownValues = c.getTopDownValues();
+		int[] outputSpace = new int[c.getN()];
+		int minVal = c.getMinVal();
+		int maxVal = c.getMaxVal();
+		for(int i = 0;i < outputSpace.length;i++) {
+			double value = topDownValues[i];
+			value = Math.max(value, minVal);
+			value = Math.min(value, maxVal);
+			encodeIntoArray(c, value, outputSpace);
+			topDownMapping.set(i, Arrays.copyOf(outputSpace, outputSpace.length));
+		}
+		
+		return topDownMapping;
+	}
+	
+	public TDoubleList getBucketValues(Connections c) {
+		TDoubleList bucketValues = null;
+		if((bucketValues = c.getBucketValues()) == null) {
+			SparseObjectMatrix<int[]> topDownMapping = c.getTopDownMapping();
+			int numBuckets = topDownMapping.getMaxIndex() + 1;
+			bucketValues = new TDoubleArrayList();
+			for(int i = 0;i < numBuckets;i++) {
+				bucketValues.add((Double)getBucketInfo(c, new int[] { i }).get(1));
+			}
+			c.setBucketValues(bucketValues);
+		}
+		return bucketValues;
+	}
+	
+	public EncoderResult getBucketInfo(Connections c, int[] buckets) {
+		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping(c);
+		
+		//The "category" is simply the bucket index
+		int category = buckets[0];
+		int[] encoding = topDownMapping.getObject(category);
+		
+		//Which input value does this correspond to?
+		double inputVal;
+		if(c.isPeriodic()) {
+			inputVal = c.getMinVal() + c.getResolution() / 2 + category * c.getResolution();
+		}else{
+			inputVal = c.getMinVal() + category * c.getResolution();
+		}
+		
+		return new EncoderResult(inputVal, inputVal, Arrays.toString(encoding));
+	}
+	
+	public EncoderResult topDownCompute(Connections c, int[] encoded) {
+		//Get/generate the topDown mapping table
+		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping(c);
+		
+		// See which "category" we match the closest.
+		int category = ArrayUtils.argmax(topDownMapping.rightVecProd(encoded));
+		
+		return getBucketInfo(c, new int[] { category });
+	}
+	
+	/**
+	 * Returns a list of {@link Tuple}s which in this case is a list of
+	 * key value parameter values for this {@code ScalarEncoder}
+	 * 
+	 * @param c		the memory
+	 * @return	a list of {@link Tuple}s
+	 */
+	public List<Tuple> dict(Connections c) {
+		List<Tuple> l = new ArrayList<Tuple>();
+		l.add(new Tuple(2, "maxval", c.getMaxVal()));
+		l.add(new Tuple(2, "bucketValues", c.getBucketValues()));
+		l.add(new Tuple(2, "nInternal", c.getNInternal()));
+		l.add(new Tuple(2, "name", c.getName()));
+		l.add(new Tuple(2, "minval", c.getMinVal()));
+		l.add(new Tuple(2, "topDownValues", c.getTopDownValues()));
+		l.add(new Tuple(2, "verbosity", c.getEncVerbosity()));
+		l.add(new Tuple(2, "clipInput", c.clipInput()));
+		l.add(new Tuple(2, "n", c.getN()));
+		l.add(new Tuple(2, "padding", c.getPadding()));
+		l.add(new Tuple(2, "range", c.getRange()));
+		l.add(new Tuple(2, "periodic", c.isPeriodic()));
+		l.add(new Tuple(2, "radius", c.getRadius()));
+		l.add(new Tuple(2, "w", c.getW()));
+		l.add(new Tuple(2, "topDownMappingM", c.getTopDownMapping()));
+		l.add(new Tuple(2, "halfwidth", c.getHalfWidth()));
+		l.add(new Tuple(2, "resolution", c.getResolution()));
+		l.add(new Tuple(2, "rangeInternal", c.getRangeInternal()));
+		
+		return l;
 	}
 }
