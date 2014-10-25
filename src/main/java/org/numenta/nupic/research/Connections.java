@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.research;
 
+import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -43,6 +45,7 @@ import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
@@ -231,9 +234,10 @@ public class Connections {
      * This matrix is used for the topDownCompute. We build it the first time
      * topDownCompute is called
      */
-    private SparseMatrix<?> topDownMapping;
-    private int[] topDownValues;
-    private TIntArrayList bucketValues;
+    private SparseObjectMatrix<int[]> topDownMapping;
+    private double[] topDownValues;
+    private TDoubleList bucketValues;
+    private List<Tuple> encoders;
 
     
     ///////////////////////   Structural Elements /////////////////////////
@@ -1656,7 +1660,7 @@ public class Connections {
      * 
      * @param sm
      */
-    public void setTopDownMapping(SparseMatrix<?> sm) {
+    public void setTopDownMapping(SparseObjectMatrix<int[]> sm) {
     	this.topDownMapping = sm;
     }
     
@@ -1666,7 +1670,7 @@ public class Connections {
      * 
      * @return
      */
-    public SparseMatrix<?> getTopDownMapping() {
+    public SparseObjectMatrix<int[]> getTopDownMapping() {
     	return topDownMapping;
     }
     
@@ -1674,7 +1678,7 @@ public class Connections {
      * Range of values.
      * @param values
      */
-    public void setTopDownValues(int[] values) {
+    public void setTopDownValues(double[] values) {
     	this.topDownValues = values;
     }
     
@@ -1682,15 +1686,15 @@ public class Connections {
      * Returns the top down range of values
      * @return
      */
-    public int[] getTopDownValues() {
+    public double[] getTopDownValues() {
     	return topDownValues;
     }
     
-    public void setBucketValues(TIntArrayList l) {
-    	this.bucketValues = l;
+    public void setBucketValues(TDoubleList bucketValues) {
+    	this.bucketValues = bucketValues;
     }
     
-    public TIntArrayList getBucketValues() {
+    public TDoubleList getBucketValues() {
     	return bucketValues;
     }
     
@@ -1861,4 +1865,28 @@ public class Connections {
     public int getEncVerbosity() {
     	return encVerbosity;
     }
+    
+    /**
+     * Adds a the specified {@link Encoder} to the list
+     * 
+     * @param name		Name of the {@link Encoder}
+     * @param e			the {@code Encoder}
+     * @param offset	the offset of the encoded output the specified encoder
+     * 					was used to encode.
+     */
+    public void addEncoder(String name, Encoder e, int offset) {
+    	if(encoders == null) {
+    		encoders = new ArrayList<Tuple>();
+    	}
+    	encoders.add(new Tuple(3, name, e, offset));
+    }
+    
+    /**
+     * Returns the list of {@link Encoder}s
+     * @return
+     */
+    public List<Tuple> getEncoders() {
+    	return encoders;
+    }
+    
 }
