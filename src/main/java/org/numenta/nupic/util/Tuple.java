@@ -25,7 +25,7 @@ public class Tuple {
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0;i < container.length;i++) {
 			try {
-				new Double(Double.parseDouble(container[i] +""));
+				new Double((double) container[i]);
 				sb.append(container[i]);
 			}catch(Exception e) { sb.append("'").append(container[i]).append("'");}
 			sb.append(":");
