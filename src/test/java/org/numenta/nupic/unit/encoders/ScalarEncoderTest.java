@@ -1,25 +1,15 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Test;
-import org.numenta.nupic.encoders.Decode;
-import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.encoders.EncoderResult;
-import org.numenta.nupic.encoders.Ranges;
-import org.numenta.nupic.encoders.ScalarEncoder;
+import org.numenta.nupic.encoders.*;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.Parameters.KEY;
 import org.numenta.nupic.util.Tuple;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
@@ -162,13 +152,13 @@ public class ScalarEncoderTest {
 			EncoderResult topDown = se.topDownCompute(mem, output);
 			System.out.println("topdown => " + topDown);
 			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
-			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= mem.getResolution() / 2);
+			assertTrue(Math.abs(((Double)topDown.get(1)) - v) <= mem.getResolution() / 2);
 			
 			//Test bucket support
 			int[] bucketIndices = se.getBucketIndices(mem, v);
 			System.out.println("bucket index => " + bucketIndices[0]);
 			topDown = se.getBucketInfo(mem, bucketIndices);
-			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= mem.getResolution() / 2);
+			assertTrue(Math.abs(((Double)topDown.get(1)) - v) <= mem.getResolution() / 2);
 			assertEquals(topDown.get(1), se.getBucketValues(mem).toArray()[bucketIndices[0]]);
 			assertEquals(topDown.get(2), topDown.get(1));
 			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
