@@ -41,6 +41,8 @@
 				<configuration>
 					<verbose>true</verbose>
 					<fork>true</fork>
+          <source>1.7</source>
+          <target>1.7</target>
 					<executable><!-- path-to-javac -->
 					</executable>
 					<compilerVersion>1.7</compilerVersion>
