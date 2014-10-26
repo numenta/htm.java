@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.research;
 
+import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -43,6 +45,7 @@ import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
@@ -202,9 +205,9 @@ public class Connections {
      * inputs separated by more than, or equal to this distance will have non-overlapping 
      * representations 
      */
-    private float radius = 0;
+    private double radius = 0;
     /** inputs separated by more than, or equal to this distance will have different representations */
-    private float resolution  = 0;
+    private double resolution  = 0;
     /**
      * If true, then the input value "wraps around" such that minval = maxval
      * For a periodic value, the input must be strictly less than maxval,
@@ -224,15 +227,17 @@ public class Connections {
     private String name;
     private int padding;
     private int nInternal;
-    private float rangeInternal;
-    private float range;
+    private double rangeInternal;
+    private double range;
     private int encVerbosity;
     /** 
      * This matrix is used for the topDownCompute. We build it the first time
      * topDownCompute is called
      */
-    private SparseMatrix<?> topDownMapping;
-    private TIntArrayList bucketValues;
+    private SparseObjectMatrix<int[]> topDownMapping;
+    private double[] topDownValues;
+    private TDoubleList bucketValues;
+    private List<Tuple> encoders;
 
     
     ///////////////////////   Structural Elements /////////////////////////
@@ -1611,7 +1616,7 @@ public class Connections {
      * Returns the range internal value
      * @return
      */
-    public float getRangeInternal() {
+    public double getRangeInternal() {
     	return rangeInternal;
     }
     
@@ -1619,7 +1624,7 @@ public class Connections {
      * Sets the range
      * @param range
      */
-    public void setRange(float range) {
+    public void setRange(double range) {
     	this.range = range;
     }
     
@@ -1627,7 +1632,7 @@ public class Connections {
      * Returns the range
      * @return
      */
-    public float getRange() {
+    public double getRange() {
     	return range;
     }
     
@@ -1655,7 +1660,7 @@ public class Connections {
      * 
      * @param sm
      */
-    public void setTopDownMapping(SparseMatrix<?> sm) {
+    public void setTopDownMapping(SparseObjectMatrix<int[]> sm) {
     	this.topDownMapping = sm;
     }
     
@@ -1665,15 +1670,31 @@ public class Connections {
      * 
      * @return
      */
-    public SparseMatrix<?> getTopDownMapping() {
+    public SparseObjectMatrix<int[]> getTopDownMapping() {
     	return topDownMapping;
     }
     
-    public void setBucketValues(TIntArrayList l) {
-    	this.bucketValues = l;
+    /**
+     * Range of values.
+     * @param values
+     */
+    public void setTopDownValues(double[] values) {
+    	this.topDownValues = values;
     }
     
-    public TIntArrayList getBucketValues() {
+    /**
+     * Returns the top down range of values
+     * @return
+     */
+    public double[] getTopDownValues() {
+    	return topDownValues;
+    }
+    
+    public void setBucketValues(TDoubleList bucketValues) {
+    	this.bucketValues = bucketValues;
+    }
+    
+    public TDoubleList getBucketValues() {
     	return bucketValues;
     }
     
@@ -1739,7 +1760,7 @@ public class Connections {
      * 
      * @param radius
      */
-    public void setRadius(float radius) {
+    public void setRadius(double radius) {
     	this.radius = radius;
     }
     
@@ -1747,7 +1768,7 @@ public class Connections {
      * Returns the radius
      * @return
      */
-    public float getRadius() {
+    public double getRadius() {
     	return radius;
     }
     
@@ -1757,7 +1778,7 @@ public class Connections {
      * 
      * @param resolution
      */
-    public void setResolution(float resolution) {
+    public void setResolution(double resolution) {
     	this.resolution = resolution;
     }
     
@@ -1765,7 +1786,7 @@ public class Connections {
      * Returns the resolution
      * @return
      */
-    public float getResolution() {
+    public double getResolution() {
     	return resolution;
     }
     
@@ -1844,4 +1865,28 @@ public class Connections {
     public int getEncVerbosity() {
     	return encVerbosity;
     }
+    
+    /**
+     * Adds a the specified {@link Encoder} to the list
+     * 
+     * @param name		Name of the {@link Encoder}
+     * @param e			the {@code Encoder}
+     * @param offset	the offset of the encoded output the specified encoder
+     * 					was used to encode.
+     */
+    public void addEncoder(String name, Encoder e, int offset) {
+    	if(encoders == null) {
+    		encoders = new ArrayList<Tuple>();
+    	}
+    	encoders.add(new Tuple(3, name, e, offset));
+    }
+    
+    /**
+     * Returns the list of {@link Encoder}s
+     * @return
+     */
+    public List<Tuple> getEncoders() {
+    	return encoders;
+    }
+    
 }

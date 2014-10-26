@@ -1,5 +1,6 @@
 package org.numenta.nupic.util;
 
+import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -33,6 +34,46 @@ public class ArrayUtils {
             retVal[i] = ints[i];
         }
         return retVal;
+    }
+    
+    /**
+     * Performs a modulus operation in Python style.
+     * @param a
+     * @param b
+     * @return
+     */
+    public static int modulo(int a, int b) {
+    	if(b == 0) throw new IllegalArgumentException("Division by Zero!");
+    	if(a > 0 && b > 0 && b > a) return a;
+    	boolean isMinus = Math.abs(b - (a - b)) < Math.abs(b - (a + b));
+    	if(isMinus) {
+	    	while(a >= b) {
+	    		a -= b;
+	    	}
+    	}else{
+    		if(a % b == 0) return 0;
+        	
+    		while(a + b < b) {
+    			a += b;
+    		}
+    	}
+    	return a;
+    }
+    
+    /**
+     * Performs a modulus on every index of the first argument using
+     * the second argument and places the result in the same index of
+     * the first argument.
+     * 
+     * @param a
+     * @param b
+     * @return
+     */
+    public static int[] modulo(int[] a, int b) {
+    	for(int i = 0;i < a.length;i++) {
+    		a[i] = modulo(a[i], b);
+    	}
+    	return a;
     }
     
     /**
@@ -477,6 +518,23 @@ public class ArrayUtils {
             ints.add(i);
         }
         return ints.toArray();
+    }
+    
+    /**
+     * Returns an array which starts from lowerBounds (inclusive) and
+     * ends at the upperBounds (exclusive).
+     * 
+     * @param lowerBounds	the starting value
+     * @param upperBounds	the maximum value (exclusive)
+     * @param interval		the amount by which to increment the values
+     * @return
+     */
+    public static double[] arange(double lowerBounds, double upperBounds, double interval) {
+        TDoubleList doubs = new TDoubleArrayList();
+        for(double i = lowerBounds;i < upperBounds;i+=interval) {
+        	doubs.add(i);
+        }
+        return doubs.toArray();
     }
     
     /**
@@ -947,6 +1005,23 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns the index of the max value in the specified array
+     * @param array		the array to find the max value index in
+     * @return			the index of the max value
+     */
+    public static int argmax(int[] array) {
+    	int index = -1;
+    	int max = Integer.MIN_VALUE;
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] > max) {
+                max = array[i];
+                index = i;
+            }
+        }
+        return index;
+    }
+    
+    /**
      * Returns the maximum value in the specified array
      * @param array
      * @return
@@ -986,6 +1061,22 @@ public class ArrayUtils {
      */
     public static double[] sub(double[] source, int[] indexes) {
     	double[] retVal = new double[indexes.length];
+    	for(int i = 0;i < indexes.length;i++) {
+    		retVal[i] = source[indexes[i]];
+    	}
+    	return retVal;
+    }
+    
+    /**
+     * Returns a new array containing the items specified from
+     * the source array by the indexes specified.
+     * 
+     * @param source
+     * @param indexes
+     * @return
+     */
+    public static int[] sub(int[] source, int[] indexes) {
+    	int[] retVal = new int[indexes.length];
     	for(int i = 0;i < indexes.length;i++) {
     		retVal[i] = source[indexes[i]];
     	}

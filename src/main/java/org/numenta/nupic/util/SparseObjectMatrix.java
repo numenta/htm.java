@@ -46,6 +46,25 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
     }
     
     /**
+     * Returns an array containing the sum of the right 
+     * applied multiplications of each slice to the array
+     * passed in.
+     * 
+     * @param encoded
+     * @return
+     */
+    public int[] rightVecProd(int[] encoded) {
+    	int[] retVal = new int[getMaxIndex() + 1];
+    	for(int i = 0;i < retVal.length;i++) {
+    		int[] slice = (int[])sparseMap.get(i);
+    		for(int j = 0;j < slice.length;j++) {
+    			retVal[i] += (slice[j] * encoded[j]);
+    		}
+    	}
+    	return retVal;
+    }
+    
+    /**
      * Sets the object to occupy the specified index.
      * 
      * @param index     the index the object will occupy
