@@ -21,16 +21,8 @@
  */
 package org.numenta.nupic.integration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.bethecoder.table.AsciiTableInstance;
+import com.bethecoder.table.spec.AsciiTable;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
@@ -40,7 +32,7 @@ import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
 
-import com.bethecoder.ascii_table.ASCIITable;
+import java.util.*;
 
 /**
  * Test utility to furnish test data.
@@ -163,7 +155,7 @@ public class TemporalMemoryTestMachine {
             data[i] = row;
         }
         
-        String retVal = ASCIITable.getInstance().getTable(header, data, ASCIITable.ALIGN_CENTER);
+        String retVal = AsciiTableInstance.get().getTable(header, data, AsciiTable.ALIGN_CENTER);
         
         return retVal;
     }
