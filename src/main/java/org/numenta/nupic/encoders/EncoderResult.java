@@ -30,4 +30,29 @@ public class EncoderResult extends Tuple {
 			append(get(1)).append(", scalar=").append(get(2)).
 			append(", encoding=").append(get(3)).toString();
 	}
+	
+	/**
+	 * Returns a representation of the encoded value in the same format as the input.
+	 * 
+	 * @return	the encoded value
+	 */
+	public Object getValue() {
+		return get(1);
+	}
+	
+	/**
+	 * Returns the encoded value as a number.
+	 * @return
+	 */
+	public Number getScalar() {
+		return (Number)get(2);
+	}
+	
+	/**
+	 * Returns the bit-string encoding of the value
+	 * @return
+	 */
+	public String getEncoding() {
+		return (String)get(3);
+	}
 }

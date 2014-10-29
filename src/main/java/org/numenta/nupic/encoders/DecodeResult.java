@@ -3,6 +3,7 @@ package org.numenta.nupic.encoders;
 import java.util.List;
 import java.util.Map;
 
+import org.numenta.nupic.util.DecodeTuple;
 import org.numenta.nupic.util.MinMax;
 
 /**
@@ -11,22 +12,22 @@ import org.numenta.nupic.util.MinMax;
  * 
  * @author David Ray
  */
-public class Decode extends DecodeTuple<Map<String, Ranges>, List<String>> {
+public class DecodeResult extends DecodeTuple<Map<String, RangeList>, List<String>> {
 	
 	/**
 	 * Constructs a new {@code Decode}
-	 * @param m		Map of field names to {@link Ranges} object
+	 * @param m		Map of field names to {@link RangeList} object
 	 * @param l		List of comma-separated descriptions for each list of ranges.
 	 */
-	public Decode(Map<String, Ranges> m, List<String> l) {
+	public DecodeResult(Map<String, RangeList> m, List<String> l) {
 		super(m, l);
 	}
 	
 	/**
-	 * Returns the Map of field names to {@link Ranges} object
+	 * Returns the Map of field names to {@link RangeList} object
 	 * @return
 	 */
-	public Map<String, Ranges>  getFields() {
+	public Map<String, RangeList>  getFields() {
 		return fields;
 	}
 	
@@ -39,11 +40,11 @@ public class Decode extends DecodeTuple<Map<String, Ranges>, List<String>> {
 	}
 
 	/**
-	 * Returns the {@link Ranges} associated with the specified field.
+	 * Returns the {@link RangeList} associated with the specified field.
 	 * @param fieldName		the name of the field
 	 * @return
 	 */
-	public Ranges getRanges(String fieldName) {
+	public RangeList getRanges(String fieldName) {
 		return fields.get(fieldName);
 	}
 	
