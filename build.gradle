@@ -2,14 +2,14 @@ apply plugin: 'maven'
 apply plugin: 'java'
 
 group = 'htm.java'
-version = '1.0-SNAPSHOT'
+version = '0.30'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': 0.20
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': 0.30
     }
 }
 
@@ -22,11 +22,11 @@ repositories {
 
 dependencies {
     compile(group: 'com.chaschev', name: 'chutils', version:'1.4') {
-exclude(module: 'mockito-all')
-exclude(module: 'slf4j-api')
-exclude(module: 'guava')
-exclude(module: 'jsr305')
-exclude(module: 'commons-io')
+        exclude(module: 'mockito-all')
+        exclude(module: 'slf4j-api')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'commons-io')
     }
     compile group: 'net.sf.trove4j', name: 'trove4j', version:'3.0.3'
     testCompile group: 'junit', name: 'junit', version:'4.11'
