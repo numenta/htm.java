@@ -3,6 +3,7 @@ package org.numenta.nupic.encoders;
 import java.util.List;
 
 import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.RangeTuple;
 
 /**
  * Convenience subclass of {@link Tuple} to contain the list of
@@ -12,7 +13,7 @@ import org.numenta.nupic.util.MinMax;
  * 
  * @author David Ray
  */
-public class Ranges extends RangeTuple<List<MinMax>, String>{
+public class RangeList extends RangeTuple<List<MinMax>, String>{
 
 	/**
 	 * Constructs and new {@code Ranges} object.
@@ -20,7 +21,7 @@ public class Ranges extends RangeTuple<List<MinMax>, String>{
 	 * 				minimum and maximum postions of 1's
 	 * @param s
 	 */
-	public Ranges(List<MinMax> l, String s) {
+	public RangeList(List<MinMax> l, String s) {
 		super(l, s);
 	}
 

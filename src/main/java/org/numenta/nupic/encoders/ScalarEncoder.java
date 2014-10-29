@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.numenta.nupic.data.FieldMetaType;
 import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
@@ -137,6 +138,13 @@ public class ScalarEncoder extends Encoder {
 	public ScalarEncoder() {}
 	
 	/**
+	 * Returns true if the underlying encoder works on deltas
+	 */
+	public boolean isDelta() {
+		return false;
+	}
+	
+	/**
 	 * w -- number of bits to set in output
      * minval -- minimum input value
      * maxval -- maximum input value (input is strictly less if periodic == True)
@@ -247,6 +255,26 @@ public class ScalarEncoder extends Encoder {
 	}
 	
 	/**
+	 * Set whether learning is enabled.
+	 * 
+	 * @param 	c					the connections memory
+	 * @param 	learningEnabled		flag indicating whether learning is enabled
+	 */
+	public void setLearning(Connections c, boolean learningEnabled) {
+		c.setLearningEnabled(learningEnabled);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * @param c		the connections memory
+	 * @return		Tuple containing 
+	 */
+	
+	public List<Tuple> getDescription(Connections c) {
+		return Arrays.asList(new Tuple[] { new Tuple(2, c.getName(), 0) });
+	}
+	
+	/**
 	 * Return the bit offset of the first bit to be set in the encoder output.
      * For periodic encoders, this can be a negative number when the encoded output
      * wraps around.
@@ -315,6 +343,21 @@ public class ScalarEncoder extends Encoder {
 		}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<FieldMetaType> getDecoderOutputFieldTypes(Connections c) {
+		return Arrays.asList(new FieldMetaType[] { FieldMetaType.FLOAT });
+	}
+	
+	/**
+	 * Should return the output width, in bits.
+	 */
+	public int getWidth(Connections c) {
+		return c.getW();
+	}
+	
 	public int[] getBucketIndices(Connections c, double input) {
 		int minbin = getFirstOnBit(c, input);
 		
@@ -332,8 +375,20 @@ public class ScalarEncoder extends Encoder {
 		return new int[] { bucketIdx };
 	}
 
+	/**
+	 * Encodes inputData and puts the encoded value into the numpy output array,
+     * which is a 1-D array of length returned by {@link Connections#getW()}.
+	 *
+     * Note: The numpy output array is reused, so clear it before updating it.
+     * 
+	 * @param c
+	 * @param inputData Data to encode. This should be validated by the encoder.
+     * @param output 1-D array of same length returned by {@link Connections#getW()}
+     * 
+	 * @return
+	 */
 	@Override
-	protected int[] encodeIntoArray(Connections c, double input, int[] output) {
+	public int[] encodeIntoArray(Connections c, double input, int[] output) {
 		if(Double.isNaN(input)) {
 			return new int[0];
 		}
@@ -375,7 +430,7 @@ public class ScalarEncoder extends Encoder {
 		return output;
 	}
 	
-	public Decode decode(Connections c, int[] encoded, String parentFieldName) {
+	public DecodeResult decode(Connections c, int[] encoded, String parentFieldName) {
 		// For now, we simply assume any top-down output greater than 0
 	    // is ON. Eventually, we will probably want to incorporate the strength
 	    // of each top-down output.
@@ -525,11 +580,11 @@ public class ScalarEncoder extends Encoder {
 			fieldName = c.getName();
 		}
 		
-		Ranges inner = new Ranges(ranges, desc);
-		Map<String, Ranges> fieldsDict = new HashMap<String, Ranges>();
+		RangeList inner = new RangeList(ranges, desc);
+		Map<String, RangeList> fieldsDict = new HashMap<String, RangeList>();
 		fieldsDict.put(fieldName, inner);
 		
-		return new Decode(fieldsDict, Arrays.asList(new String[] { fieldName }));
+		return new DecodeResult(fieldsDict, Arrays.asList(new String[] { fieldName }));
 	}
 	
 	/**
@@ -600,6 +655,33 @@ public class ScalarEncoder extends Encoder {
 		return topDownMapping;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @param c		the state memory
+	 * @param <T>	the input value, in this case a double
+	 * @return	a list of one input double
+	 */
+	@Override
+	public <T> TDoubleList getScalars(Connections c, T d) {
+		TDoubleList retVal = new TDoubleArrayList();
+		retVal.add((Double)d);
+		return retVal;
+	}
+	
+	/**
+	 * Returns a list of items, one for each bucket defined by this encoder.
+     * Each item is the value assigned to that bucket, this is the same as the
+     * EncoderResult.value that would be returned by getBucketInfo() for that
+     * bucket and is in the same format as the input that would be passed to
+     * encode().
+	 * 
+     * This call is faster than calling getBucketInfo() on each bucket individually
+     * if all you need are the bucket values.
+	 *
+     * @return list of items, each item representing the bucket value for that
+     *        bucket.
+	 */
 	public TDoubleList getBucketValues(Connections c) {
 		TDoubleList bucketValues = null;
 		if((bucketValues = c.getBucketValues()) == null) {
@@ -607,14 +689,14 @@ public class ScalarEncoder extends Encoder {
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
 			bucketValues = new TDoubleArrayList();
 			for(int i = 0;i < numBuckets;i++) {
-				bucketValues.add((Double)getBucketInfo(c, new int[] { i }).get(1));
+				bucketValues.add((Double)getBucketInfo(c, new int[] { i }).get(0).get(1));
 			}
 			c.setBucketValues(bucketValues);
 		}
 		return bucketValues;
 	}
 	
-	public EncoderResult getBucketInfo(Connections c, int[] buckets) {
+	public List<EncoderResult> getBucketInfo(Connections c, int[] buckets) {
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping(c);
 		
 		//The "category" is simply the bucket index
@@ -629,10 +711,17 @@ public class ScalarEncoder extends Encoder {
 			inputVal = c.getMinVal() + category * c.getResolution();
 		}
 		
-		return new EncoderResult(inputVal, inputVal, Arrays.toString(encoding));
+		return Arrays.asList(
+			new EncoderResult[] { 
+				new EncoderResult(inputVal, inputVal, Arrays.toString(encoding)) });
+			
 	}
 	
-	public EncoderResult topDownCompute(Connections c, int[] encoded) {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<EncoderResult> topDownCompute(Connections c, int[] encoded) {
 		//Get/generate the topDown mapping table
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping(c);
 		

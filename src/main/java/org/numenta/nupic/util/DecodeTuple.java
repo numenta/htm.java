@@ -1,9 +1,10 @@
-package org.numenta.nupic.encoders;
+package org.numenta.nupic.util;
 
 import java.util.List;
 import java.util.Map;
 
-import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.RangeList;
 
 /**
  * Subclass of Tuple to specifically contain the results of an
@@ -15,7 +16,7 @@ import org.numenta.nupic.util.Tuple;
  * @param <T>	the fieldsMap
  * @param <K>	the fieldsOrder
  */
-public class DecodeTuple<M extends Map<String, Ranges>, L extends List<String>> extends Tuple {
+public class DecodeTuple<M extends Map<String, RangeList>, L extends List<String>> extends Tuple {
 	protected M fields;
 	protected L fieldDescriptions;
 	

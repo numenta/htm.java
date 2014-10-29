@@ -22,10 +22,10 @@
 package org.numenta.nupic.research;
 
 import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,7 +33,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.numenta.nupic.data.FieldMetaType;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -230,6 +232,9 @@ public class Connections {
     private double rangeInternal;
     private double range;
     private int encVerbosity;
+    private boolean encLearningEnabled;
+    private List<FieldMetaType> flattenedFieldTypeList;
+    private Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
     /** 
      * This matrix is used for the topDownCompute. We build it the first time
      * topDownCompute is called
@@ -237,8 +242,8 @@ public class Connections {
     private SparseObjectMatrix<int[]> topDownMapping;
     private double[] topDownValues;
     private TDoubleList bucketValues;
-    private List<Tuple> encoders;
-
+    private Map<EncoderTuple, List<EncoderTuple>> encoders;
+    private List<String> scalarNames;
     
     ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
@@ -1867,26 +1872,138 @@ public class Connections {
     }
     
     /**
-     * Adds a the specified {@link Encoder} to the list
+     * Adds a the specified {@link Encoder} to the list of the specified
+     * parent's {@code Encoder}s.
      * 
+     * @param parent	the parent Encoder
      * @param name		Name of the {@link Encoder}
      * @param e			the {@code Encoder}
      * @param offset	the offset of the encoded output the specified encoder
      * 					was used to encode.
      */
-    public void addEncoder(String name, Encoder e, int offset) {
+    public void addEncoder(Encoder parent, String name, Encoder child, int offset) {
     	if(encoders == null) {
-    		encoders = new ArrayList<Tuple>();
+    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
     	}
-    	encoders.add(new Tuple(3, name, e, offset));
+    	
+    	EncoderTuple key = getEncoderTuple(parent);
+    	List<EncoderTuple> childEncoders = null;
+    	if((childEncoders = encoders.get(key)) == null) {
+    		encoders.put(key, childEncoders = new ArrayList<EncoderTuple>());
+    	}
+    	childEncoders.add(new EncoderTuple(name, child, offset));
+    }
+    
+    /**
+     * Returns the {@link Tuple} containing the specified {@link Encoder}
+     * @param e		the Encoder the return value should contain
+     * @return		the {@link Tuple} containing the specified {@link Encoder}
+     */
+    public EncoderTuple getEncoderTuple(Encoder e) {
+    	if(encoders == null) {
+    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
+    	}
+    	
+    	for(EncoderTuple tuple : encoders.keySet()) {
+    		if(tuple.getEncoder().equals(e)) {
+    			return tuple;
+    		}
+    	}
+    	return null;
+    }
+    
+    /**
+     * Returns the list of child {@link Encoder} {@link Tuple}s 
+     * corresponding to the specified {@code Encoder}
+     * 
+     * @param e		the parent {@link Encoder} whose child Encoder Tuples are being returned
+     * @return		the list of child {@link Encoder} {@link Tuple}s
+     */
+    public List<EncoderTuple> getEncoders(Encoder e) {
+    	return getEncoders().get(getEncoderTuple(e));
     }
     
     /**
      * Returns the list of {@link Encoder}s
      * @return
      */
-    public List<Tuple> getEncoders() {
+    public Map<EncoderTuple, List<EncoderTuple>> getEncoders() {
+    	if(encoders == null) {
+    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
+    	}
     	return encoders;
+    }
+    
+    /**
+     * Sets the encoder flag indicating whether learning is enabled.
+     * 
+     * @param	encLearningEnabled	true if learning is enabled, false if not
+     */
+    public void setLearningEnabled(boolean encLearningEnabled) {
+    	this.encLearningEnabled = encLearningEnabled;
+    }
+    
+    /**
+     * Returns a flag indicating whether encoder learning is enabled.
+     */
+    public boolean isEncoderLearningEnabled() {
+    	return encLearningEnabled;
+    }
+    
+    /**
+     * Returns the list of all field types of the specified {@link Encoder}.
+     * 
+     * @return	List<FieldMetaType>
+     */
+    public List<FieldMetaType> getFlattenedFieldTypeList(Encoder e) { 
+    	if(decoderFieldTypes == null) {
+    		decoderFieldTypes = new HashMap<Tuple, List<FieldMetaType>>();
+    	}
+    	
+    	Tuple key = getEncoderTuple(e);
+    	List<FieldMetaType> fieldTypes = null;
+    	if((fieldTypes = decoderFieldTypes.get(key)) == null) {
+    		decoderFieldTypes.put(key, fieldTypes = new ArrayList<FieldMetaType>());
+    	}
+    	return fieldTypes;
+    }
+    
+    /**
+     * Returns the list of all field types of a parent {@link Encoder} and all
+     * leaf encoders flattened in a linear list which does not retain any parent
+     * child relationship information.
+     * 
+     * @return	List<FieldMetaType>
+     */
+    public List<FieldMetaType> getFlattenedFieldTypeList() {
+    	return flattenedFieldTypeList;
+    }
+    
+    /**
+     * Sets the list of flattened {@link FieldMetaType}s
+     * 
+     * @param l		list of {@link FieldMetaType}s
+     */
+    public void setFlattenedFieldTypeList(List<FieldMetaType> l) {
+    	this.flattenedFieldTypeList = l;
+    }
+    
+    /**
+     * Returns the names of the fields
+     * 
+     * @return	the list of names
+     */
+    public List<String> getScalarNames() {
+    	return scalarNames;
+    }
+    
+    /**
+     * Sets the names of the fields
+     * 
+     * @param names	the list of names
+     */
+    public void setScalarNames(List<String> names) {
+    	this.scalarNames = names;
     }
     
 }
