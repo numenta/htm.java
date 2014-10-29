@@ -1,9 +1,8 @@
-package org.numenta.nupic.encoders;
+package org.numenta.nupic.util;
 
 import java.util.List;
 
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.encoders.Encoder;
 
 /**
  * Subclasses the {@link Tuple} utility class to constrain 
