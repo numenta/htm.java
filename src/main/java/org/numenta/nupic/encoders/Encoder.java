@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
@@ -16,6 +37,28 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
+/**
+ * <pre>
+ * An encoder takes a value and encodes it with a partial sparse representation
+ * of bits.  The Encoder superclass implements:
+ * - encode() - returns a numpy array encoding the input; syntactic sugar
+ *   on top of encodeIntoArray. If pprint, prints the encoding to the terminal
+ * - pprintHeader() -- prints a header describing the encoding to the terminal
+ * - pprint() -- prints an encoding to the terminal
+ *
+ * Methods/properties that must be implemented by subclasses:
+ * - getDecoderOutputFieldTypes()   --  must be implemented by leaf encoders; returns
+ *                                      [`nupic.data.fieldmeta.FieldMetaType.XXXXX`] 
+ *                                      (e.g., [nupic.data.fieldmetaFieldMetaType.float])
+ * - getWidth()                     --  returns the output width, in bits
+ * - encodeIntoArray()              --  encodes input and puts the encoded value into the numpy output array, 
+ *                                      which is a 1-D array of length returned by getWidth()
+ * - getDescription()               --  returns a list of (name, offset) pairs describing the
+ *                                      encoded output
+ * </pre>
+ * @author Numenta
+ * @author David Ray
+ */
 public abstract class Encoder {
 	/** Value used to represent no data */
 	public static final double SENTINEL_VALUE_FOR_MISSING_DATA = Double.NaN;
