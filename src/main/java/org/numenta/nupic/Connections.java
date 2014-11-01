@@ -19,13 +19,10 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.research;
-
-import gnu.trove.list.TDoubleList;
+package org.numenta.nupic;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,9 +30,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.numenta.nupic.data.FieldMetaType;
-import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -43,11 +37,12 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
-import org.numenta.nupic.util.Tuple;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
@@ -194,57 +189,6 @@ public class Connections {
     
     private Cell[] cells;
     
-    /////////////////////// Encoder Vars //////////////////////////
-    /** The number of bits that are set to encode a single value - the
-     * "width" of the output signal 
-     */
-    private int w = 0;
-    /** number of bits in the representation (must be > w) */
-    private int n = 0;
-    /** the half width value */
-    private int halfWidth;
-    /** 
-     * inputs separated by more than, or equal to this distance will have non-overlapping 
-     * representations 
-     */
-    private double radius = 0;
-    /** inputs separated by more than, or equal to this distance will have different representations */
-    private double resolution  = 0;
-    /**
-     * If true, then the input value "wraps around" such that minval = maxval
-     * For a periodic value, the input must be strictly less than maxval,
-     * otherwise maxval is a true upper bound.
-     */
-    private boolean periodic = true;
-    /** The minimum value of the input signal.  */
-    private double minval = 0;
-    /** The maximum value of the input signal. */
-    private double maxval = 0;
-    /** if true, non-periodic inputs smaller than minval or greater
-            than maxval will be clipped to minval/maxval */
-    private boolean clipInput;
-    /** if true, skip some safety checks (for compatibility reasons), default false */
-    private boolean forced;
-    /** Encoder name - an optional string which will become part of the description */
-    private String name;
-    private int padding;
-    private int nInternal;
-    private double rangeInternal;
-    private double range;
-    private int encVerbosity;
-    private boolean encLearningEnabled;
-    private List<FieldMetaType> flattenedFieldTypeList;
-    private Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
-    /** 
-     * This matrix is used for the topDownCompute. We build it the first time
-     * topDownCompute is called
-     */
-    private SparseObjectMatrix<int[]> topDownMapping;
-    private double[] topDownValues;
-    private TDoubleList bucketValues;
-    private LinkedHashMap<EncoderTuple, List<EncoderTuple>> encoders;
-    private List<String> scalarNames;
-    
     ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
     protected Map<Cell, Set<Synapse>> receptorSynapses;
@@ -287,6 +231,22 @@ public class Connections {
         activeSegments.clear();
         learningSegments.clear();
         activeSynapsesForSegment.clear();
+    }
+    
+    /**
+     * Returns the segment counter
+     * @return
+     */
+    public int getSegmentCount() {
+    	return segmentCounter;
+    }
+    
+    /**
+     * Sets the segment counter
+     * @param counter
+     */
+    public void setSegmentCount(int counter) {
+    	this.segmentCounter = counter;
     }
     
     /**
@@ -1096,12 +1056,20 @@ public class Connections {
     /////////////////////////////// Temporal Memory //////////////////////////////
     
     /**
-     * Returns the current {@link Set} of active cells
+     * Returns the current {@link Set} of active {@link Cell}s
      * 
-     * @return  the current {@link Set} of active cells
+     * @return  the current {@link Set} of active {@link Cell}s
      */
     public Set<Cell> getActiveCells() {
         return activeCells;
+    }
+    
+    /**
+     * Sets the current {@link Set} of active {@link Cell}s
+     * @param cells
+     */
+    public void setActiveCells(Set<Cell> cells) {
+    	this.activeCells = cells;
     }
     
     /**
@@ -1114,11 +1082,27 @@ public class Connections {
     }
     
     /**
+     * Sets the current {@link Set} of winner {@link Cells}s
+     * @param cells
+     */
+    public void setWinnerCells(Set<Cell> cells) {
+    	this.winnerCells = cells;
+    }
+    
+    /**
      * Returns the {@link Set} of predictive cells.
      * @return
      */
     public Set<Cell> getPredictiveCells() {
         return predictiveCells;
+    }
+    
+    /**
+     * Sets the current {@link Set} of predictive {@link Cell}s
+     * @param cells
+     */
+    public void setPredictiveCells(Set<Cell> cells) {
+    	this.predictiveCells = cells;
     }
     
     /**
@@ -1131,11 +1115,27 @@ public class Connections {
     }
     
     /**
+     * Sets the {@link Set} of predictedColumns
+     * @param columns
+     */
+    public void setPredictedColumns(Set<Column> columns) {
+    	this.predictedColumns = columns;
+    }
+    
+    /**
      * Returns the Set of learning {@link DistalDendrite}s
      * @return
      */
     public Set<DistalDendrite> getLearningSegments() {
         return learningSegments;
+    }
+    
+    /**
+     * Sets the {@link Set} of learning segments
+     * @param segments
+     */
+    public void setLearningSegments(Set<DistalDendrite> segments) {
+    	this.learningSegments = segments;
     }
     
     /**
@@ -1147,11 +1147,27 @@ public class Connections {
     }
     
     /**
+     * Sets the {@link Set} of active {@link Segment}s
+     * @param segments
+     */
+    public void setActiveSegments(Set<DistalDendrite> segments) {
+    	this.activeSegments = segments;
+    }
+    
+    /**
      * Returns the mapping of Segments to active synapses in t-1
      * @return
      */
     public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
         return activeSynapsesForSegment;
+    }
+    
+    /**
+     * Sets the mapping of {@link Segment}s to active {@link Synapse}s
+     * @param syns
+     */
+    public void setActiveSynapsesForSegment(Map<DistalDendrite, Set<Synapse>> syns) {
+    	this.activeSynapsesForSegment = syns;
     }
     
     /**
@@ -1557,453 +1573,6 @@ public class Connections {
     		retVal.add(memory.getObject(indexes[i]));
     	}
     	return retVal;
-    }
-    
-    //////////////////////////////// Encoder values ////////////////////////////////
-    /** 
-     * Sets the "w" or width of the output signal
-     * <em>Restriction:</em> w must be odd to avoid centering problems.
-     * @param w
-     */
-    public void setW(int w) {
-    	this.w = w;
-    }
-    
-    /**
-     * Returns w
-     * @return
-     */
-    public int getW() {
-    	return w;
-    }
-    
-    /**
-     * Half the width
-     * @param hw
-     */
-    public void setHalfWidth(int hw) {
-    	this.halfWidth = hw;
-    }
-    
-    /**
-     * For non-periodic inputs, padding is the number of bits "outside" the range,
-     * on each side. I.e. the representation of minval is centered on some bit, and
-     * there are "padding" bits to the left of that centered bit; similarly with
-     * bits to the right of the center bit of maxval
-     * 
-     * @param padding
-     */
-    public void setPadding(int padding) {
-    	this.padding = padding;
-    }
-    
-    /**
-     * For non-periodic inputs, padding is the number of bits "outside" the range,
-     * on each side. I.e. the representation of minval is centered on some bit, and
-     * there are "padding" bits to the left of that centered bit; similarly with
-     * bits to the right of the center bit of maxval
-     *  
-     * @return
-     */
-    public int getPadding() {
-    	return padding;
-    }
-    
-    /**
-     * Sets rangeInternal
-     * @param r
-     */
-    public void setRangeInternal(double r) {
-    	this.rangeInternal = r;
-    }
-    
-    /**
-     * Returns the range internal value
-     * @return
-     */
-    public double getRangeInternal() {
-    	return rangeInternal;
-    }
-    
-    /**
-     * Sets the range
-     * @param range
-     */
-    public void setRange(double range) {
-    	this.range = range;
-    }
-    
-    /**
-     * Returns the range
-     * @return
-     */
-    public double getRange() {
-    	return range;
-    }
-    
-    /**
-     * nInternal represents the output area excluding the possible padding on each side
-     * 
-     * @param n
-     */
-    public void setNInternal(int n) {
-    	this.nInternal = n;
-    }
-    
-    /**
-     * nInternal represents the output area excluding the possible padding on each 
-     * side
-     * @return
-     */
-    public int getNInternal() {
-    	return nInternal;
-    }
-    
-    /**
-     * This matrix is used for the topDownCompute. We build it the first time
-     * topDownCompute is called
-     * 
-     * @param sm
-     */
-    public void setTopDownMapping(SparseObjectMatrix<int[]> sm) {
-    	this.topDownMapping = sm;
-    }
-    
-    /**
-     * This matrix is used for the topDownCompute. We build it the first time
-     * topDownCompute is called
-     * 
-     * @return
-     */
-    public SparseObjectMatrix<int[]> getTopDownMapping() {
-    	return topDownMapping;
-    }
-    
-    /**
-     * Range of values.
-     * @param values
-     */
-    public void setTopDownValues(double[] values) {
-    	this.topDownValues = values;
-    }
-    
-    /**
-     * Returns the top down range of values
-     * @return
-     */
-    public double[] getTopDownValues() {
-    	return topDownValues;
-    }
-    
-    public void setBucketValues(TDoubleList bucketValues) {
-    	this.bucketValues = bucketValues;
-    }
-    
-    public TDoubleList getBucketValues() {
-    	return bucketValues;
-    }
-    
-    /**
-     * Return the half width value.
-     * @return
-     */
-    public int getHalfWidth() {
-    	return halfWidth;
-    }
-    
-    /**
-     * The number of bits in the output. Must be greater than or equal to w
-     * @param n
-     */
-    public void setN(int n) {
-    	this.n = n;
-    }
-    
-    /**
-     * Returns n
-     * @return
-     */
-    public int getN() {
-    	return n;
-    }
-    
-    /**
-     * The minimum value of the input signal.
-     * @param minVal
-     */
-    public void setMinVal(double minVal) {
-    	this.minval = minVal;
-    }
-    
-    /**
-     * Returns minval
-     * @return
-     */
-    public double getMinVal() {
-    	return minval;
-    }
-    
-    /**
-     * The maximum value of the input signal.
-     * @param maxVal
-     */
-    public void setMaxVal(double maxVal) {
-    	this.maxval = maxVal;
-    }
-    
-    /**
-     * Returns maxval
-     * @return
-     */
-    public double getMaxVal() {
-    	return maxval;
-    }
-    
-    /**
-     * inputs separated by more than, or equal to this distance will have non-overlapping
-     * representations
-     * 
-     * @param radius
-     */
-    public void setRadius(double radius) {
-    	this.radius = radius;
-    }
-    
-    /**
-     * Returns the radius
-     * @return
-     */
-    public double getRadius() {
-    	return radius;
-    }
-    
-    /**
-     * inputs separated by more than, or equal to this distance will have different
-     * representations
-     * 
-     * @param resolution
-     */
-    public void setResolution(double resolution) {
-    	this.resolution = resolution;
-    }
-    
-    /**
-     * Returns the resolution
-     * @return
-     */
-    public double getResolution() {
-    	return resolution;
-    }
-    
-    /**
-     * If true, non-periodic inputs smaller than minval or greater
-     * than maxval will be clipped to minval/maxval
-     * @param b
-     */
-    public void setClipInput(boolean b) {
-    	this.clipInput = b;
-    }
-    
-    /**
-     * Returns the clip input flag
-     * @return
-     */
-    public boolean clipInput() {
-    	return clipInput;
-    }
-    
-    /**
-     * If true, then the input value "wraps around" such that minval = maxval
-     * For a periodic value, the input must be strictly less than maxval,
-     * otherwise maxval is a true upper bound.
-     * 
-     * @param b
-     */
-    public void setPeriodic(boolean b) {
-    	this.periodic = b;
-    }
-    
-    /**
-     * Returns the periodic flag
-     * @return
-     */
-    public boolean isPeriodic() {
-    	return periodic;
-    }
-    
-    /**
-     * If true, skip some safety checks (for compatibility reasons), default false 
-     * @param b
-     */
-    public void setForced(boolean b) {
-    	this.forced = b;
-    }
-    
-    /**
-     * Returns the forced flag
-     * @return
-     */
-    public boolean isForced() {
-    	return forced;
-    }
-    
-    /**
-     * An optional string which will become part of the description
-     * @param name
-     */
-    public void setName(String name) {
-    	this.name = name;
-    }
-    
-    /**
-     * Returns the optional name
-     * @return
-     */
-    public String getName() {
-    	return name;
-    }
-    
-    /**
-     * Returns the verbosity setting for an encoder.
-     * @return
-     */
-    public int getEncVerbosity() {
-    	return encVerbosity;
-    }
-    
-    /**
-     * Adds a the specified {@link Encoder} to the list of the specified
-     * parent's {@code Encoder}s.
-     * 
-     * @param parent	the parent Encoder
-     * @param name		Name of the {@link Encoder}
-     * @param e			the {@code Encoder}
-     * @param offset	the offset of the encoded output the specified encoder
-     * 					was used to encode.
-     */
-    public void addEncoder(Encoder parent, String name, Encoder child, int offset) {
-    	if(encoders == null) {
-    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
-    	}
-    	
-    	EncoderTuple key = getEncoderTuple(parent);
-    	List<EncoderTuple> childEncoders = null;
-    	if((childEncoders = encoders.get(key)) == null) {
-    		encoders.put(key, childEncoders = new ArrayList<EncoderTuple>());
-    	}
-    	childEncoders.add(new EncoderTuple(name, child, offset));
-    }
-    
-    /**
-     * Returns the {@link Tuple} containing the specified {@link Encoder}
-     * @param e		the Encoder the return value should contain
-     * @return		the {@link Tuple} containing the specified {@link Encoder}
-     */
-    public EncoderTuple getEncoderTuple(Encoder e) {
-    	if(encoders == null) {
-    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
-    	}
-    	
-    	for(EncoderTuple tuple : encoders.keySet()) {
-    		if(tuple.getEncoder().equals(e)) {
-    			return tuple;
-    		}
-    	}
-    	return null;
-    }
-    
-    /**
-     * Returns the list of child {@link Encoder} {@link Tuple}s 
-     * corresponding to the specified {@code Encoder}
-     * 
-     * @param e		the parent {@link Encoder} whose child Encoder Tuples are being returned
-     * @return		the list of child {@link Encoder} {@link Tuple}s
-     */
-    public List<EncoderTuple> getEncoders(Encoder e) {
-    	return getEncoders().get(getEncoderTuple(e));
-    }
-    
-    /**
-     * Returns the list of {@link Encoder}s
-     * @return
-     */
-    public Map<EncoderTuple, List<EncoderTuple>> getEncoders() {
-    	if(encoders == null) {
-    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
-    	}
-    	return encoders;
-    }
-    
-    /**
-     * Sets the encoder flag indicating whether learning is enabled.
-     * 
-     * @param	encLearningEnabled	true if learning is enabled, false if not
-     */
-    public void setLearningEnabled(boolean encLearningEnabled) {
-    	this.encLearningEnabled = encLearningEnabled;
-    }
-    
-    /**
-     * Returns a flag indicating whether encoder learning is enabled.
-     */
-    public boolean isEncoderLearningEnabled() {
-    	return encLearningEnabled;
-    }
-    
-    /**
-     * Returns the list of all field types of the specified {@link Encoder}.
-     * 
-     * @return	List<FieldMetaType>
-     */
-    public List<FieldMetaType> getFlattenedFieldTypeList(Encoder e) { 
-    	if(decoderFieldTypes == null) {
-    		decoderFieldTypes = new HashMap<Tuple, List<FieldMetaType>>();
-    	}
-    	
-    	Tuple key = getEncoderTuple(e);
-    	List<FieldMetaType> fieldTypes = null;
-    	if((fieldTypes = decoderFieldTypes.get(key)) == null) {
-    		decoderFieldTypes.put(key, fieldTypes = new ArrayList<FieldMetaType>());
-    	}
-    	return fieldTypes;
-    }
-    
-    /**
-     * Returns the list of all field types of a parent {@link Encoder} and all
-     * leaf encoders flattened in a linear list which does not retain any parent
-     * child relationship information.
-     * 
-     * @return	List<FieldMetaType>
-     */
-    public List<FieldMetaType> getFlattenedFieldTypeList() {
-    	return flattenedFieldTypeList;
-    }
-    
-    /**
-     * Sets the list of flattened {@link FieldMetaType}s
-     * 
-     * @param l		list of {@link FieldMetaType}s
-     */
-    public void setFlattenedFieldTypeList(List<FieldMetaType> l) {
-    	this.flattenedFieldTypeList = l;
-    }
-    
-    /**
-     * Returns the names of the fields
-     * 
-     * @return	the list of names
-     */
-    public List<String> getScalarNames() {
-    	return scalarNames;
-    }
-    
-    /**
-     * Sets the names of the fields
-     * 
-     * @param names	the list of names
-     */
-    public void setScalarNames(List<String> names) {
-    	this.scalarNames = names;
     }
     
 }

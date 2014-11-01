@@ -2,7 +2,7 @@ package org.numenta.nupic.model;
 
 import java.util.List;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 
 public class ProximalDendrite extends Segment {
 	private int index;

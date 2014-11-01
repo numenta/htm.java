@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -88,17 +89,17 @@ public class TemporalMemory {
      * @return                  {@link ComputeCycle} container for one cycle of inference values.
      */
     public ComputeCycle compute(Connections connections, int[] activeColumns, boolean learn) {
-        ComputeCycle result = computeFn(connections, connections.getColumnSet(activeColumns), new LinkedHashSet<Cell>(connections.predictiveCells), 
-            new LinkedHashSet<DistalDendrite>(connections.activeSegments), new LinkedHashMap<DistalDendrite, Set<Synapse>>(connections.activeSynapsesForSegment), 
-                new LinkedHashSet<Cell>(connections.winnerCells), learn);
+        ComputeCycle result = computeFn(connections, connections.getColumnSet(activeColumns), new LinkedHashSet<Cell>(connections.getPredictiveCells()), 
+            new LinkedHashSet<DistalDendrite>(connections.getActiveSegments()), new LinkedHashMap<DistalDendrite, Set<Synapse>>(connections.getActiveSynapsesForSegment()), 
+                new LinkedHashSet<Cell>(connections.getWinnerCells()), learn);
         
-        connections.activeCells = result.activeCells();
-        connections.winnerCells = result.winnerCells();
-        connections.predictiveCells = result.predictiveCells();
-        connections.predictedColumns = result.predictedColumns();
-        connections.activeSegments = result.activeSegments();
-        connections.learningSegments = result.learningSegments();
-        connections.activeSynapsesForSegment = result.activeSynapsesForSegment();
+        connections.setActiveCells(result.activeCells());
+        connections.setWinnerCells(result.winnerCells());
+        connections.setPredictiveCells(result.predictiveCells());
+        connections.setPredictedColumns(result.predictedColumns());
+        connections.setActiveSegments(result.activeSegments());
+        connections.setLearningSegments(result.learningSegments());
+        connections.setActiveSynapsesForSegment(result.activeSynapsesForSegment());
         
         return result; 
     }
@@ -200,9 +201,10 @@ public class TemporalMemory {
                 cycle.winnerCells.add(bestCell);
             }
             
+            int segmentCounter = c.getSegmentCount();
             if(bestSegment == null) {
-                bestSegment = bestCell.createSegment(c, c.segmentCounter);
-                c.segmentCounter += 1;
+                bestSegment = bestCell.createSegment(c, segmentCounter);
+                c.setSegmentCount(segmentCounter + 1);
             }
             
             cycle.learningSegments.add(bestSegment);
@@ -249,13 +251,15 @@ public class TemporalMemory {
                 dd.adaptSegment(c, activeSynapses, permanenceIncrement, permanenceDecrement);
             }
             
+            int synapseCounter = c.getSynapseCount();  
             if(isLearningSegment) {
                 int n = c.getMaxNewSynapseCount() - activeSynapses.size();
-                Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.random);
+                Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.getRandom());
                 for(Cell sourceCell : learnCells) {
-                    dd.createSynapse(c, sourceCell, c.getInitialPermanence(), c.synapseCounter);
-                    c.synapseCounter += 1;
+                    dd.createSynapse(c, sourceCell, c.getInitialPermanence(), synapseCounter);
+                    synapseCounter += 1;
                 }
+                c.setSynapseCount(synapseCounter);
             }
         }
     }
@@ -313,11 +317,11 @@ public class TemporalMemory {
      * @param   connections   the Connections state of the temporal memory
      */
     public void reset(Connections connections) {
-        connections.activeCells.clear();
-        connections.predictiveCells.clear();
-        connections.activeSegments.clear();
-        connections.activeSynapsesForSegment.clear();
-        connections.winnerCells.clear();
+        connections.getActiveCells().clear();
+        connections.getPredictiveCells().clear();
+        connections.getActiveSegments().clear();
+        connections.getActiveSynapsesForSegment().clear();
+        connections.getWinnerCells().clear();
     }
     
     

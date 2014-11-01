@@ -24,7 +24,7 @@ package org.numenta.nupic.model;
 import java.util.List;
 import java.util.Set;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 
 /**
  * Software implementation of a neuron in the neocortical region.
