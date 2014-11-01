@@ -75,4 +75,11 @@ public class RangeList extends RangeTuple<List<MinMax>, String>{
 	public int size() {
 		return l.size();
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public String toString() {
+		return l.toString();
+	}
 }

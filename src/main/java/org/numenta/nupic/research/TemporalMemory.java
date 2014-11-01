@@ -428,21 +428,4 @@ public class TemporalMemory {
     public LinkedHashSet<Column> getColumns(Connections c, int[] columnIndexes) {
     	return c.getColumnSet(columnIndexes);
     }
-    
-    /**
-     * Subtracts the contents of the first argument from the last argument's list.
-     * 
-     * <em>NOTE: Does not destroy/alter the argument lists. </em>
-     * 
-     * @param minuend
-     * @param subtrahend
-     * @return
-     * @deprecated
-     */
-    public List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
-        ArrayList<Integer> sList = new ArrayList<Integer>(minuend);
-        sList.removeAll(subtrahend);
-        return new ArrayList<Integer>(sList);
-    }
-    
-}
+ }

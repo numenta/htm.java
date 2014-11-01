@@ -196,9 +196,9 @@ public class Parameters {
      */
     private boolean periodic = true;
     /** The minimum value of the input signal.  */
-    private int minval = 0;
+    private double minval = 0;
     /** The maximum value of the input signal. */
-    private int maxval = 0;
+    private double maxval = 0;
     /** if true, non-periodic inputs smaller than minval or greater
             than maxval will be clipped to minval/maxval */
     private boolean clipInput;
@@ -842,7 +842,7 @@ public class Parameters {
      * The minimum value of the input signal.
      * @param minVal
      */
-    public void setMinVal(int minVal) {
+    public void setMinVal(double minVal) {
     	this.minval = minVal;
     	getMap().put(KEY.MINVAL, minVal);
     }
@@ -851,7 +851,7 @@ public class Parameters {
      * The maximum value of the input signal.
      * @param maxVal
      */
-    public void setMaxVal(int maxVal) {
+    public void setMaxVal(double maxVal) {
     	this.maxval = maxVal;
     	getMap().put(KEY.MAXVAL, maxVal);
     }

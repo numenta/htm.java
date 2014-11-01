@@ -2,6 +2,7 @@ package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public abstract class Encoder {
 	
 	/**
 	 * Return the field names for each of the scalar values returned by
-     * getScalars.
+     * .
      * 
 	 * @param c
 	 * @param parentFieldName	parentFieldName The name of the encoder which is our parent. This name
@@ -196,7 +197,18 @@ public abstract class Encoder {
      * 
 	 * @return
 	 */
-	public abstract <T> TDoubleList getScalars(Connections c, T inputData);
+	public <T> TDoubleList getScalars(Connections c, T d) {
+		TDoubleList retVals = new TDoubleArrayList();
+		double inputData = (Double)d;
+		List<EncoderTuple> encoders = c.getEncoders(this);
+		if(encoders != null) {
+			for(EncoderTuple t : encoders) {
+				TDoubleList values = t.getEncoder().getScalars(c, inputData);
+				retVals.addAll(values);
+			}
+		}
+		return retVals;
+	}
 	
 	/**
 	 * Returns the input in the same format as is returned by topDownCompute().
@@ -278,20 +290,140 @@ public abstract class Encoder {
 	}
 	
 	/**
-	 * Returns a list of items, one for each bucket defined by this encoder.
-     * Each item is the value assigned to that bucket, this is the same as the
-     * EncoderResult.value that would be returned by getBucketInfo() for that
-     * bucket and is in the same format as the input that would be passed to
-     * encode().
+	 * Return a pretty print string representing the return values from
+     * getScalars and getScalarNames().
 	 * 
-     * This call is faster than calling getBucketInfo() on each bucket individually
-     * if all you need are the bucket values.
-	 * 
-     * @param c	the state memory
-	 * @return  list of items, each item representing the bucket value for that
-     *          bucket.
+	 * @param c				the state memory
+     * @param scalarValues 	input values to encode to string
+     * @param scalarNames 	optional input of scalar names to convert. If None, gets
+     *                  	scalar names from getScalarNames()
+     * @return string representation of scalar values
 	 */
-	public abstract TDoubleList getBucketValues(Connections c);
+	public String scalarsToStr(Connections c, List<?> scalarValues, List<String> scalarNames) {
+		if(scalarNames == null || scalarNames.isEmpty()) {
+			scalarNames = getScalarNames(c, "");
+		}
+		
+		StringBuilder desc = new StringBuilder();
+		for(Tuple t : ArrayUtils.zip(scalarNames, scalarValues)) {
+			if(desc.length() > 0) {
+				desc.append(String.format(", %s:%.2f", t.get(0), t.get(1)));
+			}else{
+				desc.append(String.format("%s:%.2f", t.get(0), t.get(1)));
+			}
+		}
+		return desc.toString();
+	}
+	
+	/**
+	 * This returns a list of tuples, each containing (name, offset).
+     * The 'name' is a string description of each sub-field, and offset is the bit
+     * offset of the sub-field for that encoder.
+	 * 
+     * For now, only the 'multi' and 'date' encoders have multiple (name, offset)
+     * pairs. All other encoders have a single pair, where the offset is 0.
+     * 
+	 * @param c		the connections memory
+	 * @return		list of tuples, each containing (name, offset)
+	 */		
+	public abstract List<Tuple> getDescription(Connections c); 
+	
+	/**
+	 * Return a description of the given bit in the encoded output.
+     * This will include the field name and the offset within the field.
+	 * 
+     * @param bitOffset  	Offset of the bit to get the description of
+     * @param formatted     If True, the bitOffset is w.r.t. formatted output,
+     *                     	which includes separators
+     * @return tuple(fieldName, offsetWithinField)
+	 */
+	public Tuple encodedBitDescription(Connections c, int bitOffset, boolean formatted) {
+		//Find which field it's in
+		List<Tuple> description = getDescription(c);
+		int len = description.size();
+		String prevFieldName = null;
+		int prevFieldOffset = -1;
+		int offset = -1;
+		for(int i = 0;i < len;i++) {
+			Tuple t = description.get(i);//(name, offset)
+			if(formatted) {
+				offset = ((int)t.get(1)) + 1;
+				if(bitOffset == offset - 1) {
+					prevFieldName = "separator";
+					prevFieldOffset = bitOffset;
+				}
+			}
+			if(bitOffset < offset) break;
+		}
+		// Return the field name and offset within the field
+	    // return (fieldName, bitOffset - fieldOffset)
+		int width = formatted ? getDisplayWidth(c) : getWidth(c);
+		
+		if(prevFieldOffset == -1 || bitOffset > getWidth(c)) {
+			throw new IllegalStateException("Bit is outside of allowable range: " + 
+				String.format("[0 - %d]", width));
+		}
+		return new Tuple(2, prevFieldName, bitOffset - prevFieldOffset);
+	}
+	
+	/**
+	 * Pretty-print a header that labels the sub-fields of the encoded
+     * output. This can be used in conjunction with {@link #pprint(Connections, int[], String)}.
+     * 
+	 * @param c
+	 * @param prefix
+	 */
+	public void pprintHeader(Connections c, String prefix) {
+		System.out.println(prefix == null ? "" : prefix);
+		
+		List<Tuple> description = getDescription(c);
+		description.add(new Tuple(2, "end", getWidth(c)));
+		
+		int len = description.size() - 1;
+		for(int i = 0;i < len;i++) {
+			String name = (String)description.get(i).get(0);
+			int width = (int)description.get(i+1).get(1);
+			
+			String formatStr = String.format("%%-%ds |", width);
+			StringBuilder pname = new StringBuilder(name);
+			if(name.length() > width) pname.setLength(width);
+			
+			System.out.println(String.format(formatStr, pname));
+		}
+		
+		len = getWidth(c) + (description.size() - 1)*3 - 1;
+		StringBuilder hyphens = new StringBuilder();
+		for(int i = 0;i < len;i++) hyphens.append("-");
+		System.out.println(new StringBuilder(prefix).append(hyphens));
+	}
+	
+	/**
+	 * Pretty-print the encoded output using ascii art.
+	 * 
+	 * @param c
+	 * @param output
+	 * @param prefix
+	 */
+	public void pprint(Connections c, int[] output, String prefix) {
+		System.out.println(prefix == null ? "" : prefix);
+		
+		List<Tuple> description = getDescription(c);
+		description.add(new Tuple(2, "end", getWidth(c)));
+		
+		int len = description.size() - 1;
+		for(int i = 0;i < len;i++) {
+			int offset = (int)description.get(i).get(1);
+			int nextOffset = (int)description.get(i + 1).get(1);
+			
+			System.out.println(
+				String.format("%s |", 
+					ArrayUtils.bitsToString(
+						ArrayUtils.sub(output, ArrayUtils.range(offset, nextOffset))
+					)
+				)
+			);
+		}
+	}
 	
 	/**
 	 * Takes an encoded output and does its best to work backwards and generate
@@ -386,19 +518,6 @@ public abstract class Encoder {
 	}
 	
 	/**
-	 * This returns a list of tuples, each containing (name, offset).
-     * The 'name' is a string description of each sub-field, and offset is the bit
-     * offset of the sub-field for that encoder.
-	 * 
-     * For now, only the 'multi' and 'date' encoders have multiple (name, offset)
-     * pairs. All other encoders have a single pair, where the offset is 0.
-     * 
-	 * @param c		the connections memory
-	 * @return		list of tuples, each containing (name, offset)
-	 */		
-	public abstract List<Tuple> getDescription(Connections c); 
-	
-	/**
 	 * Return a pretty print string representing the return value from decode().
 	 * 
 	 * @param decodeResults
@@ -419,6 +538,55 @@ public abstract class Encoder {
 			desc.append("[").append(ranges.get(1)).append("]");
 		}
 		return desc.toString();
+	}
+	
+	/**
+	 * Returns a list of items, one for each bucket defined by this encoder.
+     * Each item is the value assigned to that bucket, this is the same as the
+     * EncoderResult.value that would be returned by getBucketInfo() for that
+     * bucket and is in the same format as the input that would be passed to
+     * encode().
+	 * 
+     * This call is faster than calling getBucketInfo() on each bucket individually
+     * if all you need are the bucket values.
+	 * 
+     * @param c	the state memory
+	 * @return  list of items, each item representing the bucket value for that
+     *          bucket.
+	 */
+	public abstract TDoubleList getBucketValues(Connections c);
+	
+	/**
+	 * Returns a list of {@link EncoderResult}s describing the inputs for
+     * each sub-field that correspond to the bucket indices passed in 'buckets'.
+     * To get the associated field names for each of the values, call getScalarNames().
+	 *
+     * @param buckets 	The list of bucket indices, one for each sub-field encoder.
+     *              	These bucket indices for example may have been retrieved
+     *              	from the getBucketIndices() call.
+     * @retun A list of {@link EncoderResult}s. Each EncoderResult has
+	 */
+	public List<EncoderResult> getBucketInfo(Connections c, int[] buckets) {
+		//Concatenate the results from bucketInfo on each child encoder
+		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
+		int bucketOffset = 0;
+		for(EncoderTuple encoderTuple : c.getEncoders(this)) {
+			int nextBucketOffset = -1;
+			List<EncoderTuple> childEncoders = null;
+			if((childEncoders = c.getEncoders(encoderTuple.getEncoder())) != null) {
+				nextBucketOffset = bucketOffset + childEncoders.size();
+			}else{
+				nextBucketOffset = bucketOffset + 1;
+			}
+			int[] bucketIndices = ArrayUtils.sub(buckets, ArrayUtils.range(bucketOffset, nextBucketOffset));
+			List<EncoderResult> values = encoderTuple.getEncoder().getBucketInfo(c, bucketIndices);
+			
+			retVals.addAll(values);
+			
+			bucketOffset = nextBucketOffset;
+		}
+		
+		return retVals;
 	}
 	
 	/**
@@ -477,4 +645,53 @@ public abstract class Encoder {
 		
 		return retVals;
 	}
+	
+	public TDoubleList closenessScores(Connections c, TDoubleList expValues, TDoubleList actValues, boolean fractional) {
+		TDoubleList retVal = new TDoubleArrayList();
+		
+		//Fallback closenss is a percentage match
+		List<EncoderTuple> encoders = c.getEncoders(this);
+		if(encoders == null || encoders.size() < 1) {
+			double err = Math.abs(expValues.get(0) - actValues.get(0));
+			double closeness = -1;
+			if(fractional) {
+				double denom = Math.max(expValues.get(0), actValues.get(0));
+				if(denom == 0) {
+					denom = 1.0;
+				}
+				
+				closeness = 1.0 - (double)err/denom;
+				if(closeness < 0) {
+					closeness = 0;
+				}
+			}else{
+				closeness = err;
+			}
+			
+			retVal.add(closeness);
+			return retVal;
+		}
+		
+		int scalarIdx = 0;
+		for(EncoderTuple res : c.getEncoders(this)) {
+			TDoubleList values = res.getEncoder().closenessScores(
+				c, expValues.subList(scalarIdx, expValues.size()), actValues.subList(scalarIdx, actValues.size()), fractional);
+			
+			scalarIdx += values.size();
+			retVal.addAll(values);
+		}
+		
+		return retVal;
+	}
+	
+	/**
+	 * Calculate width of display for bits plus blanks between fields.
+	 * 
+	 * @param c		the state memory	
+	 * @return	width
+	 */
+	public int getDisplayWidth(Connections c) {
+		return getWidth(c) + getDescription(c).size() - 1;
+	}
+	
 }
