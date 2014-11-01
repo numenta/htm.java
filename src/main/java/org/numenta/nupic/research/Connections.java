@@ -217,9 +217,9 @@ public class Connections {
      */
     private boolean periodic = true;
     /** The minimum value of the input signal.  */
-    private int minval = 0;
+    private double minval = 0;
     /** The maximum value of the input signal. */
-    private int maxval = 0;
+    private double maxval = 0;
     /** if true, non-periodic inputs smaller than minval or greater
             than maxval will be clipped to minval/maxval */
     private boolean clipInput;
@@ -242,7 +242,7 @@ public class Connections {
     private SparseObjectMatrix<int[]> topDownMapping;
     private double[] topDownValues;
     private TDoubleList bucketValues;
-    private Map<EncoderTuple, List<EncoderTuple>> encoders;
+    private LinkedHashMap<EncoderTuple, List<EncoderTuple>> encoders;
     private List<String> scalarNames;
     
     ///////////////////////   Structural Elements /////////////////////////
@@ -1613,7 +1613,7 @@ public class Connections {
      * Sets rangeInternal
      * @param r
      */
-    public void setRangeInternal(float r) {
+    public void setRangeInternal(double r) {
     	this.rangeInternal = r;
     }
     
@@ -1731,7 +1731,7 @@ public class Connections {
      * The minimum value of the input signal.
      * @param minVal
      */
-    public void setMinVal(int minVal) {
+    public void setMinVal(double minVal) {
     	this.minval = minVal;
     }
     
@@ -1739,7 +1739,7 @@ public class Connections {
      * Returns minval
      * @return
      */
-    public int getMinVal() {
+    public double getMinVal() {
     	return minval;
     }
     
@@ -1747,7 +1747,7 @@ public class Connections {
      * The maximum value of the input signal.
      * @param maxVal
      */
-    public void setMaxVal(int maxVal) {
+    public void setMaxVal(double maxVal) {
     	this.maxval = maxVal;
     }
     
@@ -1755,7 +1755,7 @@ public class Connections {
      * Returns maxval
      * @return
      */
-    public int getMaxVal() {
+    public double getMaxVal() {
     	return maxval;
     }
     
@@ -1883,7 +1883,7 @@ public class Connections {
      */
     public void addEncoder(Encoder parent, String name, Encoder child, int offset) {
     	if(encoders == null) {
-    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
     	}
     	
     	EncoderTuple key = getEncoderTuple(parent);
@@ -1901,7 +1901,7 @@ public class Connections {
      */
     public EncoderTuple getEncoderTuple(Encoder e) {
     	if(encoders == null) {
-    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
     	}
     	
     	for(EncoderTuple tuple : encoders.keySet()) {
@@ -1929,7 +1929,7 @@ public class Connections {
      */
     public Map<EncoderTuple, List<EncoderTuple>> getEncoders() {
     	if(encoders == null) {
-    		encoders = new HashMap<EncoderTuple, List<EncoderTuple>>();
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
     	}
     	return encoders;
     }

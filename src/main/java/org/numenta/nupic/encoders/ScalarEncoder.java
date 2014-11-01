@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
@@ -80,7 +101,7 @@ import org.numenta.nupic.util.Tuple;
  *
  * Since the resolution is 12 hours, we can also encode noon, as
  * monday noon  -> 11100000000000
- * monday midnt-> 01110000000000
+ * monday midnight-> 01110000000000
  * tuesday noon -> 00111000000000
  * etc.
  *
@@ -190,13 +211,18 @@ public class ScalarEncoder extends Encoder {
 		
 		// There are three different ways of thinking about the representation. Handle
 	    // each case here.
-		initEncoder(c, c.getMinVal(), c.getW(), c.getMaxVal(), c.getN(), c.getRadius(), c.getResolution());
+		initEncoder(c, c.getW(), c.getMinVal(), c.getMaxVal(), c.getN(), c.getRadius(), c.getResolution());
 		
 		//nInternal represents the output area excluding the possible padding on each side
 		c.setNInternal(c.getN() - 2 * c.getPadding());
 		
 		if(c.getName() == null) {
-			c.setName("[" + c.getMinVal() + ":" + c.getMaxVal() + "]");
+			if((c.getMinVal() % ((int)c.getMinVal())) > 0 ||
+			    (c.getMaxVal() % ((int)c.getMaxVal())) > 0) {
+				c.setName("[" + c.getMinVal() + ":" + c.getMaxVal() + "]");
+			}else{
+				c.setName("[" + (int)c.getMinVal() + ":" + (int)c.getMaxVal() + "]");
+			}
 		}
 		
 		//Checks for likely mistakes in encoder settings
@@ -216,7 +242,7 @@ public class ScalarEncoder extends Encoder {
 	 * @param radius
 	 * @param resolution
 	 */
-	public void initEncoder(Connections c, int w, int minVal, int maxVal, int n, double radius, double resolution) {
+	public void initEncoder(Connections c, int w, double minVal, double maxVal, int n, double radius, double resolution) {
 		if(n != 0) {
 			if(minVal != 0 && maxVal != 0) {
 			    if(!c.isPeriodic()) {
@@ -269,9 +295,11 @@ public class ScalarEncoder extends Encoder {
 	 * @param c		the connections memory
 	 * @return		Tuple containing 
 	 */
-	
+	@Override
 	public List<Tuple> getDescription(Connections c) {
-		return Arrays.asList(new Tuple[] { new Tuple(2, c.getName(), 0) });
+		//Throws UnsupportedOperationException if you try to add to the list
+		//returned by Arrays.asList() ??? So we wrap it in yet another List?
+		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2, c.getName(), 0) }));
 	}
 	
 	/**
@@ -355,7 +383,7 @@ public class ScalarEncoder extends Encoder {
 	 * Should return the output width, in bits.
 	 */
 	public int getWidth(Connections c) {
-		return c.getW();
+		return c.getN();
 	}
 	
 	public int[] getBucketIndices(Connections c, double input) {
@@ -449,7 +477,7 @@ public class ScalarEncoder extends Encoder {
 		for(int i = 0;i < maxZerosInARow;i++) {
 			int[] searchStr = new int[i + 3];
 			Arrays.fill(searchStr, 1);
-			ArrayUtils.setIndexesTo(searchStr, ArrayUtils.range(1, searchStr.length - 1), 0);
+			ArrayUtils.setRangeTo(searchStr, 1, -1, 0);
 			int subLen = searchStr.length;
 			
 			// Does this search string appear in the output?
@@ -463,9 +491,8 @@ public class ScalarEncoder extends Encoder {
 				}
 			}else{
 				for(int j = 0;j < c.getN() - subLen + 1;j++) {
-					int[] range = ArrayUtils.range(j, j + subLen);
-					if(Arrays.equals(searchStr, ArrayUtils.sub(tmpOutput, range))) {
-						ArrayUtils.setIndexesTo(tmpOutput, range, 1);
+					if(Arrays.equals(searchStr, ArrayUtils.sub(tmpOutput, ArrayUtils.range(j, j + subLen)))) {
+						ArrayUtils.setRangeTo(tmpOutput, j, j + subLen, 1);
 					}
 				}
 			}
@@ -642,9 +669,9 @@ public class ScalarEncoder extends Encoder {
 		
 		double[] topDownValues = c.getTopDownValues();
 		int[] outputSpace = new int[c.getN()];
-		int minVal = c.getMinVal();
-		int maxVal = c.getMaxVal();
-		for(int i = 0;i < outputSpace.length;i++) {
+		double minVal = c.getMinVal();
+		double maxVal = c.getMaxVal();
+		for(int i = 0;i < numCategories;i++) {
 			double value = topDownValues[i];
 			value = Math.max(value, minVal);
 			value = Math.min(value, maxVal);

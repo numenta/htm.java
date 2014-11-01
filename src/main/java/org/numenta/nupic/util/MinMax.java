@@ -41,7 +41,7 @@ public class MinMax {
 	
 	@Override
 	public String toString() {
-		return new StringBuilder("[").append(min).
-			append(", ").append(max).append("]").toString();
+		return new StringBuilder().append(min).
+			append(", ").append(max).toString();
 	}
 }

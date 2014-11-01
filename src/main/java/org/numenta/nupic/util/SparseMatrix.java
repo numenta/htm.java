@@ -395,12 +395,14 @@ public abstract class SparseMatrix<T> {
      * @param index the array dimensions to check
      */
     protected void checkDims(int[] index) {
-        if(index.length != numDimensions) {
+    	if(index.length != numDimensions) {
             throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
                "input dimensions: " + index.length + " > number of configured dimensions: " + numDimensions);
         }
-        for(int i = 0;i < index.length;i++) {
-            if(index[i] >= dimensions[i]) {
+        for(int i = 0;i < index.length - 1;i++) {
+        	if(index[i] >= dimensions[i]) {
+        		System.out.println("index = " + index[i] + ",  dimensions = " + dimensions[i] + ",  i = " + i );
+                
                 throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
                     print1DArray(index) + " > " + print1DArray(dimensions));
             }
