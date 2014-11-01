@@ -28,13 +28,14 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.numenta.nupic.data.FieldMetaType;
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -63,11 +64,492 @@ public abstract class Encoder {
 	/** Value used to represent no data */
 	public static final double SENTINEL_VALUE_FOR_MISSING_DATA = Double.NaN;
 	
+	/** The number of bits that are set to encode a single value - the
+     * "width" of the output signal 
+     */
+    protected int w = 0;
+    /** number of bits in the representation (must be > w) */
+    protected int n = 0;
+    /** the half width value */
+    protected int halfWidth;
+    /** 
+     * inputs separated by more than, or equal to this distance will have non-overlapping 
+     * representations 
+     */
+    protected double radius = 0;
+    /** inputs separated by more than, or equal to this distance will have different representations */
+    protected double resolution  = 0;
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     */
+    protected boolean periodic = true;
+    /** The minimum value of the input signal.  */
+    protected double minval = 0;
+    /** The maximum value of the input signal. */
+    protected double maxval = 0;
+    /** if true, non-periodic inputs smaller than minval or greater
+            than maxval will be clipped to minval/maxval */
+    protected boolean clipInput;
+    /** if true, skip some safety checks (for compatibility reasons), default false */
+    protected boolean forced;
+    /** Encoder name - an optional string which will become part of the description */
+    protected String name;
+    protected int padding;
+    protected int nInternal;
+    protected double rangeInternal;
+    protected double range;
+    protected int encVerbosity;
+    protected boolean encLearningEnabled;
+    protected List<FieldMetaType> flattenedFieldTypeList;
+    protected Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
+    /** 
+     * This matrix is used for the topDownCompute. We build it the first time
+     * topDownCompute is called
+     */
+    protected SparseObjectMatrix<int[]> topDownMapping;
+    protected double[] topDownValues;
+    protected TDoubleList bucketValues;
+    protected LinkedHashMap<EncoderTuple, List<EncoderTuple>> encoders;
+    protected List<String> scalarNames;
+    
+    
+    ///////////////////////////////////////////////////////////
+    /** 
+     * Sets the "w" or width of the output signal
+     * <em>Restriction:</em> w must be odd to avoid centering problems.
+     * @param w
+     */
+    public void setW(int w) {
+    	this.w = w;
+    }
+    
+    /**
+     * Returns w
+     * @return
+     */
+    public int getW() {
+    	return w;
+    }
+    
+    /**
+     * Half the width
+     * @param hw
+     */
+    public void setHalfWidth(int hw) {
+    	this.halfWidth = hw;
+    }
+    
+    /**
+     * For non-periodic inputs, padding is the number of bits "outside" the range,
+     * on each side. I.e. the representation of minval is centered on some bit, and
+     * there are "padding" bits to the left of that centered bit; similarly with
+     * bits to the right of the center bit of maxval
+     * 
+     * @param padding
+     */
+    public void setPadding(int padding) {
+    	this.padding = padding;
+    }
+    
+    /**
+     * For non-periodic inputs, padding is the number of bits "outside" the range,
+     * on each side. I.e. the representation of minval is centered on some bit, and
+     * there are "padding" bits to the left of that centered bit; similarly with
+     * bits to the right of the center bit of maxval
+     *  
+     * @return
+     */
+    public int getPadding() {
+    	return padding;
+    }
+    
+    /**
+     * Sets rangeInternal
+     * @param r
+     */
+    public void setRangeInternal(double r) {
+    	this.rangeInternal = r;
+    }
+    
+    /**
+     * Returns the range internal value
+     * @return
+     */
+    public double getRangeInternal() {
+    	return rangeInternal;
+    }
+    
+    /**
+     * Sets the range
+     * @param range
+     */
+    public void setRange(double range) {
+    	this.range = range;
+    }
+    
+    /**
+     * Returns the range
+     * @return
+     */
+    public double getRange() {
+    	return range;
+    }
+    
+    /**
+     * nInternal represents the output area excluding the possible padding on each side
+     * 
+     * @param n
+     */
+    public void setNInternal(int n) {
+    	this.nInternal = n;
+    }
+    
+    /**
+     * nInternal represents the output area excluding the possible padding on each 
+     * side
+     * @return
+     */
+    public int getNInternal() {
+    	return nInternal;
+    }
+    
+    /**
+     * This matrix is used for the topDownCompute. We build it the first time
+     * topDownCompute is called
+     * 
+     * @param sm
+     */
+    public void setTopDownMapping(SparseObjectMatrix<int[]> sm) {
+    	this.topDownMapping = sm;
+    }
+    
+    /**
+     * Range of values.
+     * @param values
+     */
+    public void setTopDownValues(double[] values) {
+    	this.topDownValues = values;
+    }
+    
+    /**
+     * Returns the top down range of values
+     * @return
+     */
+    public double[] getTopDownValues() {
+    	return topDownValues;
+    }
+    
+    /**
+     * Return the half width value.
+     * @return
+     */
+    public int getHalfWidth() {
+    	return halfWidth;
+    }
+    
+    /**
+     * The number of bits in the output. Must be greater than or equal to w
+     * @param n
+     */
+    public void setN(int n) {
+    	this.n = n;
+    }
+    
+    /**
+     * Returns n
+     * @return
+     */
+    public int getN() {
+    	return n;
+    }
+    
+    /**
+     * The minimum value of the input signal.
+     * @param minVal
+     */
+    public void setMinVal(double minVal) {
+    	this.minval = minVal;
+    }
+    
+    /**
+     * Returns minval
+     * @return
+     */
+    public double getMinVal() {
+    	return minval;
+    }
+    
+    /**
+     * The maximum value of the input signal.
+     * @param maxVal
+     */
+    public void setMaxVal(double maxVal) {
+    	this.maxval = maxVal;
+    }
+    
+    /**
+     * Returns maxval
+     * @return
+     */
+    public double getMaxVal() {
+    	return maxval;
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have non-overlapping
+     * representations
+     * 
+     * @param radius
+     */
+    public void setRadius(double radius) {
+    	this.radius = radius;
+    }
+    
+    /**
+     * Returns the radius
+     * @return
+     */
+    public double getRadius() {
+    	return radius;
+    }
+    
+    /**
+     * inputs separated by more than, or equal to this distance will have different
+     * representations
+     * 
+     * @param resolution
+     */
+    public void setResolution(double resolution) {
+    	this.resolution = resolution;
+    }
+    
+    /**
+     * Returns the resolution
+     * @return
+     */
+    public double getResolution() {
+    	return resolution;
+    }
+    
+    /**
+     * If true, non-periodic inputs smaller than minval or greater
+     * than maxval will be clipped to minval/maxval
+     * @param b
+     */
+    public void setClipInput(boolean b) {
+    	this.clipInput = b;
+    }
+    
+    /**
+     * Returns the clip input flag
+     * @return
+     */
+    public boolean clipInput() {
+    	return clipInput;
+    }
+    
+    /**
+     * If true, then the input value "wraps around" such that minval = maxval
+     * For a periodic value, the input must be strictly less than maxval,
+     * otherwise maxval is a true upper bound.
+     * 
+     * @param b
+     */
+    public void setPeriodic(boolean b) {
+    	this.periodic = b;
+    }
+    
+    /**
+     * Returns the periodic flag
+     * @return
+     */
+    public boolean isPeriodic() {
+    	return periodic;
+    }
+    
+    /**
+     * If true, skip some safety checks (for compatibility reasons), default false 
+     * @param b
+     */
+    public void setForced(boolean b) {
+    	this.forced = b;
+    }
+    
+    /**
+     * Returns the forced flag
+     * @return
+     */
+    public boolean isForced() {
+    	return forced;
+    }
+    
+    /**
+     * An optional string which will become part of the description
+     * @param name
+     */
+    public void setName(String name) {
+    	this.name = name;
+    }
+    
+    /**
+     * Returns the optional name
+     * @return
+     */
+    public String getName() {
+    	return name;
+    }
+    
+    /**
+     * Returns the verbosity setting for an encoder.
+     * @return
+     */
+    public int getEncVerbosity() {
+    	return encVerbosity;
+    }
+    
+    /**
+     * Adds a the specified {@link Encoder} to the list of the specified
+     * parent's {@code Encoder}s.
+     * 
+     * @param parent	the parent Encoder
+     * @param name		Name of the {@link Encoder}
+     * @param e			the {@code Encoder}
+     * @param offset	the offset of the encoded output the specified encoder
+     * 					was used to encode.
+     */
+    public void addEncoder(Encoder parent, String name, Encoder child, int offset) {
+    	if(encoders == null) {
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
+    	}
+    	
+    	EncoderTuple key = getEncoderTuple(parent);
+    	List<EncoderTuple> childEncoders = null;
+    	if((childEncoders = encoders.get(key)) == null) {
+    		encoders.put(key, childEncoders = new ArrayList<EncoderTuple>());
+    	}
+    	childEncoders.add(new EncoderTuple(name, child, offset));
+    }
+    
+    /**
+     * Returns the {@link Tuple} containing the specified {@link Encoder}
+     * @param e		the Encoder the return value should contain
+     * @return		the {@link Tuple} containing the specified {@link Encoder}
+     */
+    public EncoderTuple getEncoderTuple(Encoder e) {
+    	if(encoders == null) {
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
+    	}
+    	
+    	for(EncoderTuple tuple : encoders.keySet()) {
+    		if(tuple.getEncoder().equals(e)) {
+    			return tuple;
+    		}
+    	}
+    	return null;
+    }
+    
+    /**
+     * Returns the list of child {@link Encoder} {@link Tuple}s 
+     * corresponding to the specified {@code Encoder}
+     * 
+     * @param e		the parent {@link Encoder} whose child Encoder Tuples are being returned
+     * @return		the list of child {@link Encoder} {@link Tuple}s
+     */
+    public List<EncoderTuple> getEncoders(Encoder e) {
+    	return getEncoders().get(getEncoderTuple(e));
+    }
+    
+    /**
+     * Returns the list of {@link Encoder}s
+     * @return
+     */
+    public Map<EncoderTuple, List<EncoderTuple>> getEncoders() {
+    	if(encoders == null) {
+    		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
+    	}
+    	return encoders;
+    }
+    
+    /**
+     * Sets the encoder flag indicating whether learning is enabled.
+     * 
+     * @param	encLearningEnabled	true if learning is enabled, false if not
+     */
+    public void setLearningEnabled(boolean encLearningEnabled) {
+    	this.encLearningEnabled = encLearningEnabled;
+    }
+    
+    /**
+     * Returns a flag indicating whether encoder learning is enabled.
+     */
+    public boolean isEncoderLearningEnabled() {
+    	return encLearningEnabled;
+    }
+    
+    /**
+     * Returns the list of all field types of the specified {@link Encoder}.
+     * 
+     * @return	List<FieldMetaType>
+     */
+    public List<FieldMetaType> getFlattenedFieldTypeList(Encoder e) { 
+    	if(decoderFieldTypes == null) {
+    		decoderFieldTypes = new HashMap<Tuple, List<FieldMetaType>>();
+    	}
+    	
+    	Tuple key = getEncoderTuple(e);
+    	List<FieldMetaType> fieldTypes = null;
+    	if((fieldTypes = decoderFieldTypes.get(key)) == null) {
+    		decoderFieldTypes.put(key, fieldTypes = new ArrayList<FieldMetaType>());
+    	}
+    	return fieldTypes;
+    }
+    
+    /**
+     * Returns the list of all field types of a parent {@link Encoder} and all
+     * leaf encoders flattened in a linear list which does not retain any parent
+     * child relationship information.
+     * 
+     * @return	List<FieldMetaType>
+     */
+    public List<FieldMetaType> getFlattenedFieldTypeList() {
+    	return flattenedFieldTypeList;
+    }
+    
+    /**
+     * Sets the list of flattened {@link FieldMetaType}s
+     * 
+     * @param l		list of {@link FieldMetaType}s
+     */
+    public void setFlattenedFieldTypeList(List<FieldMetaType> l) {
+    	this.flattenedFieldTypeList = l;
+    }
+    
+    /**
+     * Returns the names of the fields
+     * 
+     * @return	the list of names
+     */
+    public List<String> getScalarNames() {
+    	return scalarNames;
+    }
+    
+    /**
+     * Sets the names of the fields
+     * 
+     * @param names	the list of names
+     */
+    public void setScalarNames(List<String> names) {
+    	this.scalarNames = names;
+    }
+    ///////////////////////////////////////////////////////////
+	
 	
 	/**
 	 * Should return the output width, in bits.
 	 */
-	public abstract int getWidth(Connections c);
+	public abstract int getWidth();
 	
 	/**
 	 * Returns true if the underlying encoder works on deltas
@@ -76,68 +558,60 @@ public abstract class Encoder {
 	
 	/**
 	 * Encodes inputData and puts the encoded value into the numpy output array,
-     * which is a 1-D array of length returned by {@link Connections#getW()}.
+     * which is a 1-D array of length returned by {@link #getW()}.
 	 *
      * Note: The numpy output array is reused, so clear it before updating it.
-     * 
-	 * @param c
 	 * @param inputData Data to encode. This should be validated by the encoder.
-     * @param output 1-D array of same length returned by {@link Connections#getW()}
+	 * @param output 1-D array of same length returned by {@link #getW()}
      * 
 	 * @return
 	 */
-	public abstract int[] encodeIntoArray(Connections c, double inputData, int[] output);
+	public abstract int[] encodeIntoArray(double inputData, int[] output);
 	
 	/**
 	 * Set whether learning is enabled.
-	 * 
-	 * @param 	c					the connections memory
 	 * @param 	learningEnabled		flag indicating whether learning is enabled
 	 */
-	public abstract void setLearning(Connections c, boolean learningEnabled);
+	public abstract void setLearning(boolean learningEnabled);
 	
 	/**
 	 * This method is called by the model to set the statistics like min and
      * max for the underlying encoders if this information is available.
-     * 
-     * @param	c					the system state and data
-     * @param	fieldName			fieldName name of the field this encoder is encoding, provided by
+	 * @param	fieldName			fieldName name of the field this encoder is encoding, provided by
           							{@link MultiEncoder}	
-     * @param	fieldStatistics		fieldStatistics dictionary of dictionaries with the first level being
+	 * @param	fieldStatistics		fieldStatistics dictionary of dictionaries with the first level being
           							the fieldName and the second index the statistic ie:
           							fieldStatistics['pounds']['min']
 	 */
-	public void setFieldStats(Connections c, String fieldName, Map<String, Double> fieldStatistics) {}
+	public void setFieldStats(String fieldName, Map<String, Double> fieldStatistics) {}
 	
 	/**
-	 * Convenience wrapper for {@link #encodeIntoArray(Connections, double, int[])}
-	 *  
-     * @param c				the memory
+	 * Convenience wrapper for {@link #encodeIntoArray(double, int[])}
 	 * @param inputData		the input scalar
-	 * @return	an array with the encoded representation of inputData
+	 *  
+     * @return	an array with the encoded representation of inputData
 	 */
-	public int[] encode(Connections c, double inputData) {
-		int[] output = new int[c.getN()];
-		encodeIntoArray(c, inputData, output);
+	public int[] encode(double inputData) {
+		int[] output = new int[getN()];
+		encodeIntoArray(inputData, output);
 		return output;
 	}
 	
 	/**
 	 * Return the field names for each of the scalar values returned by
      * .
-     * 
-	 * @param c
 	 * @param parentFieldName	parentFieldName The name of the encoder which is our parent. This name
      *     						is prefixed to each of the field names within this encoder to form the
      *      					keys of the dict() in the retval.
+     * 
 	 * @return
 	 */
-	public List<String> getScalarNames(Connections c, String parentFieldName) {
+	public List<String> getScalarNames(String parentFieldName) {
 		List<String> names = new ArrayList<String>();
-		if(c.getEncoders() != null) {
-			List<EncoderTuple> encoders = c.getEncoders(this);
+		if(getEncoders() != null) {
+			List<EncoderTuple> encoders = getEncoders(this);
 			for(Tuple tuple : encoders) {
-				List<String> subNames = ((Encoder)tuple.get(1)).getScalarNames(c, c.getName());
+				List<String> subNames = ((Encoder)tuple.get(1)).getScalarNames(getName());
 				List<String> hierarchicalNames = new ArrayList<String>();
 				if(parentFieldName != null) {
 					for(String name : subNames) {
@@ -150,7 +624,7 @@ public abstract class Encoder {
 			if(parentFieldName != null) {
 				names.add(parentFieldName);
 			}else{
-				names.add((String)c.getEncoderTuple(this).get(0));
+				names.add((String)getEncoderTuple(this).get(0));
 			}
 		}
 		
@@ -161,31 +635,29 @@ public abstract class Encoder {
 	 * Returns a sequence of field types corresponding to the elements in the
      * decoded output field array.  The types are defined by {@link FieldMetaType}
      * 
-	 * @param c 	the state memory
 	 * @return
 	 */
-	public List<FieldMetaType> getDecoderOutputFieldTypes(Connections c) {
-		if(c.getFlattenedFieldTypeList() != null) {
-			return c.getFlattenedFieldTypeList();
+	public List<FieldMetaType> getDecoderOutputFieldTypes() {
+		if(getFlattenedFieldTypeList() != null) {
+			return getFlattenedFieldTypeList();
 		}
 		
 		List<FieldMetaType> retVal = new ArrayList<FieldMetaType>();
-		for(Tuple t : c.getEncoders(this)) {
-			List<FieldMetaType> subTypes = ((Encoder)t.get(1)).getDecoderOutputFieldTypes(c);
+		for(Tuple t : getEncoders(this)) {
+			List<FieldMetaType> subTypes = ((Encoder)t.get(1)).getDecoderOutputFieldTypes();
 			retVal.addAll(subTypes);
 		}
-		c.setFlattenedFieldTypeList(retVal);
+		setFlattenedFieldTypeList(retVal);
 		return retVal;
 	}
 	
 	/**
 	 * Gets the value of a given field from the input record
-	 * @param c				the state memory
 	 * @param inputObject	input object
 	 * @param fieldName		the name of the field containing the input object.
 	 * @return
 	 */
-	public Object getInputValue(Connections c, Object inputObject, String fieldName) {
+	public Object getInputValue(Object inputObject, String fieldName) {
 		if(Map.class.isAssignableFrom(inputObject.getClass())) {
 			@SuppressWarnings("rawtypes")
 			Map map = (Map)inputObject;
@@ -203,16 +675,15 @@ public abstract class Encoder {
      * returned in the same order as they are for getScalarNames() and
      * getScalars()
      * 
-	 * @param c
 	 * @return
 	 */
-	public List<Encoder> getEncoderList(Connections c) {
+	public List<Encoder> getEncoderList() {
 		List<Encoder> encoders = new ArrayList<Encoder>();
 		
-		List<EncoderTuple> registeredList = c.getEncoders(this);
+		List<EncoderTuple> registeredList = getEncoders(this);
 		if(registeredList != null && !registeredList.isEmpty()) {
 			for(Tuple t : registeredList) {
-				List<Encoder> subEncoders = ((Encoder)t.get(1)).getEncoderList(c);
+				List<Encoder> subEncoders = ((Encoder)t.get(1)).getEncoderList();
 				encoders.addAll(subEncoders);
 			}
 		}else{
@@ -240,13 +711,13 @@ public abstract class Encoder {
      * 
 	 * @return
 	 */
-	public <T> TDoubleList getScalars(Connections c, T d) {
+	public <T> TDoubleList getScalars(T d) {
 		TDoubleList retVals = new TDoubleArrayList();
 		double inputData = (Double)d;
-		List<EncoderTuple> encoders = c.getEncoders(this);
+		List<EncoderTuple> encoders = getEncoders(this);
 		if(encoders != null) {
 			for(EncoderTuple t : encoders) {
-				TDoubleList values = t.getEncoder().getScalars(c, inputData);
+				TDoubleList values = t.getEncoder().getScalars(inputData);
 				retVals.addAll(values);
 			}
 		}
@@ -262,22 +733,20 @@ public abstract class Encoder {
 	 * 
      * This method is essentially the same as getScalars() except that it returns
      * strings
-	 * 
-     * @param inputData The input data in the format it is received from the data source
+	 * @param inputData The input data in the format it is received from the data source
+	 * @param inputData		the input data object
 	 * 
      * @return A list of values, in the same format and in the same order as they
      * are returned by topDownCompute.
      * 
-	 * @param c				the state memory
-	 * @param inputData		the input data object
 	 * @return	list of encoded values in String form
 	 */
-	public <T> List<String> getEncodedValues(Connections c, T inputData) {
+	public <T> List<String> getEncodedValues(T inputData) {
 		List<String> retVals = new ArrayList<String>();
-		Map<EncoderTuple, List<EncoderTuple>> encoders = c.getEncoders();
+		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
 			for(EncoderTuple t : encoders.keySet()) {
-				retVals.addAll(t.getEncoder().getEncodedValues(c, inputData));
+				retVals.addAll(t.getEncoder().getEncodedValues(inputData));
 			}
 		}else{
 			retVals.add(inputData.toString());
@@ -290,17 +759,16 @@ public abstract class Encoder {
 	 * Returns an array containing the sub-field bucket indices for
      * each sub-field of the inputData. To get the associated field names for each of
      * the buckets, call getScalarNames().
+	 * @param  	inputData 	The data from the source. This is typically a object with members.
 	 * 
-	 * @param 	c			the state memory
-     * @param  	inputData 	The data from the source. This is typically a object with members.
-     * @return 	array of bucket indices
+	 * @return 	array of bucket indices
 	 */
-	public int[] getBucketIndices(Connections c, double input) {
+	public int[] getBucketIndices(double input) {
 		TIntList l = new TIntArrayList();
-		Map<EncoderTuple, List<EncoderTuple>> encoders = c.getEncoders();
+		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
 			for(EncoderTuple t : encoders.keySet()) {
-				l.addAll(t.getEncoder().getBucketIndices(c, input));
+				l.addAll(t.getEncoder().getBucketIndices(input));
 			}
 		}else{
 			throw new IllegalStateException("Should be implemented in base classes that are not " +
@@ -313,17 +781,16 @@ public abstract class Encoder {
 	 * Returns an array containing the sub-field bucket indices for
      * each sub-field of the inputData. To get the associated field names for each of
      * the buckets, call getScalarNames().
+	 * @param  	inputData 	The data from the source. This is typically a object with members.
 	 * 
-	 * @param 	c			the state memory
-     * @param  	inputData 	The data from the source. This is typically a object with members.
-     * @return 	array of bucket indices
+	 * @return 	array of bucket indices
 	 */
-	public int[] getBucketIndices(Connections c, Object input) {
+	public int[] getBucketIndices(Object input) {
 		TIntList l = new TIntArrayList();
-		Map<EncoderTuple, List<EncoderTuple>> encoders = c.getEncoders();
+		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
 			for(EncoderTuple t : encoders.keySet()) {
-				l.addAll(t.getEncoder().getBucketIndices(c, input));
+				l.addAll(t.getEncoder().getBucketIndices(input));
 			}
 		}else{
 			throw new IllegalStateException("Should be implemented in base classes that are not " +
@@ -335,16 +802,15 @@ public abstract class Encoder {
 	/**
 	 * Return a pretty print string representing the return values from
      * getScalars and getScalarNames().
-	 * 
-	 * @param c				the state memory
-     * @param scalarValues 	input values to encode to string
-     * @param scalarNames 	optional input of scalar names to convert. If None, gets
+	 * @param scalarValues 	input values to encode to string
+	 * @param scalarNames 	optional input of scalar names to convert. If None, gets
      *                  	scalar names from getScalarNames()
-     * @return string representation of scalar values
+	 * 
+	 * @return string representation of scalar values
 	 */
-	public String scalarsToStr(Connections c, List<?> scalarValues, List<String> scalarNames) {
+	public String scalarsToStr(List<?> scalarValues, List<String> scalarNames) {
 		if(scalarNames == null || scalarNames.isEmpty()) {
-			scalarNames = getScalarNames(c, "");
+			scalarNames = getScalarNames("");
 		}
 		
 		StringBuilder desc = new StringBuilder();
@@ -366,23 +832,22 @@ public abstract class Encoder {
      * For now, only the 'multi' and 'date' encoders have multiple (name, offset)
      * pairs. All other encoders have a single pair, where the offset is 0.
      * 
-	 * @param c		the connections memory
 	 * @return		list of tuples, each containing (name, offset)
 	 */		
-	public abstract List<Tuple> getDescription(Connections c); 
+	public abstract List<Tuple> getDescription(); 
 	
 	/**
 	 * Return a description of the given bit in the encoded output.
      * This will include the field name and the offset within the field.
-	 * 
-     * @param bitOffset  	Offset of the bit to get the description of
-     * @param formatted     If True, the bitOffset is w.r.t. formatted output,
+	 * @param bitOffset  	Offset of the bit to get the description of
+	 * @param formatted     If True, the bitOffset is w.r.t. formatted output,
      *                     	which includes separators
+	 * 
      * @return tuple(fieldName, offsetWithinField)
 	 */
-	public Tuple encodedBitDescription(Connections c, int bitOffset, boolean formatted) {
+	public Tuple encodedBitDescription(int bitOffset, boolean formatted) {
 		//Find which field it's in
-		List<Tuple> description = getDescription(c);
+		List<Tuple> description = getDescription();
 		int len = description.size();
 		String prevFieldName = null;
 		int prevFieldOffset = -1;
@@ -400,9 +865,9 @@ public abstract class Encoder {
 		}
 		// Return the field name and offset within the field
 	    // return (fieldName, bitOffset - fieldOffset)
-		int width = formatted ? getDisplayWidth(c) : getWidth(c);
+		int width = formatted ? getDisplayWidth() : getWidth();
 		
-		if(prevFieldOffset == -1 || bitOffset > getWidth(c)) {
+		if(prevFieldOffset == -1 || bitOffset > getWidth()) {
 			throw new IllegalStateException("Bit is outside of allowable range: " + 
 				String.format("[0 - %d]", width));
 		}
@@ -411,16 +876,14 @@ public abstract class Encoder {
 	
 	/**
 	 * Pretty-print a header that labels the sub-fields of the encoded
-     * output. This can be used in conjunction with {@link #pprint(Connections, int[], String)}.
-     * 
-	 * @param c
+     * output. This can be used in conjunction with {@link #pprint(int[], String)}.
 	 * @param prefix
 	 */
-	public void pprintHeader(Connections c, String prefix) {
+	public void pprintHeader(String prefix) {
 		System.out.println(prefix == null ? "" : prefix);
 		
-		List<Tuple> description = getDescription(c);
-		description.add(new Tuple(2, "end", getWidth(c)));
+		List<Tuple> description = getDescription();
+		description.add(new Tuple(2, "end", getWidth()));
 		
 		int len = description.size() - 1;
 		for(int i = 0;i < len;i++) {
@@ -434,7 +897,7 @@ public abstract class Encoder {
 			System.out.println(String.format(formatStr, pname));
 		}
 		
-		len = getWidth(c) + (description.size() - 1)*3 - 1;
+		len = getWidth() + (description.size() - 1)*3 - 1;
 		StringBuilder hyphens = new StringBuilder();
 		for(int i = 0;i < len;i++) hyphens.append("-");
 		System.out.println(new StringBuilder(prefix).append(hyphens));
@@ -442,16 +905,14 @@ public abstract class Encoder {
 	
 	/**
 	 * Pretty-print the encoded output using ascii art.
-	 * 
-	 * @param c
 	 * @param output
 	 * @param prefix
 	 */
-	public void pprint(Connections c, int[] output, String prefix) {
+	public void pprint(int[] output, String prefix) {
 		System.out.println(prefix == null ? "" : prefix);
 		
-		List<Tuple> description = getDescription(c);
-		description.add(new Tuple(2, "end", getWidth(c)));
+		List<Tuple> description = getDescription();
+		description.add(new Tuple(2, "end", getWidth()));
 		
 		int len = description.size() - 1;
 		for(int i = 0;i < len;i++) {
@@ -521,24 +982,22 @@ public abstract class Encoder {
 	 *
      *   {'amount':  ( [[2.5,2.5]],     '2.5'       ),
      *   'country': ( [[1,1], [5,6]],  'US, GB, ES' )}
-     *    
-	 * @param c					the memory
 	 * @param encoded      		The encoded output that you want decode
-     * @param parentFieldName 	The name of the encoder which is our parent. This name
+	 * @param parentFieldName 	The name of the encoder which is our parent. This name
      *      					is prefixed to each of the field names within this encoder to form the
      *    						keys of the {@link Map} returned.
-	 *
-     * @returns Tuple(fieldsMap, fieldOrder)
+     *    
+	 * @returns Tuple(fieldsMap, fieldOrder)
 	 */
 	@SuppressWarnings("unchecked")
-	public Tuple decode(Connections c, int[] encoded, String parentFieldName) {
+	public Tuple decode(int[] encoded, String parentFieldName) {
 		Map<String, Tuple> fieldsMap = new HashMap<String, Tuple>();
 		List<String> fieldsOrder = new ArrayList<String>();
 		
 		String parentName = parentFieldName == null || parentFieldName.isEmpty() ? 
-			c.getName() : String.format("%s.%s", parentFieldName, c.getName());
+			getName() : String.format("%s.%s", parentFieldName, getName());
 		
-		List<EncoderTuple> encoders = c.getEncoders(this);
+		List<EncoderTuple> encoders = getEncoders(this);
 		int len = encoders.size();
 		for(int i = 0;i < len;i++) {
 			Tuple threeFieldsTuple = encoders.get(i);
@@ -546,12 +1005,12 @@ public abstract class Encoder {
 			if(i < len - 1) {
 				nextOffset = (Integer)encoders.get(i + 1).get(2);
 			}else{
-				nextOffset = c.getW();
+				nextOffset = getW();
 			}
 			
 			int[] fieldOutput = ArrayUtils.sub(encoded, ArrayUtils.range((Integer)threeFieldsTuple.get(2), nextOffset));
 			
-			Tuple result = ((Encoder)threeFieldsTuple.get(1)).decode(c, fieldOutput, parentName);
+			Tuple result = ((Encoder)threeFieldsTuple.get(1)).decode(fieldOutput, parentName);
 			
 			fieldsMap.putAll((Map<String, Tuple>)result.get(0));
 			fieldsOrder.addAll((List<String>)result.get(1));
@@ -593,36 +1052,35 @@ public abstract class Encoder {
      * This call is faster than calling getBucketInfo() on each bucket individually
      * if all you need are the bucket values.
 	 * 
-     * @param c	the state memory
-	 * @return  list of items, each item representing the bucket value for that
+     * @return  list of items, each item representing the bucket value for that
      *          bucket.
 	 */
-	public abstract TDoubleList getBucketValues(Connections c);
+	public abstract TDoubleList getBucketValues();
 	
 	/**
 	 * Returns a list of {@link EncoderResult}s describing the inputs for
      * each sub-field that correspond to the bucket indices passed in 'buckets'.
      * To get the associated field names for each of the values, call getScalarNames().
-	 *
-     * @param buckets 	The list of bucket indices, one for each sub-field encoder.
+	 * @param buckets 	The list of bucket indices, one for each sub-field encoder.
      *              	These bucket indices for example may have been retrieved
      *              	from the getBucketIndices() call.
+	 *
      * @retun A list of {@link EncoderResult}s. Each EncoderResult has
 	 */
-	public List<EncoderResult> getBucketInfo(Connections c, int[] buckets) {
+	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		//Concatenate the results from bucketInfo on each child encoder
 		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
 		int bucketOffset = 0;
-		for(EncoderTuple encoderTuple : c.getEncoders(this)) {
+		for(EncoderTuple encoderTuple : getEncoders(this)) {
 			int nextBucketOffset = -1;
 			List<EncoderTuple> childEncoders = null;
-			if((childEncoders = c.getEncoders(encoderTuple.getEncoder())) != null) {
+			if((childEncoders = getEncoders(encoderTuple.getEncoder())) != null) {
 				nextBucketOffset = bucketOffset + childEncoders.size();
 			}else{
 				nextBucketOffset = bucketOffset + 1;
 			}
 			int[] bucketIndices = ArrayUtils.sub(buckets, ArrayUtils.range(bucketOffset, nextBucketOffset));
-			List<EncoderResult> values = encoderTuple.getEncoder().getBucketInfo(c, bucketIndices);
+			List<EncoderResult> values = encoderTuple.getEncoder().getBucketInfo(bucketIndices);
 			
 			retVals.addAll(values);
 			
@@ -638,10 +1096,9 @@ public abstract class Encoder {
      * values which are most likely to generate the given encoded output.
      * To get the associated field names for each of the values, call
      * getScalarNames().
-	 * 
-     * @param encoded The encoded output. Typically received from the topDown outputs
+	 * @param encoded The encoded output. Typically received from the topDown outputs
      *              from the spatial pooler just above us.
-	 *
+	 * 
      * @returns A list of EncoderResult named tuples. Each EncoderResult has
      *        three attributes:
 	 *
@@ -663,10 +1120,10 @@ public abstract class Encoder {
      *                          encode(), an identical bit-array should be
      *                          returned.
 	 */
-	public List<EncoderResult> topDownCompute(Connections c, int[] encoded) {
+	public List<EncoderResult> topDownCompute(int[] encoded) {
 		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
 		
-		List<EncoderTuple> encoders = c.getEncoders(this);
+		List<EncoderTuple> encoders = getEncoders(this);
 		int len = encoders.size();
 		for(int i = 0;i < len;i++) {
 			int offset = (int)encoders.get(i).get(2);
@@ -677,11 +1134,11 @@ public abstract class Encoder {
 				//Encoders = List<Encoder> : Encoder = EncoderTuple(name, encoder, offset)
 				nextOffset = (int)encoders.get(i + 1).get(2);
 			}else{
-				nextOffset = c.getW();
+				nextOffset = getW();
 			}
 			
 			int[] fieldOutput = ArrayUtils.sub(encoded, ArrayUtils.range(offset, nextOffset));
-			List<EncoderResult> values = encoder.topDownCompute(c, fieldOutput);
+			List<EncoderResult> values = encoder.topDownCompute(fieldOutput);
 			
 			retVals.addAll(values);
 		}
@@ -689,11 +1146,11 @@ public abstract class Encoder {
 		return retVals;
 	}
 	
-	public TDoubleList closenessScores(Connections c, TDoubleList expValues, TDoubleList actValues, boolean fractional) {
+	public TDoubleList closenessScores(TDoubleList expValues, TDoubleList actValues, boolean fractional) {
 		TDoubleList retVal = new TDoubleArrayList();
 		
 		//Fallback closenss is a percentage match
-		List<EncoderTuple> encoders = c.getEncoders(this);
+		List<EncoderTuple> encoders = getEncoders(this);
 		if(encoders == null || encoders.size() < 1) {
 			double err = Math.abs(expValues.get(0) - actValues.get(0));
 			double closeness = -1;
@@ -716,9 +1173,9 @@ public abstract class Encoder {
 		}
 		
 		int scalarIdx = 0;
-		for(EncoderTuple res : c.getEncoders(this)) {
+		for(EncoderTuple res : getEncoders(this)) {
 			TDoubleList values = res.getEncoder().closenessScores(
-				c, expValues.subList(scalarIdx, expValues.size()), actValues.subList(scalarIdx, actValues.size()), fractional);
+				expValues.subList(scalarIdx, expValues.size()), actValues.subList(scalarIdx, actValues.size()), fractional);
 			
 			scalarIdx += values.size();
 			retVal.addAll(values);
@@ -730,11 +1187,10 @@ public abstract class Encoder {
 	/**
 	 * Calculate width of display for bits plus blanks between fields.
 	 * 
-	 * @param c		the state memory	
 	 * @return	width
 	 */
-	public int getDisplayWidth(Connections c) {
-		return getWidth(c) + getDescription(c).size() - 1;
+	public int getDisplayWidth() {
+		return getWidth() + getDescription().size() - 1;
 	}
 	
 }

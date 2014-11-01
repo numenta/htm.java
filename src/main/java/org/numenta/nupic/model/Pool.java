@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 
 /**
  * Convenience container for "bound" {@link Synapse} values

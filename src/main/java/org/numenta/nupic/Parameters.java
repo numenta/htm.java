@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.research;
+package org.numenta.nupic;
 
 import java.lang.reflect.Field;
 import java.util.EnumMap;
@@ -30,6 +30,9 @@ import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.research.ComputeCycle;
+import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -361,8 +364,6 @@ public class Parameters {
     public EnumMap<Parameters.KEY, Object> getMap() {
         if(paramMap == null) {
             paramMap = new EnumMap<Parameters.KEY, Object>(Parameters.KEY.class);
-            
-            
         }
         
         return paramMap;
@@ -375,7 +376,47 @@ public class Parameters {
      * @param cn
      * @param p
      */
-    public static void apply(Connections cn, Parameters p) {
+//    public static void apply(Connections cn, Parameters p) {
+//        try {
+//            for(Parameters.KEY key : p.paramMap.keySet()) {
+//                switch(key){
+//                    case RANDOM: {
+//                        Field f = cn.getClass().getDeclaredField(key.fieldName);
+//                        f.setAccessible(true);
+//                        f.set(cn, p.random);
+//                        
+//                        f = p.getClass().getDeclaredField(key.fieldName);
+//                        f.setAccessible(true);
+//                        f.set(p, p.random);
+//                        
+//                        break;
+//                    }
+//                    default: {
+//                    	Field f = cn.getClass().getDeclaredField(key.fieldName);
+//                    	f.setAccessible(true);
+//                        f.set(cn, p.paramMap.get(key));
+//                        
+//                        f = p.getClass().getDeclaredField(key.fieldName);
+//                        f.setAccessible(true);
+//                        f.set(p, p.paramMap.get(key));
+//                        
+//                        break;
+//                    }
+//                }
+//            }
+//        }catch(Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+    
+    /**
+     * Sets the fields specified by the {@code Parameters} on the specified
+     * {@link Connections} object. 
+     * 
+     * @param cn
+     * @param p
+     */
+    public static void apply(Object cn, Parameters p) {
         try {
             for(Parameters.KEY key : p.paramMap.keySet()) {
                 switch(key){
@@ -391,7 +432,12 @@ public class Parameters {
                         break;
                     }
                     default: {
-                    	Field f = cn.getClass().getDeclaredField(key.fieldName);
+                    	Field f = null;
+                    	try {
+                    		f = cn.getClass().getDeclaredField(key.fieldName);
+                    	}catch(NoSuchFieldException n) {
+                    		f = cn.getClass().getSuperclass().getDeclaredField(key.fieldName);
+                    	}
                     	f.setAccessible(true);
                         f.set(cn, p.paramMap.get(key));
                         

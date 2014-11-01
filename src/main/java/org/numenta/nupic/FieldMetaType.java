@@ -1,4 +1,4 @@
-package org.numenta.nupic.data;
+package org.numenta.nupic;
 
 /**
  * Public values for the field data types

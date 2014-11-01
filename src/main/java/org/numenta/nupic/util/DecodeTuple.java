@@ -8,7 +8,7 @@ import org.numenta.nupic.encoders.RangeList;
 
 /**
  * Subclass of Tuple to specifically contain the results of an
- * {@link Encoder}'s {@link Encoder#encode(org.numenta.nupic.research.Connections, double)}
+ * {@link Encoder}'s {@link Encoder#encode(double)}
  * call.
  * 
  * @author David Ray

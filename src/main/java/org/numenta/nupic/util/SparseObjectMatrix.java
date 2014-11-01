@@ -24,6 +24,9 @@ package org.numenta.nupic.util;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 /**
  * Allows storage of array data in sparse form, meaning that the indexes
  * of the data stored are maintained while empty indexes are not. This allows
@@ -37,10 +40,19 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 public class SparseObjectMatrix<T> extends SparseMatrix<T> {
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
     
+    /**
+     * Constructs a new {@code SparseObjectMatrix}
+     * @param dimensions	the dimensions of this array
+     */
     public SparseObjectMatrix(int[] dimensions) {
         super(dimensions, false);
     }
     
+    /**
+     * Constructs a new {@code SparseObjectMatrix}
+     * @param dimensions					the dimensions of this array
+     * @param useColumnMajorOrdering		where inner index increments most frequently
+     */
     public SparseObjectMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
     }
@@ -130,5 +142,11 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
         return reverse(sparseMap.keys());
     }
     
-    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+    	return Arrays.toString(dimensions);
+    }
 }
