@@ -170,7 +170,7 @@ public class ScalarEncoderTest {
 			System.out.println("bucket index => " + bucketIndices[0]);
 			topDown = se.getBucketInfo(bucketIndices).get(0);
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
-			assertEquals(topDown.get(1), se.getBucketValues().toArray()[bucketIndices[0]]);
+			assertEquals(topDown.get(1), se.getBucketValues(Double.class).toArray()[bucketIndices[0]]);
 			assertEquals(topDown.get(2), topDown.get(1));
 			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
 		}

@@ -21,6 +21,10 @@ import java.util.Random;
  * @author David Ray
  */
 public class ArrayUtils {
+	public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
+		public boolean eval(int i) { return i == 1; }
+	};
+	
 	public static void main(String[] args) {
 		System.out.println(ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
 	}
@@ -1196,5 +1200,22 @@ public class ArrayUtils {
     		ret[i] = d[j];
     	}
     	return ret;
+    }
+    
+    /**
+     * Returns a new int array containing the or'd on bits of
+     * both arg1 and arg2.
+     * 
+     * @param arg1
+     * @param arg2
+     * @return
+     */
+    public static int[] or(int[] arg1, int[] arg2) {
+    	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
+    	int[] arg1ones = ArrayUtils.where(arg1, WHERE_1);
+    	int[] arg2ones = ArrayUtils.where(arg2, WHERE_1);
+    	ArrayUtils.setIndexesTo(retVal, arg1ones, 1);
+    	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
+    	return retVal;
     }
 }
