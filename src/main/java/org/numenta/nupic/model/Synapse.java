@@ -21,7 +21,7 @@
  */
 package org.numenta.nupic.model;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
 /**

@@ -19,17 +19,19 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.research;
+package org.numenta.nupic;
 
 import java.lang.reflect.Field;
+import java.nio.file.NoSuchFileException;
 import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.research.ComputeCycle;
+import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -96,7 +98,10 @@ public class Parameters {
         NAME("name", "None"),
         CLIP_INPUT("clipInput", false),
         FORCED("forced", false),
-        ENC_VERBOSITY("encVerbosity", 0);
+        ENC_VERBOSITY("encVerbosity", 0),
+        
+        //////////// Category Encoder Parameters /////////////
+        CATEGORY_LIST("categoryList", null);
         
         private String fieldName;
         private Object fieldValue;
@@ -196,9 +201,9 @@ public class Parameters {
      */
     private boolean periodic = true;
     /** The minimum value of the input signal.  */
-    private int minval = 0;
+    private double minval = 0;
     /** The maximum value of the input signal. */
-    private int maxval = 0;
+    private double maxval = 0;
     /** if true, non-periodic inputs smaller than minval or greater
             than maxval will be clipped to minval/maxval */
     private boolean clipInput;
@@ -208,6 +213,9 @@ public class Parameters {
     private String name;
     /** Encoder verbosity setting */
     private int encVerbosity = 0;
+    
+    //---- Category Encoder
+    private List<String> categoryList;
     
     //////////////// General ////////////////
     /** Random Number Generator */
@@ -361,8 +369,6 @@ public class Parameters {
     public EnumMap<Parameters.KEY, Object> getMap() {
         if(paramMap == null) {
             paramMap = new EnumMap<Parameters.KEY, Object>(Parameters.KEY.class);
-            
-            
         }
         
         return paramMap;
@@ -375,7 +381,7 @@ public class Parameters {
      * @param cn
      * @param p
      */
-    public static void apply(Connections cn, Parameters p) {
+    public static void apply(Object cn, Parameters p) {
         try {
             for(Parameters.KEY key : p.paramMap.keySet()) {
                 switch(key){
@@ -391,7 +397,23 @@ public class Parameters {
                         break;
                     }
                     default: {
-                    	Field f = cn.getClass().getDeclaredField(key.fieldName);
+                    	Field f = null;
+                    	try {
+                    		f = cn.getClass().getDeclaredField(key.fieldName);
+                    	}catch(NoSuchFieldException n) {
+                    		Class<?> superClazz = cn.getClass();
+                    		while((superClazz = superClazz.getSuperclass()) != null) {
+                    			try {
+                    				f = superClazz.getDeclaredField(key.fieldName);
+                    			}catch(NoSuchFieldException n2) {}
+                    			if(f != null) break;
+                    		}
+//                    		try {
+//                    			f = cn.getClass().getSuperclass().getDeclaredField(key.fieldName);
+//                    		}catch(NoSuchFieldException n2) {
+//                    			f = cn.getClass().getSuperclass().getSuperclass().getDeclaredField(key.fieldName);
+//                    		}
+                    	}
                     	f.setAccessible(true);
                         f.set(cn, p.paramMap.get(key));
                         
@@ -842,7 +864,7 @@ public class Parameters {
      * The minimum value of the input signal.
      * @param minVal
      */
-    public void setMinVal(int minVal) {
+    public void setMinVal(double minVal) {
     	this.minval = minVal;
     	getMap().put(KEY.MINVAL, minVal);
     }
@@ -851,7 +873,7 @@ public class Parameters {
      * The maximum value of the input signal.
      * @param maxVal
      */
-    public void setMaxVal(int maxVal) {
+    public void setMaxVal(double maxVal) {
     	this.maxval = maxVal;
     	getMap().put(KEY.MAXVAL, maxVal);
     }
@@ -916,6 +938,13 @@ public class Parameters {
     public void setName(String name) {
     	this.name = name;
     	getMap().put(KEY.NAME, name);
+    }
+    
+    ///////////////////////////////
+    
+    public void setCategoryList(List<String> l) {
+    	this.categoryList = l;
+    	getMap().put(KEY.CATEGORY_LIST, l);
     }
     
     /**

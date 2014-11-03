@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
 /**

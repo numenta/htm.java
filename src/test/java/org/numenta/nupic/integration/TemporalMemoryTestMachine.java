@@ -31,17 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.ComputeCycle;
-import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
 
-import com.bethecoder.ascii_table.ASCIITable;
-
+import com.bethecoder.table.AsciiTableInstance;
+import com.bethecoder.table.spec.AsciiTable;
 /**
  * Test utility to furnish test data.
  * 
@@ -114,7 +115,7 @@ public class TemporalMemoryTestMachine {
                     }
                 }
                 
-                unpredictedActiveColumns.addAll(temporalMemory.subtract(
+                unpredictedActiveColumns.addAll(ArrayUtils.subtract(
                     new ArrayList<Integer>(predictedActiveColumns), new ArrayList<Integer>(pattern)));
             }
             
@@ -163,7 +164,7 @@ public class TemporalMemoryTestMachine {
             data[i] = row;
         }
         
-        String retVal = ASCIITable.getInstance().getTable(header, data, ASCIITable.ALIGN_CENTER);
+        String retVal = AsciiTableInstance.get().getTable(header, data, AsciiTable.ALIGN_CENTER);
         
         return retVal;
     }

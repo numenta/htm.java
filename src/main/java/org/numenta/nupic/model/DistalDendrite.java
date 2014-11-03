@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.numenta.nupic.research.Connections;
+import org.numenta.nupic.Connections;
 
 /**
  * Represents a proximal or distal dendritic segment.

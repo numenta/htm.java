@@ -21,6 +21,48 @@ import java.util.Random;
  * @author David Ray
  */
 public class ArrayUtils {
+	public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
+		public boolean eval(int i) { return i == 1; }
+	};
+	
+	public static void main(String[] args) {
+		System.out.println(ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
+	}
+	/**
+	 * Returns a string representing a numpy array of 0's and 1's
+	 * 
+	 * @param arr	an binary array (0's and 1's only)
+	 * @return
+	 */
+	public static String bitsToString(int[] arr) {
+		char[] s = new char[arr.length + 1];
+		Arrays.fill(s, '.');
+		s[0] = 'c';
+		for(int i = 0;i < arr.length;i++) {
+			if(arr[i] == 1) {
+				s[i + 1] = '*';
+			}
+		}
+		return new String(s);
+	}
+	/**
+	 * Return a list of tuples, where each tuple contains the i-th element
+     * from each of the argument sequences.  The returned list is 
+     * truncated in length to the length of the shortest argument sequence.
+     * 
+	 * @param arg1	the first list to be the zero'th entry in the returned tuple
+	 * @param arg2  the first list to be the one'th entry in the returned tuple
+	 * @return	a list of tuples
+	 */
+	public static List<Tuple> zip(List<?> arg1, List<?> arg2) {
+		List<Tuple> tuples = new ArrayList<Tuple>();
+		int len = Math.min(arg1.size(), arg2.size());
+		for(int i = 0;i < len;i++) {
+			tuples.add(new Tuple(2, arg1.get(i), arg2.get(i)));
+		}
+		
+		return tuples;
+	}
     /**
      * Returns an array with the same shape and the contents
      * converted to doubles.
@@ -367,6 +409,21 @@ public class ArrayUtils {
     }
     
     /**
+     * Subtracts the contents of the first argument from the last argument's list.
+     * 
+     * <em>NOTE: Does not destroy/alter the argument lists. </em>
+     * 
+     * @param minuend
+     * @param subtrahend
+     * @return
+     */
+    public static List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
+        ArrayList<Integer> sList = new ArrayList<Integer>(minuend);
+        sList.removeAll(subtrahend);
+        return new ArrayList<Integer>(sList);
+    }
+    
+    /**
      * Returns the average of all the specified array contents.
      * @param arr
      * @return
@@ -649,7 +706,24 @@ public class ArrayUtils {
     		values[indexes[i]] = setTo;
     	}
     }
-
+    
+    /**
+     * Sets the values in range start to stop to the value specified. If 
+     * stop < 0, then stop indicates the number of places counting from the
+     * length of "values" back. 
+     * 
+     * @param values	the array to alter	
+     * @param start		the start index (inclusive)
+     * @param stop      the end index (exclusive)
+     * @param setTo		the value to set the indexes to
+     */
+    public static void setRangeTo(int[] values, int start, int stop, int setTo) {
+    	stop = stop < 0 ? values.length + stop : stop;
+    	for(int i = start;i < stop;i++) {
+    		values[i] = setTo;
+    	}
+    }
+    
     /**
      * Returns a random, sorted, and  unique array of the specified sample size of 
      * selections from the specified list of choices.
@@ -1126,5 +1200,22 @@ public class ArrayUtils {
     		ret[i] = d[j];
     	}
     	return ret;
+    }
+    
+    /**
+     * Returns a new int array containing the or'd on bits of
+     * both arg1 and arg2.
+     * 
+     * @param arg1
+     * @param arg2
+     * @return
+     */
+    public static int[] or(int[] arg1, int[] arg2) {
+    	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
+    	int[] arg1ones = ArrayUtils.where(arg1, WHERE_1);
+    	int[] arg2ones = ArrayUtils.where(arg2, WHERE_1);
+    	ArrayUtils.setIndexesTo(retVal, arg1ones, 1);
+    	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
+    	return retVal;
     }
 }

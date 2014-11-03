@@ -35,12 +35,12 @@ import java.util.Random;
 import java.util.Set;
 
 import org.junit.Test;
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.ComputeCycle;
-import org.numenta.nupic.research.Connections;
 import org.numenta.nupic.research.TemporalMemory;
 
 

@@ -29,7 +29,9 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.ArrayUtils;
@@ -641,8 +643,9 @@ public class SpatialPooler {
     public double[] initPermanence(Connections c, int[] potentialPool, int index, double connectedPct) {
     	int count = (int)Math.round((double)potentialPool.length * connectedPct);
         TIntHashSet pick = new TIntHashSet();
+        Random random = c.getRandom();
         while(pick.size() < count) {
-        	int randIdx = c.random.nextInt(potentialPool.length);
+        	int randIdx = random.nextInt(potentialPool.length);
         	pick.add(potentialPool[randIdx]);
         }
         
@@ -796,7 +799,7 @@ public class SpatialPooler {
         TIntArrayList neighbors = new TIntArrayList(neighborList.size());
         int size = neighborList.size();
         for(int i = 0;i < size;i++) {
-            int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i).toArray());
+        	int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i).toArray(), false);
             if(flatIndex == columnIndex) continue;
             neighbors.add(flatIndex);
         }

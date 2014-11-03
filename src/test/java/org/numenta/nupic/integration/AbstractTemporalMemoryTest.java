@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.numenta.nupic.Connections;
+import org.numenta.nupic.Parameters;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
-import org.numenta.nupic.research.Connections;
-import org.numenta.nupic.research.Parameters;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
