@@ -24,7 +24,6 @@ package org.numenta.nupic.util;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**

@@ -22,11 +22,10 @@
 package org.numenta.nupic;
 
 import java.lang.reflect.Field;
+import java.nio.file.NoSuchFileException;
 import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -99,7 +98,10 @@ public class Parameters {
         NAME("name", "None"),
         CLIP_INPUT("clipInput", false),
         FORCED("forced", false),
-        ENC_VERBOSITY("encVerbosity", 0);
+        ENC_VERBOSITY("encVerbosity", 0),
+        
+        //////////// Category Encoder Parameters /////////////
+        CATEGORY_LIST("categoryList", null);
         
         private String fieldName;
         private Object fieldValue;
@@ -211,6 +213,9 @@ public class Parameters {
     private String name;
     /** Encoder verbosity setting */
     private int encVerbosity = 0;
+    
+    //---- Category Encoder
+    private List<String> categoryList;
     
     //////////////// General ////////////////
     /** Random Number Generator */
@@ -376,46 +381,6 @@ public class Parameters {
      * @param cn
      * @param p
      */
-//    public static void apply(Connections cn, Parameters p) {
-//        try {
-//            for(Parameters.KEY key : p.paramMap.keySet()) {
-//                switch(key){
-//                    case RANDOM: {
-//                        Field f = cn.getClass().getDeclaredField(key.fieldName);
-//                        f.setAccessible(true);
-//                        f.set(cn, p.random);
-//                        
-//                        f = p.getClass().getDeclaredField(key.fieldName);
-//                        f.setAccessible(true);
-//                        f.set(p, p.random);
-//                        
-//                        break;
-//                    }
-//                    default: {
-//                    	Field f = cn.getClass().getDeclaredField(key.fieldName);
-//                    	f.setAccessible(true);
-//                        f.set(cn, p.paramMap.get(key));
-//                        
-//                        f = p.getClass().getDeclaredField(key.fieldName);
-//                        f.setAccessible(true);
-//                        f.set(p, p.paramMap.get(key));
-//                        
-//                        break;
-//                    }
-//                }
-//            }
-//        }catch(Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-    
-    /**
-     * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link Connections} object. 
-     * 
-     * @param cn
-     * @param p
-     */
     public static void apply(Object cn, Parameters p) {
         try {
             for(Parameters.KEY key : p.paramMap.keySet()) {
@@ -436,7 +401,18 @@ public class Parameters {
                     	try {
                     		f = cn.getClass().getDeclaredField(key.fieldName);
                     	}catch(NoSuchFieldException n) {
-                    		f = cn.getClass().getSuperclass().getDeclaredField(key.fieldName);
+                    		Class<?> superClazz = cn.getClass();
+                    		while((superClazz = superClazz.getSuperclass()) != null) {
+                    			try {
+                    				f = superClazz.getDeclaredField(key.fieldName);
+                    			}catch(NoSuchFieldException n2) {}
+                    			if(f != null) break;
+                    		}
+//                    		try {
+//                    			f = cn.getClass().getSuperclass().getDeclaredField(key.fieldName);
+//                    		}catch(NoSuchFieldException n2) {
+//                    			f = cn.getClass().getSuperclass().getSuperclass().getDeclaredField(key.fieldName);
+//                    		}
                     	}
                     	f.setAccessible(true);
                         f.set(cn, p.paramMap.get(key));
@@ -962,6 +938,13 @@ public class Parameters {
     public void setName(String name) {
     	this.name = name;
     	getMap().put(KEY.NAME, name);
+    }
+    
+    ///////////////////////////////
+    
+    public void setCategoryList(List<String> l) {
+    	this.categoryList = l;
+    	getMap().put(KEY.CATEGORY_LIST, l);
     }
     
     /**

@@ -68,7 +68,7 @@ public abstract class Encoder {
      * "width" of the output signal 
      */
     protected int w = 0;
-    /** number of bits in the representation (must be > w) */
+    /** number of bits in the representation (must be >= w) */
     protected int n = 0;
     /** the half width value */
     protected int halfWidth;
@@ -100,7 +100,7 @@ public abstract class Encoder {
     protected int nInternal;
     protected double rangeInternal;
     protected double range;
-    protected int encVerbosity;
+    protected int verbosity;
     protected boolean encLearningEnabled;
     protected List<FieldMetaType> flattenedFieldTypeList;
     protected Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
@@ -110,7 +110,7 @@ public abstract class Encoder {
      */
     protected SparseObjectMatrix<int[]> topDownMapping;
     protected double[] topDownValues;
-    protected TDoubleList bucketValues;
+    protected List<?> bucketValues;
     protected LinkedHashMap<EncoderTuple, List<EncoderTuple>> encoders;
     protected List<String> scalarNames;
     
@@ -402,11 +402,19 @@ public abstract class Encoder {
     }
     
     /**
+     * Sets the verbosity of debug output
+     * @param v
+     */
+    public void setVerbosity(int v) {
+    	this.verbosity = v;
+    }
+    
+    /**
      * Returns the verbosity setting for an encoder.
      * @return
      */
-    public int getEncVerbosity() {
-    	return encVerbosity;
+    public int getVerbosity() {
+    	return verbosity;
     }
     
     /**
@@ -569,6 +577,18 @@ public abstract class Encoder {
 	public abstract int[] encodeIntoArray(double inputData, int[] output);
 	
 	/**
+	 * Encodes inputData and puts the encoded value into the numpy output array,
+     * which is a 1-D array of length returned by {@link #getW()}.
+	 *
+     * Note: The numpy output array is reused, so clear it before updating it.
+	 * @param inputData Data to encode. This should be validated by the encoder.
+	 * @param output 1-D array of same length returned by {@link #getW()}
+     * 
+	 * @return
+	 */
+	public abstract int[] encodeIntoArray(String inputData, int[] output);
+	
+	/**
 	 * Set whether learning is enabled.
 	 * @param 	learningEnabled		flag indicating whether learning is enabled
 	 */
@@ -592,6 +612,18 @@ public abstract class Encoder {
      * @return	an array with the encoded representation of inputData
 	 */
 	public int[] encode(double inputData) {
+		int[] output = new int[getN()];
+		encodeIntoArray(inputData, output);
+		return output;
+	}
+	
+	/**
+	 * Convenience wrapper for {@link #encodeIntoArray(double, int[])}
+	 * @param inputData		the input scalar
+	 *  
+     * @return	an array with the encoded representation of inputData
+	 */
+	public int[] encode(String inputData) {
 		int[] output = new int[getN()];
 		encodeIntoArray(inputData, output);
 		return output;
@@ -759,11 +791,11 @@ public abstract class Encoder {
 	 * Returns an array containing the sub-field bucket indices for
      * each sub-field of the inputData. To get the associated field names for each of
      * the buckets, call getScalarNames().
-	 * @param  	inputData 	The data from the source. This is typically a object with members.
+	 * @param  	input 	The data from the source. This is typically a object with members.
 	 * 
 	 * @return 	array of bucket indices
 	 */
-	public int[] getBucketIndices(double input) {
+	public int[] getBucketIndices(String input) {
 		TIntList l = new TIntArrayList();
 		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
@@ -781,11 +813,11 @@ public abstract class Encoder {
 	 * Returns an array containing the sub-field bucket indices for
      * each sub-field of the inputData. To get the associated field names for each of
      * the buckets, call getScalarNames().
-	 * @param  	inputData 	The data from the source. This is typically a object with members.
+	 * @param  	input 	The data from the source. This is typically a object with members.
 	 * 
 	 * @return 	array of bucket indices
 	 */
-	public int[] getBucketIndices(Object input) {
+	public int[] getBucketIndices(double input) {
 		TIntList l = new TIntArrayList();
 		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
@@ -1051,11 +1083,14 @@ public abstract class Encoder {
 	 * 
      * This call is faster than calling getBucketInfo() on each bucket individually
      * if all you need are the bucket values.
+     * 
+     * @param	returnType 		class type parameter so that this method can return encoder
+     * 							specific value types
 	 * 
      * @return  list of items, each item representing the bucket value for that
      *          bucket.
 	 */
-	public abstract TDoubleList getBucketValues();
+	public abstract <T> List<T> getBucketValues(Class<T> returnType);
 	
 	/**
 	 * Returns a list of {@link EncoderResult}s describing the inputs for
@@ -1065,7 +1100,7 @@ public abstract class Encoder {
      *              	These bucket indices for example may have been retrieved
      *              	from the getBucketIndices() call.
 	 *
-     * @retun A list of {@link EncoderResult}s. Each EncoderResult has
+     * @return A list of {@link EncoderResult}s. Each EncoderResult has
 	 */
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		//Concatenate the results from bucketInfo on each child encoder

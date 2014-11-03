@@ -312,7 +312,7 @@ public class ScalarEncoder extends Encoder {
 		}else{
 			if(input < getMinVal()) {
 				if(clipInput() && !isPeriodic()) {
-					if(getEncVerbosity() > 0) {
+					if(getVerbosity() > 0) {
 						System.out.println("Clipped input " + getName() +
 							"=" + input + " to minval " + getMinVal());
 					}
@@ -332,7 +332,7 @@ public class ScalarEncoder extends Encoder {
 		}else{
 			if(input > getMaxVal()) {
 				if(clipInput()) {
-					if(getEncVerbosity() > 0) {
+					if(getVerbosity() > 0) {
 						System.out.println("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
 					}
 					
@@ -381,6 +381,19 @@ public class ScalarEncoder extends Encoder {
 		return getN();
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 * NO-OP
+	 */
+	@Override
+	public int[] getBucketIndices(String input) { return null; }
+	
+	/**
+	 * Returns the bucket indices.
+	 * 
+	 * @param	input 	
+	 */
+	@Override
 	public int[] getBucketIndices(double input) {
 		int minbin = getFirstOnBit(input);
 		
@@ -397,7 +410,7 @@ public class ScalarEncoder extends Encoder {
 		
 		return new int[] { bucketIdx };
 	}
-
+	
 	/**
 	 * Encodes inputData and puts the encoded value into the numpy output array,
      * which is a 1-D array of length returned by {@link Connections#getW()}.
@@ -438,7 +451,7 @@ public class ScalarEncoder extends Encoder {
 			ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
 		}
 		
-		if(getEncVerbosity() >= 2) {
+		if(getVerbosity() >= 2) {
 			System.out.println("");
 			System.out.println("input: " + input);
 			System.out.println("range: " + getMinVal() + " - " + getMaxVal());
@@ -451,6 +464,14 @@ public class ScalarEncoder extends Encoder {
 		return output;
 	}
 	
+	/**
+	 * NO-OP 
+	 */
+	@Override
+	public int[] encodeIntoArray(String inputData, int[] output) {
+		return null;
+	}
+
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// For now, we simply assume any top-down output greater than 0
 	    // is ON. Eventually, we will probably want to incorporate the strength
@@ -491,7 +512,7 @@ public class ScalarEncoder extends Encoder {
 			}
 		}
 		
-		if(getEncVerbosity() >= 2) {
+		if(getVerbosity() >= 2) {
 			System.out.println("raw output:" + Arrays.toString(
 				ArrayUtils.sub(encoded, ArrayUtils.range(0, getN()))));
 			System.out.println("filtered output:" + Arrays.toString(tmpOutput));
@@ -698,21 +719,30 @@ public class ScalarEncoder extends Encoder {
      * This call is faster than calling getBucketInfo() on each bucket individually
      * if all you need are the bucket values.
 	 *
+	 * @param	returnType 		class type parameter so that this method can return encoder
+     * 							specific value types
+     * 
      * @return list of items, each item representing the bucket value for that
      *        bucket.
 	 */
-	public TDoubleList getBucketValues() {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> List<T> getBucketValues(Class<T> t) {
 		if(bucketValues == null) {
 			SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
-			bucketValues = new TDoubleArrayList();
+			bucketValues = new ArrayList<Double>();
 			for(int i = 0;i < numBuckets;i++) {
-				bucketValues.add((Double)getBucketInfo(new int[] { i }).get(0).get(1));
+				((List<Double>)bucketValues).add((Double)getBucketInfo(new int[] { i }).get(0).get(1));
 			}
 		}
-		return bucketValues;
+		return (List<T>)bucketValues;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 		
@@ -757,12 +787,12 @@ public class ScalarEncoder extends Encoder {
 	public List<Tuple> dict() {
 		List<Tuple> l = new ArrayList<Tuple>();
 		l.add(new Tuple(2, "maxval", getMaxVal()));
-		l.add(new Tuple(2, "bucketValues", getBucketValues()));
+		l.add(new Tuple(2, "bucketValues", getBucketValues(Double.class)));
 		l.add(new Tuple(2, "nInternal", getNInternal()));
 		l.add(new Tuple(2, "name", getName()));
 		l.add(new Tuple(2, "minval", getMinVal()));
 		l.add(new Tuple(2, "topDownValues", Arrays.toString(getTopDownValues())));
-		l.add(new Tuple(2, "verbosity", getEncVerbosity()));
+		l.add(new Tuple(2, "verbosity", getVerbosity()));
 		l.add(new Tuple(2, "clipInput", clipInput()));
 		l.add(new Tuple(2, "n", getN()));
 		l.add(new Tuple(2, "padding", getPadding()));
@@ -777,4 +807,5 @@ public class ScalarEncoder extends Encoder {
 		
 		return l;
 	}
+
 }
