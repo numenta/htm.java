@@ -75,4 +75,8 @@ public class ArrayUtilsTest {
 		assertEquals(2, ArrayUtils.modulo(a, n));
 	}
 
+	@Test
+	public void testBitsToString() {
+		assertEquals("c....***", ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
+	}
 }

@@ -46,10 +46,7 @@ public class ArrayUtils {
 	public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
 		public boolean eval(int i) { return i == 1; }
 	};
-	
-	public static void main(String[] args) {
-		System.out.println(ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
-	}
+
 	/**
 	 * Returns a string representing a numpy array of 0's and 1's
 	 * 
