@@ -21,6 +21,7 @@ repositories {
 }
 
 dependencies {
+    compile group: 'joda-time', name: 'joda-time', version: '2.5'
     compile(group: 'com.chaschev', name: 'chutils', version:'1.4') {
         exclude(module: 'mockito-all')
         exclude(module: 'slf4j-api')
