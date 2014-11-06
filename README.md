@@ -23,7 +23,7 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
  * [NuPIC Community](http://numenta.org/community.html)
 
-## Installation - [***NEW! Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips_)
+## Installation - [***NEW! Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
