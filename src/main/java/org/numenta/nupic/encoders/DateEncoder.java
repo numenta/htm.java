@@ -41,51 +41,69 @@ import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.encoders.ScalarEncoder;
 
 /**
- * Encodes a date according to encoding parameters specified in its constructor.
+ * DOCUMENTATION TAKEN DIRECTLY FROM THE PYTHON VERSION:
  *
- * The input to a date encoder is a datetime object. The output is
+ * A date encoder encodes a date according to encoding parameters specified in its constructor.
+ *
+ * The input to a date encoder is a datetime.datetime object. The output is
  * the concatenation of several sub-encodings, each of which encodes a different
  * aspect of the date. Which sub-encodings are present, and details of those
  * sub-encodings, are specified in the DateEncoder constructor.
  *
- * Each parameter describes one attribute to encode. By default, the attribute is
- * not encoded.
+ * Each parameter describes one attribute to encode. By default, the attribute
+ * is not encoded.
+ *
+ * season (season of the year; units = day):
+ * (int) width of attribute; default radius = 91.5 days (1 season)
+ * (tuple)  season[0] = width; season[1] = radius
+ *
+ * dayOfWeek (monday = 0; units = day)
+ * (int) width of attribute; default radius = 1 day
+ * (tuple) dayOfWeek[0] = width; dayOfWeek[1] = radius
+ *
+ * weekend (boolean: 0, 1)
+ * (int) width of attribute
+ *
+ * holiday (boolean: 0, 1)
+ * (int) width of attribute
+ *
+ * timeOfday (midnight = 0; units = hour)
+ * (int) width of attribute: default radius = 4 hours
+ * (tuple) timeOfDay[0] = width; timeOfDay[1] = radius
+ *
+ * customDays TODO: what is it?
+ *
+ * forced (default True) : if True, skip checks for parameters' settings; see {@code ScalarEncoders} for details
  *
  * @author utensil
+ *
+ * TODO Improve the document:
+ *
+ * - improve wording on unspecified attributes: "Each parameter describes one extra attribute(other than the datetime
+ *   object itself) to encode. By default, the unspecified attributes are not encoded."
+ * - change datetime.datetime object to joda-time object
+ * - refer to Parameters, which where these parameters are defined.
  */
 
 public class DateEncoder extends Encoder {
 
+    protected int width;
+
+    protected List<Tuple> description;
+
     /**
      * Constructs a new {@code DateEncoder}
-     *
-     * Each parameter describes one attribute to encode. By default, the attribute
-     * is not encoded.
-     *
-     * @param season        season of the year; units = day
-     *                      (int) width of attribute; default radius = 91.5 days (1 season)
-     *                      (tuple)  season[0] = width; season[1] = radius
-     * @param dayOfWeek     monday = 0; units = day
-     *                      (int) width of attribute; default radius = 1 day
-     *                      (tuple) dayOfWeek[0] = width; dayOfWeek[1] = radius
-     * @param weekend       boolean: 0, 1
-     *                      (int) width of attribute
-     * @param holiday       boolean: 0, 1
-     *                      (int) width of attribute
-     * @param timeOfday     midnight = 0; units = hour
-     *                      (int) width of attribute: default radius = 4 hours
-     *                      (tuple) timeOfDay[0] = width; timeOfDay[1] = radius
-     * @param customDays    TODO: what is it?
-     * @param forced        (default True) : if True, skip checks for parameters' settings;
-     *                      see {@code ScalarEncoders} for details
      */
     public DateEncoder(/* self, season=0, dayOfWeek=0, weekend=0, holiday=0, timeOfDay=0, customDays=0,
                 name = '', forced=True */) {
     }
 
+    /**
+     * Should return the output width, in bits.
+     */
     @Override
     public int getWidth() {
-        return 0;
+        return width;
     }
 
     @Override
@@ -108,9 +126,19 @@ public class DateEncoder extends Encoder {
 
     }
 
+    /**
+     * This returns a list of tuples, each containing (name, offset).
+     * The 'name' is a string description of each sub-field, and offset is the bit
+     * offset of the sub-field for that encoder.
+     *
+     * For now, only the 'multi' and 'date' encoders have multiple (name, offset)
+     * pairs. All other encoders have a single pair, where the offset is 0.
+     *
+     * @return		list of tuples, each containing (name, offset)
+     */
     @Override
     public List<Tuple> getDescription() {
-        return null;
+        return description;
     }
 
     @Override
