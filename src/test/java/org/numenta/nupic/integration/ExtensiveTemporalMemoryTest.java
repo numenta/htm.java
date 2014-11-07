@@ -21,19 +21,20 @@
  */
 package org.numenta.nupic.integration;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Set;
-
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
+
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -126,7 +127,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         p.put(KEY.MIN_THRESHOLD, 11);
         p.put(KEY.MAX_NEW_SYNAPSE_COUNT, 11);
         p.put(KEY.PERMANENCE_INCREMENT, 0.4);
-        p.put(KEY.PERMANENCE_DECREMENT, 0);
+        p.put(KEY.PERMANENCE_DECREMENT, 0.0);
         p.put(KEY.ACTIVATION_THRESHOLD, 8);
     }
     

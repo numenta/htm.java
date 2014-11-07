@@ -256,4 +256,12 @@ public class CategoryEncoder extends ScalarEncoder {
 		List<EncoderResult> encoderResult = super.topDownCompute(encoded);
 		return encoderResult;
 	}
+
+    public List<String> getCategoryList() {
+        return categoryList;
+    }
+
+    public void setCategoryList(List<String> categoryList) {
+        this.categoryList = categoryList;
+    }
 }
