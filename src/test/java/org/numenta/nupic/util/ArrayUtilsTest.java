@@ -27,6 +27,8 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class ArrayUtilsTest {
 
 	/**
@@ -78,5 +80,11 @@ public class ArrayUtilsTest {
 	@Test
 	public void testBitsToString() {
 		assertEquals("c....***", ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
+	}
+
+	@Test
+	public void testConcatAll() {
+		assertTrue(Arrays.equals(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+				ArrayUtils.concatAll(new int[]{1, 2}, new int[]{3, 4, 5, 6, 7}, new int[]{8, 9, 0})));
 	}
 }

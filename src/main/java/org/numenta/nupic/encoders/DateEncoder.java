@@ -99,6 +99,13 @@ public class DateEncoder extends Encoder {
     }
 
     /**
+     * Init the {@code DateEncoder} with parameters
+     */
+    public void init() {
+
+    }
+
+    /**
      * Should return the output width, in bits.
      */
     @Override

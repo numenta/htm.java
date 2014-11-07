@@ -1237,4 +1237,48 @@ public class ArrayUtils {
     	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
     	return retVal;
     }
+
+    /**
+     * Concat arrays
+     *
+     * @return The concatenated array
+     *
+     * http://stackoverflow.com/a/784842
+     */
+    @SafeVarargs
+    public static <T> T[] concatAll(T[] first, T[]... rest) {
+        int totalLength = first.length;
+        for (T[] array : rest) {
+            totalLength += array.length;
+        }
+        T[] result = Arrays.copyOf(first, totalLength);
+        int offset = first.length;
+        for (T[] array : rest) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
+    }
+
+    /**
+     * Concat int arrays
+     *
+     * @return The concatenated array
+     *
+     * http://stackoverflow.com/a/784842
+     */
+    @SafeVarargs
+    public static int[] concatAll(int[] first, int[]... rest) {
+        int totalLength = first.length;
+        for (int[] array : rest) {
+            totalLength += array.length;
+        }
+        int[] result = Arrays.copyOf(first, totalLength);
+        int offset = first.length;
+        for (int[] array : rest) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
+    }
 }
