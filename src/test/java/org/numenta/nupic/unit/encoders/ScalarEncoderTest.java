@@ -1,17 +1,7 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -24,6 +14,16 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
 	private Parameters parameters;
@@ -33,9 +33,9 @@ public class ScalarEncoderTest {
         EnumMap<Parameters.KEY, Object> p = parameters.getMap();
         p.put(KEY.N, 14);
         p.put(KEY.W, 3);
-        p.put(KEY.RADIUS, 0);//3
-        p.put(KEY.MINVAL, 1);
-        p.put(KEY.MAXVAL, 8);
+        p.put(KEY.RADIUS, 0.0);//3
+        p.put(KEY.MINVAL, 1.0);
+        p.put(KEY.MAXVAL, 8.0);
         p.put(KEY.PERIODIC, true);
         p.put(KEY.FORCED, true);
     }
@@ -239,10 +239,10 @@ public class ScalarEncoderTest {
 	public void testCloseness() {
 		setUp();
 		parameters.setName("day of week");
-		parameters.setRadius(1);
+		parameters.setRadius(1.0);
 		parameters.setW(7);
-		parameters.setMinVal(0);
-		parameters.setMaxVal(7);
+		parameters.setMinVal(0.0);
+		parameters.setMaxVal(7.0);
 		parameters.setPeriodic(true);
 		parameters.setForced(true);
 		initSE();
@@ -265,8 +265,8 @@ public class ScalarEncoderTest {
 		parameters.setRadius(1);
 		parameters.setN(14);
 		parameters.setW(5);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(10);
+		parameters.setMinVal(1.0);
+		parameters.setMaxVal(10.0);
 		parameters.setPeriodic(false);
 		parameters.setForced(true);
 		initSE();

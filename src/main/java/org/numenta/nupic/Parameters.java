@@ -23,6 +23,7 @@ package org.numenta.nupic;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.research.ComputeCycle;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
@@ -41,6 +42,7 @@ import java.util.Set;
  * or {@link SpatialPooler}
  *
  * @author David Ray
+ * @author Kirill Solovyev
  * @see SpatialPooler
  * @see TemporalMemory
  * @see Connections
@@ -51,58 +53,58 @@ public class Parameters {
     private static final Map<KEY, Object> DEFAULTS;
 
     static {
-       Map<KEY, Object> defaultParams = new ParametersMap();
+        Map<KEY, Object> defaultParams = new ParametersMap();
 
-       /////////// Universal Parameters ///////////
-       defaultParams.put(KEY.COLUMN_DIMENSIONS, new int[]{2048});
-       defaultParams.put(KEY.CELLS_PER_COLUMN, 32);
-       defaultParams.put(KEY.SEED, 42);
-       defaultParams.put(KEY.RANDOM, new MersenneTwister((int)defaultParams.get(KEY.SEED)));
+        /////////// Universal Parameters ///////////
+        defaultParams.put(KEY.COLUMN_DIMENSIONS, new int[]{2048});
+        defaultParams.put(KEY.CELLS_PER_COLUMN, 32);
+        defaultParams.put(KEY.SEED, 42);
+        defaultParams.put(KEY.RANDOM, new MersenneTwister((int)defaultParams.get(KEY.SEED)));
 
-       /////////// Temporal Memory Parameters ///////////
-       defaultParams.put(KEY.ACTIVATION_THRESHOLD, 13);
-       defaultParams.put(KEY.LEARNING_RADIUS, 2048);
-       defaultParams.put(KEY.MIN_THRESHOLD, 10);
-       defaultParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
-       defaultParams.put(KEY.INITIAL_PERMANENCE, 0.21);
-       defaultParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
-       defaultParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
-       defaultParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
-       defaultParams.put(KEY.TM_VERBOSITY, 0);
+        /////////// Temporal Memory Parameters ///////////
+        defaultParams.put(KEY.ACTIVATION_THRESHOLD, 13);
+        defaultParams.put(KEY.LEARNING_RADIUS, 2048);
+        defaultParams.put(KEY.MIN_THRESHOLD, 10);
+        defaultParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultParams.put(KEY.INITIAL_PERMANENCE, 0.21);
+        defaultParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
+        defaultParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
+        defaultParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
+        defaultParams.put(KEY.TM_VERBOSITY, 0);
 
-       /// Spatial Pooler Parameters ///////////
-       defaultParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
-       defaultParams.put(KEY.POTENTIAL_RADIUS, 16);
-       defaultParams.put(KEY.POTENTIAL_PCT, 0.5);
-       defaultParams.put(KEY.GLOBAL_INHIBITIONS, false);
-       defaultParams.put(KEY.INHIBITION_RADIUS, 0);
-       defaultParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
-       defaultParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10);
-       defaultParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
-       defaultParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-       defaultParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-       defaultParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
-       defaultParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
-       defaultParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
-       defaultParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
-       defaultParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
-       defaultParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
-       defaultParams.put(KEY.MAX_BOOST, 10.0);
-       defaultParams.put(KEY.SP_VERBOSITY, 0);
+        /// Spatial Pooler Parameters ///////////
+        defaultParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
+        defaultParams.put(KEY.POTENTIAL_RADIUS, 16);
+        defaultParams.put(KEY.POTENTIAL_PCT, 0.5);
+        defaultParams.put(KEY.GLOBAL_INHIBITIONS, false);
+        defaultParams.put(KEY.INHIBITION_RADIUS, 0);
+        defaultParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
+        defaultParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
+        defaultParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
+        defaultParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        defaultParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        defaultParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
+        defaultParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
+        defaultParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
+        defaultParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
+        defaultParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
+        defaultParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
+        defaultParams.put(KEY.MAX_BOOST, 10.0);
+        defaultParams.put(KEY.SP_VERBOSITY, 0);
 
-       //////////// Encoder Parameters ///////////
-       defaultParams.put(KEY.W, 0);
-       defaultParams.put(KEY.MINVAL, .0);
-       defaultParams.put(KEY.MAXVAL, .0);
-       defaultParams.put(KEY.PERIODIC, false);
-       defaultParams.put(KEY.N, 0);
-       defaultParams.put(KEY.RADIUS, .0);
-       defaultParams.put(KEY.RESOLUTION, .0);
-       defaultParams.put(KEY.NAME, "None");
-       defaultParams.put(KEY.CLIP_INPUT, false);
-       defaultParams.put(KEY.FORCED, false);
-       defaultParams.put(KEY.ENC_VERBOSITY, 0);
-       DEFAULTS = Collections.unmodifiableMap(defaultParams);
+        //////////// Encoder Parameters ///////////
+        defaultParams.put(KEY.W, 0);
+        defaultParams.put(KEY.MINVAL, .0);
+        defaultParams.put(KEY.MAXVAL, .0);
+        defaultParams.put(KEY.PERIODIC, false);
+        defaultParams.put(KEY.N, 0);
+        defaultParams.put(KEY.RADIUS, .0);
+        defaultParams.put(KEY.RESOLUTION, .0);
+        defaultParams.put(KEY.NAME, "None");
+        defaultParams.put(KEY.CLIP_INPUT, false);
+        defaultParams.put(KEY.FORCED, false);
+        defaultParams.put(KEY.ENC_VERBOSITY, 0);
+        DEFAULTS = Collections.unmodifiableMap(defaultParams);
     }
 
     /**
@@ -110,46 +112,91 @@ public class Parameters {
      */
     public static enum KEY {
         /////////// Universal Parameters ///////////
+        /**
+         * Total number of columns
+         */
         COLUMN_DIMENSIONS("columnDimensions", int[].class),
-        CELLS_PER_COLUMN("cellsPerColumn", Integer.class),
+        /**
+         * Total number of cells per column
+         */
+        CELLS_PER_COLUMN("cellsPerColumn", Integer.class, 1, null),
+        /**
+         * Random Number Generator
+         */
         RANDOM("random", Random.class),
+        /**
+         * Seed for random number generator
+         */
         SEED("seed", Integer.class),
 
         /////////// Temporal Memory Parameters ///////////
-        ACTIVATION_THRESHOLD("activationThreshold", Integer.class),
-        LEARNING_RADIUS("learningRadius", Integer.class),
-        MIN_THRESHOLD("minThreshold", Integer.class),
+        /**
+         * If the number of active connected synapses on a segment
+         * is at least this threshold, the segment is said to be active.
+         */
+        ACTIVATION_THRESHOLD("activationThreshold", Integer.class, 0, null),
+        /**
+         * Radius around cell from which it can
+         * sample to form distal {@link DistalDendrite} connections.
+         */
+        LEARNING_RADIUS("learningRadius", Integer.class, 0, null),
+        /**
+         * If the number of synapses active on a segment is at least this
+         * threshold, it is selected as the best matching
+         * cell in a bursting column.
+         */
+        MIN_THRESHOLD("minThreshold", Integer.class, 0, null),
+        /**
+         * The maximum number of synapses added to a segment during learning.
+         */
         MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", Integer.class),
-        INITIAL_PERMANENCE("initialPermanence", Double.class),
-        CONNECTED_PERMANENCE("connectedPermanence", Double.class),
-        PERMANENCE_INCREMENT("permanenceIncrement", Double.class),
-        PERMANENCE_DECREMENT("permanenceDecrement", Double.class),
-        TM_VERBOSITY("tmVerbosity", Integer.class),
+        /**
+         * Initial permanence of a new synapse
+         */
+        INITIAL_PERMANENCE("initialPermanence", Double.class, 0.0, 1.0),
+        /**
+         * If the permanence value for a synapse
+         * is greater than this value, it is said
+         * to be connected.
+         */
+        CONNECTED_PERMANENCE("connectedPermanence", Double.class, 0.0, 1.0),
+        /**
+         * Amount by which permanence of synapses
+         * are incremented during learning.
+         */
+        PERMANENCE_INCREMENT("permanenceIncrement", Double.class, 0.0, 1.0),
+        /**
+         * Amount by which permanences of synapses
+         * are decremented during learning.
+         */
+        PERMANENCE_DECREMENT("permanenceDecrement", Double.class, 0.0, 1.0),
+        TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
 
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", int[].class),
         POTENTIAL_RADIUS("potentialRadius", Integer.class),
-        POTENTIAL_PCT("potentialPct", Double.class),
+        POTENTIAL_PCT("potentialPct", Double.class), //TODO add range here?
         GLOBAL_INHIBITIONS("globalInhibition", Boolean.class),
-        INHIBITION_RADIUS("inhibitionRadius", Integer.class),
-        LOCAL_AREA_DENSITY("localAreaDensity", Double.class),
-        NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", Integer.class),
-        STIMULUS_THRESHOLD("stimulusThreshold", Double.class),
-        SYN_PERM_INACTIVE_DEC("synPermInactiveDec", Double.class),
-        SYN_PERM_ACTIVE_INC("synPermActiveInc", Double.class),
-        SYN_PERM_CONNECTED("synPermConnected", Double.class),
-        SYN_PERM_BELOW_STIMULUS_INC("synPermBelowStimulusInc", Double.class),
-        SYN_PERM_TRIM_THRESHOLD("synPermTrimThreshold", Double.class),
-        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", Double.class),
-        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),
-        DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),
-        MAX_BOOST("maxBoost", Double.class),
-        SP_VERBOSITY("spVerbosity", Integer.class),
+        INHIBITION_RADIUS("inhibitionRadius", Integer.class, 0, null),
+        LOCAL_AREA_DENSITY("localAreaDensity", Double.class), //TODO add range here?
+        NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", Double.class),//TODO add range here?
+        STIMULUS_THRESHOLD("stimulusThreshold", Double.class), //TODO add range here?
+        SYN_PERM_INACTIVE_DEC("synPermInactiveDec", Double.class, 0.0, 1.0),
+        SYN_PERM_ACTIVE_INC("synPermActiveInc", Double.class, 0.0, 1.0),
+        SYN_PERM_CONNECTED("synPermConnected", Double.class, 0.0, 1.0),
+        SYN_PERM_BELOW_STIMULUS_INC("synPermBelowStimulusInc", Double.class, 0.0, 1.0),
+        SYN_PERM_TRIM_THRESHOLD("synPermTrimThreshold", Double.class, 0.0, 1.0),
+        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", Double.class),//TODO add range here?
+        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),//TODO add range here?
+        DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
+        MAX_BOOST("maxBoost", Double.class), //TODO add range here?
+        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
 
         //////////// Encoder Parameters ///////////
         W("w", Integer.class),
-        MINVAL("minval", Double.class),
-        MAXVAL("maxval", Double.class),
+        //TODO rename minval maxval variables in Encoder accordingly with JavaBeans Spec http://www.oracle.com/technetwork/java/javase/documentation/spec-136004.html
+        MINVAL("minVal", Double.class),
+        MAXVAL("maxVal", Double.class),
         PERIODIC("periodic", Boolean.class),
         N("n", Integer.class),
         RADIUS("radius", Double.class),
@@ -164,7 +211,8 @@ public class Parameters {
 
         final private String fieldName;
         final private Class<?> fieldType;
-        //TODO add range automatic range check for parameters, same as type
+        final private Number min;
+        final private Number max;
 
         /**
          * Constructs a new KEY
@@ -173,8 +221,22 @@ public class Parameters {
          * @param fieldType
          */
         private KEY(String fieldName, Class<?> fieldType) {
+            this(fieldName, fieldType, null, null);
+        }
+
+        /**
+         * Constructs a new KEY with range check
+         *
+         * @param fieldName
+         * @param fieldType
+         * @param min
+         * @param max
+         */
+        private KEY(String fieldName, Class<?> fieldType, Number min, Number max) {
             this.fieldName = fieldName;
             this.fieldType = fieldType;
+            this.min = min;
+            this.max = max;
         }
 
         public Class<?> getFieldType() {
@@ -184,6 +246,25 @@ public class Parameters {
         public String getFieldName() {
             return fieldName;
         }
+
+        public Number getMin() {
+            return min;
+        }
+
+        public Number getMax() {
+            return max;
+        }
+
+        public boolean checkRange(Number value) {
+            if (value == null) {
+                throw new IllegalArgumentException("checkRange argument can not be null");
+            }
+            return (min == null && max == null) ||
+                   (min != null && max == null && min.doubleValue() <= value.doubleValue()) ||
+                   (max != null && min == null && value.doubleValue() < value.doubleValue()) ||
+                   (min != null && min.doubleValue() <= value.doubleValue() && max != null && value.doubleValue() < max.doubleValue());
+        }
+
     }
 
     /**
@@ -195,20 +276,51 @@ public class Parameters {
         }
 
         @Override public Object put(KEY key, Object value) {
-            if (!key.getFieldType().isInstance(value)) {
-                throw new IllegalArgumentException(
-                        "Can not set Parameters Property '" + key.getFieldName() + "' because of type mismatch. The required type is " + key.getFieldType());
+            if(value != null) {
+                if (!key.getFieldType().isInstance(value)) {
+                    throw new IllegalArgumentException(
+                            "Can not set Parameters Property '" + key.getFieldName() + "' because of type mismatch. The required type is " + key.getFieldType());
+                }
+                if (value instanceof Number && !key.checkRange((Number)value)) {
+                    throw new IllegalArgumentException(
+                            "Can not set Parameters Property '" + key.getFieldName() + "' because of value '" + value + "' not in range. Range[" + key.getMin() + "-" + key.getMax() + "]");
+                }
             }
             return super.put(key, value);
         }
     }
 
     /**
-    * Map of parameters to their values
-    */
+     * Map of parameters to their values
+     */
     private EnumMap<Parameters.KEY, Object> paramMap = new ParametersMap();
 
+    /**
+     * Sets the fields specified by the {@code Parameters} on the specified
+     * {@link Connections} object.
+     *
+     * @param cn
+     * @param p
+     */
+    public static void apply(Object cn, Parameters p) {
+        BeanUtil beanUtil = BeanUtil.getInstance();
+        for (KEY key : p.getKeysForPresent()) {
+            beanUtil.setSimpleProperty(cn, key.fieldName, p.getParameterByKey(key));
+        }
+    }
 
+    /**
+     * Return {@link Parameters} object with default values
+     *
+     * @return {@link Parameters} object
+     */
+    public static Parameters getDefaultParameters() {
+        Parameters result = new Parameters();
+        for (KEY key : DEFAULTS.keySet()) {
+            result.setParameterByKey(key, DEFAULTS.get(key));
+        }
+        return result;
+    }
 
 
     /**
@@ -218,10 +330,6 @@ public class Parameters {
     }
 
     /**
-     * @deprecated  This constructor has 27 parameters, many of them same type, so it is error prone
-     * Sets up default parameters for both the {@link SpatialPooler} and the
-     * {@link TemporalMemory}
-     *
      * @param inputDimensions
      * @param columnDimensions
      * @param cellsPerColumn
@@ -249,6 +357,9 @@ public class Parameters {
      * @param permanenceIncrement
      * @param permanenceDecrement
      * @param random
+     * @deprecated This constructor has 27 parameters, many of them same type, so it is error prone
+     * Sets up default parameters for both the {@link SpatialPooler} and the
+     * {@link TemporalMemory}
      */
     @Deprecated
     public Parameters(int[] inputDimensions, int[] columnDimensions, int cellsPerColumn,
@@ -305,19 +416,18 @@ public class Parameters {
      * @param other
      */
     public Parameters(Parameters other) {
-        for(KEY key: KEY.values()){
+        for (KEY key : other.getKeysForPresent()) {
             this.setParameterByKey(key, other.getParameterByKey(key));
         }
     }
 
     /**
-     * @deprecated  Will have private access, replaced by {@link #setParameterByKey(KEY, Object)}. Need it to to be compatible with EnumMap<Parameters.KEY, Object> p = parameters.getMap() in tests.
+     * @return
+     * @deprecated Will have private access, replaced by {@link #setParameterByKey(KEY, Object)}. Need it to to be compatible with EnumMap<Parameters.KEY, Object> p = parameters.getMap() in tests.
      * Creates and returns an {@link EnumMap} containing the specified keys; whose
      * values are to be loaded later. The map returned is only created if the internal
      * reference is null (never been created), therefore the map is a singleton which
      * cannot be recreated once created.
-     *
-     * @return
      */
     @Deprecated
     public EnumMap<Parameters.KEY, Object> getMap() {
@@ -325,39 +435,27 @@ public class Parameters {
     }
 
     /**
-    * Set parameter by Key{@link KEY}
-    * @param key
-    * @param value
-    */
-    public void setParameterByKey(KEY key, Object value){
-      paramMap.put(key, value);
+     * Set parameter by Key{@link KEY}
+     *
+     * @param key
+     * @param value
+     */
+    public void setParameterByKey(KEY key, Object value) {
+        paramMap.put(key, value);
     }
 
     /**
      * Get parameter by Key{@link KEY}
+     *
      * @param key
      * @return
      */
-    public Object getParameterByKey(KEY key){
+    public Object getParameterByKey(KEY key) {
         return paramMap.get(key);
     }
 
-    public Set<KEY> getKeysForPresent(){
+    public Set<KEY> getKeysForPresent() {
         return paramMap.keySet();
-    }
-
-    /**
-     * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link Connections} object.
-     *
-     * @param cn
-     * @param p
-     */
-    public static void apply(Object cn, Parameters p) {
-        BeanUtil beanUtil = BeanUtil.getInstance();
-        for(KEY key: p.getKeysForPresent()){
-            beanUtil.setSimpleProperty(cn, key.fieldName, p.getParameterByKey(key));
-        }
     }
 
     //TODO I'm not sure we need maintain implicit setters below. Kinda contradict unified access with KEYs
@@ -521,7 +619,7 @@ public class Parameters {
      * radius is updated every learning round. It grows and shrinks with the
      * average number of connected synapses per column.
      *
-     * @param    inhibitionRadius    the local group size
+     * @param inhibitionRadius the local group size
      */
     public void setInhibitionRadius(int inhibitionRadius) {
         paramMap.put(KEY.INHIBITION_RADIUS, inhibitionRadius);
@@ -857,53 +955,71 @@ public class Parameters {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{ Spatial\n")
-        .append("\t").append("inputDimensions :  ").append(getParameterByKey(KEY.INPUT_DIMENSIONS)).append("\n")
-        .append("\t").append("potentialRadius :  ").append(getParameterByKey(KEY.POTENTIAL_RADIUS)).append("\n")
-        .append("\t").append("potentialPct :  ").append(getParameterByKey(KEY.POTENTIAL_PCT)).append("\n")
-        .append("\t").append("globalInhibition :  ").append(getParameterByKey(KEY.GLOBAL_INHIBITIONS)).append("\n")
-        .append("\t").append("inhibitionRadius :  ").append(getParameterByKey(KEY.INHIBITION_RADIUS)).append("\n")
-        .append("\t").append("localAreaDensity :  ").append(getParameterByKey(KEY.LOCAL_AREA_DENSITY)).append("\n")
-        .append("\t").append("numActiveColumnsPerInhArea :  ").append(getParameterByKey(
+                .append("\t").append("inputDimensions :  ").append(getParameterByKey(KEY.INPUT_DIMENSIONS)).append("\n")
+                .append("\t").append("potentialRadius :  ").append(getParameterByKey(KEY.POTENTIAL_RADIUS)).append("\n")
+                .append("\t").append("potentialPct :  ").append(getParameterByKey(KEY.POTENTIAL_PCT)).append("\n")
+                .append("\t").append("globalInhibition :  ").append(getParameterByKey(KEY.GLOBAL_INHIBITIONS)).append(
+                "\n")
+                .append("\t").append("inhibitionRadius :  ").append(getParameterByKey(KEY.INHIBITION_RADIUS)).append(
+                "\n")
+                .append("\t").append("localAreaDensity :  ").append(getParameterByKey(KEY.LOCAL_AREA_DENSITY)).append(
+                "\n")
+                .append("\t").append("numActiveColumnsPerInhArea :  ").append(getParameterByKey(
                 KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA)).append("\n")
-        .append("\t").append("stimulusThreshold :  ").append(getParameterByKey(KEY.STIMULUS_THRESHOLD)).append("\n")
-        .append("\t").append("synPermInactiveDec :  ").append(getParameterByKey(KEY.SYN_PERM_INACTIVE_DEC)).append("\n")
-        .append("\t").append("synPermActiveInc :  ").append(getParameterByKey(KEY.SYN_PERM_ACTIVE_INC)).append("\n")
-        .append("\t").append("synPermConnected :  ").append(getParameterByKey(KEY.SYN_PERM_CONNECTED)).append("\n")
-        .append("\t").append("synPermBelowStimulusInc :  ").append(getParameterByKey(KEY.SYN_PERM_BELOW_STIMULUS_INC)).append(
+                .append("\t").append("stimulusThreshold :  ").append(getParameterByKey(KEY.STIMULUS_THRESHOLD)).append(
                 "\n")
-        .append("\t").append("minPctOverlapDutyCycles :  ").append(getParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE)).append(
+                .append("\t").append("synPermInactiveDec :  ").append(getParameterByKey(
+                KEY.SYN_PERM_INACTIVE_DEC)).append("\n")
+                .append("\t").append("synPermActiveInc :  ").append(getParameterByKey(KEY.SYN_PERM_ACTIVE_INC)).append(
                 "\n")
-        .append("\t").append("minPctActiveDutyCycles :  ").append(getParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE)).append(
+                .append("\t").append("synPermConnected :  ").append(getParameterByKey(KEY.SYN_PERM_CONNECTED)).append(
                 "\n")
-        .append("\t").append("dutyCyclePeriod :  ").append(getParameterByKey(KEY.DUTY_CYCLE_PERIOD)).append("\n")
-        .append("\t").append("maxBoost :  ").append(getParameterByKey(KEY.MAX_BOOST)).append("\n")
-        .append("\t").append("spVerbosity :  ").append(getParameterByKey(KEY.SP_VERBOSITY)).append("\n")
-        .append("}\n\n")
-        
-        .append("{ Temporal\n")
-        .append("\t").append("activationThreshold :  ").append(getParameterByKey(KEY.ACTIVATION_THRESHOLD)).append("\n")
-        .append("\t").append("cellsPerColumn :  ").append(getParameterByKey(KEY.CELLS_PER_COLUMN)).append("\n")
-        .append("\t").append("columnDimensions :  ").append(getParameterByKey(KEY.COLUMN_DIMENSIONS)).append("\n")
-        .append("\t").append("connectedPermanence :  ").append(getParameterByKey(KEY.CONNECTED_PERMANENCE)).append("\n")
-        .append("\t").append("initialPermanence :  ").append(getParameterByKey(KEY.INITIAL_PERMANENCE)).append("\n")
-        .append("\t").append("maxNewSynapseCount :  ").append(getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT)).append("\n")
-        .append("\t").append("minThreshold :  ").append(getParameterByKey(KEY.MIN_THRESHOLD)).append("\n")
-        .append("\t").append("permanenceIncrement :  ").append(getParameterByKey(KEY.PERMANENCE_INCREMENT)).append("\n")
-        .append("\t").append("permanenceDecrement :  ").append(getParameterByKey(KEY.PERMANENCE_DECREMENT)).append("\n")
-        .append("}\n\n")
-        
-        .append("{ Encoder\n")
-        .append("\t").append("w :  ").append(getParameterByKey(KEY.W)).append("\n")
-        .append("\t").append("n :  ").append(getParameterByKey(KEY.N)).append("\n")
-        .append("\t").append("radius :  ").append(getParameterByKey(KEY.RADIUS)).append("\n")
-        .append("\t").append("resolution :  ").append(getParameterByKey(KEY.RESOLUTION)).append("\n")
-        .append("\t").append("minval :  ").append(getParameterByKey(KEY.MINVAL)).append("\n")
-        .append("\t").append("maxval :  ").append(getParameterByKey(KEY.MAXVAL)).append("\n")
-        .append("\t").append("periodic :  ").append(getParameterByKey(KEY.PERIODIC)).append("\n")
-        .append("\t").append("clipInput :  ").append(getParameterByKey(KEY.CLIP_INPUT)).append("\n")
-        .append("\t").append("forced :  ").append(getParameterByKey(KEY.FORCED)).append("\n")
-        .append("\t").append("name :  ").append(getParameterByKey(KEY.NAME)).append("\n")
-        .append("}\n\n");
+                .append("\t").append("synPermBelowStimulusInc :  ").append(getParameterByKey(
+                KEY.SYN_PERM_BELOW_STIMULUS_INC)).append(
+                "\n")
+                .append("\t").append("minPctOverlapDutyCycles :  ").append(getParameterByKey(
+                KEY.MIN_PCT_OVERLAP_DUTY_CYCLE)).append(
+                "\n")
+                .append("\t").append("minPctActiveDutyCycles :  ").append(getParameterByKey(
+                KEY.MIN_PCT_ACTIVE_DUTY_CYCLE)).append(
+                "\n")
+                .append("\t").append("dutyCyclePeriod :  ").append(getParameterByKey(KEY.DUTY_CYCLE_PERIOD)).append(
+                "\n")
+                .append("\t").append("maxBoost :  ").append(getParameterByKey(KEY.MAX_BOOST)).append("\n")
+                .append("\t").append("spVerbosity :  ").append(getParameterByKey(KEY.SP_VERBOSITY)).append("\n")
+                .append("}\n\n")
+
+                .append("{ Temporal\n")
+                .append("\t").append("activationThreshold :  ").append(getParameterByKey(
+                KEY.ACTIVATION_THRESHOLD)).append("\n")
+                .append("\t").append("cellsPerColumn :  ").append(getParameterByKey(KEY.CELLS_PER_COLUMN)).append("\n")
+                .append("\t").append("columnDimensions :  ").append(getParameterByKey(KEY.COLUMN_DIMENSIONS)).append(
+                "\n")
+                .append("\t").append("connectedPermanence :  ").append(getParameterByKey(
+                KEY.CONNECTED_PERMANENCE)).append("\n")
+                .append("\t").append("initialPermanence :  ").append(getParameterByKey(KEY.INITIAL_PERMANENCE)).append(
+                "\n")
+                .append("\t").append("maxNewSynapseCount :  ").append(getParameterByKey(
+                KEY.MAX_NEW_SYNAPSE_COUNT)).append("\n")
+                .append("\t").append("minThreshold :  ").append(getParameterByKey(KEY.MIN_THRESHOLD)).append("\n")
+                .append("\t").append("permanenceIncrement :  ").append(getParameterByKey(
+                KEY.PERMANENCE_INCREMENT)).append("\n")
+                .append("\t").append("permanenceDecrement :  ").append(getParameterByKey(
+                KEY.PERMANENCE_DECREMENT)).append("\n")
+                .append("}\n\n")
+
+                .append("{ Encoder\n")
+                .append("\t").append("w :  ").append(getParameterByKey(KEY.W)).append("\n")
+                .append("\t").append("n :  ").append(getParameterByKey(KEY.N)).append("\n")
+                .append("\t").append("radius :  ").append(getParameterByKey(KEY.RADIUS)).append("\n")
+                .append("\t").append("resolution :  ").append(getParameterByKey(KEY.RESOLUTION)).append("\n")
+                .append("\t").append("minval :  ").append(getParameterByKey(KEY.MINVAL)).append("\n")
+                .append("\t").append("maxval :  ").append(getParameterByKey(KEY.MAXVAL)).append("\n")
+                .append("\t").append("periodic :  ").append(getParameterByKey(KEY.PERIODIC)).append("\n")
+                .append("\t").append("clipInput :  ").append(getParameterByKey(KEY.CLIP_INPUT)).append("\n")
+                .append("\t").append("forced :  ").append(getParameterByKey(KEY.FORCED)).append("\n")
+                .append("\t").append("name :  ").append(getParameterByKey(KEY.NAME)).append("\n")
+                .append("}\n\n");
 
         return sb.toString();
     }

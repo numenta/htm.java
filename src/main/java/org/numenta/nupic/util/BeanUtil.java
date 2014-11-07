@@ -30,6 +30,10 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ *Singleton helper for reading/writing beans properties
+ *@author Kirill Solovyev
+ */
 public class BeanUtil {
   //TODO introduce proper log in future
   //private static final Log LOG = LogFactory.getLog(BeanUtil.class);
@@ -44,6 +48,13 @@ public class BeanUtil {
   private BeanUtil() {
   }
 
+  /**
+  * Write value to bean's property
+  * @param bean
+  * @param name
+  * @param value
+  * @return
+  */
   public boolean setSimpleProperty(Object bean, String name, Object value) {
     PropertyInfo pi = getPropertyInfo(bean, name);
     if (pi != null) {
@@ -58,10 +69,16 @@ public class BeanUtil {
     setSimpleProperty(bean, getPropertyInfoRequired(bean, name), value);
   }
 
-
+    /**
+     * Return bean's property value
+     * @param bean
+     * @param name
+     * @return
+     */
   public Object getSimpleProperty(Object bean, String name) {
     return getSimpleProperty(bean, getPropertyInfo(bean, name));
   }
+
 
   private Object getSimpleProperty(Object bean, PropertyInfo info) {
     if (info.getReadMethod() == null) {

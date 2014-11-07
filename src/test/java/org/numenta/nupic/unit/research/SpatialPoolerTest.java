@@ -21,15 +21,8 @@
  */
 package org.numenta.nupic.unit.research;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
-
-import java.util.Arrays;
-import java.util.EnumMap;
-
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
@@ -41,6 +34,13 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+
+import java.util.Arrays;
+import java.util.EnumMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class SpatialPoolerTest {
     private Parameters parameters;
@@ -56,7 +56,7 @@ public class SpatialPoolerTest {
         p.put(KEY.POTENTIAL_PCT, 0.5);//0.5
         p.put(KEY.GLOBAL_INHIBITIONS, false);
         p.put(KEY.LOCAL_AREA_DENSITY, -1.0);
-        p.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3);
+        p.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
         p.put(KEY.STIMULUS_THRESHOLD, 1.0);
         p.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
         p.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);

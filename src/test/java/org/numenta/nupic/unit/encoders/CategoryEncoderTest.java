@@ -1,13 +1,5 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -19,6 +11,14 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class CategoryEncoderTest {
 	private CategoryEncoder ce;
 	private Parameters parameters;
@@ -27,8 +27,8 @@ public class CategoryEncoderTest {
 		parameters = new Parameters();
         EnumMap<Parameters.KEY, Object> p = parameters.getMap();
         p.put(KEY.W, 3);
-        p.put(KEY.MINVAL, 0);
-        p.put(KEY.MAXVAL, 8);
+        p.put(KEY.MINVAL, 0.0);
+        p.put(KEY.MAXVAL, 8.0);
         p.put(KEY.PERIODIC, false);
         p.put(KEY.FORCED, true);
     }
