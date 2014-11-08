@@ -294,7 +294,8 @@ public class ScalarEncoder extends Encoder {
 	public List<Tuple> getDescription() {
 		//Throws UnsupportedOperationException if you try to add to the list
 		//returned by Arrays.asList() ??? So we wrap it in yet another List?
-		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2, getName(), 0) }));
+		String name = (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name;
+		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2, name, 0) }));
 	}
 	
 	/**

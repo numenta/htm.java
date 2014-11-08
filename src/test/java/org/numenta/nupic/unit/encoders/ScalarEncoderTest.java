@@ -28,15 +28,14 @@ public class ScalarEncoderTest {
 	private Parameters parameters;
 	
 	private void setUp() {
-		parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.N, 14);
-        p.put(KEY.W, 3);
-        p.put(KEY.RADIUS, 0.0);//3
-        p.put(KEY.MINVAL, 1.0);
-        p.put(KEY.MAXVAL, 8.0);
-        p.put(KEY.PERIODIC, true);
-        p.put(KEY.FORCED, true);
+        parameters = Parameters.getDefaultParameters();
+        parameters.setParameterByKey(KEY.N, 14);
+        parameters.setParameterByKey(KEY.W, 3);
+        parameters.setParameterByKey(KEY.RADIUS, 0.0);//3
+        parameters.setParameterByKey(KEY.MINVAL, 1.0);
+        parameters.setParameterByKey(KEY.MAXVAL, 8.0);
+        parameters.setParameterByKey(KEY.PERIODIC, true);
+        parameters.setParameterByKey(KEY.FORCED, true);
     }
 	
 	private void initSE() {
@@ -64,7 +63,7 @@ public class ScalarEncoderTest {
 		assertEquals("[1:8]", se.getDescription().get(0).get(0));
 		
 		setUp();
-		parameters.setName("scalar");
+		parameters.setParameterByKey(KEY.NAME, "scalar");
 		initSE();
 		assertEquals("scalar", se.getDescription().get(0).get(0));
 		int[] res = se.encode(3);
@@ -112,20 +111,20 @@ public class ScalarEncoderTest {
 		List<Tuple> dict = se.dict();
 		
 		setUp();
-		parameters.setResolution(0.5);
+		parameters.setParameterByKey(KEY.RESOLUTION, 0.5);
 		initSE();
 		List<Tuple> compare = se.dict();
 		assertEquals(dict.toString(), compare.toString());
 		
 		setUp();
-		parameters.setRadius(1.5);
+		parameters.setParameterByKey(KEY.RADIUS, 1.5);
 		initSE();
 		compare = se.dict();
 		assertEquals(dict.toString(), compare.toString());
 		
 		//Negative test
 		setUp();
-		parameters.setResolution(0.5);
+		parameters.setParameterByKey(KEY.RESOLUTION, 0.5);
 		initSE();
 		se.setName("break this");
 		compare = se.dict();
@@ -139,7 +138,7 @@ public class ScalarEncoderTest {
 	@Test
 	public void testDecodeAndResolution() {
 		setUp();
-		parameters.setName("scalar");
+		parameters.setParameterByKey(KEY.NAME, "scalar");
 		initSE();
 		double resolution = se.getResolution();
 		System.out.println("resolution = " +resolution);
@@ -177,13 +176,13 @@ public class ScalarEncoderTest {
 		// -----------------------------------------------------------------------
 	    // Test the input description generation on a large number, periodic encoder
 		setUp();
-		parameters.setName("scalar");
-		parameters.setRadius(1.5);
-		parameters.setW(3);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(8);
-		parameters.setPeriodic(true);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "scalar");
+		parameters.setParameterByKey(KEY.RADIUS, 1.5);
+		parameters.setParameterByKey(KEY.W, 3);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 8.0);
+		parameters.setParameterByKey(KEY.PERIODIC, true);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		System.out.println("\nTesting periodic encoder decoding, resolution of " + se.getResolution());
@@ -237,13 +236,13 @@ public class ScalarEncoderTest {
 	@Test
 	public void testCloseness() {
 		setUp();
-		parameters.setName("day of week");
-		parameters.setRadius(1.0);
-		parameters.setW(7);
-		parameters.setMinVal(0.0);
-		parameters.setMaxVal(7.0);
-		parameters.setPeriodic(true);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "day of week");
+		parameters.setParameterByKey(KEY.RADIUS, 1.0);
+		parameters.setParameterByKey(KEY.W, 7);
+		parameters.setParameterByKey(KEY.MINVAL, 0.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 7.0);
+		parameters.setParameterByKey(KEY.PERIODIC, true);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		TDoubleList expValues = new TDoubleArrayList(new double[] { 2, 4, 7 });
@@ -260,14 +259,14 @@ public class ScalarEncoderTest {
 	@Test
 	public void testNonPeriodicBottomUp() {
 		setUp();
-		parameters.setName("day of week");
-		parameters.setRadius(1);
-		parameters.setN(14);
-		parameters.setW(5);
-		parameters.setMinVal(1.0);
-		parameters.setMaxVal(10.0);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "day of week");
+		parameters.setParameterByKey(KEY.RADIUS, 1.0);
+		parameters.setParameterByKey(KEY.N, 14);
+		parameters.setParameterByKey(KEY.W, 5);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 10.0);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		System.out.println(String.format("Testing non-periodic encoder encoding resolution of ", se.getResolution()));
@@ -279,13 +278,13 @@ public class ScalarEncoderTest {
 		// Test that we get the same encoder when we construct it using resolution
 	    // instead of n
 		setUp();
-		parameters.setName("day of week");
-		parameters.setRadius(5);
-		parameters.setW(5);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(10);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "day of week");
+		parameters.setParameterByKey(KEY.RADIUS, 5.0);
+		parameters.setParameterByKey(KEY.W, 5);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 10.0);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		double v = se.getMinVal();
@@ -334,12 +333,12 @@ public class ScalarEncoderTest {
 		
 		// Test min and max
 		setUp();
-		parameters.setName("scalar");
-		parameters.setW(3);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(10);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "scalar");
+		parameters.setParameterByKey(KEY.W, 3);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 10.0);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		List<EncoderResult> decode = se.topDownCompute(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 });
@@ -349,13 +348,13 @@ public class ScalarEncoderTest {
 		
 		// Make sure only the last and first encoding encodes to max and min, and there is no value greater than max or min
 		setUp();
-		parameters.setName("scalar");
-		parameters.setN(140);
-		parameters.setW(3);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(141);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "scalar");
+		parameters.setParameterByKey(KEY.N, 140);
+		parameters.setParameterByKey(KEY.W, 3);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 141.0);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		List<int[]> iterlist = new ArrayList<int[]>();
@@ -374,13 +373,13 @@ public class ScalarEncoderTest {
 	    // Test the input description generation and top-down compute on a small number
 	    //   non-periodic encoder
 		setUp();
-		parameters.setName("scalar");
-		parameters.setN(15);
-		parameters.setW(3);
-		parameters.setMinVal(.001);
-		parameters.setMaxVal(.002);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "scalar");
+		parameters.setParameterByKey(KEY.N, 15);
+		parameters.setParameterByKey(KEY.W, 3);
+		parameters.setParameterByKey(KEY.MINVAL, .001);
+		parameters.setParameterByKey(KEY.MAXVAL, .002);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		System.out.println(String.format("\nTesting non-periodic encoder decoding resolution of %f...", se.getResolution()));
@@ -407,13 +406,13 @@ public class ScalarEncoderTest {
 		// -------------------------------------------------------------------------
 	    // Test the input description generation on a large number, non-periodic encoder
 		setUp();
-		parameters.setName("scalar");
-		parameters.setN(15);
-		parameters.setW(3);
-		parameters.setMinVal(1);
-		parameters.setMaxVal(1000000000);
-		parameters.setPeriodic(false);
-		parameters.setForced(true);
+		parameters.setParameterByKey(KEY.NAME, "scalar");
+		parameters.setParameterByKey(KEY.N, 15);
+		parameters.setParameterByKey(KEY.W, 3);
+		parameters.setParameterByKey(KEY.MINVAL, 1.0);
+		parameters.setParameterByKey(KEY.MAXVAL, 1000000000.0);
+		parameters.setParameterByKey(KEY.PERIODIC, false);
+		parameters.setParameterByKey(KEY.FORCED, true);
 		initSE();
 		
 		System.out.println(String.format("\nTesting non-periodic encoder decoding resolution of %f...", se.getResolution()));
