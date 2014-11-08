@@ -1,8 +1,5 @@
 package org.numenta.nupic.unit.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 
@@ -21,11 +18,14 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
+import static org.junit.Assert.*;
+
 public class DateEncoderTest {
     private DateEncoder de;
     private Parameters parameters;
     private DateTime dt;
     private int[] expected;
+    private int[] bits;
 
     private void setUp() {
         // 3 bits for season, 1 bit for day of week, 3 for weekend, 5 for time of day
@@ -40,6 +40,9 @@ public class DateEncoderTest {
 
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
+
+        //FIXME how to pass the datetime in, it should not be string
+        bits = de.encode(dt.toString("yyyy-MM-dd HH:mm:ss"));
 
         // season is aaabbbcccddd (1 bit/month) # TODO should be <<3?
         // should be 000000000111 (centered on month 11 - Nov)
@@ -67,6 +70,9 @@ public class DateEncoderTest {
         de.init();
     }
 
+    /**
+     * Creating date encoder instance
+     */
     @Test
     public void testDateEncoder() {
         setUp();
@@ -76,5 +82,37 @@ public class DateEncoderTest {
         System.out.println("\nEncoded missing data as: " + Arrays.toString(empty));
         int[] expected = new int[14];
         assertTrue(Arrays.equals(expected, empty));
+
+        List<Tuple> desc = de.getDescription();
+        assertNotNull(desc);
+        // should be [("season", 0), ("day of week", 12), ("weekend", 19), ("time of day", 25)]
+
+        Tuple descSeason = desc.get(0);
+        assertNotNull(descSeason);
+        assertEquals("season", descSeason.get(0));
+        assertEquals(0, descSeason.get(1));
+
+        Tuple descDayOfWeek = desc.get(0);
+        assertNotNull(descDayOfWeek);
+        assertEquals("day of week", descDayOfWeek.get(0));
+        assertEquals(12, descDayOfWeek.get(1));
+
+        Tuple descWeekend = desc.get(0);
+        assertNotNull(descWeekend);
+        assertEquals("weekend", descWeekend.get(0));
+        assertEquals(19, descWeekend.get(1));
+
+        Tuple descTimeOfDay = desc.get(0);
+        assertNotNull(descTimeOfDay);
+        assertEquals("time of day", descTimeOfDay.get(0));
+        assertEquals(25, descWeekend.get(1));
+
+        assertTrue(Arrays.equals(expected, bits));
+
+        System.out.println();
+        de.pprintHeader("");
+        de.pprint(bits, "");
+        System.out.println();
     }
 }
+
