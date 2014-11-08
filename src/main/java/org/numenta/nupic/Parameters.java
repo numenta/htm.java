@@ -91,18 +91,6 @@ public class Parameters {
         defaultParams.put(KEY.MAX_BOOST, 10.0);
         defaultParams.put(KEY.SP_VERBOSITY, 0);
 
-        //////////// Encoder Parameters ///////////
-        defaultParams.put(KEY.W, 0);
-        defaultParams.put(KEY.MINVAL, .0);
-        defaultParams.put(KEY.MAXVAL, .0);
-        defaultParams.put(KEY.PERIODIC, false);
-        defaultParams.put(KEY.N, 0);
-        defaultParams.put(KEY.RADIUS, .0);
-        defaultParams.put(KEY.RESOLUTION, .0);
-        defaultParams.put(KEY.NAME, "None");
-        defaultParams.put(KEY.CLIP_INPUT, false);
-        defaultParams.put(KEY.FORCED, false);
-        defaultParams.put(KEY.ENC_VERBOSITY, 0);
         DEFAULTS = Collections.unmodifiableMap(defaultParams);
     }
 
@@ -829,7 +817,7 @@ public class Parameters {
      * used if the duty cycle is >= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
-     * 2 endpoints.
+     * 2 end points.
      *
      * @param maxBoost
      */
@@ -844,110 +832,6 @@ public class Parameters {
      */
     public void setSpVerbosity(int spVerbosity) {
         paramMap.put(KEY.SP_VERBOSITY, spVerbosity);
-    }
-
-    /////////////////// Encoder Params ///////////////////
-
-    /**
-     * Sets the "w" or width of the output signal
-     * <em>Restriction:</em> w must be odd to avoid centering problems.
-     *
-     * @param w
-     */
-    public void setW(int w) {
-        paramMap.put(KEY.W, w);
-    }
-
-    /**
-     * The number of bits in the output. Must be greater than or equal to w
-     *
-     * @param n
-     */
-    public void setN(int n) {
-        paramMap.put(KEY.N, n);
-    }
-
-    /**
-     * The minimum value of the input signal.
-     *
-     * @param minVal
-     */
-    public void setMinVal(double minVal) {
-        paramMap.put(KEY.MINVAL, minVal);
-    }
-
-    /**
-     * The maximum value of the input signal.
-     *
-     * @param maxVal
-     */
-    public void setMaxVal(double maxVal) {
-        paramMap.put(KEY.MAXVAL, maxVal);
-    }
-
-    /**
-     * inputs separated by more than, or equal to this distance will have non-overlapping
-     * representations
-     *
-     * @param radius
-     */
-    public void setRadius(double radius) {
-        paramMap.put(KEY.RADIUS, radius);
-    }
-
-    /**
-     * inputs separated by more than, or equal to this distance will have different
-     * representations
-     *
-     * @param resolution
-     */
-    public void setResolution(double resolution) {
-        paramMap.put(KEY.RESOLUTION, resolution);
-    }
-
-    /**
-     * If true, non-periodic inputs smaller than minval or greater
-     * than maxval will be clipped to minval/maxval
-     *
-     * @param b
-     */
-    public void setClipInput(boolean b) {
-        paramMap.put(KEY.CLIP_INPUT, b);
-    }
-
-    /**
-     * If true, then the input value "wraps around" such that minval = maxval
-     * For a periodic value, the input must be strictly less than maxval,
-     * otherwise maxval is a true upper bound.
-     *
-     * @param b
-     */
-    public void setPeriodic(boolean b) {
-        paramMap.put(KEY.PERIODIC, b);
-    }
-
-    /**
-     * If true, skip some safety checks (for compatibility reasons), default false
-     *
-     * @param b
-     */
-    public void setForced(boolean b) {
-        paramMap.put(KEY.FORCED, b);
-    }
-
-    /**
-     * An optional string which will become part of the description
-     *
-     * @param name
-     */
-    public void setName(String name) {
-        paramMap.put(KEY.NAME, name);
-    }
-
-    ///////////////////////////////
-
-    public void setCategoryList(List<String> l) {
-        paramMap.put(KEY.CATEGORY_LIST, l);
     }
 
     /**
@@ -986,19 +870,6 @@ public class Parameters {
             .append("\t").append("minThreshold :  ").append(getParameterByKey(KEY.MIN_THRESHOLD)).append("\n")
             .append("\t").append("permanenceIncrement :  ").append(getParameterByKey(KEY.PERMANENCE_INCREMENT)).append("\n")
             .append("\t").append("permanenceDecrement :  ").append(getParameterByKey(KEY.PERMANENCE_DECREMENT)).append("\n")
-            .append("}\n\n")
-
-            .append("{ Encoder\n")
-            .append("\t").append("w :  ").append(getParameterByKey(KEY.W)).append("\n")
-            .append("\t").append("n :  ").append(getParameterByKey(KEY.N)).append("\n")
-            .append("\t").append("radius :  ").append(getParameterByKey(KEY.RADIUS)).append("\n")
-            .append("\t").append("resolution :  ").append(getParameterByKey(KEY.RESOLUTION)).append("\n")
-            .append("\t").append("minval :  ").append(getParameterByKey(KEY.MINVAL)).append("\n")
-            .append("\t").append("maxval :  ").append(getParameterByKey(KEY.MAXVAL)).append("\n")
-            .append("\t").append("periodic :  ").append(getParameterByKey(KEY.PERIODIC)).append("\n")
-            .append("\t").append("clipInput :  ").append(getParameterByKey(KEY.CLIP_INPUT)).append("\n")
-            .append("\t").append("forced :  ").append(getParameterByKey(KEY.FORCED)).append("\n")
-            .append("\t").append("name :  ").append(getParameterByKey(KEY.NAME)).append("\n")
             .append("}\n\n");
 
         return sb.toString();

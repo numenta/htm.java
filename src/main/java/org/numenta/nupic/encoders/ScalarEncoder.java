@@ -156,7 +156,17 @@ public class ScalarEncoder extends Encoder {
 	/**
 	 * Constructs a new {@code ScalarEncoder}
 	 */
-	public ScalarEncoder() {}
+	ScalarEncoder() {}
+	
+	/**
+	 * Returns a builder for building ScalarEncoders. 
+	 * This builder may be reused to produce multiple builders
+	 * 
+	 * @return a {@code ScalarEncoder.Builder}
+	 */
+	public static Encoder.Builder<ScalarEncoder.Builder, ScalarEncoder> builder() {
+		return new ScalarEncoder.Builder();
+	}
 	
 	/**
 	 * Returns true if the underlying encoder works on deltas
@@ -809,4 +819,48 @@ public class ScalarEncoder extends Encoder {
 		return l;
 	}
 
+	/**
+	 * Returns a {@link EncoderBuilder} for constructing {@link ScalarEncoder}s
+	 * 
+	 * The base class architecture is put together in such a way where boilerplate
+	 * initialization can be kept to a minimum for implementing subclasses. 
+	 * Hopefully! :-)
+	 * 
+	 * @see ScalarEncoder.Builder#setStuff(int)
+	 */
+	public static class Builder extends Encoder.Builder<ScalarEncoder.Builder, ScalarEncoder> {
+		private Builder() {}
+
+		@Override
+		public ScalarEncoder build() {
+			//Must be instantiated so that super class can initialize 
+			//boilerplate variables.
+			encoder = new ScalarEncoder();
+			
+			//Call super class here
+			super.build();
+			
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
+			
+			((ScalarEncoder)encoder).init();
+			
+			return (ScalarEncoder)encoder;
+		}
+		
+		/**
+		 * Never called - just here as an example of specialization for a specific 
+		 * subclass of Encoder.Builder
+		 * 
+		 * Example specific method!!
+		 * 
+		 * @param stuff
+		 * @return
+		 */
+		public ScalarEncoder.Builder setStuff(int stuff) {
+			return this;
+		}
+	}
 }
