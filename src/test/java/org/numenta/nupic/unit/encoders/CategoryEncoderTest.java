@@ -24,13 +24,12 @@ public class CategoryEncoderTest {
 	private Parameters parameters;
 	
 	private void setUp() {
-		parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.W, 3);
-        p.put(KEY.MINVAL, 0.0);
-        p.put(KEY.MAXVAL, 8.0);
-        p.put(KEY.PERIODIC, false);
-        p.put(KEY.FORCED, true);
+        parameters = Parameters.getDefaultParameters();
+        parameters.setParameterByKey(KEY.W, 3);
+        parameters.setParameterByKey(KEY.MINVAL, 0.0);
+        parameters.setParameterByKey(KEY.MAXVAL, 8.0);
+        parameters.setParameterByKey(KEY.PERIODIC, false);
+        parameters.setParameterByKey(KEY.FORCED, true);
     }
 	
 	private void initCE() {
@@ -44,8 +43,8 @@ public class CategoryEncoderTest {
 		String[] categories = new String[] { "ES", "GB", "US" };
 		
 		setUp();
-		parameters.setRadius(1);
-		parameters.setCategoryList(Arrays.<String>asList(categories));
+		parameters.setParameterByKey(KEY.RADIUS, 1.0);
+		parameters.setParameterByKey(KEY.CATEGORY_LIST, Arrays.<String>asList(categories));
 		initCE();
 		
 		System.out.println("Testing CategoryEncoder...");
@@ -142,8 +141,8 @@ public class CategoryEncoderTest {
 		categories = new String[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
 		
 		setUp();
-		parameters.setRadius(1);
-		parameters.setCategoryList(Arrays.<String>asList(categories));
+		parameters.setParameterByKey(KEY.RADIUS, 1.0);
+		parameters.setParameterByKey(KEY.CATEGORY_LIST, Arrays.<String>asList(categories));
 		initCE();
 		
 		for(String cat : categories) {
