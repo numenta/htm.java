@@ -138,7 +138,7 @@ public class BeanUtil {
     if (name == null) {
       throw new IllegalArgumentException("Property name is required and can not be null");
     }
-    PropertyInfo infos[] = getPropertyInfos(beanClass);
+    PropertyInfo infos[] = getPropertiesInfoForBean(beanClass);
     for (PropertyInfo info : infos) {
       if (name.equals(info.getName())) {
         return info;
@@ -147,7 +147,8 @@ public class BeanUtil {
     return null;
   }
 
-  private PropertyInfo[] getPropertyInfos(Class<?> beanClass) {
+
+  public PropertyInfo[] getPropertiesInfoForBean(Class<?> beanClass) {
     if (beanClass == null) {
       throw new IllegalArgumentException("Bean class is required and can not be null");
     }

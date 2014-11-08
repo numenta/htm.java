@@ -32,6 +32,7 @@ import org.numenta.nupic.util.MersenneTwister;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -208,6 +209,17 @@ public class Parameters {
 
         //////////// Category Encoder Parameters /////////////
         CATEGORY_LIST("categoryList", List.class);
+        private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
+
+        static {
+            for (KEY key : KEY.values()) {
+                fieldMap.put(key.getFieldName(), key);
+            }
+        }
+
+        public static KEY getKeyByFieldName(String fieldName) {
+            return fieldMap.get(fieldName);
+        }
 
         final private String fieldName;
         final private Class<?> fieldType;
@@ -276,7 +288,7 @@ public class Parameters {
         }
 
         @Override public Object put(KEY key, Object value) {
-            if(value != null) {
+            if (value != null) {
                 if (!key.getFieldType().isInstance(value)) {
                     throw new IllegalArgumentException(
                             "Can not set Parameters Property '" + key.getFieldName() + "' because of type mismatch. The required type is " + key.getFieldType());
@@ -290,10 +302,15 @@ public class Parameters {
         }
     }
 
+    /*
+    * Object on which to synchronize
+    */
+    final Object lock = new Object();
+
     /**
      * Map of parameters to their values
      */
-    private EnumMap<Parameters.KEY, Object> paramMap = new ParametersMap();
+    private Map<Parameters.KEY, Object> paramMap = Collections.synchronizedMap(new ParametersMap());
 
     /**
      * Sets the fields specified by the {@code Parameters} on the specified
@@ -304,13 +321,18 @@ public class Parameters {
      */
     public static void apply(Object cn, Parameters p) {
         BeanUtil beanUtil = BeanUtil.getInstance();
-        for (KEY key : p.getKeysForPresent()) {
-            beanUtil.setSimpleProperty(cn, key.fieldName, p.getParameterByKey(key));
+        Set<KEY> presentKeys = p.getKeysForPresent();
+        synchronized (p.lock) {
+            for (KEY key : presentKeys) {
+                beanUtil.setSimpleProperty(cn, key.fieldName, p.getParameterByKey(key));
+            }
         }
     }
 
+    //TODO apply from container to parameters
+
     /**
-     * Return {@link Parameters} object with default values
+     * Factory method. Return {@link Parameters} object with default values
      *
      * @return {@link Parameters} object
      */
@@ -320,118 +342,32 @@ public class Parameters {
             result.setParameterByKey(key, DEFAULTS.get(key));
         }
         return result;
+        //return new Parameters();
+    }
+
+    /**
+     * Factory methods. Returns copy of passed {@link Parameters} object
+     *
+     * @return {@link Parameters} object
+     */
+    public static Parameters cloneParameters(Parameters source) {
+        Parameters result = new Parameters();
+        Set<KEY> presentKeys = source.getKeysForPresent();
+        synchronized (source.lock) {
+            for (KEY key : presentKeys) {
+                result.setParameterByKey(key, DEFAULTS.get(key));
+            }
+        }
+        return result;
     }
 
 
     /**
      * Constructs a new {@code Parameters} object.
+     * It is private. Only allow instantiation with Factory methods.
+     * This way we will never have erroneous Parameters with missing attributes
      */
-    public Parameters() {
-    }
-
-    /**
-     * @param inputDimensions
-     * @param columnDimensions
-     * @param cellsPerColumn
-     * @param potentialRadius
-     * @param potentialPct
-     * @param globalInhibition
-     * @param localAreaDensity
-     * @param numActiveColumnsPerInhArea
-     * @param stimulusThreshold
-     * @param synPermInactiveDec
-     * @param synPermActiveInc
-     * @param synPermConnected
-     * @param synPermBelowStimulusInc
-     * @param minPctOverlapDutyCycles
-     * @param minPctActiveDutyCycles
-     * @param dutyCyclePeriod
-     * @param maxBoost
-     * @param activationThreshold
-     * @param learningRadius
-     * @param minThreshold
-     * @param maxNewSynapseCount
-     * @param seed
-     * @param initialPermanence
-     * @param connectedPermanence
-     * @param permanenceIncrement
-     * @param permanenceDecrement
-     * @param random
-     * @deprecated This constructor has 27 parameters, many of them same type, so it is error prone
-     * Sets up default parameters for both the {@link SpatialPooler} and the
-     * {@link TemporalMemory}
-     */
-    @Deprecated
-    public Parameters(int[] inputDimensions, int[] columnDimensions, int cellsPerColumn,
-                      int potentialRadius/*SP*/, double potentialPct/*SP*/, boolean globalInhibition/*SP*/,
-                      double localAreaDensity/*SP*/, double numActiveColumnsPerInhArea/*SP*/, double stimulusThreshold/*SP*/,
-                      double synPermInactiveDec/*SP*/, double synPermActiveInc/*SP*/, double synPermConnected/*SP*/,
-                      double synPermBelowStimulusInc/*SP*/, double minPctOverlapDutyCycles/*SP*/,
-                      double minPctActiveDutyCycles/*SP*/,
-                      int dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold/*TM*/,
-                      int learningRadius/*TM*/, int minThreshold/*TM*/,
-                      int maxNewSynapseCount/*TM*/, int seed, double initialPermanence/*TM*/,
-                      double connectedPermanence/*TM*/, double permanenceIncrement/*TM*/,
-                      double permanenceDecrement/*TM*/, int w/*ENC*/, int n/*ENC*/, int radius/*ENC*/,
-                      int resolution/*ENC*/, boolean periodic/*ENC*/, boolean clipInput/*ENC*/, boolean forced/*ENC*/,
-                      int minval/*ENC*/, int maxval/*ENC*/, String name/*ENC*/, Random random) {
-
-        super();
-
-        //SpatialPooler
-        setInputDimensions(inputDimensions);
-        setColumnDimensions(columnDimensions);
-        setCellsPerColumn(cellsPerColumn);
-        setPotentialRadius(potentialRadius);
-        setPotentialPct(potentialPct);
-        setGlobalInhibition(globalInhibition);
-        setLocalAreaDensity(localAreaDensity);
-        setNumActiveColumnsPerInhArea(numActiveColumnsPerInhArea);
-        setStimulusThreshold(stimulusThreshold);
-        setSynPermInactiveDec(synPermInactiveDec);
-        setSynPermActiveInc(synPermActiveInc);
-        setSynPermConnected(synPermConnected);
-        setSynPermBelowStimulusInc(synPermBelowStimulusInc);
-        setMinPctOverlapDutyCycle(minPctOverlapDutyCycles);
-        setMinPctActiveDutyCycle(minPctActiveDutyCycles);
-        setDutyCyclePeriod(dutyCyclePeriod);
-        setMaxBoost(maxBoost);
-
-        //TemporalMemory
-        setActivationThreshold(activationThreshold);
-        setLearningRadius(learningRadius);
-        setMinThreshold(minThreshold);
-        setMaxNewSynapseCount(maxNewSynapseCount);
-        setSeed(seed);
-        setInitialPermanence(initialPermanence);
-        setConnectedPermanence(connectedPermanence);
-        setPermanenceIncrement(permanenceIncrement);
-        setPermanenceDecrement(permanenceDecrement);
-        setRandom(random);
-    }
-
-    /**
-     * Copy constructor for convenience
-     *
-     * @param other
-     */
-    public Parameters(Parameters other) {
-        for (KEY key : other.getKeysForPresent()) {
-            this.setParameterByKey(key, other.getParameterByKey(key));
-        }
-    }
-
-    /**
-     * @return
-     * @deprecated Will have private access, replaced by {@link #setParameterByKey(KEY, Object)}. Need it to to be compatible with EnumMap<Parameters.KEY, Object> p = parameters.getMap() in tests.
-     * Creates and returns an {@link EnumMap} containing the specified keys; whose
-     * values are to be loaded later. The map returned is only created if the internal
-     * reference is null (never been created), therefore the map is a singleton which
-     * cannot be recreated once created.
-     */
-    @Deprecated
-    public EnumMap<Parameters.KEY, Object> getMap() {
-        return paramMap;
+    private Parameters() {
     }
 
     /**
@@ -456,6 +392,46 @@ public class Parameters {
 
     public Set<KEY> getKeysForPresent() {
         return paramMap.keySet();
+    }
+
+    /**
+     * @param key
+     * @deprecated dangerous method, add to comply with some special cases in unit testing.Should be removed eventually
+     * This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
+     */
+    @Deprecated
+    public void clearParameter(KEY key) {
+        paramMap.remove(key);
+    }
+
+    /**
+     * Convenience method to log difference this {@code Parameters} and specified
+     * {@link Connections} object.
+     *
+     * @param cn
+     * @return true if find it different
+     */
+    public boolean logDiff(Object cn) {
+        if (cn == null) {
+             throw new IllegalArgumentException("cn Object is required and can not be null");
+           }
+        boolean result = false;
+        BeanUtil beanUtil = BeanUtil.getInstance();
+        BeanUtil.PropertyInfo[] properties = beanUtil.getPropertiesInfoForBean(cn.getClass());
+        for (int i = 0; i < properties.length; i++) {
+            BeanUtil.PropertyInfo property = properties[i];
+            String fieldName = property.getName();
+            KEY propKey = KEY.getKeyByFieldName(property.getName());
+            if (propKey != null) {
+                Object paramValue = this.getParameterByKey(propKey);
+                Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
+                if (paramValue != null && !paramValue.equals(cnValue)) {
+                    result = true;
+                    System.out.println("Property:" + fieldName + " is different - CN:" + cnValue +" | PARAM:" + paramValue);
+                }
+            }
+        }
+        return result;
     }
 
     //TODO I'm not sure we need maintain implicit setters below. Kinda contradict unified access with KEYs

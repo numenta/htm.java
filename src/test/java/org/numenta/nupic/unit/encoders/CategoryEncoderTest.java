@@ -13,7 +13,6 @@ import org.numenta.nupic.util.MinMax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -24,13 +23,12 @@ public class CategoryEncoderTest {
 	private Parameters parameters;
 	
 	private void setUp() {
-		parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.W, 3);
-        p.put(KEY.MINVAL, 0.0);
-        p.put(KEY.MAXVAL, 8.0);
-        p.put(KEY.PERIODIC, false);
-        p.put(KEY.FORCED, true);
+		parameters = Parameters.getDefaultParameters();
+        parameters.setParameterByKey(KEY.W, 3);
+        parameters.setParameterByKey(KEY.MINVAL, 0.0);
+        parameters.setParameterByKey(KEY.MAXVAL, 8.0);
+        parameters.setParameterByKey(KEY.PERIODIC, false);
+        parameters.setParameterByKey(KEY.FORCED, true);
     }
 	
 	private void initCE() {
