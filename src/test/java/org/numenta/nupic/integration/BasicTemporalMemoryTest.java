@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +33,7 @@ import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
+import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ConsecutivePatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
 
@@ -51,16 +51,15 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
      */
     private void defaultSetup() {
         parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.COLUMN_DIMENSIONS, new int[] { 6 });
-        p.put(KEY.CELLS_PER_COLUMN, 4);
-        p.put(KEY.INITIAL_PERMANENCE, 0.3);
-        p.put(KEY.CONNECTED_PERMANENCE, 0.5);
-        p.put(KEY.MIN_THRESHOLD, 1);
-        p.put(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
-        p.put(KEY.PERMANENCE_INCREMENT, 0.1);
-        p.put(KEY.PERMANENCE_DECREMENT, 0.05);
-        p.put(KEY.ACTIVATION_THRESHOLD, 1);
+        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 6 });
+        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.3);
+        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.5);
+        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 1);
+        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
+        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1);
+        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
+        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 1);
     }
     
     /**

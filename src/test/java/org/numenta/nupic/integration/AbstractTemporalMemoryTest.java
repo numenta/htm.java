@@ -58,7 +58,7 @@ public abstract class AbstractTemporalMemoryTest {
     protected void initTM() {
         tm = new TemporalMemory();
         connections = new Connections();
-        if(parameters != null && parameters.getMap().size() > 0) {
+        if(parameters != null) {
             Parameters.apply(connections, parameters);
         }
         tm.init(connections);
@@ -69,7 +69,7 @@ public abstract class AbstractTemporalMemoryTest {
      * @return
      */
     private boolean checkParams() {
-        return parameters != null && parameters.getMap().size() > 0;
+        return parameters != null;
     }
     
     /**
