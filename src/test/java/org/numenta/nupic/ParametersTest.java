@@ -16,7 +16,8 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 public class ParametersTest {
-    private Parameters parameters;
+    @SuppressWarnings("unused")
+	private Parameters parameters;
 
     @Test
     public void testApply() {
