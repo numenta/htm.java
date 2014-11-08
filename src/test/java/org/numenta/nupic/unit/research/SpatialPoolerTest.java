@@ -21,8 +21,15 @@
  */
 package org.numenta.nupic.unit.research;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
+
+import java.util.Arrays;
+import java.util.EnumMap;
+
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
@@ -31,16 +38,10 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
-
-import java.util.Arrays;
-import java.util.EnumMap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class SpatialPoolerTest {
     private Parameters parameters;
@@ -48,25 +49,24 @@ public class SpatialPoolerTest {
     private Connections mem;
     
     public void setupParameters() {
-        parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.INPUT_DIMENSIONS, new int[] { 5 });//5
-        p.put(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
-        p.put(KEY.POTENTIAL_RADIUS, 3);//3
-        p.put(KEY.POTENTIAL_PCT, 0.5);//0.5
-        p.put(KEY.GLOBAL_INHIBITIONS, false);
-        p.put(KEY.LOCAL_AREA_DENSITY, -1.0);
-        p.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
-        p.put(KEY.STIMULUS_THRESHOLD, 1.0);
-        p.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        p.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        p.put(KEY.SYN_PERM_CONNECTED, 0.1);
-        p.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        p.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        p.put(KEY.DUTY_CYCLE_PERIOD, 10);
-        p.put(KEY.MAX_BOOST, 10.0);
-        p.put(KEY.SEED, 42);
-        p.put(KEY.SP_VERBOSITY, 0);
+        parameters = Parameters.getDefaultParameters();
+        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 5 });//5
+        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
+        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 3);//3
+        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
+        parameters.setParameterByKey(KEY.GLOBAL_INHIBITIONS, false);
+        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
+        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
+        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
+        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
+        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
+        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        parameters.setParameterByKey(KEY.SEED, 42);
+        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
     }
     
     private void initSP() {
@@ -129,6 +129,7 @@ public class SpatialPoolerTest {
         parameters.setMinPctActiveDutyCycle(0.1);
         parameters.setDutyCyclePeriod(10);
         parameters.setMaxBoost(10);
+        parameters.setSynPermTrimThreshold(0);
         
         //This is 0.5 in Python version due to use of dense 
         // permanence instead of sparse (as it should be)
@@ -227,6 +228,8 @@ public class SpatialPoolerTest {
         parameters.setDutyCyclePeriod(1000);
         parameters.setMaxBoost(10);
         parameters.setSynPermConnected(0.1);
+        parameters.setSynPermTrimThreshold(0);
+        parameters.setRandom(new MersenneTwister(42));
         initSP();
         
         int[] inputVector = {
@@ -248,6 +251,7 @@ public class SpatialPoolerTest {
                 0, 0, 0, 0, 0, 0, 0, 0	
         };
         
+       
         int[] activeArray = new int[2048];
         
         sp.compute(mem, inputVector, activeArray, true, false);
@@ -1720,6 +1724,7 @@ public class SpatialPoolerTest {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 10 });
     	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setSynPermTrimThreshold(0);
     	initSP();
     	
     	mem.setPotentialRadius(2);
@@ -1737,6 +1742,7 @@ public class SpatialPoolerTest {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 100 });
     	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setSynPermTrimThreshold(0);
     	initSP();
     	mem.setPotentialRadius(100);
     	connectedPct = 0.5;
@@ -1773,6 +1779,7 @@ public class SpatialPoolerTest {
     	setupParameters();
     	parameters.setInputDimensions(new int[] { 10 });
     	parameters.setColumnDimensions(new int[] { 5 });
+    	parameters.setSynPermTrimThreshold(0);
     	initSP();
     	
     	sp = new SpatialPooler() {
