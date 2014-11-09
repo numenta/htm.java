@@ -28,7 +28,7 @@ public class ScalarEncoderTest {
     private Parameters parameters;
 
     private void setUp() {
-        parameters = Parameters.getDefaultParameters();
+        parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.N, 14);
         parameters.setParameterByKey(KEY.W, 3);
         parameters.setParameterByKey(KEY.RADIUS, 0.0);//3
@@ -40,7 +40,7 @@ public class ScalarEncoderTest {
 
     private void initSE() {
         se = new ScalarEncoder();
-        Parameters.apply(se, parameters);
+        parameters.apply(se);
         se.init();
     }
 

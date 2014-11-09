@@ -47,7 +47,7 @@ public class SpatialPoolerTest {
     private Connections mem;
 
     public void setupParameters() {
-        parameters = Parameters.getDefaultParameters();
+        parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{5});//5
         parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[]{5});//5
         parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 3);//3
@@ -70,7 +70,7 @@ public class SpatialPoolerTest {
     private void initSP() {
         sp = new SpatialPooler();
         mem = new Connections();
-        Parameters.apply(mem, parameters);
+        parameters.apply(mem);
         sp.init(mem);
     }
 
@@ -133,8 +133,24 @@ public class SpatialPoolerTest {
         parameters.setPotentialPct(1);
 
         parameters.setSynPermConnected(0.1);
+        //TODO David I took out "synPermTrimThreshold" parameter here, because Parameters.apply(se, parameters) overwrites initialized "synPermTrimThreshold" attribute in Connections
+        // Please see my javaDoc comments for Parameters.clearParameter()
+        // Not sure what to clear, just all what different
+        parameters.clearParameter(KEY.ACTIVATION_THRESHOLD);
+        parameters.clearParameter(KEY.CELLS_PER_COLUMN);
+        parameters.clearParameter(KEY.CONNECTED_PERMANENCE);
+        parameters.clearParameter(KEY.INHIBITION_RADIUS);
+        parameters.clearParameter(KEY.RANDOM);
+        parameters.clearParameter(KEY.MAX_NEW_SYNAPSE_COUNT);
+        parameters.clearParameter(KEY.MIN_THRESHOLD);
+        parameters.clearParameter(KEY.PERMANENCE_DECREMENT);
+        parameters.clearParameter(KEY.PERMANENCE_INCREMENT);
+        parameters.clearParameter(KEY.SYN_PERM_BELOW_STIMULUS_INC);
+        parameters.clearParameter(KEY.SYN_PERM_TRIM_THRESHOLD);
+
 
         initSP();
+
 
         SpatialPooler mock = new SpatialPooler() {
             public int[] inhibitColumns(Connections c, double[] overlaps) {
@@ -228,12 +244,35 @@ public class SpatialPoolerTest {
 
         //TODO David I took out "synPermTrimThreshold" parameter here, because Parameters.apply(se, parameters) overwrites initialized "synPermTrimThreshold" attribute in Connections
         // Please see my javaDoc comments for Parameters.clearParameter()
+        // Not sure what to clear, just all what different
+        /*Property:activationThreshold is different - CN:13 | PARAM:null
+        Property:cellsPerColumn is different - CN:32 | PARAM:null
+        Property:connectedPermanence is different - CN:0.5 | PARAM:null
+        Property:inhibitionRadius is different - CN:2048 | PARAM:null
+        Property:initialPermanence is different - CN:0.21 | PARAM:null
+        Property:learningRadius is different - CN:2048 | PARAM:null
+        Property:maxNewSynapseCount is different - CN:20 | PARAM:null
+        Property:minThreshold is different - CN:10 | PARAM:null
+        Property:permanenceDecrement is different - CN:0.1 | PARAM:null
+        Property:permanenceIncrement is different - CN:0.1 | PARAM:null
+        Property:random is different - CN:org.numenta.nupic.util.MersenneTwister@cc49d2 | PARAM:null
+        Property:synPermBelowStimulusInc is different - CN:0.01 | PARAM:null
+        Property:synPermTrimThreshold is different - CN:0.05 | PARAM:null*/
+        parameters.clearParameter(KEY.ACTIVATION_THRESHOLD);
+        parameters.clearParameter(KEY.CELLS_PER_COLUMN);
+        parameters.clearParameter(KEY.CONNECTED_PERMANENCE);
         parameters.clearParameter(KEY.INHIBITION_RADIUS);
-
+        parameters.clearParameter(KEY.RANDOM);
+        parameters.clearParameter(KEY.MAX_NEW_SYNAPSE_COUNT);
+        parameters.clearParameter(KEY.MIN_THRESHOLD);
+        parameters.clearParameter(KEY.PERMANENCE_DECREMENT);
+        parameters.clearParameter(KEY.PERMANENCE_INCREMENT);
+        parameters.clearParameter(KEY.SYN_PERM_BELOW_STIMULUS_INC);
+        parameters.clearParameter(KEY.SYN_PERM_TRIM_THRESHOLD);
 
         initSP();
 
-        parameters.logDiff(mem);
+        //parameters.logDiff(mem);
 
         int[] inputVector = {
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -1213,7 +1252,7 @@ public class SpatialPoolerTest {
     /**
      * As coded in the Python test
      */
-    //@Test
+    @Test
     public void testGetNeighborsND() {
         //This setup isn't relevant to this test
         setupParameters();
@@ -1795,7 +1834,35 @@ public class SpatialPoolerTest {
         setupParameters();
         parameters.setInputDimensions(new int[]{10});
         parameters.setColumnDimensions(new int[]{5});
+            //TODO David I took out "synPermTrimThreshold" parameter here, because Parameters.apply(se, parameters) overwrites initialized "synPermTrimThreshold" attribute in Connections
+        // Please see my javaDoc comments for Parameters.clearParameter()
+        // Not sure what to clear, just all what different
+        /*Property:activationThreshold is different - CN:13 | PARAM:null
+        Property:cellsPerColumn is different - CN:32 | PARAM:null
+        Property:connectedPermanence is different - CN:0.5 | PARAM:null
+        Property:inhibitionRadius is different - CN:2048 | PARAM:null
+        Property:initialPermanence is different - CN:0.21 | PARAM:null
+        Property:learningRadius is different - CN:2048 | PARAM:null
+        Property:maxNewSynapseCount is different - CN:20 | PARAM:null
+        Property:minThreshold is different - CN:10 | PARAM:null
+        Property:permanenceDecrement is different - CN:0.1 | PARAM:null
+        Property:permanenceIncrement is different - CN:0.1 | PARAM:null
+        Property:random is different - CN:org.numenta.nupic.util.MersenneTwister@cc49d2 | PARAM:null
+        Property:synPermBelowStimulusInc is different - CN:0.01 | PARAM:null
+        Property:synPermTrimThreshold is different - CN:0.05 | PARAM:null*/
+        parameters.clearParameter(KEY.ACTIVATION_THRESHOLD);
+        parameters.clearParameter(KEY.CELLS_PER_COLUMN);
+        parameters.clearParameter(KEY.CONNECTED_PERMANENCE);
+        parameters.clearParameter(KEY.INHIBITION_RADIUS);
+        parameters.clearParameter(KEY.RANDOM);
+        parameters.clearParameter(KEY.MAX_NEW_SYNAPSE_COUNT);
+        parameters.clearParameter(KEY.MIN_THRESHOLD);
+        parameters.clearParameter(KEY.PERMANENCE_DECREMENT);
+        parameters.clearParameter(KEY.PERMANENCE_INCREMENT);
+        parameters.clearParameter(KEY.SYN_PERM_BELOW_STIMULUS_INC);
+        parameters.clearParameter(KEY.SYN_PERM_TRIM_THRESHOLD);
         initSP();
+
 
         sp = new SpatialPooler() {
             public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {

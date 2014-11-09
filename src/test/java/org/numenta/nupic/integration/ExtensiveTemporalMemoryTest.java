@@ -116,7 +116,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
      * Basic static input for all tests in this class
      */
     private void defaultSetup() {
-        parameters = Parameters.getDefaultParameters();
+        parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[]{100});
         parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 1);
         parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.8);

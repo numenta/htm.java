@@ -23,7 +23,7 @@ public class CategoryEncoderTest {
 	private Parameters parameters;
 	
 	private void setUp() {
-		parameters = Parameters.getDefaultParameters();
+		parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.W, 3);
         parameters.setParameterByKey(KEY.MINVAL, 0.0);
         parameters.setParameterByKey(KEY.MAXVAL, 8.0);
@@ -33,7 +33,7 @@ public class CategoryEncoderTest {
 	
 	private void initCE() {
 		ce = new CategoryEncoder();
-		Parameters.apply(ce, parameters);
+		parameters.apply(ce);
 		ce.init();
 	}
 

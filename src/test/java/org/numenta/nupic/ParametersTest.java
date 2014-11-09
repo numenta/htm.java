@@ -21,18 +21,18 @@ public class ParametersTest {
     @Test
     public void testApply() {
         DummyContainer dc = new DummyContainer();
-        Parameters params = Parameters.getDefaultParameters();
+        Parameters params = Parameters.getAllDefaultParameters();
         params.setParameterByKey(Parameters.KEY.MINVAL, 10.0);
         params.setParameterByKey(Parameters.KEY.MAXVAL, 20.0);
         params.setParameterByKey(Parameters.KEY.CELLS_PER_COLUMN, null);
-        Parameters.apply(dc, params);
+        params.apply(dc);
         assertEquals(10.0, dc.getMinVal(), 0);
         assertEquals(20.0, dc.getMaxVal(), 0);
     }
 
     @Test
     public void testDefaults() {
-       Parameters params = Parameters.getDefaultParameters();
+       Parameters params = Parameters.getAllDefaultParameters();
         assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), 32);
         assertEquals(params.getParameterByKey(Parameters.KEY.SEED), 42);
         assertEquals(true, ((Random)params.getParameterByKey(Parameters.KEY.RANDOM)).getClass().equals(MersenneTwister.class));
@@ -40,7 +40,7 @@ public class ParametersTest {
 
     @Test
     public void testCopy() {
-        Parameters params = Parameters.getDefaultParameters();
+        Parameters params = Parameters.getAllDefaultParameters();
         //assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), copy.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN));
         //assertEquals(params.getParameterByKey(Parameters.KEY.SEED), copy.getParameterByKey(Parameters.KEY.SEED));
     }

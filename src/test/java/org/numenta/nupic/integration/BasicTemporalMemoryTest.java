@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +49,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
      * Basic static input for all tests in this class
      */
     private void defaultSetup() {
-        parameters = Parameters.getDefaultParameters();
+        parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[]{6});
         parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
         parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.3);
