@@ -19,8 +19,8 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.util;
 
+package org.numenta.nupic.util;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
