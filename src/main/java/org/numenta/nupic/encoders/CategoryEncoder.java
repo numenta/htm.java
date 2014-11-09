@@ -83,8 +83,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	public void init() {
 		// number of categories includes zero'th category: "unknown"
 		ncategories = categoryList == null ? 0 : categoryList.size() + 1;
-		minval = 0;
-		maxval = ncategories - 1;
+		minVal = 0;
+		maxVal = ncategories - 1;
 		
 		super.init();
 		

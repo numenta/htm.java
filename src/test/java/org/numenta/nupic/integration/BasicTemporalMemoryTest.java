@@ -21,14 +21,6 @@
  */
 package org.numenta.nupic.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -36,6 +28,14 @@ import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ConsecutivePatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -50,7 +50,7 @@ public class BasicTemporalMemoryTest extends AbstractTemporalMemoryTest {
      * Basic static input for all tests in this class
      */
     private void defaultSetup() {
-        parameters = new Parameters();
+        parameters = Parameters.getAllDefaultParameters();
         parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 6 });
         parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
         parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.3);
