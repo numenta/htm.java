@@ -99,7 +99,7 @@ public class CategoryEncoderTest {
 		assertTrue(Arrays.equals( new int[] {0,0,0,1,1,1,0,0,0,0,0,0 }, output));
 		
 		// MISSING VALUE
-		int[] outputForMissing = ce.encode(null);
+		int[] outputForMissing = ce.encode((String)null);
 		assertTrue(Arrays.equals( new int[] {0,0,0,0,0,0,0,0,0,0,0,0 }, outputForMissing));
 		
 		// Test reverse lookup

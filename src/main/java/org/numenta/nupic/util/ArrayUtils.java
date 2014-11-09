@@ -29,6 +29,37 @@ public class ArrayUtils {
 		System.out.println(ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
 	}
 	/**
+	 * Utility to compute a flat index from coordinates.
+	 * 
+	 * @param coordinates	an array of integer coordinates
+	 * @return	 a flat index
+	 */
+	public static int fromCoordinate(int[] coordinates) {
+		int[] localMults = initDimensionMultiples(coordinates);
+		int base = 0;
+        for(int i = 0;i < coordinates.length;i++) {
+            base += (localMults[i] * coordinates[i]);
+        }
+        return base;
+	}
+	/**
+     * Initializes internal helper array which is used for multidimensional
+     * index computation.
+     * 
+     * @param dimensions
+     * @return
+     */
+    public static int[] initDimensionMultiples(int[] dimensions) {
+        int holder = 1;
+        int len = dimensions.length;
+        int[] dimensionMultiples = new int[dimensions.length];
+        for(int i = 0;i < len;i++) {
+            holder *= (i == 0 ? 1 : dimensions[len - i]);
+            dimensionMultiples[len - 1 - i] = holder;
+        }
+        return dimensionMultiples;
+    }
+	/**
 	 * Returns a string representing a numpy array of 0's and 1's
 	 * 
 	 * @param arr	an binary array (0's and 1's only)

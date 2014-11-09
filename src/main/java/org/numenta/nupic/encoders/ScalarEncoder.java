@@ -476,11 +476,19 @@ public class ScalarEncoder extends Encoder {
 	}
 	
 	/**
-	 * NO-OP 
+	 * @throws UnsupportedOperationException
 	 */
 	@Override
 	public int[] encodeIntoArray(String inputData, int[] output) {
-		return null;
+		throw new UnsupportedOperationException("Not suported.");
+	}
+	
+	/**
+	 * @throws UnsupportedOperationException
+	 */
+	@Override
+	public int[] encodeIntoArray(int[] inputData, int[] output) {
+		throw new UnsupportedOperationException("Not suported.");
 	}
 
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
