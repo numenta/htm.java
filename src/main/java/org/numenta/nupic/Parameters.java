@@ -210,7 +210,6 @@ public class Parameters {
 
         //////////// Encoder Parameters ///////////
         W("w", Integer.class),
-        //TODO rename minval maxval variables in Encoder accordingly with JavaBeans Spec http://www.oracle.com/technetwork/java/javase/documentation/spec-136004.html
         MINVAL("minVal", Double.class),
         MAXVAL("maxVal", Double.class),
         PERIODIC("periodic", Boolean.class),
@@ -338,7 +337,7 @@ public class Parameters {
     }
 
     /**
-     * Factory method. Return global {@link Parameters} object with default values
+     * Factory method. Return temporal {@link Parameters} object with default values
      *
      * @return {@link Parameters} object
      */
@@ -348,7 +347,7 @@ public class Parameters {
 
 
     /**
-     * Factory method. Return global {@link Parameters} object with default values
+     * Factory method. Return spatial {@link Parameters} object with default values
      *
      * @return {@link Parameters} object
      */
@@ -357,7 +356,7 @@ public class Parameters {
     }
 
     /**
-     * Factory method. Return global {@link Parameters} object with default values
+     * Factory method. Return encoder {@link Parameters} object with default values
      *
      * @return {@link Parameters} object
      */
@@ -420,16 +419,10 @@ public class Parameters {
         return paramMap.get(key);
     }
 
-    public Set<KEY> getKeysForPresent() {
-        return paramMap.keySet();
-    }
-
     /**
      * @param key
-     * @deprecated dangerous method, add to comply with some special cases in unit testing.Should be removed eventually
-     * This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
+     * IMPORTANT! This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
      */
-    @Deprecated
     public void clearParameter(KEY key) {
         paramMap.remove(key);
     }
