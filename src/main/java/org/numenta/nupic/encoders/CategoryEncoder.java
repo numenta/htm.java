@@ -29,6 +29,23 @@ import org.numenta.nupic.util.Tuple;
  *
  * The SDRCategoryEncoder (not yet implemented in Java) uses a different method to encode categories
  * 
+ * <P>
+ * Typical usage is as follows:
+ * <PRE>
+ * CategoryEncoder.Builder builder =  ((CategoryEncoder.Builder)CategoryEncoder.builder())
+ *      .w(3)
+ *      .radius(0.0)
+ *      .minVal(0.0)
+ *      .maxVal(8.0)
+ *      .periodic(false)
+ *      .forced(true);
+ *      
+ * CategoryEncoder encoder = builder.build();
+ * 
+ * <b>Above values are <i>not</i> an example of "sane" values.</b>
+ * 
+ * </PRE>
+ * 
  * @author David Ray
  * @see ScalarEncoder
  * @see Encoder
@@ -49,27 +66,18 @@ public class CategoryEncoder extends ScalarEncoder {
 	/**
 	 * Constructs a new {@code CategoryEncoder}
 	 */
-	public CategoryEncoder() {
-		this(0, null, "Category", 0, false);
+	private CategoryEncoder() {
 	}
 	
 	/**
-	 * Constructs a new {@code CategoryEncoder}
+	 * Returns a builder for building CategoryEncoders. 
+	 * This builder may be reused to produce multiple builders
 	 * 
-	 * @param w					The number of bits that are set to encode a single value - the
-     *           				"width" of the output signal
-     *         					<em>restriction:</em> w must be odd to avoid centering problems.	
-	 * @param categoryList		list of categories to encode
-	 * @param name				the name of this encoder
-	 * @param verbosity			the debug verbosity level
-	 * @param forced			if true, skip some safety checks (for compatibility reasons), default false
+	 * @return a {@code CategoryEncoder.Builder}
 	 */
-	public CategoryEncoder(int w, List<String> categoryList, String name, int verbosity, boolean forced) {
-		this.w = w;
-		this.categoryList = categoryList;
-		this.name = name;
-		this.verbosity = verbosity;
-		this.forced = forced;
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Encoder.Builder builder() {
+		return new CategoryEncoder.Builder();
 	}
 	
 	public void init() {
@@ -264,4 +272,57 @@ public class CategoryEncoder extends ScalarEncoder {
     public void setCategoryList(List<String> categoryList) {
         this.categoryList = categoryList;
     }
+    
+    /**
+	 * Returns a {@link EncoderBuilder} for constructing {@link CategoryEncoder}s
+	 * 
+	 * The base class architecture is put together in such a way where boilerplate
+	 * initialization can be kept to a minimum for implementing subclasses. 
+	 * Hopefully! :-)
+	 * 
+	 * @see ScalarEncoder.Builder#setStuff(int)
+	 */
+	public static class Builder extends Encoder.Builder<CategoryEncoder.Builder, CategoryEncoder> {
+		private List<String> categoryList;
+		
+		private Builder() {}
+
+		@Override
+		public CategoryEncoder build() {
+			//Must be instantiated so that super class can initialize 
+			//boilerplate variables.
+			encoder = new CategoryEncoder();
+			
+			//Call super class here
+			super.build();
+			
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
+			if(categoryList == null) {
+				throw new IllegalStateException("Category List cannot be null");
+			}
+			//Set CategoryEncoder specific field
+			((CategoryEncoder)encoder).setCategoryList(this.categoryList);
+			//Call init
+			((CategoryEncoder)encoder).init();
+			
+			return (CategoryEncoder)encoder;
+		}
+		
+		/**
+		 * Never called - just here as an example of specialization for a specific 
+		 * subclass of Encoder.Builder
+		 * 
+		 * Example specific method!!
+		 * 
+		 * @param stuff
+		 * @return
+		 */
+		public CategoryEncoder.Builder categoryList(List<String> categoryList) {
+			this.categoryList = categoryList;
+			return this;
+		}
+	}
 }

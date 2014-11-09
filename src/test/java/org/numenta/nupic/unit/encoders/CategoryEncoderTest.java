@@ -1,8 +1,13 @@
 package org.numenta.nupic.unit.encoders;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.encoders.CategoryEncoder;
 import org.numenta.nupic.encoders.DecodeResult;
 import org.numenta.nupic.encoders.EncoderResult;
@@ -11,30 +16,22 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class CategoryEncoderTest {
 	private CategoryEncoder ce;
-	private Parameters parameters;
+	private CategoryEncoder.Builder builder;
 	
 	private void setUp() {
-		parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.W, 3);
-        parameters.setParameterByKey(KEY.MINVAL, 0.0);
-        parameters.setParameterByKey(KEY.MAXVAL, 8.0);
-        parameters.setParameterByKey(KEY.PERIODIC, false);
-        parameters.setParameterByKey(KEY.FORCED, true);
+        builder =  ((CategoryEncoder.Builder)CategoryEncoder.builder())
+            .w(3)
+            .radius(0.0)
+            .minVal(0.0)
+            .maxVal(8.0)
+            .periodic(false)
+            .forced(true);
     }
 	
 	private void initCE() {
-		ce = new CategoryEncoder();
-		parameters.apply(ce);
-		ce.init();
+		ce = builder.build();
 	}
 
 	@Test
@@ -42,8 +39,8 @@ public class CategoryEncoderTest {
 		String[] categories = new String[] { "ES", "GB", "US" };
 		
 		setUp();
-		parameters.setRadius(1);
-		parameters.setCategoryList(Arrays.<String>asList(categories));
+		builder.radius(1.0);
+		builder.categoryList(Arrays.<String>asList(categories));
 		initCE();
 		
 		System.out.println("Testing CategoryEncoder...");
@@ -140,8 +137,8 @@ public class CategoryEncoderTest {
 		categories = new String[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
 		
 		setUp();
-		parameters.setRadius(1);
-		parameters.setCategoryList(Arrays.<String>asList(categories));
+		builder.radius(1.0);
+		builder.categoryList(Arrays.<String>asList(categories));
 		initCE();
 		
 		for(String cat : categories) {
@@ -165,10 +162,10 @@ public class CategoryEncoderTest {
 		for(int i = 0;i < 9;i++) categories[i] = String.format("cat%d", i + 1);
 		//forced: is not recommended, but is used here for readability.
 		setUp();
-		parameters.setRadius(1);
-		parameters.setW(9);
-		parameters.setForced(true);
-		parameters.setCategoryList(Arrays.<String>asList(categories));
+		builder.radius(1.0);
+		builder.w(9);
+		builder.forced(true);
+		builder.categoryList(Arrays.<String>asList(categories));
 		initCE();
 		
 		for(String cat : categories) {

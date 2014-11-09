@@ -179,6 +179,7 @@ public class BeanUtil {
     return new PropertyInfo(beanClass, d.getName(), d.getPropertyType(), d.getReadMethod(), d.getWriteMethod());
   }
 
+  @SuppressWarnings("unused")
   private PropertyInfo createPropertyInfo(Class<?> beanClass, String propertyName, Class<?> propertyType) {
     return new PropertyInfo(beanClass, propertyName, propertyType, null, null);
   }
