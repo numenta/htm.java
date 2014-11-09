@@ -21,16 +21,16 @@
  */
 package org.numenta.nupic.integration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Base class for integration tests of the {@link TemporalMemory}
@@ -59,7 +59,7 @@ public abstract class AbstractTemporalMemoryTest {
         tm = new TemporalMemory();
         connections = new Connections();
         if(parameters != null) {
-            Parameters.apply(connections, parameters);
+            parameters.apply(connections);
         }
         tm.init(connections);
     }

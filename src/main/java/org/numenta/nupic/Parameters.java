@@ -21,13 +21,6 @@
  */
 package org.numenta.nupic;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -36,6 +29,14 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
+
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -48,50 +49,78 @@ import org.numenta.nupic.util.MersenneTwister;
  * @see Connections
  * @see ComputeCycle
  */
+@SuppressWarnings("unused")
 public class Parameters {
-    private static final Map<KEY, Object> DEFAULTS;
+    private static final Map<KEY, Object> DEFAULTS_ALL;
+    private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
+    private static final Map<KEY, Object> DEFAULTS_SPATIAL;
+    private static final Map<KEY, Object> DEFAULTS_ENCODER;
+
 
     static {
         Map<KEY, Object> defaultParams = new ParametersMap();
 
         /////////// Universal Parameters ///////////
-        defaultParams.put(KEY.COLUMN_DIMENSIONS, new int[]{2048});
-        defaultParams.put(KEY.CELLS_PER_COLUMN, 32);
+
         defaultParams.put(KEY.SEED, 42);
         defaultParams.put(KEY.RANDOM, new MersenneTwister((int)defaultParams.get(KEY.SEED)));
 
         /////////// Temporal Memory Parameters ///////////
-        defaultParams.put(KEY.ACTIVATION_THRESHOLD, 13);
-        defaultParams.put(KEY.LEARNING_RADIUS, 2048);
-        defaultParams.put(KEY.MIN_THRESHOLD, 10);
-        defaultParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
-        defaultParams.put(KEY.INITIAL_PERMANENCE, 0.21);
-        defaultParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
-        defaultParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
-        defaultParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
-        defaultParams.put(KEY.TM_VERBOSITY, 0);
+        Map<KEY, Object> defaultTemporalParams = new ParametersMap();
+        defaultTemporalParams.put(KEY.COLUMN_DIMENSIONS, new int[]{2048});
+        defaultTemporalParams.put(KEY.CELLS_PER_COLUMN, 32);
+        defaultTemporalParams.put(KEY.ACTIVATION_THRESHOLD, 13);
+        defaultTemporalParams.put(KEY.LEARNING_RADIUS, 2048);
+        defaultTemporalParams.put(KEY.MIN_THRESHOLD, 10);
+        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultTemporalParams.put(KEY.INITIAL_PERMANENCE, 0.21);
+        defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
+        defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
+        defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
+        defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
+        DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
+        defaultParams.putAll(DEFAULTS_TEMPORAL);
 
         /// Spatial Pooler Parameters ///////////
-        defaultParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
-        defaultParams.put(KEY.POTENTIAL_RADIUS, 16);
-        defaultParams.put(KEY.POTENTIAL_PCT, 0.5);
-        defaultParams.put(KEY.GLOBAL_INHIBITIONS, false);
-        defaultParams.put(KEY.INHIBITION_RADIUS, 0);
-        defaultParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
-        defaultParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
-        defaultParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
-        defaultParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        defaultParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        defaultParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
-        defaultParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
-        defaultParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
-        defaultParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
-        defaultParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
-        defaultParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
-        defaultParams.put(KEY.MAX_BOOST, 10.0);
-        defaultParams.put(KEY.SP_VERBOSITY, 0);
+        Map<KEY, Object> defaultSpatialParams = new ParametersMap();
+        defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
+        defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, 16);
+        defaultSpatialParams.put(KEY.POTENTIAL_PCT, 0.5);
+        defaultSpatialParams.put(KEY.GLOBAL_INHIBITIONS, false);
+        defaultSpatialParams.put(KEY.INHIBITION_RADIUS, 0);
+        defaultSpatialParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
+        defaultSpatialParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
+        defaultSpatialParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
+        defaultSpatialParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
+        defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
+        defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
+        defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
+        defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
+        defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
+        defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
+        defaultSpatialParams.put(KEY.SP_VERBOSITY, 0);
+        DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
+        defaultParams.putAll(DEFAULTS_SPATIAL);
 
-        DEFAULTS = Collections.unmodifiableMap(defaultParams);
+        //////////// Encoder Parameters ///////////
+        Map<KEY, Object> defaultEncoderParams = new ParametersMap();
+        defaultEncoderParams.put(KEY.W, 0);
+        defaultEncoderParams.put(KEY.MINVAL, .0);
+        defaultEncoderParams.put(KEY.MAXVAL, .0);
+        defaultEncoderParams.put(KEY.PERIODIC, false);
+        defaultEncoderParams.put(KEY.N, 0);
+        defaultEncoderParams.put(KEY.RADIUS, .0);
+        defaultEncoderParams.put(KEY.RESOLUTION, .0);
+        defaultEncoderParams.put(KEY.NAME, "None");
+        defaultEncoderParams.put(KEY.CLIP_INPUT, false);
+        defaultEncoderParams.put(KEY.FORCED, false);
+        defaultEncoderParams.put(KEY.ENC_VERBOSITY, 0);
+        DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
+
+        defaultParams.putAll(DEFAULTS_ENCODER);
+        DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
 
     /**
@@ -181,7 +210,6 @@ public class Parameters {
 
         //////////// Encoder Parameters ///////////
         W("w", Integer.class),
-        //TODO rename minval maxval variables in Encoder accordingly with JavaBeans Spec http://www.oracle.com/technetwork/java/javase/documentation/spec-136004.html
         MINVAL("minVal", Double.class),
         MAXVAL("maxVal", Double.class),
         PERIODIC("periodic", Boolean.class),
@@ -195,6 +223,18 @@ public class Parameters {
 
         //////////// Category Encoder Parameters /////////////
         CATEGORY_LIST("categoryList", List.class);
+
+        private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
+
+        static {
+            for (KEY key : KEY.values()) {
+                fieldMap.put(key.getFieldName(), key);
+            }
+        }
+
+        public static KEY getKeyByFieldName(String fieldName) {
+            return fieldMap.get(fieldName);
+        }
 
         final private String fieldName;
         final private Class<?> fieldType;
@@ -266,7 +306,7 @@ public class Parameters {
         }
 
         @Override public Object put(KEY key, Object value) {
-            if(value != null) {
+            if (value != null) {
                 if (!key.getFieldType().isInstance(value)) {
                     throw new IllegalArgumentException(
                             "Can not set Parameters Property '" + key.getFieldName() + "' because of type mismatch. The required type is " + key.getFieldType());
@@ -283,31 +323,52 @@ public class Parameters {
     /**
      * Map of parameters to their values
      */
-    private EnumMap<Parameters.KEY, Object> paramMap = new ParametersMap();
+    private final Map<Parameters.KEY, Object> paramMap = Collections.synchronizedMap(new ParametersMap());
+
+    //TODO apply from container to parameters
 
     /**
-     * Sets the fields specified by the {@code Parameters} on the specified
-     * {@link Connections} object.
-     *
-     * @param cn
-     * @param p
-     */
-    public static void apply(Object cn, Parameters p) {
-        BeanUtil beanUtil = BeanUtil.getInstance();
-        for (KEY key : p.getKeysForPresent()) {
-            beanUtil.setSimpleProperty(cn, key.fieldName, p.getParameterByKey(key));
-        }
-    }
-
-    /**
-     * Return {@link Parameters} object with default values
+     * Factory method. Return global {@link Parameters} object with default values
      *
      * @return {@link Parameters} object
      */
-    public static Parameters getDefaultParameters() {
+    public static Parameters getAllDefaultParameters() {
+        return getParameters(DEFAULTS_ALL);
+    }
+
+    /**
+     * Factory method. Return temporal {@link Parameters} object with default values
+     *
+     * @return {@link Parameters} object
+     */
+    public static Parameters getTemporalDefaultParameters() {
+        return getParameters(DEFAULTS_TEMPORAL);
+    }
+
+
+    /**
+     * Factory method. Return spatial {@link Parameters} object with default values
+     *
+     * @return {@link Parameters} object
+     */
+    public static Parameters getSpatialDefaultParameters() {
+        return getParameters(DEFAULTS_SPATIAL);
+    }
+
+    /**
+     * Factory method. Return encoder {@link Parameters} object with default values
+     *
+     * @return {@link Parameters} object
+     */
+    public static Parameters getEncoderDefaultParameters() {
+        return getParameters(DEFAULTS_ENCODER);
+    }
+
+
+    private static Parameters getParameters(Map<KEY, Object> map) {
         Parameters result = new Parameters();
-        for (KEY key : DEFAULTS.keySet()) {
-            result.setParameterByKey(key, DEFAULTS.get(key));
+        for (KEY key : map.keySet()) {
+            result.setParameterByKey(key, map.get(key));
         }
         return result;
     }
@@ -315,114 +376,28 @@ public class Parameters {
 
     /**
      * Constructs a new {@code Parameters} object.
+     * It is private. Only allow instantiation with Factory methods.
+     * This way we will never have erroneous Parameters with missing attributes
      */
-    public Parameters() {
+    private Parameters() {
     }
 
     /**
-     * @param inputDimensions
-     * @param columnDimensions
-     * @param cellsPerColumn
-     * @param potentialRadius
-     * @param potentialPct
-     * @param globalInhibition
-     * @param localAreaDensity
-     * @param numActiveColumnsPerInhArea
-     * @param stimulusThreshold
-     * @param synPermInactiveDec
-     * @param synPermActiveInc
-     * @param synPermConnected
-     * @param synPermBelowStimulusInc
-     * @param minPctOverlapDutyCycles
-     * @param minPctActiveDutyCycles
-     * @param dutyCyclePeriod
-     * @param maxBoost
-     * @param activationThreshold
-     * @param learningRadius
-     * @param minThreshold
-     * @param maxNewSynapseCount
-     * @param seed
-     * @param initialPermanence
-     * @param connectedPermanence
-     * @param permanenceIncrement
-     * @param permanenceDecrement
-     * @param random
-     * @deprecated This constructor has 27 parameters, many of them same type, so it is error prone
-     * Sets up default parameters for both the {@link SpatialPooler} and the
-     * {@link TemporalMemory}
-     */
-    @Deprecated
-    public Parameters(int[] inputDimensions, int[] columnDimensions, int cellsPerColumn,
-                      int potentialRadius/*SP*/, double potentialPct/*SP*/, boolean globalInhibition/*SP*/,
-                      double localAreaDensity/*SP*/, double numActiveColumnsPerInhArea/*SP*/, double stimulusThreshold/*SP*/,
-                      double synPermInactiveDec/*SP*/, double synPermActiveInc/*SP*/, double synPermConnected/*SP*/,
-                      double synPermBelowStimulusInc/*SP*/, double minPctOverlapDutyCycles/*SP*/,
-                      double minPctActiveDutyCycles/*SP*/,
-                      int dutyCyclePeriod/*SP*/, double maxBoost/*SP*/, int activationThreshold/*TM*/,
-                      int learningRadius/*TM*/, int minThreshold/*TM*/,
-                      int maxNewSynapseCount/*TM*/, int seed, double initialPermanence/*TM*/,
-                      double connectedPermanence/*TM*/, double permanenceIncrement/*TM*/,
-                      double permanenceDecrement/*TM*/, int w/*ENC*/, int n/*ENC*/, int radius/*ENC*/,
-                      int resolution/*ENC*/, boolean periodic/*ENC*/, boolean clipInput/*ENC*/, boolean forced/*ENC*/,
-                      int minval/*ENC*/, int maxval/*ENC*/, String name/*ENC*/, Random random) {
-
-        super();
-
-        //SpatialPooler
-        setInputDimensions(inputDimensions);
-        setColumnDimensions(columnDimensions);
-        setCellsPerColumn(cellsPerColumn);
-        setPotentialRadius(potentialRadius);
-        setPotentialPct(potentialPct);
-        setGlobalInhibition(globalInhibition);
-        setLocalAreaDensity(localAreaDensity);
-        setNumActiveColumnsPerInhArea(numActiveColumnsPerInhArea);
-        setStimulusThreshold(stimulusThreshold);
-        setSynPermInactiveDec(synPermInactiveDec);
-        setSynPermActiveInc(synPermActiveInc);
-        setSynPermConnected(synPermConnected);
-        setSynPermBelowStimulusInc(synPermBelowStimulusInc);
-        setMinPctOverlapDutyCycle(minPctOverlapDutyCycles);
-        setMinPctActiveDutyCycle(minPctActiveDutyCycles);
-        setDutyCyclePeriod(dutyCyclePeriod);
-        setMaxBoost(maxBoost);
-
-        //TemporalMemory
-        setActivationThreshold(activationThreshold);
-        setLearningRadius(learningRadius);
-        setMinThreshold(minThreshold);
-        setMaxNewSynapseCount(maxNewSynapseCount);
-        setSeed(seed);
-        setInitialPermanence(initialPermanence);
-        setConnectedPermanence(connectedPermanence);
-        setPermanenceIncrement(permanenceIncrement);
-        setPermanenceDecrement(permanenceDecrement);
-        setRandom(random);
-    }
-
-    /**
-     * Copy constructor for convenience
+     * Sets the fields specified by this {@code Parameters} on the specified
+     * {@link Connections} object.
      *
-     * @param other
+     * @param cn
      */
-    public Parameters(Parameters other) {
-        for (KEY key : other.getKeysForPresent()) {
-            this.setParameterByKey(key, other.getParameterByKey(key));
+    public void apply(Object cn) {
+        BeanUtil beanUtil = BeanUtil.getInstance();
+        Set<KEY> presentKeys = paramMap.keySet();
+        synchronized (paramMap) {
+            for (KEY key : presentKeys) {
+                beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
+            }
         }
     }
 
-    /**
-     * @return
-     * @deprecated Will have private access, replaced by {@link #setParameterByKey(KEY, Object)}. Need it to to be compatible with EnumMap<Parameters.KEY, Object> p = parameters.getMap() in tests.
-     * Creates and returns an {@link EnumMap} containing the specified keys; whose
-     * values are to be loaded later. The map returned is only created if the internal
-     * reference is null (never been created), therefore the map is a singleton which
-     * cannot be recreated once created.
-     */
-    @Deprecated
-    public EnumMap<Parameters.KEY, Object> getMap() {
-        return paramMap;
-    }
 
     /**
      * Set parameter by Key{@link KEY}
@@ -444,8 +419,43 @@ public class Parameters {
         return paramMap.get(key);
     }
 
-    public Set<KEY> getKeysForPresent() {
-        return paramMap.keySet();
+    /**
+     * @param key
+     * IMPORTANT! This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
+     */
+    public void clearParameter(KEY key) {
+        paramMap.remove(key);
+    }
+
+    /**
+     * Convenience method to log difference this {@code Parameters} and specified
+     * {@link Connections} object.
+     *
+     * @param cn
+     * @return true if find it different
+     */
+    public boolean logDiff(Object cn) {
+        if (cn == null) {
+            throw new IllegalArgumentException("cn Object is required and can not be null");
+        }
+        boolean result = false;
+        BeanUtil beanUtil = BeanUtil.getInstance();
+        BeanUtil.PropertyInfo[] properties = beanUtil.getPropertiesInfoForBean(cn.getClass());
+        for (int i = 0; i < properties.length; i++) {
+            BeanUtil.PropertyInfo property = properties[i];
+            String fieldName = property.getName();
+            KEY propKey = KEY.getKeyByFieldName(property.getName());
+            if (propKey != null) {
+                Object paramValue = this.getParameterByKey(propKey);
+                Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
+                if ((paramValue != null && !paramValue.equals(cnValue)) || (paramValue == null && cnValue != null)) {
+                    result = true;
+                    System.out.println(
+                            "Property:" + fieldName + " is different - CN:" + cnValue + " | PARAM:" + paramValue);
+                }
+            }
+        }
+        return result;
     }
 
     //TODO I'm not sure we need maintain implicit setters below. Kinda contradict unified access with KEYs

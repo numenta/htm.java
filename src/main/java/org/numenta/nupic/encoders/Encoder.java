@@ -103,9 +103,9 @@ public abstract class Encoder {
      */
     protected boolean periodic = true;
     /** The minimum value of the input signal.  */
-    protected double minval = 0;
+    protected double minVal = 0;
     /** The maximum value of the input signal. */
-    protected double maxval = 0;
+    protected double maxVal = 0;
     /** if true, non-periodic inputs smaller than minval or greater
             than maxval will be clipped to minval/maxval */
     protected boolean clipInput;
@@ -289,7 +289,7 @@ public abstract class Encoder {
      * @param minVal
      */
     public void setMinVal(double minVal) {
-    	this.minval = minVal;
+    	this.minVal = minVal;
     }
     
     /**
@@ -297,7 +297,7 @@ public abstract class Encoder {
      * @return
      */
     public double getMinVal() {
-    	return minval;
+    	return minVal;
     }
     
     /**
@@ -305,7 +305,7 @@ public abstract class Encoder {
      * @param maxVal
      */
     public void setMaxVal(double maxVal) {
-    	this.maxval = maxVal;
+    	this.maxVal = maxVal;
     }
     
     /**
@@ -313,7 +313,7 @@ public abstract class Encoder {
      * @return
      */
     public double getMaxVal() {
-    	return maxval;
+    	return maxVal;
     }
     
     /**
