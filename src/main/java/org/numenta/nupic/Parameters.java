@@ -32,6 +32,7 @@ import org.numenta.nupic.util.MersenneTwister;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -65,15 +66,20 @@ public class Parameters {
         defaultParams.put(KEY.RANDOM, new MersenneTwister((int)defaultParams.get(KEY.SEED)));
 
         /////////// Temporal Memory Parameters ///////////
-        defaultParams.put(KEY.ACTIVATION_THRESHOLD, 13);
-        defaultParams.put(KEY.LEARNING_RADIUS, 2048);
-        defaultParams.put(KEY.MIN_THRESHOLD, 10);
-        defaultParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
-        defaultParams.put(KEY.INITIAL_PERMANENCE, 0.21);
-        defaultParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
-        defaultParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
-        defaultParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
-        defaultParams.put(KEY.TM_VERBOSITY, 0);
+        Map<KEY, Object> defaultTemporalParams = new ParametersMap();
+        defaultTemporalParams.put(KEY.COLUMN_DIMENSIONS, new int[]{2048});
+        defaultTemporalParams.put(KEY.CELLS_PER_COLUMN, 32);
+        defaultTemporalParams.put(KEY.ACTIVATION_THRESHOLD, 13);
+        defaultTemporalParams.put(KEY.LEARNING_RADIUS, 2048);
+        defaultTemporalParams.put(KEY.MIN_THRESHOLD, 10);
+        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultTemporalParams.put(KEY.INITIAL_PERMANENCE, 0.21);
+        defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
+        defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
+        defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
+        defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
+        DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
+        defaultParams.putAll(DEFAULTS_TEMPORAL);
 
         /// Spatial Pooler Parameters ///////////
         Map<KEY, Object> defaultSpatialParams = new ParametersMap();
@@ -218,6 +224,7 @@ public class Parameters {
 
         //////////// Category Encoder Parameters /////////////
         CATEGORY_LIST("categoryList", List.class);
+
         private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
 
         static {
