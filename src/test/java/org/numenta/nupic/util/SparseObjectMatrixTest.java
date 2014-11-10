@@ -19,15 +19,12 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.SparseMatrix;
-import org.numenta.nupic.util.SparseObjectMatrix;
-import org.numenta.nupic.util.TypeFactory;
 
 public class SparseObjectMatrixTest {
 

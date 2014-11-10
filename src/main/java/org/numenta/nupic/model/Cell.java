@@ -19,6 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.model;
 
 import java.util.List;

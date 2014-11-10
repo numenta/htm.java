@@ -19,6 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.model;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 
 /**
