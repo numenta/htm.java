@@ -77,7 +77,7 @@ import org.numenta.nupic.util.Tuple;
  * @author Numenta
  * @author David Ray
  */
-public abstract class Encoder {
+public abstract class Encoder<T> {
 	/** Value used to represent no data */
 	public static final double SENTINEL_VALUE_FOR_MISSING_DATA = Double.NaN;
 	
@@ -593,19 +593,7 @@ public abstract class Encoder {
      * 
 	 * @return
 	 */
-	public abstract int[] encodeIntoArray(double inputData, int[] output);
-	
-	/**
-	 * Encodes inputData and puts the encoded value into the numpy output array,
-     * which is a 1-D array of length returned by {@link #getW()}.
-	 *
-     * Note: The numpy output array is reused, so clear it before updating it.
-	 * @param inputData Data to encode. This should be validated by the encoder.
-	 * @param output 1-D array of same length returned by {@link #getW()}
-     * 
-	 * @return
-	 */
-	public abstract int[] encodeIntoArray(String inputData, int[] output);
+	public abstract void encodeIntoArray(T inputData, int[] output);
 	
 	/**
 	 * Set whether learning is enabled.
@@ -630,19 +618,7 @@ public abstract class Encoder {
 	 *  
      * @return	an array with the encoded representation of inputData
 	 */
-	public int[] encode(double inputData) {
-		int[] output = new int[getN()];
-		encodeIntoArray(inputData, output);
-		return output;
-	}
-	
-	/**
-	 * Convenience wrapper for {@link #encodeIntoArray(double, int[])}
-	 * @param inputData		the input scalar
-	 *  
-     * @return	an array with the encoded representation of inputData
-	 */
-	public int[] encode(String inputData) {
+	public int[] encode(T inputData) {
 		int[] output = new int[getN()];
 		encodeIntoArray(inputData, output);
 		return output;

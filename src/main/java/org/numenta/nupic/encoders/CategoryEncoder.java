@@ -52,7 +52,7 @@ import org.numenta.nupic.util.Tuple;
  * @see EncoderResult
  * @see Parameters
  */
-public class CategoryEncoder extends ScalarEncoder {
+public class CategoryEncoder extends Encoder<String> {
 	protected int ncategories;
 	
 	protected TObjectIntMap<String> categoryToIndex = new TObjectIntHashMap<String>();
@@ -62,6 +62,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	
 	protected int width;
 	protected Tuple description;
+
+	private ScalarEncoder scalarEncoder;
 	
 	/**
 	 * Constructs a new {@code CategoryEncoder}
@@ -85,8 +87,9 @@ public class CategoryEncoder extends ScalarEncoder {
 		ncategories = categoryList == null ? 0 : categoryList.size() + 1;
 		minVal = 0;
 		maxVal = ncategories - 1;
-		
-		super.init();
+		scalarEncoder = new ScalarEncoder();
+		scalarEncoder.init();
+
 		
 		indexToCategory.put(0, "<UNKNOWN>");
 		if(categoryList != null && !categoryList.isEmpty()) {
@@ -127,7 +130,7 @@ public class CategoryEncoder extends ScalarEncoder {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int[] encodeIntoArray(String input, int[] output) {
+	public void encodeIntoArray(String input, int[] output) {
 		String val = null;
 		double value = 0;
 		if(input == null) {
@@ -135,7 +138,7 @@ public class CategoryEncoder extends ScalarEncoder {
 		}else{
 			value = categoryToIndex.get(input);
 			value = value == categoryToIndex.getNoEntryValue() ? 0 : value;
-			super.encodeIntoArray(value, output);
+			scalarEncoder.encodeIntoArray(value, output);
 		}
 		
 		if(verbosity >= 2) {
@@ -143,8 +146,6 @@ public class CategoryEncoder extends ScalarEncoder {
 				String.format("input: %s,  val: %s, value: %d, output: %s",
 					input, val, value, Arrays.toString(output)));
 		}
-		
-		return output;
 	}
 
 	/**
@@ -153,7 +154,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// Get the scalar values from the underlying scalar encoder
-		DecodeResult result = super.decode(encoded, parentFieldName);
+		DecodeResult result = scalarEncoder.decode(encoded, parentFieldName);
+		
 		if(result.getFields().size() == 0) {
 			return result;
 		}
@@ -230,7 +232,7 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public <T> List<T> getBucketValues(Class<T> t) {
 		if(bucketValues == null) {
-			SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
+			SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
 			bucketValues = new ArrayList<String>();
 			for(int i = 0;i < numBuckets;i++) {
@@ -324,5 +326,29 @@ public class CategoryEncoder extends ScalarEncoder {
 			this.categoryList = categoryList;
 			return this;
 		}
+	}
+
+	@Override
+	public int getWidth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isDelta() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setLearning(boolean learningEnabled) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Tuple> getDescription() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
