@@ -44,6 +44,9 @@ public class DateEncoderTest {
         //FIXME how to pass the datetime in, it should not be string
         bits = de.encode(dt.toString("yyyy-MM-dd HH:mm:ss"));
 
+        //
+        //dt.getMillis();
+
         // season is aaabbbcccddd (1 bit/month) # TODO should be <<3?
         // should be 000000000111 (centered on month 11 - Nov)
         int[] seasonExpected = {0,0,0,0,0,0,0,0,0,1,1,1};
@@ -77,11 +80,6 @@ public class DateEncoderTest {
     public void testDateEncoder() {
         setUp();
         initDE();
-
-        int[] empty = de.encode(Encoder.SENTINEL_VALUE_FOR_MISSING_DATA);
-        System.out.println("\nEncoded missing data as: " + Arrays.toString(empty));
-        int[] expected = new int[14];
-        assertTrue(Arrays.equals(expected, empty));
 
         List<Tuple> desc = de.getDescription();
         assertNotNull(desc);
