@@ -121,6 +121,16 @@ public class Parameters {
         DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
 
         defaultParams.putAll(DEFAULTS_ENCODER);
+
+        //////////// Date Encoder Parameters /////////////
+        //TODO Should we have something like DEFAULTS_DATE_ENCODER ?
+        defaultParams.put(KEY.SEASON, 0);
+        defaultParams.put(KEY.DAY_OF_WEEK, 0);
+        defaultParams.put(KEY.WEEKEND, 0);
+        defaultParams.put(KEY.HOLIDAY, 0);
+        defaultParams.put(KEY.TIME_OF_DAY, 0);
+        defaultParams.put(KEY.CUSTOM_DAYS, 0);
+
         DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
 
@@ -223,7 +233,15 @@ public class Parameters {
         ENC_VERBOSITY("encVerbosity", Integer.class),
 
         //////////// Category Encoder Parameters /////////////
-        CATEGORY_LIST("categoryList", List.class);
+        CATEGORY_LIST("categoryList", List.class),
+
+        //////////// Date Encoder Parameters /////////////
+        SEASON("season", Integer.class),
+        DAY_OF_WEEK("dayOfWeek", Integer.class),
+        WEEKEND("weekend", Integer.class),
+        HOLIDAY("holiday", Integer.class),
+        TIME_OF_DAY("timeOfDay", Integer.class),
+        CUSTOM_DAYS("customDays", Integer.class);
 
         private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
 
