@@ -9,7 +9,7 @@ import org.numenta.nupic.util.Tuple;
  * @author wilsondy
  *
  */
-public class PassThroughEncoder extends Encoder {
+public class PassThroughEncoder extends Encoder<int[]> {
 	//total #bits in output (must equal input bits * multiply)
 	
 	/**
@@ -34,17 +34,7 @@ public class PassThroughEncoder extends Encoder {
 		return false;
 	}
 
-	@Override
-	public int[] encodeIntoArray(double inputData, int[] output) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int[] encodeIntoArray(String inputData, int[] output) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 	/**
 	 * TODO Why have the output parameter and a return value?
@@ -52,7 +42,7 @@ public class PassThroughEncoder extends Encoder {
 	 * @param output
 	 * @return
 	 */
-	public int[] encodeIntoArray(int[] input, int[] output){
+	public void encodeIntoArray(int[] input, int[] output){
 
 		if( input.length != output.length)
 			throw new IllegalArgumentException(String.format("Different input (%i) and output (%i) sizes", input.length, output.length));
@@ -61,7 +51,6 @@ public class PassThroughEncoder extends Encoder {
 		
 		System.arraycopy(input, 0, output, 0, input.length);
 
-		return output;
 	}
 
 	@Override

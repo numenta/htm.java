@@ -109,9 +109,14 @@ public class CategoryEncoder extends Encoder<String> {
 		ncategories = categoryList == null ? 0 : categoryList.size() + 1;
 		minVal = 0;
 		maxVal = ncategories - 1;
-		scalarEncoder = new ScalarEncoder();
-		scalarEncoder.init();
-
+		scalarEncoder = ScalarEncoder.builder()
+		        .n(this.n)
+		        .w(this.w)
+		        .radius(this.radius)
+		        .minVal(this.minVal)
+		        .maxVal(this.maxVal)
+		        .periodic(this.periodic)
+		        .forced(this.forced).build();
 		
 		indexToCategory.put(0, "<UNKNOWN>");
 		if(categoryList != null && !categoryList.isEmpty()) {
@@ -123,6 +128,10 @@ public class CategoryEncoder extends Encoder<String> {
 		}
 		
 		width = n = w * ncategories;
+		
+	
+		
+		
 		if(getWidth() != width) {
 			throw new IllegalStateException(
 				"Width != w (num bits to represent output item) * #categories");
@@ -352,25 +361,23 @@ public class CategoryEncoder extends Encoder<String> {
 
 	@Override
 	public int getWidth() {
-		// TODO Auto-generated method stub
-		return 0;
+		return getN();
 	}
 
 	@Override
 	public boolean isDelta() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void setLearning(boolean learningEnabled) {
-		// TODO Auto-generated method stub
-		
+		setLearningEnabled(learningEnabled);		
 	}
 
 	@Override
 	public List<Tuple> getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+	ArrayList<Tuple> list = new ArrayList<Tuple>();
+	 list.add(description);
+	 return list;
 	}
 }
