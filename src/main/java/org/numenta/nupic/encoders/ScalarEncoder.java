@@ -19,6 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;

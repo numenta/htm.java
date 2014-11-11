@@ -19,6 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.research;
 
 import java.util.LinkedHashMap;

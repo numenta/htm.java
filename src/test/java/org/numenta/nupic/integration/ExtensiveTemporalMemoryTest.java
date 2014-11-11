@@ -19,7 +19,15 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
+
 package org.numenta.nupic.integration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
@@ -27,13 +35,6 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.util.PatternMachine;
 import org.numenta.nupic.util.SequenceMachine;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 
 /**
