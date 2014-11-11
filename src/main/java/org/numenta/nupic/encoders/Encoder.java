@@ -131,8 +131,8 @@ public abstract class Encoder {
     protected List<?> bucketValues;
     protected LinkedHashMap<EncoderTuple, List<EncoderTuple>> encoders;
     protected List<String> scalarNames;
-    
-    
+
+
     protected Encoder() {}
     
     ///////////////////////////////////////////////////////////

@@ -1,28 +1,19 @@
 package org.numenta.nupic.unit.encoders;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TDoubleArrayList;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.encoders.*;
 import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
 import static org.junit.Assert.*;
 
 public class DateEncoderTest {
     private DateEncoder de;
-    private Parameters parameters;
+    private DateEncoder.Builder builder;
     private DateTime dt;
     private int[] expected;
     private int[] bits;
@@ -30,13 +21,9 @@ public class DateEncoderTest {
     private void setUp() {
         // 3 bits for season, 1 bit for day of week, 3 for weekend, 5 for time of day
         // use of forced is not recommended, used here for readability.
-        parameters = new Parameters();
-        EnumMap<Parameters.KEY, Object> p = parameters.getMap();
-        p.put(KEY.SEASON, 3);
-        p.put(KEY.DAY_OF_WEEK, 1);
-        p.put(KEY.WEEKEND, 3);
-        p.put(KEY.TIME_OF_DAY, 5);
+        builder = DateEncoder.builder();
 
+        builder.season(3).dayOfWeek(1).weekend(3).timeOfDay(5);
 
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
@@ -68,9 +55,7 @@ public class DateEncoderTest {
     }
 
     private void initDE() {
-        de = new DateEncoder();
-        Parameters.apply(de, parameters);
-        de.init();
+        de = builder.build();
     }
 
     /**

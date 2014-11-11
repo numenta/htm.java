@@ -22,23 +22,9 @@
 
 package org.numenta.nupic.encoders;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TDoubleArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
-import org.numenta.nupic.encoders.ScalarEncoder;
 
 /**
  * DOCUMENTATION TAKEN DIRECTLY FROM THE PYTHON VERSION:
@@ -91,15 +77,89 @@ public class DateEncoder extends Encoder {
 
     protected List<Tuple> description;
 
+    protected int season;
+    protected int dayOfWeek;
+    protected int weekend;
+    protected int holiday;
+    protected int timeOfDay;
+    protected int customDays;
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setDescription(List<Tuple> description) {
+        this.description = description;
+    }
+
+    public int getSeason() {
+        return season;
+    }
+
+    public void setSeason(int season) {
+        this.season = season;
+    }
+
+    public int getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public void setDayOfWeek(int dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public int getWeekend() {
+        return weekend;
+    }
+
+    public void setWeekend(int weekend) {
+        this.weekend = weekend;
+    }
+
+    public int getHoliday() {
+        return holiday;
+    }
+
+    public void setHoliday(int holiday) {
+        this.holiday = holiday;
+    }
+
+    public int getTimeOfDay() {
+        return timeOfDay;
+    }
+
+    public void setTimeOfDay(int timeOfDay) {
+        this.timeOfDay = timeOfDay;
+    }
+
+    public int getCustomDays() {
+        return customDays;
+    }
+
+    public void setCustomDays(int customDays) {
+        this.customDays = customDays;
+    }
+
     /**
      * Constructs a new {@code DateEncoder}
      */
-    public DateEncoder(/* self, season=0, dayOfWeek=0, weekend=0, holiday=0, timeOfDay=0, customDays=0,
-                name = '', forced=True */) {
+    public DateEncoder() {}
+
+    /**
+     * Returns a builder for building DateEncoder.
+     * This builder may be reused to produce multiple builders
+     *
+     * @return a {@code DateEncoder.Builder}
+     */
+    public static DateEncoder.Builder builder() {
+        return new DateEncoder.Builder();
     }
 
     /**
      * Init the {@code DateEncoder} with parameters
+     *
+     * season=0, dayOfWeek=0, weekend=0, holiday=0, timeOfDay=0, customDays=0,
+     * name = '', forced=True
      */
     public void init() {
 
@@ -151,5 +211,112 @@ public class DateEncoder extends Encoder {
     @Override
     public <T> List<T> getBucketValues(Class<T> returnType) {
         return null;
+    }
+
+
+    /**
+     * Returns a {@link EncoderBuilder} for constructing {@link DateEncoder}s
+     *
+     * The base class architecture is put together in such a way where boilerplate
+     * initialization can be kept to a minimum for implementing subclasses.
+     * Hopefully! :-)
+     *
+     * @see DateEncoder.Builder#setStuff(int)
+     */
+    public static class Builder extends Encoder.Builder<DateEncoder.Builder, DateEncoder> {
+
+        protected int season;
+        protected int dayOfWeek;
+        protected int weekend;
+        protected int holiday;
+        protected int timeOfDay;
+        protected int customDays;
+
+        private Builder() {}
+
+        @Override
+        public DateEncoder build() {
+            //Must be instantiated so that super class can initialize
+            //boilerplate variables.
+            encoder = new DateEncoder();
+
+            //Call super class here
+            super.build();
+
+            ////////////////////////////////////////////////////////
+            //  Implementing classes would do setting of specific //
+            //  vars here together with any sanity checking       //
+            ////////////////////////////////////////////////////////
+            DateEncoder e = ((DateEncoder)encoder);
+
+            e.setSeason(this.season);
+            e.setDayOfWeek(this.dayOfWeek);
+            e.setWeekend(this.weekend);
+            e.setHoliday(this.holiday);
+            e.setTimeOfDay(this.timeOfDay);
+            e.setCustomDays(this.customDays);
+
+            ((DateEncoder)encoder).init();
+
+            return (DateEncoder)encoder;
+        }
+
+        /**
+         * Set how many bits are used to encode season
+         */
+        public DateEncoder.Builder season(int season) {
+            this.season = season;
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode dayOfWeek
+         */
+        public DateEncoder.Builder dayOfWeek(int dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
+            return this;
+        }
+
+
+        /**
+         * Set how many bits are used to encode holiday
+         */
+        public DateEncoder.Builder holiday(int holiday) {
+            this.holiday = holiday;
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode timeOfDay
+         */
+        public DateEncoder.Builder timeOfDay(int timeOfDay) {
+            this.timeOfDay = timeOfDay;
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode customDays
+         */
+        public DateEncoder.Builder customDays(int customDays) {
+            this.customDays = customDays;
+            return this;
+        }
+
+        /**
+         * Set the name of the encoder
+         */
+        public DateEncoder.Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode weekend
+         */
+        public DateEncoder.Builder weekend(int weekend) {
+            this.weekend = weekend;
+            return this;
+        }
+
     }
 }
