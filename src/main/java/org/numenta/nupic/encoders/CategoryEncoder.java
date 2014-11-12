@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
@@ -109,6 +110,7 @@ public class CategoryEncoder extends Encoder<String> {
 		ncategories = categoryList == null ? 0 : categoryList.size() + 1;
 		minVal = 0;
 		maxVal = ncategories - 1;
+		
 		scalarEncoder = ScalarEncoder.builder()
 		        .n(this.n)
 		        .w(this.w)
@@ -127,10 +129,16 @@ public class CategoryEncoder extends Encoder<String> {
 			}
 		}
 		
+		
 		width = n = w * ncategories;
 		
-	
+		//TODO this is what the CategoryEncoder was doing before I added the ScalarEncoder delegate.
+		//I'm concerned because we're changing n without calling init again on the scalarencoder.  
+		//In other words, if I move the scalarEncoder = ...build() from to here, the test cases fail
+		//which indicates significant fragility and at some level a violation of encapsulation.
+		scalarEncoder.n = n;
 		
+	
 		
 		if(getWidth() != width) {
 			throw new IllegalStateException(
@@ -154,7 +162,7 @@ public class CategoryEncoder extends Encoder<String> {
 	@Override
 	public int[] getBucketIndices(String input) {
 		if(input == null) return null;
-		return super.getBucketIndices(categoryToIndex.get(input));
+		return scalarEncoder.getBucketIndices(categoryToIndex.get(input));
 	}
 	
 	/**
@@ -280,7 +288,7 @@ public class CategoryEncoder extends Encoder<String> {
 	@Override
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		// For the category encoder, the bucket index is the category index
-		List<EncoderResult> bucketInfo = super.getBucketInfo(buckets);
+		List<EncoderResult> bucketInfo = scalarEncoder.getBucketInfo(buckets);
 		
 		int categoryIndex = (int)Math.round((double)bucketInfo.get(0).getValue());
 		String category = indexToCategory.get(categoryIndex);
@@ -294,8 +302,11 @@ public class CategoryEncoder extends Encoder<String> {
 	 */
 	@Override
 	public List<EncoderResult> topDownCompute(int[] encoded) {
-		List<EncoderResult> encoderResult = super.topDownCompute(encoded);
-		return encoderResult;
+		//Get/generate the topDown mapping table
+		SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();		
+		// See which "category" we match the closest.
+		int category = ArrayUtils.argmax(topDownMapping.rightVecProd(encoded));		
+		return getBucketInfo(new int[] { category });
 	}
 
     public List<String> getCategoryList() {
