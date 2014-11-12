@@ -1,4 +1,4 @@
-package org.numenta.nupic.unit.encoders;
+package org.numenta.nupic.encoders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +23,7 @@ public class CategoryEncoderTest {
 	private void setUp() {
         builder =  ((CategoryEncoder.Builder)CategoryEncoder.builder())
             .w(3)
-            .radius(0.0)
+            .radius(0)
             .minVal(0.0)
             .maxVal(8.0)
             .periodic(false)
@@ -39,7 +39,7 @@ public class CategoryEncoderTest {
 		String[] categories = new String[] { "ES", "GB", "US" };
 		
 		setUp();
-		builder.radius(1.0);
+		builder.radius(1);
 		builder.categoryList(Arrays.<String>asList(categories));
 		initCE();
 		
@@ -137,7 +137,7 @@ public class CategoryEncoderTest {
 		categories = new String[] { "cat1", "cat2", "cat3", "cat4", "cat5" };
 		
 		setUp();
-		builder.radius(1.0);
+		builder.radius(1);
 		builder.categoryList(Arrays.<String>asList(categories));
 		initCE();
 		
@@ -162,7 +162,7 @@ public class CategoryEncoderTest {
 		for(int i = 0;i < 9;i++) categories[i] = String.format("cat%d", i + 1);
 		//forced: is not recommended, but is used here for readability.
 		setUp();
-		builder.radius(1.0);
+		builder.radius(1);
 		builder.w(9);
 		builder.forced(true);
 		builder.categoryList(Arrays.<String>asList(categories));

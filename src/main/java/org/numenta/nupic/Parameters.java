@@ -21,6 +21,14 @@
  */
 package org.numenta.nupic;
 
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -29,14 +37,6 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
-
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -49,7 +49,6 @@ import java.util.Set;
  * @see Connections
  * @see ComputeCycle
  */
-@SuppressWarnings("unused")
 public class Parameters {
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;

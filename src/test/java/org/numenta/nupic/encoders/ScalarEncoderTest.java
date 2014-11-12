@@ -1,4 +1,4 @@
-package org.numenta.nupic.unit.encoders;
+package org.numenta.nupic.encoders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -63,7 +63,7 @@ public class ScalarEncoderTest {
 		initSE();
 		
 		assertEquals("scalar", se.getDescription().get(0).get(0));
-		int[] res = se.encode(3);
+		int[] res = se.encode(3.0);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
 		res = se.encode(3.1);
@@ -78,16 +78,16 @@ public class ScalarEncoderTest {
 		res = se.encode(3.7);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(4);
+		res = se.encode(4.0);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(1);
+		res = se.encode(1.0);
 		assertTrue(Arrays.equals(new int[] { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }, res));
 
 		res = se.encode(1.5);
 		assertTrue(Arrays.equals(new int[] { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(7);
+		res = se.encode(7.0);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 }, res));
 		
 		res = se.encode(7.5);
@@ -267,9 +267,9 @@ public class ScalarEncoderTest {
 		
 		System.out.println(String.format("Testing non-periodic encoder encoding resolution of ", se.getResolution()));
 		
-		assertTrue(Arrays.equals(se.encode(1), new int[] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-		assertTrue(Arrays.equals(se.encode(2), new int[] { 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }));
-		assertTrue(Arrays.equals(se.encode(10), new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1 }));
+		assertTrue(Arrays.equals(se.encode(1.0), new int[] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+		assertTrue(Arrays.equals(se.encode(2.0), new int[] { 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }));
+		assertTrue(Arrays.equals(se.encode(10.0), new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1 }));
 		
 		// Test that we get the same encoder when we construct it using resolution
 	    // instead of n

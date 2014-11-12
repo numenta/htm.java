@@ -1,5 +1,6 @@
 package org.numenta.nupic.util;
 
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -25,8 +26,21 @@ public class ArrayUtils {
 		public boolean eval(int i) { return i == 1; }
 	};
 	
-	public static void main(String[] args) {
-		System.out.println(ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 }));
+	/**
+	 * Returns a flag indicating whether the container list contains an
+	 * array which matches the specified match array.
+	 * 
+	 * @param match			the array to match
+	 * @param container		the list of arrays to test
+	 * @return	true if so, false if not
+	 */	
+	public static boolean contains(int[] match, List<int[]> container) {
+		int len = container.size();
+		for(int i = 0;i < len;i++) {
+			if(Arrays.equals(match, container.get(i)))
+				return true;
+		}
+		return false;
 	}
 	/**
 	 * Utility to compute a flat index from coordinates.
@@ -1189,6 +1203,22 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a new 2D array containing the items specified from
+     * the source array by the indexes specified.
+     * 
+     * @param source
+     * @param indexes
+     * @return
+     */
+    public static int[][] sub(int[][] source, int[] indexes) {
+    	int[][] retVal = new int[indexes.length][];
+    	for(int i = 0;i < indexes.length;i++) {
+    		retVal[i] = source[indexes[i]];
+    	}
+    	return retVal;
+    }
+    
+    /**
      * Returns the minimum value in the specified array
      * @param array
      * @return
@@ -1247,6 +1277,25 @@ public class ArrayUtils {
     	int[] arg2ones = ArrayUtils.where(arg2, WHERE_1);
     	ArrayUtils.setIndexesTo(retVal, arg1ones, 1);
     	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
+    	return retVal;
+    }
+    
+    /**
+     * Returns a new int array containing the or'd on bits of
+     * both arg1 and arg2.
+     * 
+     * @param arg1
+     * @param arg2
+     * @return
+     */
+    public static int[] and(int[] arg1, int[] arg2) {
+    	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
+    	TIntHashSet arg1ones = new TIntHashSet(ArrayUtils.where(arg1, WHERE_1));
+    	TIntHashSet arg2ones = new TIntHashSet(ArrayUtils.where(arg2, WHERE_1));
+    	for(TIntIterator it = arg1ones.iterator();it.hasNext();) {
+    		int idx = it.next();
+    		retVal[idx] = arg2ones.contains(idx) ? 1 : 0;
+    	}
     	return retVal;
     }
 }
