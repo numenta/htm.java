@@ -153,7 +153,7 @@ import org.numenta.nupic.util.Tuple;
  * 
  * @author metaware
  */
-public class ScalarEncoder extends Encoder {
+public class ScalarEncoder extends Encoder<Double> {
 	/**
 	 * Constructs a new {@code ScalarEncoder}
 	 */
@@ -434,9 +434,10 @@ public class ScalarEncoder extends Encoder {
 	 * @return
 	 */
 	@Override
-	public int[] encodeIntoArray(double input, int[] output) {
+	public void encodeIntoArray(Double input, int[] output) {
 		if(Double.isNaN(input)) {
-			return new int[0];
+			output = new int[0];
+			return;
 		}
 		
 		Integer bucketVal = getFirstOnBit(input);
@@ -472,16 +473,6 @@ public class ScalarEncoder extends Encoder {
 			System.out.println("output: " + Arrays.toString(output));
 			System.out.println("input desc: " + decode(output, ""));
 		}
-		
-		return output;
-	}
-	
-	/**
-	 * NO-OP 
-	 */
-	@Override
-	public int[] encodeIntoArray(String inputData, int[] output) {
-		return null;
 	}
 
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
