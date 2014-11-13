@@ -100,7 +100,7 @@ public class CategoryEncoder extends Encoder<String> {
 	 * 
 	 * @return a {@code CategoryEncoder.Builder}
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	public static Encoder.Builder builder() {
 		return new CategoryEncoder.Builder();
 	}
@@ -133,7 +133,7 @@ public class CategoryEncoder extends Encoder<String> {
 		width = n = w * ncategories;
 		
 		//TODO this is what the CategoryEncoder was doing before I added the ScalarEncoder delegate.
-		//I'm concerned because we're changing n without calling init again on the scalarencoder.  
+		//I'm concerned because we're changing n without calling init again on the scalar encoder.  
 		//In other words, if I move the scalarEncoder = ...build() from to here, the test cases fail
 		//which indicates significant fragility and at some level a violation of encapsulation.
 		scalarEncoder.n = n;

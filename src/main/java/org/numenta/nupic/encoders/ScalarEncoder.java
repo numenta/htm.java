@@ -702,11 +702,11 @@ public class ScalarEncoder extends Encoder<Double> {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * @param <T>	the input value, in this case a double
+	 * @param <S>	the input value, in this case a double
 	 * @return	a list of one input double
 	 */
 	@Override
-	public <T> TDoubleList getScalars(T d) {
+	public <S> TDoubleList getScalars(S d) {
 		TDoubleList retVal = new TDoubleArrayList();
 		retVal.add((Double)d);
 		return retVal;
@@ -730,7 +730,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> List<T> getBucketValues(Class<T> t) {
+	public <S> List<S> getBucketValues(Class<S> t) {
 		if(bucketValues == null) {
 			SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
@@ -739,7 +739,7 @@ public class ScalarEncoder extends Encoder<Double> {
 				((List<Double>)bucketValues).add((Double)getBucketInfo(new int[] { i }).get(0).get(1));
 			}
 		}
-		return (List<T>)bucketValues;
+		return (List<S>)bucketValues;
 	}
 	
 	/**

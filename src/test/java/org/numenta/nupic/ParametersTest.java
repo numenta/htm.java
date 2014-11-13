@@ -23,7 +23,9 @@
 package org.numenta.nupic;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Test;
@@ -37,51 +39,43 @@ public class ParametersTest {
     public void testApply() {
         DummyContainer dc = new DummyContainer();
         Parameters params = Parameters.getAllDefaultParameters();
-        params.setParameterByKey(Parameters.KEY.MINVAL, 10.0);
-        params.setParameterByKey(Parameters.KEY.MAXVAL, 20.0);
+        params.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        params.setParameterByKey(Parameters.KEY.POTENTIAL_PCT, 20.0);
         params.setParameterByKey(Parameters.KEY.CELLS_PER_COLUMN, null);
         params.apply(dc);
-        assertEquals(10.0, dc.getMinVal(), 0);
-        assertEquals(20.0, dc.getMaxVal(), 0);
+        assertTrue(Arrays.equals(new int[] { 2048 }, dc.getColumnDimensions()));
+        assertEquals(20.0, dc.getPotentialPct(), 0);
     }
 
     @Test
     public void testDefaults() {
-       Parameters params = Parameters.getAllDefaultParameters();
+        Parameters params = Parameters.getAllDefaultParameters();
         assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), 32);
         assertEquals(params.getParameterByKey(Parameters.KEY.SEED), 42);
         assertEquals(true, ((Random)params.getParameterByKey(Parameters.KEY.RANDOM)).getClass().equals(MersenneTwister.class));
     }
 
-    @Test
-    public void testCopy() {
-        Parameters params = Parameters.getAllDefaultParameters();
-        //assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), copy.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN));
-        //assertEquals(params.getParameterByKey(Parameters.KEY.SEED), copy.getParameterByKey(Parameters.KEY.SEED));
-    }
-
-
     public static class DummyContainerBase {
-        private double minVal = 0;
+        private int[] columnDimensions;
 
-        public double getMinVal() {
-            return minVal;
+        public int[] getColumnDimensions() {
+            return columnDimensions;
         }
 
-        public void setMinVal(double minVal) {
-            this.minVal = minVal;
+        public void setColumnDimensions(int[] columnDimensions) {
+            this.columnDimensions = columnDimensions;
         }
     }
 
     public static class DummyContainer extends DummyContainerBase {
-        private double maxVal = 0;
+        private double potentialPct = 0;
 
-        public double getMaxVal() {
-            return maxVal;
+        public double getPotentialPct() {
+            return potentialPct;
         }
 
-        public void setMaxVal(double maxVal) {
-            this.maxVal = maxVal;
+        public void setPotentialPct(double potentialPct) {
+            this.potentialPct = potentialPct;
         }
     }
 
