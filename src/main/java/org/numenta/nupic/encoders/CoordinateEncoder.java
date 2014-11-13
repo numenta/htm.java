@@ -13,7 +13,7 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
 
-public class CoordinateEncoder extends Encoder implements CoordinateOrder {
+public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder {
 	private static Random random = new MersenneTwister();
 	
 	/**
@@ -134,7 +134,7 @@ public class CoordinateEncoder extends Encoder implements CoordinateOrder {
 	}
 	
 	@Override
-	public int[] encodeIntoArray(int[] inputData, int[] output) {
+	public void encodeIntoArray(int[] inputData, int[] output) {
 		List<int[]> neighs = neighbors(inputData, radius);
 		int[][] neighbors = new int[neighs.size()][];
 		for(int i = 0;i < neighs.size();i++) neighbors[i] = neighs.get(i);
@@ -145,17 +145,6 @@ public class CoordinateEncoder extends Encoder implements CoordinateOrder {
 			int bit = bitForCoordinate(winners[i], n);
 			output[bit] = 1;
 		}
-		return output;
-	}
-
-	@Override
-	public int[] encodeIntoArray(double inputData, int[] output) {
-		throw new UnsupportedOperationException("Not suported.");
-	}
-
-	@Override
-	public int[] encodeIntoArray(String inputData, int[] output) {
-		throw new UnsupportedOperationException("Not suported.");
 	}
 
 	@Override

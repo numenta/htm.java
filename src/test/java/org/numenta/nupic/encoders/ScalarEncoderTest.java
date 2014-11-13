@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.encoders;
 
 import static org.junit.Assert.assertEquals;
@@ -78,16 +99,16 @@ public class ScalarEncoderTest {
 		res = se.encode(3.7);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(4.0);
+		res = se.encode(4d);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(1.0);
+		res = se.encode(1d);
 		assertTrue(Arrays.equals(new int[] { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }, res));
 
 		res = se.encode(1.5);
 		assertTrue(Arrays.equals(new int[] { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
-		res = se.encode(7.0);
+		res = se.encode(7d);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 }, res));
 		
 		res = se.encode(7.5);
@@ -267,9 +288,9 @@ public class ScalarEncoderTest {
 		
 		System.out.println(String.format("Testing non-periodic encoder encoding resolution of ", se.getResolution()));
 		
-		assertTrue(Arrays.equals(se.encode(1.0), new int[] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-		assertTrue(Arrays.equals(se.encode(2.0), new int[] { 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }));
-		assertTrue(Arrays.equals(se.encode(10.0), new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1 }));
+		assertTrue(Arrays.equals(se.encode(1d), new int[] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+		assertTrue(Arrays.equals(se.encode(2d), new int[] { 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }));
+		assertTrue(Arrays.equals(se.encode(10d), new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1 }));
 		
 		// Test that we get the same encoder when we construct it using resolution
 	    // instead of n
