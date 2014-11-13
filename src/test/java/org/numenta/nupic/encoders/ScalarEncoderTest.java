@@ -19,8 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-
-package org.numenta.nupic.unit.encoders;
+package org.numenta.nupic.encoders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -85,7 +84,7 @@ public class ScalarEncoderTest {
 		initSE();
 		
 		assertEquals("scalar", se.getDescription().get(0).get(0));
-		int[] res = se.encode(3d);
+		int[] res = se.encode(3.0);
 		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
 		
 		res = se.encode(3.1);

@@ -23,7 +23,10 @@
 package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -73,6 +76,34 @@ public class ArrayUtilsTest {
 		a = 2;
 		n = 10;
 		assertEquals(2, ArrayUtils.modulo(a, n));
+	}
+	
+	@Test
+	public void testAnd() {
+		int[] a = new int[] { 0, 0, 0, 0, 1, 1, 1 };
+		int[] b = new int[] { 0, 0, 0, 0, 1, 1, 1 };
+		int[] result = ArrayUtils.and(a, b);
+		assertTrue(Arrays.equals(a , result));
+		
+		a = new int[] { 0, 0, 0, 0, 1, 0, 1 };
+		result = ArrayUtils.and(a, b);
+		assertTrue(Arrays.equals(a, result));
+		
+		a = new int[] { 0, 0, 0, 0, 0, 0, 0 };
+		result = ArrayUtils.and(a, b);
+		assertTrue(Arrays.equals(a, result));
+		
+		a = new int[] { 1, 1, 1, 1, 0, 0, 0 };
+		int[] expected = new int[] { 0, 0, 0, 0, 0, 0, 0 };
+		result = ArrayUtils.and(a, b);
+		assertTrue(Arrays.equals(expected, result));
+	}
+	
+	@Test
+	public void testBitsToString() {
+		String expected = "c....***";
+		String result = ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 });
+		assertEquals(expected, result);
 	}
 
 }

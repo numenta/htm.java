@@ -447,7 +447,7 @@ public abstract class Encoder<T> {
      * @param offset	the offset of the encoded output the specified encoder
      * 					was used to encode.
      */
-    public void addEncoder(Encoder parent, String name, Encoder child, int offset) {
+    public void addEncoder(Encoder<T> parent, String name, Encoder<T> child, int offset) {
     	if(encoders == null) {
     		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
     	}
@@ -465,7 +465,7 @@ public abstract class Encoder<T> {
      * @param e		the Encoder the return value should contain
      * @return		the {@link Tuple} containing the specified {@link Encoder}
      */
-    public EncoderTuple getEncoderTuple(Encoder e) {
+    public EncoderTuple getEncoderTuple(Encoder<T> e) {
     	if(encoders == null) {
     		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
     	}
@@ -485,7 +485,7 @@ public abstract class Encoder<T> {
      * @param e		the parent {@link Encoder} whose child Encoder Tuples are being returned
      * @return		the list of child {@link Encoder} {@link Tuple}s
      */
-    public List<EncoderTuple> getEncoders(Encoder e) {
+    public List<EncoderTuple> getEncoders(Encoder<T> e) {
     	return getEncoders().get(getEncoderTuple(e));
     }
     
@@ -521,7 +521,7 @@ public abstract class Encoder<T> {
      * 
      * @return	List<FieldMetaType>
      */
-    public List<FieldMetaType> getFlattenedFieldTypeList(Encoder e) { 
+    public List<FieldMetaType> getFlattenedFieldTypeList(Encoder<T> e) { 
     	if(decoderFieldTypes == null) {
     		decoderFieldTypes = new HashMap<Tuple, List<FieldMetaType>>();
     	}
@@ -606,10 +606,10 @@ public abstract class Encoder<T> {
 	 * This method is called by the model to set the statistics like min and
      * max for the underlying encoders if this information is available.
 	 * @param	fieldName			fieldName name of the field this encoder is encoding, provided by
-          							{@link MultiEncoder}	
+     *     							{@link MultiEncoder}	
 	 * @param	fieldStatistics		fieldStatistics dictionary of dictionaries with the first level being
-          							the fieldName and the second index the statistic ie:
-          							fieldStatistics['pounds']['min']
+     *     							the fieldName and the second index the statistic ie:
+     *     							fieldStatistics['pounds']['min']
 	 */
 	public void setFieldStats(String fieldName, Map<String, Double> fieldStatistics) {}
 	
@@ -634,12 +634,13 @@ public abstract class Encoder<T> {
      * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<String> getScalarNames(String parentFieldName) {
 		List<String> names = new ArrayList<String>();
 		if(getEncoders() != null) {
 			List<EncoderTuple> encoders = getEncoders(this);
 			for(Tuple tuple : encoders) {
-				List<String> subNames = ((Encoder)tuple.get(1)).getScalarNames(getName());
+				List<String> subNames = ((Encoder<T>)tuple.get(1)).getScalarNames(getName());
 				List<String> hierarchicalNames = new ArrayList<String>();
 				if(parentFieldName != null) {
 					for(String name : subNames) {
@@ -665,6 +666,7 @@ public abstract class Encoder<T> {
      * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<FieldMetaType> getDecoderOutputFieldTypes() {
 		if(getFlattenedFieldTypeList() != null) {
 			return getFlattenedFieldTypeList();
@@ -672,7 +674,7 @@ public abstract class Encoder<T> {
 		
 		List<FieldMetaType> retVal = new ArrayList<FieldMetaType>();
 		for(Tuple t : getEncoders(this)) {
-			List<FieldMetaType> subTypes = ((Encoder)t.get(1)).getDecoderOutputFieldTypes();
+			List<FieldMetaType> subTypes = ((Encoder<T>)t.get(1)).getDecoderOutputFieldTypes();
 			retVal.addAll(subTypes);
 		}
 		setFlattenedFieldTypeList(retVal);
@@ -705,13 +707,14 @@ public abstract class Encoder<T> {
      * 
 	 * @return
 	 */
-	public List<Encoder> getEncoderList() {
-		List<Encoder> encoders = new ArrayList<Encoder>();
+	@SuppressWarnings("unchecked")
+	public List<Encoder<T>> getEncoderList() {
+		List<Encoder<T>> encoders = new ArrayList<Encoder<T>>();
 		
 		List<EncoderTuple> registeredList = getEncoders(this);
 		if(registeredList != null && !registeredList.isEmpty()) {
 			for(Tuple t : registeredList) {
-				List<Encoder> subEncoders = ((Encoder)t.get(1)).getEncoderList();
+				List<Encoder<T>> subEncoders = ((Encoder<T>)t.get(1)).getEncoderList();
 				encoders.addAll(subEncoders);
 			}
 		}else{
@@ -735,11 +738,11 @@ public abstract class Encoder<T> {
      * of the inputData with the scalar value returned from topDownCompute() on a
      * top-down representation to evaluate prediction accuracy, for example.
      * 
-     * @param <T>  the specifically typed input object
+     * @param <S>  the specifically typed input object
      * 
 	 * @return
 	 */
-	public <T> TDoubleList getScalars(T d) {
+	public <S> TDoubleList getScalars(S d) {
 		TDoubleList retVals = new TDoubleArrayList();
 		double inputData = (Double)d;
 		List<EncoderTuple> encoders = getEncoders(this);
@@ -761,15 +764,14 @@ public abstract class Encoder<T> {
 	 * 
      * This method is essentially the same as getScalars() except that it returns
      * strings
-	 * @param inputData The input data in the format it is received from the data source
-	 * @param inputData		the input data object
+	 * @param <S> 	The input data in the format it is received from the data source
 	 * 
      * @return A list of values, in the same format and in the same order as they
      * are returned by topDownCompute.
      * 
 	 * @return	list of encoded values in String form
 	 */
-	public <T> List<String> getEncodedValues(T inputData) {
+	public <S> List<String> getEncodedValues(S inputData) {
 		List<String> retVals = new ArrayList<String>();
 		Map<EncoderTuple, List<EncoderTuple>> encoders = getEncoders();
 		if(encoders != null && encoders.size() > 0) {
@@ -1038,7 +1040,7 @@ public abstract class Encoder<T> {
 			
 			int[] fieldOutput = ArrayUtils.sub(encoded, ArrayUtils.range((Integer)threeFieldsTuple.get(2), nextOffset));
 			
-			Tuple result = ((Encoder)threeFieldsTuple.get(1)).decode(fieldOutput, parentName);
+			Tuple result = ((Encoder<T>)threeFieldsTuple.get(1)).decode(fieldOutput, parentName);
 			
 			fieldsMap.putAll((Map<String, Tuple>)result.get(0));
 			fieldsOrder.addAll((List<String>)result.get(1));
@@ -1086,7 +1088,7 @@ public abstract class Encoder<T> {
      * @return  list of items, each item representing the bucket value for that
      *          bucket.
 	 */
-	public abstract <T> List<T> getBucketValues(Class<T> returnType);
+	public abstract <S> List<S> getBucketValues(Class<S> returnType);
 	
 	/**
 	 * Returns a list of {@link EncoderResult}s describing the inputs for
@@ -1098,6 +1100,7 @@ public abstract class Encoder<T> {
 	 *
      * @return A list of {@link EncoderResult}s. Each EncoderResult has
 	 */
+	@SuppressWarnings("unchecked")
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		//Concatenate the results from bucketInfo on each child encoder
 		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
@@ -1105,7 +1108,7 @@ public abstract class Encoder<T> {
 		for(EncoderTuple encoderTuple : getEncoders(this)) {
 			int nextBucketOffset = -1;
 			List<EncoderTuple> childEncoders = null;
-			if((childEncoders = getEncoders(encoderTuple.getEncoder())) != null) {
+			if((childEncoders = getEncoders((Encoder<T>)encoderTuple.getEncoder())) != null) {
 				nextBucketOffset = bucketOffset + childEncoders.size();
 			}else{
 				nextBucketOffset = bucketOffset + 1;
@@ -1151,6 +1154,7 @@ public abstract class Encoder<T> {
      *                          encode(), an identical bit-array should be
      *                          returned.
 	 */
+	@SuppressWarnings("unchecked")
 	public List<EncoderResult> topDownCompute(int[] encoded) {
 		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
 		
@@ -1158,7 +1162,7 @@ public abstract class Encoder<T> {
 		int len = encoders.size();
 		for(int i = 0;i < len;i++) {
 			int offset = (int)encoders.get(i).get(2);
-			Encoder encoder = (Encoder)encoders.get(i).get(1);
+			Encoder<T> encoder = (Encoder<T>)encoders.get(i).get(1);
 			
 			int nextOffset;
 			if(i < len - 1) {
@@ -1229,7 +1233,7 @@ public abstract class Encoder<T> {
 	 * @param <T>
 	 */
 	@SuppressWarnings("unchecked")
-	public static abstract class Builder<K, T> {
+	public static abstract class Builder<K, E> {
 		protected int n;
 		protected int w;
 		protected int encVerbosity;
@@ -1242,9 +1246,9 @@ public abstract class Encoder<T> {
 		protected boolean forced;
 		protected String name;
 		
-		protected Encoder encoder;
+		protected Encoder<?> encoder;
 		
-		public T build() {
+		public E build() {
 			if(encoder == null) {
 				throw new IllegalStateException("Subclass did not instantiate builder type " +
 					"before calling this method!");
@@ -1261,7 +1265,7 @@ public abstract class Encoder<T> {
 			encoder.setForced(forced);
 			encoder.setName(name);
 			
-			return (T)encoder;
+			return (E)encoder;
 		}
 		
 		public K n(int n) {

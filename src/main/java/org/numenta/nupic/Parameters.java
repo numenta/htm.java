@@ -25,7 +25,6 @@ package org.numenta.nupic;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -50,13 +49,11 @@ import org.numenta.nupic.util.MersenneTwister;
  * @see Connections
  * @see ComputeCycle
  */
-@SuppressWarnings("unused")
 public class Parameters {
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
-    private static final Map<KEY, Object> DEFAULTS_ENCODER;
-
+    
 
     static {
         Map<KEY, Object> defaultParams = new ParametersMap();
@@ -105,22 +102,6 @@ public class Parameters {
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
 
-        //////////// Encoder Parameters ///////////
-        Map<KEY, Object> defaultEncoderParams = new ParametersMap();
-        defaultEncoderParams.put(KEY.W, 0);
-        defaultEncoderParams.put(KEY.MINVAL, .0);
-        defaultEncoderParams.put(KEY.MAXVAL, .0);
-        defaultEncoderParams.put(KEY.PERIODIC, false);
-        defaultEncoderParams.put(KEY.N, 0);
-        defaultEncoderParams.put(KEY.RADIUS, .0);
-        defaultEncoderParams.put(KEY.RESOLUTION, .0);
-        defaultEncoderParams.put(KEY.NAME, "None");
-        defaultEncoderParams.put(KEY.CLIP_INPUT, false);
-        defaultEncoderParams.put(KEY.FORCED, false);
-        defaultEncoderParams.put(KEY.ENC_VERBOSITY, 0);
-        DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
-
-        defaultParams.putAll(DEFAULTS_ENCODER);
         DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
 
@@ -207,23 +188,7 @@ public class Parameters {
         MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),//TODO add range here?
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
-        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
-
-        //////////// Encoder Parameters ///////////
-        W("w", Integer.class),
-        MINVAL("minVal", Double.class),
-        MAXVAL("maxVal", Double.class),
-        PERIODIC("periodic", Boolean.class),
-        N("n", Integer.class),
-        RADIUS("radius", Double.class),
-        RESOLUTION("resolution", Double.class),
-        NAME("name", String.class),
-        CLIP_INPUT("clipInput", Boolean.class),
-        FORCED("forced", Boolean.class),
-        ENC_VERBOSITY("encVerbosity", Integer.class),
-
-        //////////// Category Encoder Parameters /////////////
-        CATEGORY_LIST("categoryList", List.class);
+        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10);
 
         private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
 
@@ -361,11 +326,6 @@ public class Parameters {
      *
      * @return {@link Parameters} object
      */
-    public static Parameters getEncoderDefaultParameters() {
-        return getParameters(DEFAULTS_ENCODER);
-    }
-
-
     private static Parameters getParameters(Map<KEY, Object> map) {
         Parameters result = new Parameters();
         for (KEY key : map.keySet()) {

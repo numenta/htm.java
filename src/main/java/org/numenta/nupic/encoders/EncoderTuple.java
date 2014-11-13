@@ -42,7 +42,7 @@ public class EncoderTuple extends Tuple {
 	 * 					encoder encodes/decodes. (see  {@link ScalarEncoder#getFirstOnBit(
 	 * 						org.numenta.nupic.research.Connections, double)})
 	 */
-	public EncoderTuple(String name, Encoder e, int offset) {
+	public EncoderTuple(String name, Encoder<?> e, int offset) {
 		super(3, name, e, offset);
 		if(name == null) throw new IllegalArgumentException("Can't instantiate an EncoderTuple " +
 			" with a null Name");
@@ -62,8 +62,8 @@ public class EncoderTuple extends Tuple {
 	 * Returns this {@link Encoder}
 	 * @return
 	 */
-	public Encoder getEncoder() {
-		return (Encoder)get(1);
+	public Encoder<?> getEncoder() {
+		return (Encoder<?>)get(1);
 	}
 	
 	/**
