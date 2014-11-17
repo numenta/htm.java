@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.util;
 
-import gnu.trove.list.TIntList;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,9 +35,9 @@ import static org.junit.Assert.fail;
 public class ArrayUtilsTest {
 
     @Test
-    public void testRecursiveCoordinatesAssemble() {
-        /*Create huge 4 dimensional matrix*/
-        int dimSize = 10, dimNumber = 4;
+    public void testRecursiveCoordinatesAssemble() throws InterruptedException {
+        /*Create huge 5 dimensional matrix*/
+        int dimSize = 14, dimNumber = 5;
         int[] dimCoordinates = new int[dimSize];
         List<int[]> dimensions = new ArrayList<int[]>();
         for (int i = 0; i < dimNumber; i++) {
@@ -47,12 +46,12 @@ public class ArrayUtilsTest {
             }
             dimensions.add(dimCoordinates);
         }
-        List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
+        List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
         /*
         *If uncomment below - will fail with StackOverflowError
         */
         //List<TIntList> neighborList = ArrayUtils.dimensionsToCoordinateListOld(dimensions);
-        System.out.print("neighborList:" + neighborList);
+        //System.out.print("neighborList:" + neighborList);
 
     }
 

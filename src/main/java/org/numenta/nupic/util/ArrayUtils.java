@@ -680,9 +680,9 @@ public class ArrayUtils {
     private static class CoordinateAssembler {
             final private int[] position;
             final private List<int[]> dimensions;
-            final List<TIntList> result = new ArrayList<TIntList>();
+            final List<int[]> result = new ArrayList<int[]>();
 
-            public static List<TIntList> assemble(List<int[]> dimensions) {
+            public static List<int[]> assemble(List<int[]> dimensions) {
                 CoordinateAssembler assembler = new CoordinateAssembler(dimensions);
                 assembler.process(dimensions.size());
                 return assembler.result;
@@ -695,10 +695,8 @@ public class ArrayUtils {
 
             private void process(int level) {
                 if (level == 0) {// terminating condition
-                    TIntList coordinates = new TIntArrayList();
-                    for (int i = 0; i < position.length; i++) {
-                        coordinates.add(position[i]);
-                    }
+                    int[] coordinates = new int[position.length];
+                    System.arraycopy(position, 0, coordinates, 0, position.length);
                     result.add(coordinates);
                 } else {// inductive condition
                     int index = dimensions.size() - level;
@@ -720,7 +718,7 @@ public class ArrayUtils {
      *                      of an n-dimensional array.
      * @return  a list of n-dimensional coordinates in row-major format.
      */
-    public static List<TIntList> dimensionsToCoordinateList(List<int[]> dimensions) {
+    public static List<int[]> dimensionsToCoordinateList(List<int[]> dimensions) {
         /*int[] depthIndexes = new int[dimensions.size()];
         for(int i = 0;i < dimensions.size();i++) {
             depthIndexes[i] = 0;
