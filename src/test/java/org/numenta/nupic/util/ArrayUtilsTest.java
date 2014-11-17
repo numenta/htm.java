@@ -46,7 +46,11 @@ public class ArrayUtilsTest {
             }
             dimensions.add(dimCoordinates);
         }
+        long startTime = System.currentTimeMillis();
         List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
+        long take = System.currentTimeMillis() - startTime;
+        System.out.print("Execute in:" + take + " milliseconds");
+
         /*
         *If uncomment below - will fail with StackOverflowError
         */
