@@ -673,6 +673,42 @@ public class ArrayUtils {
         Arrays.sort(result);
         return result;
     }
+
+    /**
+    * Helper Class for recursive coordinate assembling
+    */
+    private static class CoordinateAssembler {
+            final private int[] position;
+            final private List<int[]> dimensions;
+            final List<int[]> result = new ArrayList<int[]>();
+
+            public static List<int[]> assemble(List<int[]> dimensions) {
+                CoordinateAssembler assembler = new CoordinateAssembler(dimensions);
+                assembler.process(dimensions.size());
+                return assembler.result;
+            }
+
+            private CoordinateAssembler(List<int[]> dimensions) {
+                this.dimensions = dimensions;
+                position = new int[dimensions.size()];
+            }
+
+            private void process(int level) {
+                if (level == 0) {// terminating condition
+                    int[] coordinates = new int[position.length];
+                    System.arraycopy(position, 0, coordinates, 0, position.length);
+                    result.add(coordinates);
+                } else {// inductive condition
+                    int index = dimensions.size() - level;
+                    int[] currentDimension = dimensions.get(index);
+                    for (int i = 0; i < currentDimension.length; i++) {
+                        position[index] = currentDimension[i];
+                        process(level - 1);
+                    }
+                }
+            }
+        }
+
     
     /**
      * Called to merge a list of dimension arrays into a sequential row-major indexed
@@ -682,15 +718,27 @@ public class ArrayUtils {
      *                      of an n-dimensional array.
      * @return  a list of n-dimensional coordinates in row-major format.
      */
-    public static List<TIntList> dimensionsToCoordinateList(List<int[]> dimensions) {
-        int[] depthIndexes = new int[dimensions.size()];
+    public static List<int[]> dimensionsToCoordinateList(List<int[]> dimensions) {
+        /*int[] depthIndexes = new int[dimensions.size()];
         for(int i = 0;i < dimensions.size();i++) {
             depthIndexes[i] = 0;
         }
         List<TIntList> retVal = new ArrayList<TIntList>();
         recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
         
-        return retVal;
+        return retVal;*/
+        //Above replaced by following, where recursion is limited to dimensions size
+        return CoordinateAssembler.assemble(dimensions);
+    }
+
+    public static List<TIntList> dimensionsToCoordinateListOld(List<int[]> dimensions) {
+         int[] depthIndexes = new int[dimensions.size()];
+         for(int i = 0;i < dimensions.size();i++) {
+             depthIndexes[i] = 0;
+         }
+         List<TIntList> retVal = new ArrayList<TIntList>();
+         recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
+         return retVal;
     }
     
     /**
