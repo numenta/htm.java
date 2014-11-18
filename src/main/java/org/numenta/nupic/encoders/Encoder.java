@@ -36,7 +36,6 @@ import java.util.Map;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
