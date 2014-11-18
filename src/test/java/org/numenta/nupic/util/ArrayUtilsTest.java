@@ -26,11 +26,34 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
 public class ArrayUtilsTest {
+
+    @Test
+    public void testRecursiveCoordinatesAssemble() throws InterruptedException {
+        /*Create huge 5 dimensional matrix*/
+        int dimSize = 14, dimNumber = 5;
+        int[] dimCoordinates = new int[dimSize];
+        List<int[]> dimensions = new ArrayList<int[]>();
+        for (int i = 0; i < dimNumber; i++) {
+            for (int j = 0; j < dimSize; j++) {
+                dimCoordinates[j] = j;
+            }
+            dimensions.add(dimCoordinates);
+        }
+        long startTime = System.currentTimeMillis();
+        
+        List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
+        long take = System.currentTimeMillis() - startTime;
+        System.out.print("Execute in:" + take + " milliseconds");
+
+        assertEquals(neighborList.size(), 537824);
+    }
 
 	/**
 	 * Python does modulus operations differently than the rest of the world

@@ -776,7 +776,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 		
 		// See which "category" we match the closest.
-		int category = ArrayUtils.argmax(topDownMapping.rightVecProd(encoded));
+		int category = ArrayUtils.argmax(rightVecProd(topDownMapping, encoded));
 		
 		return getBucketInfo(new int[] { category });
 	}

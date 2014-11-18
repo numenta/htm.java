@@ -725,6 +725,42 @@ public class ArrayUtils {
         Arrays.sort(result);
         return result;
     }
+
+    /**
+    * Helper Class for recursive coordinate assembling
+    */
+    private static class CoordinateAssembler {
+        final private int[] position;
+        final private List<int[]> dimensions;
+        final List<int[]> result = new ArrayList<int[]>();
+
+        public static List<int[]> assemble(List<int[]> dimensions) {
+            CoordinateAssembler assembler = new CoordinateAssembler(dimensions);
+            assembler.process(dimensions.size());
+            return assembler.result;
+        }
+
+        private CoordinateAssembler(List<int[]> dimensions) {
+            this.dimensions = dimensions;
+            position = new int[dimensions.size()];
+        }
+
+        private void process(int level) {
+            if (level == 0) {// terminating condition
+                int[] coordinates = new int[position.length];
+                System.arraycopy(position, 0, coordinates, 0, position.length);
+                result.add(coordinates);
+            } else {// inductive condition
+                int index = dimensions.size() - level;
+                int[] currentDimension = dimensions.get(index);
+                for (int i = 0; i < currentDimension.length; i++) {
+                    position[index] = currentDimension[i];
+                    process(level - 1);
+                }
+            }
+        }
+    }
+
     
     /**
      * Called to merge a list of dimension arrays into a sequential row-major indexed
@@ -734,70 +770,10 @@ public class ArrayUtils {
      *                      of an n-dimensional array.
      * @return  a list of n-dimensional coordinates in row-major format.
      */
-    public static List<TIntList> dimensionsToCoordinateList(List<int[]> dimensions) {
-        int[] depthIndexes = new int[dimensions.size()];
-        for(int i = 0;i < dimensions.size();i++) {
-            depthIndexes[i] = 0;
-        }
-        List<TIntList> retVal = new ArrayList<TIntList>();
-        recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
-        
-        return retVal;
+    public static List<int[]> dimensionsToCoordinateList(List<int[]> dimensions) {
+        return CoordinateAssembler.assemble(dimensions);
     }
-    
-    /**
-     * Takes a list of arrays; each array specifying a dimension of an n-dimensional array and merges
-     * them into a list of row-major indexed coordinates (the right most index incrementing the fastest).
-     * 
-     * This method recursively calls itself to step through the depth specified by each dimension and
-     * enter the index at that depth in the list specified as "resultList". The resultList is sequentially
-     * populated with the incrementing coordinates and holds the final list of coordinates - the returned
-     * value from this method is not meaningful to the caller due to the final results being populated
-     * within the "resultList".
-     * 
-     * @param depth                 the current dimension depth
-     * @param maxDepth              the maximum number of dimensions to the array
-     * @param depthIndexes          an array holding the current index at the depth implied by that index's position.
-     * @param coords                a list of coordinates at a position in the sequence of coordinates
-     * @param dimensionIndexes      the array expressing the indexes of a given dimension
-     * @param resultList            the container of the final list of coordinates
-     * @return                      meaningless for the caller but is of interim significance during the recursion
-     */
-    private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
-        TIntList coords, List<int[]> dimensionIndexes, List<TIntList> resultList) {
-        
-        //Return null if we've added all indexes for each dimension
-        if(depth < maxDepth) {
-            //Add the index coordinate at the current depth
-            coords.add(dimensionIndexes.get(depth)[depthIndexes[depth]]);
-            //Go to the next dimensional coordinate and add that
-            coords = recurseAssembleCoordinates(depth + 1, maxDepth, depthIndexes, coords, dimensionIndexes, resultList);
-            
-            //Return until we're back at the top
-            if(depth > 0) {
-                return null;
-            }else{
-                //Adjust all depth indexes by incrementing to its max then wrapping to zero
-                for(int i = depthIndexes.length - 1;i >= 0;i--) {
-                    if(depthIndexes[i] < dimensionIndexes.get(i).length - 1) {
-                        depthIndexes[i] += 1;
-                        break;
-                    }else{
-                        if(i == 0) return null; //if the leftmost index is at its max, we're done.
-                        depthIndexes[i] = 0;
-                    }
-                }
-                recurseAssembleCoordinates(0, dimensionIndexes.size(), depthIndexes, new TIntArrayList(), dimensionIndexes, resultList);
-                //We've finished so unwind.
-                return null;
-            }
-        }
-        //Add the coordinates to the result container
-        resultList.add(coords);
-        //Return null if we've added all indexes for each dimension
-        return null;
-    }
-     
+
     /**
      * Sets the values in the specified values array at the indexes specified,
      * to the value "setTo".

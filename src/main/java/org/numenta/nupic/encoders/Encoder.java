@@ -36,6 +36,7 @@ import java.util.Map;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
@@ -1218,6 +1219,25 @@ public abstract class Encoder<T> {
 		
 		return retVal;
 	}
+	
+	/**
+     * Returns an array containing the sum of the right 
+     * applied multiplications of each slice to the array
+     * passed in.
+     * 
+     * @param encoded
+     * @return
+     */
+    public int[] rightVecProd(SparseObjectMatrix<int[]> matrix, int[] encoded) {
+    	int[] retVal = new int[matrix.getMaxIndex() + 1];
+    	for(int i = 0;i < retVal.length;i++) {
+    		int[] slice = (int[])matrix.getObject(i);
+    		for(int j = 0;j < slice.length;j++) {
+    			retVal[i] += (slice[j] * encoded[j]);
+    		}
+    	}
+    	return retVal;
+    }
 	
 	/**
 	 * Calculate width of display for bits plus blanks between fields.
