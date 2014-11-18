@@ -588,7 +588,7 @@ public abstract class Encoder<T> {
 	 * Encodes inputData and puts the encoded value into the numpy output array,
      * which is a 1-D array of length returned by {@link #getW()}.
 	 *
-     * Note: The numpy output array is reused, so clear it before updating it.
+     * Note: The output array is reused, so clear it before updating it.
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link #getW()}
      * 

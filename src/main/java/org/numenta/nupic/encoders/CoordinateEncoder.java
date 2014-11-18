@@ -1,20 +1,16 @@
 package org.numenta.nupic.encoders;
 
-import gnu.trove.set.TDoubleSet;
-import gnu.trove.set.hash.TDoubleHashSet;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.SortablePair;
 import org.numenta.nupic.util.Tuple;
 
-public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder {
-	private static Random random = new MersenneTwister();
+public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder {
+	private static MersenneTwister random = new MersenneTwister();
 	
 	/**
 	 * Package private to encourage construction using the Builder Pattern
@@ -22,20 +18,38 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	 */
 	CoordinateEncoder() {}
 	
+	/**
+	 * @see Encoder for more information
+	 */
 	@Override
 	public int getWidth() {
 		return n;
 	}
 
+	/**
+	 * @see Encoder for more information
+	 */
 	@Override
 	public boolean isDelta() {
 		return false;
 	}
 	
+	/**
+	 * Returns a {@link List} of {@link Tuple}s containing
+	 * [String:"name", int:offset]
+	 * 
+	 * @return List of Tuple(String, int)'s
+	 * @see Encoder for more information
+	 */
 	@Override
 	public List<Tuple> getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Tuple> retVal = new ArrayList<Tuple>();
+		Tuple desc = new Tuple(2, "coordinate", 0);
+		Tuple desc2 = new Tuple(2, "radius", 1);
+		retVal.add(desc);
+		retVal.add(desc2);
+		
+		return retVal;
 	}
 
 	/**
@@ -86,23 +100,21 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	 * @param w				(int) Number of top coordinates to return
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public int[][] topWCoordinates(CoordinateOrder co, int[][] coordinates, int w) {
-		double[] orders = new double[coordinates.length];
-		for(int i = 0;i < coordinates.length;i++) {
-			orders[i] = co.orderForCoordinate(coordinates[i]);
+		SortablePair<Double, Integer>[] pairs = new SortablePair[coordinates.length];
+		for(int i = 0; i < coordinates.length;i++) {
+		    pairs[i] = new SortablePair<Double, Integer>(co.orderForCoordinate(coordinates[i]), i);
 		}
 		
-		System.out.println(Arrays.toString(orders));
-		final TDoubleSet end = new TDoubleHashSet(
-			ArrayUtils.sub(orders, ArrayUtils.range(orders.length - w, orders.length)));
+		Arrays.sort(pairs);
 		
-		Arrays.sort(orders);
-		
-		int[] indices = ArrayUtils.where(orders, new Condition.Adapter<Double>() {
-			public boolean eval(double d) { return end.contains(d); }
-		});
-		
-		return ArrayUtils.sub(coordinates, indices);
+		int[][] topCoordinates = new int[w][];
+		for(int i = 0, wIdx = pairs.length - w; i < w; i++, wIdx++) {
+		    int index = pairs[wIdx].second();
+		    topCoordinates[i] = coordinates[index];
+		}
+		return topCoordinates;
 	}
 	
 	/**
@@ -113,10 +125,8 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	 * @return	A value in the interval [0, 1), representing the
      *          order of the coordinate
 	 */
-	
 	public double orderForCoordinate(int[] coordinate) {
-		int seed = ArrayUtils.fromCoordinate(coordinate);
-		random.setSeed(seed);
+		random.setSeed(coordinate);
 		return random.nextDouble();
 	}
 	
@@ -129,13 +139,16 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	 * @return	The index to a bit in the SDR
 	 */
 	public static int bitForCoordinate(int[] coordinate, int n) {
-		int seed = ArrayUtils.fromCoordinate(coordinate);
-		return new MersenneTwister(seed).nextInt(n);
+		random.setSeed(coordinate);
+		return random.nextInt(n);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void encodeIntoArray(int[] inputData, int[] output) {
-		List<int[]> neighs = neighbors(inputData, radius);
+	public void encodeIntoArray(Tuple inputData, int[] output) {
+		List<int[]> neighs = neighbors((int[])inputData.get(0), (double)inputData.get(1));
 		int[][] neighbors = new int[neighs.size()][];
 		for(int i = 0;i < neighs.size();i++) neighbors[i] = neighs.get(i);
 		
@@ -150,7 +163,6 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	@Override
 	public void setLearning(boolean learningEnabled) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -163,8 +175,8 @@ public class CoordinateEncoder extends Encoder<int[]> implements CoordinateOrder
 	 * Returns a {@link EncoderBuilder} for constructing {@link CoordinateEncoder}s
 	 * 
 	 * The base class architecture is put together in such a way where boilerplate
-	 * initialization can be kept to a minimum for implementing subclasses. 
-	 * Hopefully! :-)
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
 	 * 
 	 * @see ScalarEncoder.Builder#setStuff(int)
 	 */

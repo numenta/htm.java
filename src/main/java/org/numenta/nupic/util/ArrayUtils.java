@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.util;
 
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -47,6 +46,30 @@ public class ArrayUtils {
 	public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
 		public boolean eval(int i) { return i == 1; }
 	};
+	public static Condition<Double> GREATER_THAN_0 = new Condition.Adapter<Double>() {
+		public boolean eval(double i) { return i > 0; }
+	};
+	
+	/**
+	 * Return a new double[] containing the difference of each element and its
+	 * succeding element.
+	 * 
+	 * The first order difference is given by ``out[n] = a[n+1] - a[n]`` 
+     * along the given axis, higher order differences are calculated by using `diff`
+     * recursively.
+     * 
+	 * @param d
+	 * @return
+	 */
+	public static double[] diff(double[] d) {
+		double[] retVal = new double[d.length - 1];
+		for(int i = 0;i < retVal.length;i++) {
+			retVal[i] = d[i + 1] - d[i];
+		}
+		System.out.println("input = " + Arrays.toString(d));
+		System.out.println("diff = " + Arrays.toString(retVal));
+		return retVal;
+	}
 	
 	/**
 	 * Returns a flag indicating whether the container list contains an
@@ -70,6 +93,22 @@ public class ArrayUtils {
 	 * @param coordinates	an array of integer coordinates
 	 * @return	 a flat index
 	 */
+	public static int fromCoordinate(int[] coordinates, int[] shape) {
+		int[] localMults = initDimensionMultiples(shape);
+		int base = 0;
+        for(int i = 0;i < coordinates.length;i++) {
+            base += (localMults[i] * coordinates[i]);
+        }
+        return base;
+//		return Arrays.hashCode(coordinates);
+	}
+	
+	/**
+	 * Utility to compute a flat index from coordinates.
+	 * 
+	 * @param coordinates	an array of integer coordinates
+	 * @return	 a flat index
+	 */
 	public static int fromCoordinate(int[] coordinates) {
 		int[] localMults = initDimensionMultiples(coordinates);
 		int base = 0;
@@ -77,6 +116,7 @@ public class ArrayUtils {
             base += (localMults[i] * coordinates[i]);
         }
         return base;
+//		return Arrays.hashCode(coordinates);
 	}
 	/**
      * Initializes internal helper array which is used for multidimensional
@@ -568,6 +608,19 @@ public class ArrayUtils {
      * @return
      */
     public static int sum(int[] array) {
+    	int sum = 0;
+    	for(int i = 0;i < array.length;i++) {
+    		sum += array[i];
+    	}
+    	return sum;
+    }
+    
+    /**
+     * Returns the sum of all contents in the specified array.
+     * @param array
+     * @return
+     */
+    public static double sum(double[] array) {
     	int sum = 0;
     	for(int i = 0;i < array.length;i++) {
     		sum += array[i];
@@ -1295,10 +1348,9 @@ public class ArrayUtils {
      */
     public static int[] or(int[] arg1, int[] arg2) {
     	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
-    	int[] arg1ones = ArrayUtils.where(arg1, WHERE_1);
-    	int[] arg2ones = ArrayUtils.where(arg2, WHERE_1);
-    	ArrayUtils.setIndexesTo(retVal, arg1ones, 1);
-    	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
+    	for(int i = 0;i < arg1.length;i++) {
+    		retVal[i] = arg1[i] > 0 || arg2[i] > 0 ? 1 : 0;
+    	}
     	return retVal;
     }
     
@@ -1312,11 +1364,8 @@ public class ArrayUtils {
      */
     public static int[] and(int[] arg1, int[] arg2) {
     	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
-    	TIntHashSet arg1ones = new TIntHashSet(ArrayUtils.where(arg1, WHERE_1));
-    	TIntHashSet arg2ones = new TIntHashSet(ArrayUtils.where(arg2, WHERE_1));
-    	for(TIntIterator it = arg1ones.iterator();it.hasNext();) {
-    		int idx = it.next();
-    		retVal[idx] = arg2ones.contains(idx) ? 1 : 0;
+    	for(int i = 0;i < arg1.length;i++) {
+    		retVal[i] = arg1[i] > 0 && arg2[i] > 0 ? 1 : 0;
     	}
     	return retVal;
     }

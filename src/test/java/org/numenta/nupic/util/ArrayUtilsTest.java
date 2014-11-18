@@ -105,5 +105,14 @@ public class ArrayUtilsTest {
 		String result = ArrayUtils.bitsToString(new int[] { 0, 0, 0, 0, 1, 1, 1 });
 		assertEquals(expected, result);
 	}
+	
+	@Test
+	public void testDiff() {
+		double[] t = new double[] { 5, 4, 3, 2, 1, 0 };
+		double[] result = ArrayUtils.diff(t);
+		assertEquals(5, result.length);
+		assertTrue(Arrays.equals(new double[] { 1, 1, 1, 1, 1 }, result));
+		assertEquals(5, ArrayUtils.sum(result), 0);
+	}
 
 }
