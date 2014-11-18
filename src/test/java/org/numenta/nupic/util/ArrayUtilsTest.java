@@ -111,8 +111,8 @@ public class ArrayUtilsTest {
 		double[] t = new double[] { 5, 4, 3, 2, 1, 0 };
 		double[] result = ArrayUtils.diff(t);
 		assertEquals(5, result.length);
-		assertTrue(Arrays.equals(new double[] { 1, 1, 1, 1, 1 }, result));
-		assertEquals(5, ArrayUtils.sum(result), 0);
+		assertTrue(Arrays.equals(new double[] { -1, -1, -1, -1, -1 }, result));
+		assertEquals(-5, ArrayUtils.sum(result), 0);
 	}
 
 }

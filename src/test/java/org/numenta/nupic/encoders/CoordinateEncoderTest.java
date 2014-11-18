@@ -134,9 +134,8 @@ public class CoordinateEncoderTest {
 		final int[][] coordinates = new int[][] { { 1 }, { 2 }, { 3 }, { 4 }, { 5 } };
 		
 		CoordinateOrder mock = new CoordinateOrder() {
-			int x = 4;
 			@Override public double orderForCoordinate(int[] coordinate) {
-				return  coordinates[x--][0] / 5.0d;
+				return  ArrayUtils.sum(coordinate) / 5.0d;
 			}
 			
 		};

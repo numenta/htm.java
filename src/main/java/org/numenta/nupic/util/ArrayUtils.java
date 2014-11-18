@@ -66,8 +66,7 @@ public class ArrayUtils {
 		for(int i = 0;i < retVal.length;i++) {
 			retVal[i] = d[i + 1] - d[i];
 		}
-		System.out.println("input = " + Arrays.toString(d));
-		System.out.println("diff = " + Arrays.toString(retVal));
+		
 		return retVal;
 	}
 	
