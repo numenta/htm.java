@@ -241,6 +241,17 @@ public class CoordinateEncoderTest {
 		assertDecreasingOverlaps(overlaps);
 	}
 	
+	/**
+	 * As radius increases, the overlap should decrease
+	 */
+	@Test
+	public void testEncodeRelativePositionsAndRadii() {
+		// As radius increases and positions change, the overlap should decrease
+		double[] overlaps = overlapsForRelativeAreas(999, 25, new int[] {100, 200}, 5, 
+			new int[] { 1, 1}, 1, 5, false);
+		assertDecreasingOverlaps(overlaps);
+	}
+	
 	public void assertDecreasingOverlaps(double[] overlaps) {
 		assertEquals(0, 
 			ArrayUtils.sum(
