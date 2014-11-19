@@ -36,16 +36,13 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<verbose>true</verbose>
-					<fork>true</fork>
-					<executable><!-- path-to-javac -->
-					</executable>
-					<compilerVersion>1.7</compilerVersion>
-				</configuration>
-			</plugin>
+        		<artifactId>maven-compiler-plugin</artifactId>
+        		<configuration>
+          		<verbose>true</verbose>
+         		 <source>1.7</source>
+         		 <target>1.7</target>
+       		 </configuration>
+     		</plugin>
 			<plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
@@ -74,10 +71,10 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.ascii_table</groupId>
-			<artifactId>btc-ascii-table-1.0</artifactId>
+			<artifactId>chutils-1.4</artifactId>
 			<version>1.0</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/libs/btc-ascii-table-1.0.jar</systemPath>
+			<systemPath>${basedir}/libs/chutils-1.4.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.junit</groupId>

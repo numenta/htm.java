@@ -162,12 +162,10 @@ public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder
 
 	@Override
 	public void setLearning(boolean learningEnabled) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public <T> List<T> getBucketValues(Class<T> returnType) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

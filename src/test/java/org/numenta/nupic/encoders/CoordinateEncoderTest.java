@@ -491,6 +491,8 @@ public class CoordinateEncoderTest {
 		for(int i = 0;i < results.length;i++) {
 			assertTrue(Arrays.equals(results[i], expected[i]));
 		}
+		
+		System.out.println("done");
 	}
 }
 
