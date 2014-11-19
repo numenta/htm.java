@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.research;
 
-import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;

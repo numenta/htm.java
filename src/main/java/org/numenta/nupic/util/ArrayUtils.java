@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.util;
 
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -47,6 +46,29 @@ public class ArrayUtils {
 	public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
 		public boolean eval(int i) { return i == 1; }
 	};
+	public static Condition<Double> GREATER_THAN_0 = new Condition.Adapter<Double>() {
+		public boolean eval(double i) { return i > 0; }
+	};
+	
+	/**
+	 * Return a new double[] containing the difference of each element and its
+	 * succeding element.
+	 * 
+	 * The first order difference is given by ``out[n] = a[n+1] - a[n]`` 
+     * along the given axis, higher order differences are calculated by using `diff`
+     * recursively.
+     * 
+	 * @param d
+	 * @return
+	 */
+	public static double[] diff(double[] d) {
+		double[] retVal = new double[d.length - 1];
+		for(int i = 0;i < retVal.length;i++) {
+			retVal[i] = d[i + 1] - d[i];
+		}
+		
+		return retVal;
+	}
 	
 	/**
 	 * Returns a flag indicating whether the container list contains an
@@ -70,6 +92,22 @@ public class ArrayUtils {
 	 * @param coordinates	an array of integer coordinates
 	 * @return	 a flat index
 	 */
+	public static int fromCoordinate(int[] coordinates, int[] shape) {
+		int[] localMults = initDimensionMultiples(shape);
+		int base = 0;
+        for(int i = 0;i < coordinates.length;i++) {
+            base += (localMults[i] * coordinates[i]);
+        }
+        return base;
+//		return Arrays.hashCode(coordinates);
+	}
+	
+	/**
+	 * Utility to compute a flat index from coordinates.
+	 * 
+	 * @param coordinates	an array of integer coordinates
+	 * @return	 a flat index
+	 */
 	public static int fromCoordinate(int[] coordinates) {
 		int[] localMults = initDimensionMultiples(coordinates);
 		int base = 0;
@@ -77,6 +115,7 @@ public class ArrayUtils {
             base += (localMults[i] * coordinates[i]);
         }
         return base;
+//		return Arrays.hashCode(coordinates);
 	}
 	/**
      * Initializes internal helper array which is used for multidimensional
@@ -451,6 +490,22 @@ public class ArrayUtils {
      * @param d
      * @return
      */
+    public static int[] multiply(int[] array, int d) {
+    	int[] product = new int[array.length];
+    	for(int i = 0;i < array.length;i++) {
+    		product[i] = array[i] * d;
+    	}
+    	return product;
+    }
+    
+    /**
+     * Returns a new array containing the result of multiplying
+     * each index of the specified array by the 2nd parameter.
+     * 
+     * @param array
+     * @param d
+     * @return
+     */
     public static double[] multiply(double[] array, double d) {
     	double[] product = new double[array.length];
     	for(int i = 0;i < array.length;i++) {
@@ -540,6 +595,22 @@ public class ArrayUtils {
      * @param amount
      * @return
      */
+    public static int[] i_add(int[] arr, int[] amount) {
+        for(int i = 0;i < arr.length;i++) {
+            arr[i] += amount[i];
+        }
+        return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount at the same
+     * index
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
     public static double[] d_add(double[] arr, double[] amount) {
     	 for(int i = 0;i < arr.length;i++) {
              arr[i] += amount[i];
@@ -568,6 +639,19 @@ public class ArrayUtils {
      * @return
      */
     public static int sum(int[] array) {
+    	int sum = 0;
+    	for(int i = 0;i < array.length;i++) {
+    		sum += array[i];
+    	}
+    	return sum;
+    }
+    
+    /**
+     * Returns the sum of all contents in the specified array.
+     * @param array
+     * @return
+     */
+    public static double sum(double[] array) {
     	int sum = 0;
     	for(int i = 0;i < array.length;i++) {
     		sum += array[i];
@@ -678,36 +762,36 @@ public class ArrayUtils {
     * Helper Class for recursive coordinate assembling
     */
     private static class CoordinateAssembler {
-            final private int[] position;
-            final private List<int[]> dimensions;
-            final List<int[]> result = new ArrayList<int[]>();
+        final private int[] position;
+        final private List<int[]> dimensions;
+        final List<int[]> result = new ArrayList<int[]>();
 
-            public static List<int[]> assemble(List<int[]> dimensions) {
-                CoordinateAssembler assembler = new CoordinateAssembler(dimensions);
-                assembler.process(dimensions.size());
-                return assembler.result;
-            }
+        public static List<int[]> assemble(List<int[]> dimensions) {
+            CoordinateAssembler assembler = new CoordinateAssembler(dimensions);
+            assembler.process(dimensions.size());
+            return assembler.result;
+        }
 
-            private CoordinateAssembler(List<int[]> dimensions) {
-                this.dimensions = dimensions;
-                position = new int[dimensions.size()];
-            }
+        private CoordinateAssembler(List<int[]> dimensions) {
+            this.dimensions = dimensions;
+            position = new int[dimensions.size()];
+        }
 
-            private void process(int level) {
-                if (level == 0) {// terminating condition
-                    int[] coordinates = new int[position.length];
-                    System.arraycopy(position, 0, coordinates, 0, position.length);
-                    result.add(coordinates);
-                } else {// inductive condition
-                    int index = dimensions.size() - level;
-                    int[] currentDimension = dimensions.get(index);
-                    for (int i = 0; i < currentDimension.length; i++) {
-                        position[index] = currentDimension[i];
-                        process(level - 1);
-                    }
+        private void process(int level) {
+            if (level == 0) {// terminating condition
+                int[] coordinates = new int[position.length];
+                System.arraycopy(position, 0, coordinates, 0, position.length);
+                result.add(coordinates);
+            } else {// inductive condition
+                int index = dimensions.size() - level;
+                int[] currentDimension = dimensions.get(index);
+                for (int i = 0; i < currentDimension.length; i++) {
+                    position[index] = currentDimension[i];
+                    process(level - 1);
                 }
             }
         }
+    }
 
     
     /**
@@ -719,81 +803,9 @@ public class ArrayUtils {
      * @return  a list of n-dimensional coordinates in row-major format.
      */
     public static List<int[]> dimensionsToCoordinateList(List<int[]> dimensions) {
-        /*int[] depthIndexes = new int[dimensions.size()];
-        for(int i = 0;i < dimensions.size();i++) {
-            depthIndexes[i] = 0;
-        }
-        List<TIntList> retVal = new ArrayList<TIntList>();
-        recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
-        
-        return retVal;*/
-        //Above replaced by following, where recursion is limited to dimensions size
         return CoordinateAssembler.assemble(dimensions);
     }
 
-    public static List<TIntList> dimensionsToCoordinateListOld(List<int[]> dimensions) {
-         int[] depthIndexes = new int[dimensions.size()];
-         for(int i = 0;i < dimensions.size();i++) {
-             depthIndexes[i] = 0;
-         }
-         List<TIntList> retVal = new ArrayList<TIntList>();
-         recurseAssembleCoordinates(0, dimensions.size(), depthIndexes, new TIntArrayList(), dimensions, retVal);
-         return retVal;
-    }
-    
-    /**
-     * Takes a list of arrays; each array specifying a dimension of an n-dimensional array and merges
-     * them into a list of row-major indexed coordinates (the right most index incrementing the fastest).
-     * 
-     * This method recursively calls itself to step through the depth specified by each dimension and
-     * enter the index at that depth in the list specified as "resultList". The resultList is sequentially
-     * populated with the incrementing coordinates and holds the final list of coordinates - the returned
-     * value from this method is not meaningful to the caller due to the final results being populated
-     * within the "resultList".
-     * 
-     * @param depth                 the current dimension depth
-     * @param maxDepth              the maximum number of dimensions to the array
-     * @param depthIndexes          an array holding the current index at the depth implied by that index's position.
-     * @param coords                a list of coordinates at a position in the sequence of coordinates
-     * @param dimensionIndexes      the array expressing the indexes of a given dimension
-     * @param resultList            the container of the final list of coordinates
-     * @return                      meaningless for the caller but is of interim significance during the recursion
-     */
-    private static TIntList recurseAssembleCoordinates(int depth, int maxDepth, int[] depthIndexes, 
-        TIntList coords, List<int[]> dimensionIndexes, List<TIntList> resultList) {
-        
-        //Return null if we've added all indexes for each dimension
-        if(depth < maxDepth) {
-            //Add the index coordinate at the current depth
-            coords.add(dimensionIndexes.get(depth)[depthIndexes[depth]]);
-            //Go to the next dimensional coordinate and add that
-            coords = recurseAssembleCoordinates(depth + 1, maxDepth, depthIndexes, coords, dimensionIndexes, resultList);
-            
-            //Return until we're back at the top
-            if(depth > 0) {
-                return null;
-            }else{
-                //Adjust all depth indexes by incrementing to its max then wrapping to zero
-                for(int i = depthIndexes.length - 1;i >= 0;i--) {
-                    if(depthIndexes[i] < dimensionIndexes.get(i).length - 1) {
-                        depthIndexes[i] += 1;
-                        break;
-                    }else{
-                        if(i == 0) return null; //if the leftmost index is at its max, we're done.
-                        depthIndexes[i] = 0;
-                    }
-                }
-                recurseAssembleCoordinates(0, dimensionIndexes.size(), depthIndexes, new TIntArrayList(), dimensionIndexes, resultList);
-                //We've finished so unwind.
-                return null;
-            }
-        }
-        //Add the coordinates to the result container
-        resultList.add(coords);
-        //Return null if we've added all indexes for each dimension
-        return null;
-    }
-     
     /**
      * Sets the values in the specified values array at the indexes specified,
      * to the value "setTo".
@@ -1304,6 +1316,21 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns the minimum value in the specified array
+     * @param array
+     * @return
+     */
+    public static double min(double[] array) {
+        double min = Double.MAX_VALUE;
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+    
+    /**
      * Returns a copy of the specified integer array in 
      * reverse order
      * 
@@ -1343,10 +1370,9 @@ public class ArrayUtils {
      */
     public static int[] or(int[] arg1, int[] arg2) {
     	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
-    	int[] arg1ones = ArrayUtils.where(arg1, WHERE_1);
-    	int[] arg2ones = ArrayUtils.where(arg2, WHERE_1);
-    	ArrayUtils.setIndexesTo(retVal, arg1ones, 1);
-    	ArrayUtils.setIndexesTo(retVal, arg2ones, 1);
+    	for(int i = 0;i < arg1.length;i++) {
+    		retVal[i] = arg1[i] > 0 || arg2[i] > 0 ? 1 : 0;
+    	}
     	return retVal;
     }
     
@@ -1360,11 +1386,8 @@ public class ArrayUtils {
      */
     public static int[] and(int[] arg1, int[] arg2) {
     	int[] retVal = new int[Math.max(arg1.length, arg2.length)];
-    	TIntHashSet arg1ones = new TIntHashSet(ArrayUtils.where(arg1, WHERE_1));
-    	TIntHashSet arg2ones = new TIntHashSet(ArrayUtils.where(arg2, WHERE_1));
-    	for(TIntIterator it = arg1ones.iterator();it.hasNext();) {
-    		int idx = it.next();
-    		retVal[idx] = arg2ones.contains(idx) ? 1 : 0;
+    	for(int i = 0;i < arg1.length;i++) {
+    		retVal[i] = arg1[i] > 0 && arg2[i] > 0 ? 1 : 0;
     	}
     	return retVal;
     }

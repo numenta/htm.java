@@ -305,7 +305,7 @@ public class CategoryEncoder extends Encoder<String> {
 		//Get/generate the topDown mapping table
 		SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();		
 		// See which "category" we match the closest.
-		int category = ArrayUtils.argmax(topDownMapping.rightVecProd(encoded));		
+		int category = ArrayUtils.argmax(rightVecProd(topDownMapping, encoded));		
 		return getBucketInfo(new int[] { category });
 	}
 
@@ -321,8 +321,8 @@ public class CategoryEncoder extends Encoder<String> {
 	 * Returns a {@link EncoderBuilder} for constructing {@link CategoryEncoder}s
 	 * 
 	 * The base class architecture is put together in such a way where boilerplate
-	 * initialization can be kept to a minimum for implementing subclasses. 
-	 * Hopefully! :-)
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
 	 * 
 	 * @see ScalarEncoder.Builder#setStuff(int)
 	 */
