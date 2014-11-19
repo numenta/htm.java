@@ -15,6 +15,8 @@ public class CoordinateEncoderTest {
 	private CoordinateEncoder ce;
 	private CoordinateEncoder.Builder builder;
 	
+	private boolean verbose;
+	
 	private void setUp() {
 		builder = CoordinateEncoder.builder()
 			.name("coordinate")
@@ -252,6 +254,60 @@ public class CoordinateEncoderTest {
 		assertDecreasingOverlaps(overlaps);
 	}
 	
+	@Test
+	public void testEncodeUnrelatedAreas() {
+		double avgThreshold = 0.3;
+		
+		double maxThreshold = 0.14;
+		double[] overlaps = overlapsForUnrelatedAreas(1499, 37, 5, 100, false);
+		assertTrue(ArrayUtils.max(overlaps) < maxThreshold);
+		assertTrue(ArrayUtils.average(overlaps) < avgThreshold);
+		
+		maxThreshold = 0.12;
+		overlaps = overlapsForUnrelatedAreas(1499, 37, 10, 100, false);
+		assertTrue(ArrayUtils.max(overlaps) < maxThreshold);
+		assertTrue(ArrayUtils.average(overlaps) < avgThreshold);
+		
+		maxThreshold = 0.13;
+		overlaps = overlapsForUnrelatedAreas(999, 25, 10, 100, false);
+		assertTrue(ArrayUtils.max(overlaps) < maxThreshold);
+		assertTrue(ArrayUtils.average(overlaps) < avgThreshold);
+		
+		maxThreshold = 0.16;
+		overlaps = overlapsForUnrelatedAreas(499, 13, 10, 100, false);
+		assertTrue(ArrayUtils.max(overlaps) < maxThreshold);
+		assertTrue(ArrayUtils.average(overlaps) < avgThreshold);
+	}
+	
+	@Test
+	public void testEncodeAdjacentPositions() {
+		int repetitions = 100;
+		int n = 999;
+		int w = 25;
+		int radius = 10;
+		double minThreshold = 0.75;
+		double avgThreshold = 0.90;
+		double[] allOverlaps = new double[repetitions];
+		
+		for(int i = 0;i < repetitions;i++) {
+			double[] overlaps = overlapsForRelativeAreas(
+				n, w, new int[] { i * 10,  i * 10 }, radius, new int[] { 0, 1 }, 0, 1, false);
+			
+			allOverlaps[i] = overlaps[0];
+		}
+		
+		assertTrue(ArrayUtils.min(allOverlaps) > minThreshold);
+		assertTrue(ArrayUtils.average(allOverlaps) > avgThreshold);
+		
+		if(verbose) {
+			System.out.println(String.format("===== Adjacent positions overlap " +
+				"(n = {0}, w = {1}, radius = {2} ===", n, w, radius));
+			System.out.println(String.format("Max: {0}", ArrayUtils.max(allOverlaps)));
+			System.out.println(String.format("Min: {0}", ArrayUtils.min(allOverlaps)));
+			System.out.println(String.format("Average: {0}", ArrayUtils.average(allOverlaps)));
+		}
+	}
+	
 	public void assertDecreasingOverlaps(double[] overlaps) {
 		assertEquals(0, 
 			ArrayUtils.sum(
@@ -287,13 +343,20 @@ public class CoordinateEncoderTest {
 		int[] newPosition;
 		for(int i = 0;i < num;i++) {
 			newPosition = dPosition == null ? initPosition : 
-				ArrayUtils.add(newPosition = Arrays.copyOf(initPosition, initPosition.length), (i + 1) * dRadius);
+				ArrayUtils.i_add(
+					newPosition = Arrays.copyOf(initPosition, initPosition.length), 
+						ArrayUtils.multiply(dPosition, (i + 1)));
 			int newRadius = initRadius + (i + 1) * dRadius;
 			int[] outputB = encode(ce, newPosition, newRadius);
 			overlaps[i] = overlap(outputA, outputB);
 		}
 		
 		return overlaps;
+	}
+	
+	public double[] overlapsForUnrelatedAreas(int n, int w, int radius, int repetitions, boolean verbose) {
+		return overlapsForRelativeAreas(n, w, new int[] { 0, 0 }, radius, 
+			new int[] { 0, radius * 10 }, 0, repetitions, verbose);
 	}
  
 	@Test

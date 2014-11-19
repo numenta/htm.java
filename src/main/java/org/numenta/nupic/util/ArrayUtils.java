@@ -490,6 +490,22 @@ public class ArrayUtils {
      * @param d
      * @return
      */
+    public static int[] multiply(int[] array, int d) {
+    	int[] product = new int[array.length];
+    	for(int i = 0;i < array.length;i++) {
+    		product[i] = array[i] * d;
+    	}
+    	return product;
+    }
+    
+    /**
+     * Returns a new array containing the result of multiplying
+     * each index of the specified array by the 2nd parameter.
+     * 
+     * @param array
+     * @param d
+     * @return
+     */
     public static double[] multiply(double[] array, double d) {
     	double[] product = new double[array.length];
     	for(int i = 0;i < array.length;i++) {
@@ -566,6 +582,22 @@ public class ArrayUtils {
     public static int[] add(int[] arr, int amount) {
         for(int i = 0;i < arr.length;i++) {
             arr[i] += amount;
+        }
+        return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the addition of the specified double amount at the same
+     * index
+     * 
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static int[] i_add(int[] arr, int[] amount) {
+        for(int i = 0;i < arr.length;i++) {
+            arr[i] += amount[i];
         }
         return arr;
     }
@@ -1275,6 +1307,21 @@ public class ArrayUtils {
      */
     public static int min(int[] array) {
         int min = Integer.MAX_VALUE;
+        for(int i = 0;i < array.length;i++) {
+            if(array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+    
+    /**
+     * Returns the minimum value in the specified array
+     * @param array
+     * @return
+     */
+    public static double min(double[] array) {
+        double min = Double.MAX_VALUE;
         for(int i = 0;i < array.length;i++) {
             if(array[i] < min) {
                 min = array[i];
