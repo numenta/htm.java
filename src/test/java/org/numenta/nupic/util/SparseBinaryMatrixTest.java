@@ -22,12 +22,14 @@
 
 package org.numenta.nupic.util;
 
+import org.junit.Test;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-
-import org.junit.Test;
 
 public class SparseBinaryMatrixTest {
 
@@ -157,5 +159,59 @@ public class SparseBinaryMatrixTest {
 			assertEquals(2, sm.getTrueCount(i));
 		}
 	}
+
+    private Object createMultiDimensionArray(int[] sizes){
+         // Randomly choose number of dimensions (1, 2, 3 or 4) at runtime.
+        /*Random r = new Random();
+        int dims = 1 + r.nextInt(4);
+        // Randomly choose array lengths (1, 2, 3, 4 or 5) at runtime.
+        int[] sizes = new int[dims];
+        for (int i = 0; i < sizes.length; i++)
+            sizes[i] = 1 + r.nextInt(5);
+        // Create array */
+        System.out.println("Creating array with dimensions / sizes: " +
+                Arrays.toString(sizes).replaceAll(", ", "]["));
+        return Array.newInstance(int.class, sizes);
+    }
+
+    public static int[] tail(int[] arr) {
+            return Arrays.copyOfRange(arr, 1, arr.length);
+        }
+
+    public static void setValue(Object array, int value, int... indexes) {
+        if (indexes.length == 1)
+            ((int[]) array)[indexes[0]] = value;
+        else
+            setValue(Array.get(array, indexes[0]), value, tail(indexes));
+    }
+
+    public static void fillWithSomeRandomValues(Object array, Random r, int... sizes) {
+        for (int i = 0; i < sizes[0]; i++)
+            if (sizes.length == 1)
+                ((int[]) array)[i] =  r.nextInt(2);
+            else
+                fillWithSomeRandomValues(Array.get(array, i), r, tail(sizes));
+    }
+
+
+
+    @Test
+    public void testMultiDimensionAccess() {
+          /*Create huge 3 dimensional matrix*/
+        int[] dimensions = {5, 5 ,5, 5};
+        Object multiDimArray = createMultiDimensionArray(dimensions);
+        fillWithSomeRandomValues(multiDimArray,new Random(), dimensions);
+        if(multiDimArray instanceof Object[]){
+            System.out.println(Arrays.deepToString((Object[]) multiDimArray));
+        } else {
+            //One dimension
+            System.out.println(Arrays.toString((int[])multiDimArray));
+        }
+        //setValue(multiDimArray, 7 ,1,1,1);
+        //System.out.println(Arrays.deepToString((Object[]) multiDimArray));
+
+    }
+
+
 	
 }
