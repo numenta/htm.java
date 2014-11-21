@@ -193,20 +193,41 @@ public class SparseBinaryMatrixTest {
                 fillWithSomeRandomValues(Array.get(array, i), r, tail(sizes));
     }
 
+    private void printArray(Object array){
+        if(array instanceof Object[]){
+            System.out.println(Arrays.deepToString((Object[]) array));
+        } else {
+            //One dimension
+            System.out.println(Arrays.toString((int[])array));
+        }
+    }
+
 
 
     @Test
-    public void testMultiDimensionAccess() {
-          /*Create huge 3 dimensional matrix*/
-        int[] dimensions = {5, 5 ,5, 5};
+    public void testBackingStoreAndSliceAccessManyDimensions() {
+          /*Create huge 5 dimensional matrix*/
+        int[] dimensions = {5, 5 ,5};
         Object multiDimArray = createMultiDimensionArray(dimensions);
-        fillWithSomeRandomValues(multiDimArray,new Random(), dimensions);
-        if(multiDimArray instanceof Object[]){
-            System.out.println(Arrays.deepToString((Object[]) multiDimArray));
-        } else {
-            //One dimension
-            System.out.println(Arrays.toString((int[])multiDimArray));
-        }
+        //fillWithSomeRandomValues(multiDimArray,new Random(), dimensions);
+         /*set diagonal element to true*/
+        setValue(multiDimArray, 1, 0, 0, 0);
+        setValue(multiDimArray, 1, 1, 1, 1);
+        setValue(multiDimArray, 1, 2, 2, 2);
+        setValue(multiDimArray, 1, 3, 3, 3);
+        setValue(multiDimArray, 1, 4, 4, 4);
+        printArray(multiDimArray);
+        SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+        sm.set(1, 0, 0, 0);
+        sm.set(1, 1, 1, 1);
+        sm.set(1, 2, 2, 2);
+        sm.set(1, 3, 3, 3);
+        sm.set(1, 4, 4, 4);
+        assertEquals(1, sm.getIntValue(0, 0, 0));
+        assertEquals(1, sm.getIntValue(0, 0, 0));
+        assertEquals(1, sm.getIntValue(0, 0, 0));
+        assertEquals(1, sm.getIntValue(0, 0, 0));
+        assertEquals(1, sm.getIntValue(0, 0, 0));
         //setValue(multiDimArray, 7 ,1,1,1);
         //System.out.println(Arrays.deepToString((Object[]) multiDimArray));
 
