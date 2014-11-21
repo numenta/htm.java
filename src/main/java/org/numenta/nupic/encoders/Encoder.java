@@ -588,7 +588,7 @@ public abstract class Encoder<T> {
 	 * Encodes inputData and puts the encoded value into the numpy output array,
      * which is a 1-D array of length returned by {@link #getW()}.
 	 *
-     * Note: The numpy output array is reused, so clear it before updating it.
+     * Note: The output array is reused, so clear it before updating it.
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link #getW()}
      * 
@@ -1218,6 +1218,25 @@ public abstract class Encoder<T> {
 		
 		return retVal;
 	}
+	
+	/**
+     * Returns an array containing the sum of the right 
+     * applied multiplications of each slice to the array
+     * passed in.
+     * 
+     * @param encoded
+     * @return
+     */
+    public int[] rightVecProd(SparseObjectMatrix<int[]> matrix, int[] encoded) {
+    	int[] retVal = new int[matrix.getMaxIndex() + 1];
+    	for(int i = 0;i < retVal.length;i++) {
+    		int[] slice = (int[])matrix.getObject(i);
+    		for(int j = 0;j < slice.length;j++) {
+    			retVal[i] += (slice[j] * encoded[j]);
+    		}
+    	}
+    	return retVal;
+    }
 	
 	/**
 	 * Calculate width of display for bits plus blanks between fields.
