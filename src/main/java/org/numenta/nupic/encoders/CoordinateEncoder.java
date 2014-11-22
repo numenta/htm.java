@@ -162,6 +162,7 @@ public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder
 
 	@Override
 	public void setLearning(boolean learningEnabled) {
+		super.setLearningEnabled(learningEnabled);
 	}
 
 	@Override
@@ -170,7 +171,7 @@ public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder
 	}
 
 	/**
-	 * Returns a {@link EncoderBuilder} for constructing {@link CoordinateEncoder}s
+	 * Returns a {@code Builder} for constructing {@link CoordinateEncoder}s
 	 * 
 	 * The base class architecture is put together in such a way where boilerplate
 	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
