@@ -22,15 +22,16 @@
 
 package org.numenta.nupic.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ArrayUtilsTest {
 
@@ -137,5 +138,21 @@ public class ArrayUtilsTest {
 		assertTrue(Arrays.equals(new double[] { -1, -1, -1, -1, -1 }, result));
 		assertEquals(-5, ArrayUtils.sum(result), 0);
 	}
+
+    @Test
+   	public void testMultiDimensionArrayOperation() {
+        int[] dimensions = {5, 5 ,5};
+          Object multiDimArray = createMultiDimensionArray(dimensions);
+          ArrayUtils.fillArray(multiDimArray, 1);
+          assertEquals(125, ArrayUtils.aggregateArray(multiDimArray));
+          System.out.println(ArrayUtils.intArrayToString(multiDimArray));
+   	}
+
+    private Object createMultiDimensionArray(int[] sizes){
+            System.out.println("Creating array with dimensions / sizes: " +
+                    Arrays.toString(sizes).replaceAll(", ", "]["));
+            return Array.newInstance(int.class, sizes);
+        }
+
 
 }

@@ -54,16 +54,13 @@ public class SparseBinaryMatrix extends SparseMatrix {
     /**
      * Called during mutation operations to simultaneously set the value
      * on the backing array dynamically.
-     * @param o
      * @param val
      * @param coordinates
      */
-    private void back(Object o, int val, int... coordinates) {
-		Object slice = o;
-		for(int i = 0;i < coordinates.length - 1;i++) {
-			slice = Array.get(slice, coordinates[i]);
-		}
-		((int[])slice)[coordinates[coordinates.length - 1]] = val;
+    private void back(int val, int... coordinates) {
+		ArrayUtils.setValue(this.backingArray, val, coordinates);
+        //update true counts
+        trueCounts.set(coordinates[0], ArrayUtils.aggregateArray(((Object[])this.backingArray)[coordinates[0]]));
 	}
     
     /**
@@ -76,7 +73,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      * @throws	IllegalArgumentException if the specified coordinates address
      * 			an actual value instead of the array holding it.
      */
-    public Object getSlice(int... coordinates) {
+     public Object getSlice(int... coordinates) {
 		Object slice = backingArray;
 		for(int i = 0;i < coordinates.length;i++) {
 			Object s = Array.get(slice, coordinates[i]);
@@ -117,20 +114,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     @Override
     public SparseBinaryMatrix set(int index, int value) {
     	int[] coordinates = computeCoordinates(index);
-        int[] slice = (int[])getSlice(coordinates[0]);
-        int currentRowCount = trueCounts.get(coordinates[0]);
-        if(value == 1) {
-        	trueCounts.set(coordinates[0], currentRowCount +
-                (slice[coordinates[1]] == 0 ? 1 : 0));
-        }else{
-        	trueCounts.set(coordinates[0], slice[coordinates[1]] == 0 ?
-        		currentRowCount : Math.max(0, currentRowCount - 1));
-        }
-        
-        sparseMap.put(index, value);
-        back(backingArray, value, coordinates);
-         
-        return this;
+        return set(value, coordinates);
     }
     
     /**
@@ -141,19 +125,8 @@ public class SparseBinaryMatrix extends SparseMatrix {
      */
     @Override
     public SparseBinaryMatrix set(int value, int... coordinates) {
-    	int[] slice = (int[])getSlice(coordinates[0]);
-        int currentRowCount = trueCounts.get(coordinates[0]);
-        if(value == 1) {
-        	trueCounts.set(coordinates[0], currentRowCount +
-                (slice[coordinates[1]] == 0 ? 1 : 0));
-        }else{
-        	trueCounts.set(coordinates[0], slice[coordinates[1]] == 0 ?
-        		currentRowCount : Math.max(0, currentRowCount - 1));
-        }
-        
         sparseMap.put(computeIndex(coordinates), value);
-        back(backingArray, value, coordinates);
-        
+        back(value, coordinates);
         return this;
     }
     
