@@ -1,28 +1,42 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
+import java.util.*;
+import org.numenta.nupic.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.Tuple;
 /**
- * 
- * @author wilsondy
+ * Pass an encoded SDR straight to the model.
+ * Each encoding is an SDR in which w out of n bits are turned on.
+ * @author wilsondy (from Python original)
  *
  */
 public class PassThroughEncoder extends Encoder<int[]> {
-	//total #bits in output (must equal input bits * multiply)
 	
 	/**
-	 * used to normalize the sparsity of the output, exactly w bits ON,
-     * if Null (default) - do not alter the input, just pass it further.
+	 * This is used to check that there are exactly outputBitsOn in the outgoing bits
+	 * The Python claims to do more, but I don't think it actually does anything other than throw an error
+	 * as we do here also. (This is w in the Python code)
 	 */
 	private Integer outputBitsOnCount;
 
@@ -32,49 +46,46 @@ public class PassThroughEncoder extends Encoder<int[]> {
 		super.setForced(false);
 		this.outputBitsOnCount = outputBitsOnCount;
 	}
-
+	
 	@Override
+	/**
+	 * Does a bitwise compare of the two bitmaps and returns a fractional 
+	 * value between 0 and 1 of how similar they are.
+	 * 1 => identical
+	 * 0 => no overlapping bits
+	 * IGNORES difference in length (only compares bits of shorter list)  e..g 11 and 1100101010 are "identical"
+	 * @see org.numenta.nupic.encoders.Encoder#closenessScores(gnu.trove.list.TDoubleList, gnu.trove.list.TDoubleList, boolean)
+	 */
 	public gnu.trove.list.TDoubleList closenessScores(gnu.trove.list.TDoubleList expValues, gnu.trove.list.TDoubleList actValues, boolean fractional) {
-	TDoubleArrayList result = new TDoubleArrayList();
-//	  """Does a bitwise compare of the two bitmaps and returns a fractonal
-//    value between 0 and 1 of how similar they are.
-//    1 => identical
-//    0 => no overlaping bits
-//
-//    kwargs will have the keyword "fractional", which is assumed by this encoder
-//    """
+		TDoubleArrayList result = new TDoubleArrayList();
 
-	double ratio = 1.0d;
-	double expectedSum = expValues.sum();
-	double actualSum = actValues.sum();
-	
+		double ratio = 1.0d;
+		double expectedSum = expValues.sum();
+		double actualSum = actValues.sum();	
 
-    if (actualSum > expectedSum) {
-      double diff = actualSum - expectedSum;
-      if(diff < expectedSum)
-        ratio = 1 - diff/expectedSum;
-      else
-        ratio = 1/diff;
-	}
+		if (actualSum > expectedSum) {
+			double diff = actualSum - expectedSum;
+			if (diff < expectedSum)
+				ratio = 1 - diff / expectedSum;
+			else
+				ratio = 1 / diff;
+		}
 
-    int[] expectedInts = ArrayUtils.toIntArray(expValues.toArray()); 
-    int[] actualInts = ArrayUtils.toIntArray(actValues.toArray());
-    
-    int[] overlap = ArrayUtils.and(expectedInts, actualInts);
-    
-    int overlapSum = ArrayUtils.sum(overlap);
-//    osum = int(olap.sum())
-    double r = 0.0;
-    if (expectedSum == 0)
-    	r = 0.0;
-    else
-      r = overlapSum/expectedSum;
-    r = r * ratio;
-//
-//    return numpy.array([r])
-	
-	result.add(r);
-	return result;
+		int[] expectedInts = ArrayUtils.toIntArray(expValues.toArray());
+		int[] actualInts = ArrayUtils.toIntArray(actValues.toArray());
+
+		int[] overlap = ArrayUtils.and(expectedInts, actualInts);
+
+		int overlapSum = ArrayUtils.sum(overlap);
+		double r = 0.0;
+		if (expectedSum == 0)
+			r = 0.0;
+		else
+			r = overlapSum / expectedSum;
+		r = r * ratio;
+
+		result.add(r);
+		return result;
 	}
 	
 	@Override
@@ -90,10 +101,10 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	
 
 	/**
-	 * TODO Why have the output parameter and a return value?
-	 * @param input
+	 * Check for length the same and copy input into output
+	 * If outputBitsOnCount (w) set, throw error if not true
+	 * @param input 
 	 * @param output
-	 * @return
 	 */
 	public void encodeIntoArray(int[] input, int[] output){
 
@@ -106,6 +117,9 @@ public class PassThroughEncoder extends Encoder<int[]> {
 
 	}
 	
+	/**
+	 * Not much real work to do here as this concept doesn't really apply.
+	 */
 	public Tuple decode(int[] encoded, String parentFieldName) {
 	    //TODO: these methods should be properly implemented (this comment in Python)		  
 		String fieldName = this.name;
@@ -126,19 +140,16 @@ public class PassThroughEncoder extends Encoder<int[]> {
 
 	@Override
 	public void setLearning(boolean learningEnabled) {
-		// TODO Auto-generated method stub
-		
+		//NOOP		
 	}
 
 	@Override
 	public List<Tuple> getDescription() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public <T> List<T> getBucketValues(Class<T> returnType) {
-		// TODO Auto-generated method stub
+	public <T> List<T> getBucketValues(Class<T> returnType) { 
 		return null;
 	}
 
