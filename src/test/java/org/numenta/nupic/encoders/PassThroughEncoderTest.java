@@ -21,6 +21,17 @@ public class PassThroughEncoderTest {
 		assertEquals(ArrayUtils.sum(bitmap), ArrayUtils.sum(output));
 		Tuple decode = encoder.decode(output, null);
 		assertTrue(((HashMap) decode.get(0)).containsKey(encoder.getName()));
+		
+		encoder = PassThroughEncoder.builder()
+				.n(9)
+				.name("foo")
+				.build();
+		encoder.setName("foo");
+		output = new int[9];
+		encoder.encodeIntoArray(bitmap, output);
+		assertEquals(ArrayUtils.sum(bitmap), ArrayUtils.sum(output));
+		decode = encoder.decode(output, null);
+		assertTrue(((HashMap) decode.get(0)).containsKey(encoder.getName()));
 	}
 
 	@Test
@@ -30,6 +41,13 @@ public class PassThroughEncoderTest {
 		int bitmap[] = {0,0,0,1,0,1,0,0,0};
 		int[] output = encoder.encode(bitmap);
 		assertEquals(ArrayUtils.sum(bitmap),ArrayUtils.sum(output));  
+		
+		encoder = PassThroughEncoder.builder()
+				.n(9)
+				.name("foo")
+				.build();
+		output = encoder.encode(bitmap);
+		assertEquals(ArrayUtils.sum(bitmap),ArrayUtils.sum(output));
 	}
 	
 
@@ -64,6 +82,16 @@ public class PassThroughEncoderTest {
 		int[] out2 = encoder.encode(bitmap2);
 
 		TDoubleList result = encoder.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
+		assertTrue(result.size() == 1 );
+		assertEquals(expectedScore, result.get(0), 0.0);
+		
+		encoder = PassThroughEncoder.builder()
+				.n(9)
+				.name("foo")
+				.build();
+		out1 = encoder.encode(bitmap1);
+		out2 = encoder.encode(bitmap2);
+		result = encoder.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
 		assertTrue(result.size() == 1 );
 		assertEquals(expectedScore, result.get(0), 0.0);
 	}
