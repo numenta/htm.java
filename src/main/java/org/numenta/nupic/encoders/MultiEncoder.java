@@ -185,15 +185,15 @@ public class MultiEncoder extends Encoder<Object> {
 			case "CoordinateEncoder":
 				return CoordinateEncoder.builder();
 			case "GeospatialCoordinateEncoder":
-				return GeospatialCoordinateEncoder.builder();
+				return GeospatialCoordinateEncoder.geobuilder();
 			case "LogEncoder":
 				return LogEncoder.builder();
-			//case "PassThroughEncoder":
-			//	return PassThroughEncoder.builder();
+			case "PassThroughEncoder":
+				return PassThroughEncoder.builder();
 			case "ScalarEncoder":
 				return ScalarEncoder.builder();
-			//case "SparsePassThroughEncoder":
-			//	return SparsePassThroughEncoder.builder();
+			case "SparsePassThroughEncoder":
+				return SparsePassThroughEncoder.sparseBuilder();
 			default:
 				throw new IllegalArgumentException("Invalid encoder: " + encoderName);
 		}
