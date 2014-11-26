@@ -12,6 +12,7 @@ import org.numenta.nupic.util.*;
 
 public class SparsePassThroughEncoderTest {
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeArray() {
 		SparsePassThroughEncoder encoder = new SparsePassThroughEncoder(24, null);
@@ -23,7 +24,7 @@ public class SparsePassThroughEncoderTest {
 		encoder.encodeIntoArray(bitmap, output);
 		assertEquals(bitmap.length,ArrayUtils.sum(output));
 		Tuple decode = encoder.decode(output, null);
-		assertTrue(((HashMap) decode.get(0)).containsKey(encoder.getName()));
+		assertTrue(((HashMap<String, RangeList>) decode.get(0)).containsKey(encoder.getName()));
 	}
 	 @Rule
 	  public ExpectedException exception = ExpectedException.none();
