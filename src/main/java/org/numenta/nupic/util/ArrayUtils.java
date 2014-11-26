@@ -53,7 +53,7 @@ public class ArrayUtils {
             return i > 0;
         }
     };
-
+    
     /**
      * Return a new double[] containing the difference of each element and its
      * succeding element.
