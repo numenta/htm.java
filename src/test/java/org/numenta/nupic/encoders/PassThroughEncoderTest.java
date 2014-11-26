@@ -11,6 +11,7 @@ import org.numenta.nupic.util.*;
 
 public class PassThroughEncoderTest {
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeArray() {
 		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
@@ -20,7 +21,7 @@ public class PassThroughEncoderTest {
 		encoder.encodeIntoArray(bitmap, output);
 		assertEquals(ArrayUtils.sum(bitmap), ArrayUtils.sum(output));
 		Tuple decode = encoder.decode(output, null);
-		assertTrue(((HashMap) decode.get(0)).containsKey(encoder.getName()));
+		assertTrue(((HashMap<String, RangeList>) decode.get(0)).containsKey(encoder.getName()));
 	}
 
 	@Test
