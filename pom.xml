@@ -34,39 +34,39 @@
 		</plugins>
 	</reporting>
 	<build>
-		<plugins>
-			<plugin>
-        		<artifactId>maven-compiler-plugin</artifactId>
-        		<configuration>
-          		<verbose>true</verbose>
-         		 <source>1.7</source>
-         		 <target>1.7</target>
-       		 </configuration>
-     		</plugin>
-			<plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                  <formats>
-                    <format>html</format>
-                    <format>xml</format>
-                  </formats>
-                </configuration>
-            </plugin>
-			<plugin>
-				<groupId>org.eluder.coveralls</groupId>
-				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>2.2.0</version>
-				<configuration>
-					<format>xml</format>
-					<maxmem>256m</maxmem>
-					<aggregate>true</aggregate>
-					<sourceEncoding>UTF-8</sourceEncoding>
-					<repoToken>gWODAiN95fSX3NuVOedJPP8Xeng01sawX</repoToken>
-				</configuration>
-			</plugin>
-		</plugins>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <verbose>true</verbose>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>2.6</version>
+                    <configuration>
+                        <formats>
+                            <format>html</format>
+                            <format>xml</format>
+                        </formats>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.eluder.coveralls</groupId>
+                    <artifactId>coveralls-maven-plugin</artifactId>
+                    <version>2.2.0</version>
+                    <configuration>
+                        <format>xml</format>
+                        <maxmem>256m</maxmem>
+                        <aggregate>true</aggregate>
+                        <sourceEncoding>UTF-8</sourceEncoding>
+                        <repoToken>gWODAiN95fSX3NuVOedJPP8Xeng01sawX</repoToken>
+                    </configuration>
+                </plugin>
+            </plugins>
 	</build>
 	<dependencies>
 		<dependency>
