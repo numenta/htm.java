@@ -39,6 +39,13 @@ public class SparsePassThroughEncoderTest {
 		exception.expect(IllegalArgumentException.class);
 		encoder.encode(new int[] {2});
 		
+		encoder = SparsePassThroughEncoder.sparseBuilder()
+				.n(9)
+				.w(3)
+				.name("foo")
+				.build();
+		exception.expect(IllegalArgumentException.class);
+		encoder.encode(new int[] {2});
 	}
 	
 	@Test
@@ -47,6 +54,13 @@ public class SparsePassThroughEncoderTest {
 		exception.expect(IllegalArgumentException.class);
 		encoder.encode(new int[] {2,7,15,18,23});
 		
+		encoder = SparsePassThroughEncoder.sparseBuilder()
+				.n(9)
+				.w(3)
+				.name("foo")
+				.build();
+		exception.expect(IllegalArgumentException.class);
+		encoder.encode(new int[] {2,7,15,18,23});
 	}
 
 	@Ignore
@@ -59,6 +73,20 @@ public class SparsePassThroughEncoderTest {
 		int[] out2 = encoder2.encode(bitmap2);
 
 		TDoubleList result = encoder1.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
+		assertTrue(result.size() == 1 );
+		assertEquals(expectedScore, result.get(0), 0.0);
+		
+		encoder1 = SparsePassThroughEncoder.sparseBuilder()
+				.n(outputWidth1)
+				.build();
+		encoder2 = SparsePassThroughEncoder.sparseBuilder()
+				.n(outputWidth2)
+				.build();
+		
+		out1 = encoder1.encode(bitmap1);
+		out2 = encoder2.encode(bitmap2);
+
+		result = encoder1.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
 		assertTrue(result.size() == 1 );
 		assertEquals(expectedScore, result.get(0), 0.0);
 	}
