@@ -100,8 +100,7 @@ public class CategoryEncoder extends Encoder<String> {
 	 * 
 	 * @return a {@code CategoryEncoder.Builder}
 	 */
-	@SuppressWarnings("rawtypes")
-	public static Encoder.Builder builder() {
+	public static Encoder.Builder<CategoryEncoder.Builder, CategoryEncoder> builder() {
 		return new CategoryEncoder.Builder();
 	}
 	

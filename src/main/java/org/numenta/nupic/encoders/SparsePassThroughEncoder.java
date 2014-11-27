@@ -35,9 +35,20 @@ package org.numenta.nupic.encoders;
  *
  */
 public class SparsePassThroughEncoder extends PassThroughEncoder {
-
+	private SparsePassThroughEncoder() { super(); }
+	
 	public SparsePassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
 		super(outputWidth, outputBitsOnCount);
+	}
+	
+	/**
+	 * Returns a builder for building SparsePassThroughEncoders. 
+	 * This builder may be reused to produce multiple builders
+	 * 
+	 * @return a {@code SparsePassThroughEncoder.Builder}
+	 */
+	public static Encoder.Builder<SparsePassThroughEncoder.Builder, SparsePassThroughEncoder> sparseBuilder() {
+		return new SparsePassThroughEncoder.Builder();
 	}
 
 	@Override
@@ -53,5 +64,36 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 			denseInput[i] = 1;
 		}
 		super.encodeIntoArray(denseInput, output);
+	}
+	
+	/**
+	 * Returns a {@link EncoderBuilder} for constructing {@link SparsePassThroughEncoder}s
+	 * 
+	 * The base class architecture is put together in such a way where boilerplate
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
+	 * 
+	 */
+	public static class Builder extends Encoder.Builder<SparsePassThroughEncoder.Builder, SparsePassThroughEncoder> {
+		private Builder() {}
+
+		@Override
+		public SparsePassThroughEncoder build() {
+			//Must be instantiated so that super class can initialize 
+			//boilerplate variables.
+			encoder = new SparsePassThroughEncoder();
+			
+			//Call super class here
+			super.build();
+			
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
+			
+			((SparsePassThroughEncoder)encoder).init();
+			
+			return (SparsePassThroughEncoder)encoder;
+		}
 	}
 }
