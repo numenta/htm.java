@@ -22,7 +22,9 @@
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.array.TDoubleArrayList;
+
 import java.util.*;
+
 import org.numenta.nupic.util.*;
 
 /**
@@ -39,12 +41,29 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	 * as we do here also. (This is w in the Python code)
 	 */
 	private Integer outputBitsOnCount;
+	
+	protected PassThroughEncoder() {}
 
 	public PassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
 		super.setW(outputWidth);
 		super.setN(outputWidth);
 		super.setForced(false);
 		this.outputBitsOnCount = outputBitsOnCount;
+	}
+	
+	/**
+	 * Returns a builder for building PassThroughEncoders. 
+	 * This builder may be reused to produce multiple builders
+	 * 
+	 * @return a {@code PassThroughEncoder.Builder}
+	 */
+	public static Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> builder() {
+		return new PassThroughEncoder.Builder();
+	}
+	
+	public void init() {
+		setForced(false);
+		this.outputBitsOnCount = getW() > 0 ? getW() : null;
 	}
 	
 	@Override
@@ -107,7 +126,6 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	 * @param output
 	 */
 	public void encodeIntoArray(int[] input, int[] output){
-
 		if( input.length != output.length)
 			throw new IllegalArgumentException(String.format("Different input (%i) and output (%i) sizes", input.length, output.length));
 		if(this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
@@ -153,4 +171,34 @@ public class PassThroughEncoder extends Encoder<int[]> {
 		return null;
 	}
 
+	/**
+	 * Returns a {@link EncoderBuilder} for constructing {@link PassThroughEncoder}s
+	 * 
+	 * The base class architecture is put together in such a way where boilerplate
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
+	 * 
+	 */
+	public static class Builder extends Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> {
+		private Builder() {}
+
+		@Override
+		public PassThroughEncoder build() {
+			//Must be instantiated so that super class can initialize 
+			//boilerplate variables.
+			encoder = new PassThroughEncoder();
+			
+			//Call super class here
+			super.build();
+			
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
+			
+			((PassThroughEncoder)encoder).init();
+			
+			return (PassThroughEncoder)encoder;
+		}
+	}
 }

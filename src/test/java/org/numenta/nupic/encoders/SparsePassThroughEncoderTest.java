@@ -22,15 +22,19 @@
 
 package org.numenta.nupic.encoders;
 
-import static org.junit.Assert.*;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 
 import java.util.HashMap;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 
-import org.junit.*;
 import org.junit.rules.ExpectedException;
-import org.numenta.nupic.util.*;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Tuple;
 
 public class SparsePassThroughEncoderTest {
 
@@ -57,6 +61,13 @@ public class SparsePassThroughEncoderTest {
 		exception.expect(IllegalArgumentException.class);
 		encoder.encode(new int[] {2});
 		
+		encoder = SparsePassThroughEncoder.sparseBuilder()
+				.n(9)
+				.w(3)
+				.name("foo")
+				.build();
+		exception.expect(IllegalArgumentException.class);
+		encoder.encode(new int[] {2});
 	}
 	
 	@Test
@@ -65,6 +76,13 @@ public class SparsePassThroughEncoderTest {
 		exception.expect(IllegalArgumentException.class);
 		encoder.encode(new int[] {2,7,15,18,23});
 		
+		encoder = SparsePassThroughEncoder.sparseBuilder()
+				.n(9)
+				.w(3)
+				.name("foo")
+				.build();
+		exception.expect(IllegalArgumentException.class);
+		encoder.encode(new int[] {2,7,15,18,23});
 	}
 
 	@Ignore
@@ -77,6 +95,20 @@ public class SparsePassThroughEncoderTest {
 		int[] out2 = encoder2.encode(bitmap2);
 
 		TDoubleList result = encoder1.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
+		assertTrue(result.size() == 1 );
+		assertEquals(expectedScore, result.get(0), 0.0);
+		
+		encoder1 = SparsePassThroughEncoder.sparseBuilder()
+				.n(outputWidth1)
+				.build();
+		encoder2 = SparsePassThroughEncoder.sparseBuilder()
+				.n(outputWidth2)
+				.build();
+		
+		out1 = encoder1.encode(bitmap1);
+		out2 = encoder2.encode(bitmap2);
+
+		result = encoder1.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
 		assertTrue(result.size() == 1 );
 		assertEquals(expectedScore, result.get(0), 0.0);
 	}
