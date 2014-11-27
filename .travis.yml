@@ -2,6 +2,4 @@ language: java
 
 after_success:
   - sudo chown -R ${USER} /home/travis/build/numenta
-  - mkdir -p target/site/cobertura
-  - find . -name coverage.xml
-  - mvn clean cobertura:cobertura coveralls:report
+  - mvn clean test jacoco:report coveralls:report
