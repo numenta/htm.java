@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -73,7 +74,7 @@ public class CLAClassifier {
      * these so that we can associate the current iteration's classification
      * with the activationPattern from N steps ago
 	 */
-	private LinkedBlockingDeque<int[]> patternNZHistory;
+	private Deque<Tuple> patternNZHistory;
 	/**
 	 * These are the bit histories. Each one is a BitHistory instance, stored in
      * this dict, where the key is (bit, nSteps). The 'bit' is the index of the
@@ -114,7 +115,7 @@ public class CLAClassifier {
 		this.actValueAlpha = actValueAlpha;
 		this.verbosity = verbosity;
 		actualValues.add(null);
-		patternNZHistory = new LinkedBlockingDeque<int[]>(steps.size() + 1);
+		patternNZHistory = new Deque<Tuple>(steps.size() + 1);
 	}
 	
 	/**
@@ -169,7 +170,7 @@ public class CLAClassifier {
 			System.out.println(" classificationIn: " + classification);
 		}
 		
-		patternNZHistory.add(patternNZ);
+		patternNZHistory.append(new Tuple(2, learnIteration, patternNZ));
 		
 		//------------------------------------------------------------------------
 	    // Inference:
@@ -270,8 +271,8 @@ public class CLAClassifier {
 				// Do we have the pattern that should be assigned to this classification
 		        // in our pattern history? If not, skip it
 				boolean found = false;
-				for(int[] il : patternNZHistory) {
-					learnPatternNZ = il;
+				for(Tuple t : patternNZHistory) {
+					learnPatternNZ = (int[]) t.get(1);
 					if(iteration == learnIteration - nSteps) {
 						found = true;
 						break;

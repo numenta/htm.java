@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  *
  * @param <E>
  */
-public class Deque<E> {
+public class Deque<E> implements Iterable<E> {
 	/** Backing array list */
 	private LinkedBlockingDeque<E> backingList = new LinkedBlockingDeque<E>();
 	/** Originating size of this {@code Deque} */
