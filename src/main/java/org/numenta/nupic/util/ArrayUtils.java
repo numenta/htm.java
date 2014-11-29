@@ -1234,6 +1234,23 @@ public class ArrayUtils {
         }
         return index;
     }
+    
+    /**
+     * Returns the index of the max value in the specified array
+     * @param array the array to find the max value index in
+     * @return the index of the max value
+     */
+    public static int argmax(double[] array) {
+        int index = -1;
+        double max = Double.MIN_VALUE;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+                index = i;
+            }
+        }
+        return index;
+    }
 
     /**
      * Returns the maximum value in the specified array
