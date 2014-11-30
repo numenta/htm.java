@@ -153,7 +153,7 @@ public class BitHistory {
 	public void infer(int iteration, double[] votes) {
 		// Place the duty cycle into the votes and update the running total for
 	    // normalization
-		int total = 0;
+		double total = 0;
 		for(int i = 0;i < stats.size();i++) {
 			double dc = stats.get(i);
 			if(dc > 0.0) {

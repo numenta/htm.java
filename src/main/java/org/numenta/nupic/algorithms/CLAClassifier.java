@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
@@ -60,7 +59,7 @@ public class CLAClassifier {
 	 * This contains the offset between the recordNum (provided by caller) and
      * learnIteration (internal only, always starts at 0).
 	 */
-	private int recordNumMinusLearnIteration;
+	private int recordNumMinusLearnIteration = -1;
 	/**
 	 * This contains the value of the highest bucket index we've ever seen
      * It is used to pre-allocate fixed size arrays that hold the weights of
@@ -150,12 +149,12 @@ public class CLAClassifier {
      *              				'actualValues': [1.5, 3,5, 5,5, 7.6],
      *             				}
 	 */
-	public Map<String, Object> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
-		Map<String, Object> retVal = new LinkedHashMap<String, Object>();
+	public Map<Object, Object> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
+		Map<Object, Object> retVal = new LinkedHashMap<Object, Object>();
 		
 		// Save the offset between recordNum and learnIteration if this is the first
 	    // compute
-		if(recordNumMinusLearnIteration == 0) {
+		if(recordNumMinusLearnIteration == -1) {
 			recordNumMinusLearnIteration = recordNum - learnIteration;
 		}
 		
@@ -171,6 +170,7 @@ public class CLAClassifier {
 		}
 		
 		patternNZHistory.append(new Tuple(2, learnIteration, patternNZ));
+		System.out.println("deque size = " + learnIteration + "  " + patternNZHistory);
 		
 		//------------------------------------------------------------------------
 	    // Inference:
@@ -227,7 +227,7 @@ public class CLAClassifier {
 					}
 				}
 				
-				retVal.put("" + nSteps, sumVotes);
+				retVal.put(nSteps, sumVotes);
 			}
 		}
 		
@@ -272,6 +272,7 @@ public class CLAClassifier {
 		        // in our pattern history? If not, skip it
 				boolean found = false;
 				for(Tuple t : patternNZHistory) {
+					iteration = (int)t.get(0);
 					learnPatternNZ = (int[]) t.get(1);
 					if(iteration == learnIteration - nSteps) {
 						found = true;
@@ -280,18 +281,18 @@ public class CLAClassifier {
 					iteration++;
 				}
 				if(!found) continue;
-			}
-			
-			// Store classification info for each active bit from the pattern
-	        // that we got nSteps time steps ago.
-			for(int bit : learnPatternNZ) {
-				// Get the history structure for this bit and step
-				Tuple key = new Tuple(2, bit, nSteps);
-				BitHistory history = activeBitHistory.get(key);
-				if(history == null) {
-					activeBitHistory.put(key, history = new BitHistory(this, bit, nSteps));
+				
+				// Store classification info for each active bit from the pattern
+		        // that we got nSteps time steps ago.
+				for(int bit : learnPatternNZ) {
+					// Get the history structure for this bit and step
+					Tuple key = new Tuple(2, bit, nSteps);
+					BitHistory history = activeBitHistory.get(key);
+					if(history == null) {
+						activeBitHistory.put(key, history = new BitHistory(this, bit, nSteps));
+					}
+					history.store(learnIteration, bucketIdx);
 				}
-				history.store(iteration, bucketIdx);
 			}
 		}
 		
@@ -299,7 +300,7 @@ public class CLAClassifier {
 			System.out.println(" inference: combined bucket likelihoods:");
 			System.out.println("   actual bucket values: " + retVal.get("actualValues"));
 			
-			for(String key : retVal.keySet()) {
+			for(Object key : retVal.keySet()) {
 				if(key.equals("actualValues")) continue;
 				
 				System.out.println(String.format("  %d steps: ", key, pFormatArray((double[])retVal.get(key))));

@@ -273,4 +273,61 @@ public class Deque<E> implements Iterable<E> {
 	public Iterator<E> iterator() {
 		return backingList.iterator();
 	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((backingList == null) ? 0 : backingList.hashCode());
+		result = prime * result + capacity;
+		result = prime * result + currentSize;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Deque<E> other = (Deque<E>) obj;
+		if (capacity != other.capacity)
+			return false;
+		if (currentSize != other.currentSize)
+			return false;
+		if (backingList == null) {
+			if (other.backingList != null)
+				return false;
+		} else if (!deepEquals(other))
+			return false;
+		
+		return true;
+	}
+	
+	private boolean deepEquals(Deque<E> other) {
+		Iterator<E> otherIt = other.iterator();
+		for(Iterator<E> it = iterator();it.hasNext();) {
+			if(!otherIt.hasNext() || !it.next().equals(otherIt.next())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String toString() {
+		return backingList.toString() + " capacity: " + capacity;
+	}
 }
