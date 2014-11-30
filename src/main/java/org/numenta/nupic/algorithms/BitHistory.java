@@ -35,26 +35,32 @@ import gnu.trove.list.array.TDoubleArrayList;
  */
 public class BitHistory {
 	/** Store reference to the classifier */
-	private CLAClassifier classifier;
+	CLAClassifier classifier;
 	/** Form our "id" */
-	private String id;
+	String id;
 	/**
 	 * Dictionary of bucket entries. The key is the bucket index, the
      * value is the dutyCycle, which is the rolling average of the duty cycle
 	 */
-	private TDoubleList stats;
+	TDoubleList stats;
 	/** lastUpdate is the iteration number of the last time it was updated. */
-	private int lastTotalUpdate = -1;
+	int lastTotalUpdate = -1;
 	
 	// This determines how large one of the duty cycles must get before each of the
 	// duty cycles are updated to the current iteration.
 	// This must be less than float32 size since storage is float32 size
 	private static final int DUTY_CYCLE_UPDATE_INTERVAL = Integer.MAX_VALUE;
 	
+	
+	/**
+	 * Package protected constructor for serialization purposes.
+	 */
+	BitHistory() {}
+	
 	/**
 	 * Constructs a new {@code BitHistory}
 	 * 
-	 * @param classifier	instance of the CLAClassifier that owns us
+	 * @param classifier	instance of the {@link CLAClassifier} that owns us
 	 * @param bitNum		activation pattern bit number this history is for,
      *                  	used only for debug messages
 	 * @param nSteps		number of steps of prediction this history is for, used

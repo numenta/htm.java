@@ -1,3 +1,25 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
+
 package org.numenta.nupic.algorithms;
 
 import gnu.trove.list.TIntList;
@@ -6,13 +28,16 @@ import gnu.trove.list.array.TIntArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * A CLA classifier accepts a binary input from the level below (the
@@ -38,9 +63,12 @@ import org.numenta.nupic.util.Tuple;
  * the classifications for T+3. The 'steps' constructor argument specifies the
  * list of time-steps you want.
  * 
+ * @author Numenta
  * @author David Ray
  * @see BitHistory
  */
+@JsonSerialize(using=CLAClassifierSerializer.class)
+@JsonDeserialize(using=CLAClassifierDeserializer.class)
 public class CLAClassifier {
 	int verbosity = 0;
 	/**
@@ -54,41 +82,41 @@ public class CLAClassifier {
 	 * The bit's learning iteration. This is updated each time store() gets
      * called on this bit.
 	 */
-	private int learnIteration;
+	int learnIteration;
 	/**
 	 * This contains the offset between the recordNum (provided by caller) and
      * learnIteration (internal only, always starts at 0).
 	 */
-	private int recordNumMinusLearnIteration = -1;
+	int recordNumMinusLearnIteration = -1;
 	/**
 	 * This contains the value of the highest bucket index we've ever seen
      * It is used to pre-allocate fixed size arrays that hold the weights of
      * each bucket index during inference 
 	 */
-	private int maxBucketIdx;
+	int maxBucketIdx;
 	/** The sequence different steps of multi-step predictions */
-	private TIntList steps = new TIntArrayList();
+	TIntList steps = new TIntArrayList();
 	/**
 	 * History of the last _maxSteps activation patterns. We need to keep
      * these so that we can associate the current iteration's classification
      * with the activationPattern from N steps ago
 	 */
-	private Deque<Tuple> patternNZHistory;
+	Deque<Tuple> patternNZHistory;
 	/**
 	 * These are the bit histories. Each one is a BitHistory instance, stored in
      * this dict, where the key is (bit, nSteps). The 'bit' is the index of the
      * bit in the activation pattern and nSteps is the number of steps of
      * prediction desired for that bit.
 	 */
-	private Map<Tuple, BitHistory> activeBitHistory = new HashMap<Tuple, BitHistory>();
+	Map<Tuple, BitHistory> activeBitHistory = new HashMap<Tuple, BitHistory>();
 	/**
 	 * This keeps track of the actual value to use for each bucket index. We
      * start with 1 bucket, no actual value so that the first infer has something
      * to return
 	 */
-	private List<Object> actualValues = new ArrayList<Object>();
+	List<?> actualValues = new ArrayList<Object>();
 	
-	private String g_debugPrefix = "CLAClassifier";
+	String g_debugPrefix = "CLAClassifier";
 	
 	
 	/**
@@ -149,8 +177,10 @@ public class CLAClassifier {
      *              				'actualValues': [1.5, 3,5, 5,5, 7.6],
      *             				}
 	 */
-	public Map<Object, Object> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
-		Map<Object, Object> retVal = new LinkedHashMap<Object, Object>();
+	@SuppressWarnings("unchecked")
+	public <T> ClassifierResult<T> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
+		ClassifierResult<T> retVal = new ClassifierResult<T>();
+		List<T> actualValues = (List<T>)this.actualValues;
 		
 		// Save the offset between recordNum and learnIteration if this is the first
 	    // compute
@@ -190,12 +220,12 @@ public class CLAClassifier {
 				defaultValue = classification.get("actValue");
 			}
 			
-			Object[] actValues = new Object[this.actualValues.size()];
+			T[] actValues = (T[])new Object[this.actualValues.size()];
 			for(int i = 0;i < actualValues.size();i++) {
-				actValues[i] = actualValues.get(i) == null ? defaultValue : actualValues.get(i);
+				actValues[i] = (T)(actualValues.get(i) == null ? defaultValue : actualValues.get(i));
 			}
 			
-			retVal.put("actualValues", actValues);
+			retVal.setActualValues(actValues);
 			
 			// For each n-step prediction...
 			for(int nSteps : steps.toArray()) {
@@ -227,7 +257,7 @@ public class CLAClassifier {
 					}
 				}
 				
-				retVal.put(nSteps, sumVotes);
+				retVal.setStats(nSteps, sumVotes);
 			}
 		}
 		
@@ -251,13 +281,14 @@ public class CLAClassifier {
 				actualValues.add(null);
 			}
 			if(actualValues.get(bucketIdx) == null) {
-				actualValues.set(bucketIdx, actValue);
+				actualValues.set(bucketIdx, (T)actValue);
 			}else{
 				if(Number.class.isAssignableFrom(actValue.getClass())) {
-					actualValues.set(bucketIdx, (1.0 - actValueAlpha) * ((Number)actualValues.get(bucketIdx)).doubleValue() + 
+					Double val = ((1.0 - actValueAlpha) * ((Number)actualValues.get(bucketIdx)).doubleValue() + 
 						actValueAlpha * ((Number)actValue).doubleValue());
+					actualValues.set(bucketIdx, (T)val);
 				}else{
-					actualValues.set(bucketIdx, actValue);
+					actualValues.set(bucketIdx, (T)actValue);
 				}
 			}
 			
@@ -298,15 +329,13 @@ public class CLAClassifier {
 		
 		if(infer && verbosity >= 1) {
 			System.out.println(" inference: combined bucket likelihoods:");
-			System.out.println("   actual bucket values: " + retVal.get("actualValues"));
+			System.out.println("   actual bucket values: " + Arrays.toString((T[])retVal.getActualValues()));
 			
-			for(Object key : retVal.keySet()) {
-				if(key.equals("actualValues")) continue;
-				
-				System.out.println(String.format("  %d steps: ", key, pFormatArray((double[])retVal.get(key))));
-				int bestBucketIdx = ArrayUtils.argmax((double[])retVal.get(key));
+			for(int key : retVal.stepSet()) {
+				System.out.println(String.format("  %d steps: ", key, pFormatArray((double[])retVal.getActualValue(key))));
+				int bestBucketIdx = ArrayUtils.argmax((double[])retVal.getActualValue(key));
 				System.out.println(String.format("   most likely bucket idx: %d, value: %s ", bestBucketIdx, 
-					((Object[])retVal.get("actualValues"))[bestBucketIdx]));
+					retVal.getActualValue(bestBucketIdx)));
 				
 			}
 		}
@@ -328,5 +357,30 @@ public class CLAClassifier {
 		}
 		sb.append(" ]");
 		return sb.toString();
+	}
+	
+	public String serialize() {
+		String json = null;
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			json = mapper.writeValueAsString(this);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return json;
+	}
+	
+	public static CLAClassifier deSerialize(String jsonStrategy) {
+		ObjectMapper om = new ObjectMapper();
+		CLAClassifier c = null;
+		try {
+			Object o = om.readValue(jsonStrategy, CLAClassifier.class);
+			c = (CLAClassifier)o;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return c;
 	}
 }
