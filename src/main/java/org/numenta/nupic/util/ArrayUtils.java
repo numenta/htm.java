@@ -53,7 +53,7 @@ public class ArrayUtils {
             return i > 0;
         }
     };
-
+    
     /**
      * Return a new double[] containing the difference of each element and its
      * succeding element.
@@ -662,7 +662,7 @@ public class ArrayUtils {
      * @return
      */
     public static double sum(double[] array) {
-        int sum = 0;
+        double sum = 0;
         for (int i = 0; i < array.length; i++) {
             sum += array[i];
         }
@@ -1226,6 +1226,23 @@ public class ArrayUtils {
     public static int argmax(int[] array) {
         int index = -1;
         int max = Integer.MIN_VALUE;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+                index = i;
+            }
+        }
+        return index;
+    }
+    
+    /**
+     * Returns the index of the max value in the specified array
+     * @param array the array to find the max value index in
+     * @return the index of the max value
+     */
+    public static int argmax(double[] array) {
+        int index = -1;
+        double max = Double.MIN_VALUE;
         for (int i = 0; i < array.length; i++) {
             if (array[i] > max) {
                 max = array[i];

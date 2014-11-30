@@ -29,6 +29,9 @@ dependencies {
         exclude(module: 'commons-io')
     }
     compile group: 'net.sf.trove4j', name: 'trove4j', version:'3.0.3'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.4.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.4.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.4.4'
     testCompile group: 'junit', name: 'junit', version:'4.11'
 }
 
