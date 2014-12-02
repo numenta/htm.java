@@ -37,7 +37,7 @@ import org.numenta.nupic.util.Condition;
  * 
  * @author Neal Miller
  */
-public class SpatialPoolerExample {
+public class HelloSP {
     private SpatialPooler sp;
     private Parameters parameters;
     private Connections mem;
@@ -51,7 +51,7 @@ public class SpatialPoolerExample {
      * @param inputDimensions         The size of the input.  {m, n} will give a size of m x n
      * @param columnDimensions        The size of the 2 dimensional array of columns
      */
-    SpatialPoolerExample(int[] inputDimensions, int[] columnDimensions) {
+    HelloSP(int[] inputDimensions, int[] columnDimensions) {
         inputSize = 1;
         columnNumber = 1;
         for (int x : inputDimensions) {
@@ -128,7 +128,7 @@ public class SpatialPoolerExample {
     }
     
     public static void main(String args[]) {
-        SpatialPoolerExample example = new SpatialPoolerExample(new int[]{32, 32}, new int[]{64, 64});
+        HelloSP example = new HelloSP(new int[]{32, 32}, new int[]{64, 64});
         
         // Lesson 1
         System.out.println("\n \nFollowing columns represent the SDR");
