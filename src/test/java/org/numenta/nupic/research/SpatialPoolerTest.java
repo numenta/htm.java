@@ -59,6 +59,7 @@ public class SpatialPoolerTest {
         parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
         parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
         parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
         parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
         parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
