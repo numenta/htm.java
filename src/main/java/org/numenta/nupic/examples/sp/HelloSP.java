@@ -20,7 +20,7 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic.examples;
+package org.numenta.nupic.examples.sp;
 
 import java.util.Arrays;
 import java.util.Random;
