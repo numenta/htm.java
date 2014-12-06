@@ -1484,4 +1484,20 @@ public class ArrayUtils {
         }
         return result.toString();
     }
+
+    /**
+     * Return True if all elements of the  <tt>values</tt> have evaluated to true with <tt>condition</tt>
+     * @param values
+     * @param condition
+     * @param <T>
+     * @return
+     */
+    public static <T> boolean  all(final int[]  values, final Condition<T> condition) {
+        for (int element : values) {
+            if (!condition.eval(element)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
