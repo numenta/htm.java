@@ -1,5 +1,8 @@
 package org.numenta.nupic.encoders;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class AdaptiveScalarEncoder extends ScalarEncoder {
 
@@ -34,7 +37,6 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		super.init();
 	}
 
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -55,26 +57,47 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public AdaptiveScalarEncoder() {
 	}
-	
-	/*public static Encoder.Builder<AdaptiveScalarEncoder.Builder, AdaptiveScalarEncoder> builder() {
+
+	/**
+	 * Returns a builder for building AdaptiveScalarEncoder. This builder may be
+	 * reused to produce multiple builders
+	 * 
+	 * @return a {@code AdaptiveScalarEncoder.Builder}
+	 */
+	public static AdaptiveScalarEncoder.Builder adaptiveBuilder() {
 		return new AdaptiveScalarEncoder.Builder();
 	}
 
 	public static class Builder extends Encoder.Builder<AdaptiveScalarEncoder.Builder, AdaptiveScalarEncoder> {
 		private Builder() {}
-		
+
 		@Override
 		public AdaptiveScalarEncoder build() {
 			encoder = new AdaptiveScalarEncoder();
 			super.build();
-			((AdaptiveScalarEncoder)encoder).init();
-			
+			((AdaptiveScalarEncoder) encoder).init();
 			return (AdaptiveScalarEncoder) encoder;
 		}
-	}*/
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#topDownCompute(int[])
+	 */
+	@Override
+	public List<EncoderResult> topDownCompute(int[] encoded) {
+		if (this.getMinVal() == 0 || this.getMaxVal() == 0) {
+			List<EncoderResult> res = new ArrayList<EncoderResult>();
+			int[] enArray = new int[this.getN()];
+			Arrays.fill(enArray, 0);
+			EncoderResult ecResult = new EncoderResult(0, 0, Arrays.toString(enArray));
+			res.add(ecResult);
+			return res;
+		}
+		return super.topDownCompute(encoded);
+	}
 
 }

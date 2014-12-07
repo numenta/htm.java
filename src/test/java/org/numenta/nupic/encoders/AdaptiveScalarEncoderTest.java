@@ -22,6 +22,12 @@
 
 package org.numenta.nupic.encoders;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -30,16 +36,15 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.numenta.nupic.encoders.ScalarEncoder.Builder;
 
 /**
  * @author sambit
- *
+ * 
  */
 public class AdaptiveScalarEncoderTest {
 
 	private AdaptiveScalarEncoder ase;
-	private Builder builder;
+	private AdaptiveScalarEncoder.Builder builder;
 
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
@@ -59,19 +64,13 @@ public class AdaptiveScalarEncoderTest {
 	}
 
 	/**
-	 * @throws java.lang.Exception
+	 *
 	 */
 	@Before
-	public void setUp() throws Exception {
-		/*builder = AdaptiveScalarEncoder.builder()
-				.n(14)
-				.w(3)
-				.minVal(1)
-				.maxVal(8)
-				.radius(1.5)
-				.resolution(0.5)
-				.periodic(false)
-				.forced(true);*/
+	public void setUp() {
+		builder = AdaptiveScalarEncoder.adaptiveBuilder().n(14).w(3).minVal(1)
+				.maxVal(8).radius(1.5).resolution(0.5).periodic(false)
+				.forced(true);
 	}
 
 	/**
@@ -80,98 +79,36 @@ public class AdaptiveScalarEncoderTest {
 	@After
 	public void tearDown() throws Exception {
 	}
-	
-	private void initASE() {
-		/*ase = builder.build();*/
-	}
 
-	/**
-	 * Test method for {@link org.numenta.nupic.encoders.AdaptiveScalarEncoder#AdaptiveScalarEncoder()}.
-	 */
-	@Test
-	public void testAdaptiveScalarEncoder() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
+	private void initASE() {
+		ase = builder.build();
 	}
 
 	/**
 	 * Test method for
-	 * {@link org.numenta.nupic.encoders.AdaptiveScalarEncoder#init()}.
+	 * {@link org.numenta.nupic.encoders.AdaptiveScalarEncoder#AdaptiveScalarEncoder()}
+	 * .
 	 */
 	@Test
-	public void testInitThrowsIllegalStateExceptionForW() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		exception.expect(IllegalStateException.class);
-		adaptiveScalarEncoder.init();
-	}
-
-	@Test
-	public void testInitThrowsIllegalStateExceptionForMaxVal() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		adaptiveScalarEncoder.setW(3);
-		exception.expect(IllegalStateException.class);
-		adaptiveScalarEncoder.init();
-	}
-
-	@Test
-	public void testInitThrowsIllegalStateExceptionForN() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		adaptiveScalarEncoder.setW(3);
-		adaptiveScalarEncoder.setMinVal(1);
-		adaptiveScalarEncoder.setMaxVal(8);
-		adaptiveScalarEncoder.setN(14);
-		exception.expect(IllegalStateException.class);
-		adaptiveScalarEncoder.init();
-	}
-
-	@Test
-	public void testInitThrowsIllegalStateExceptionForRadius() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		adaptiveScalarEncoder.setW(3);
-		adaptiveScalarEncoder.setMinVal(1);
-		adaptiveScalarEncoder.setMaxVal(8);
-		adaptiveScalarEncoder.setN(14);
-		adaptiveScalarEncoder.setRadius(1.5);
-		exception.expect(IllegalStateException.class);
-		adaptiveScalarEncoder.init();
-	}
-
-	@Test
-	public void testInitThrowsIllegalStateExceptionForInterval() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		adaptiveScalarEncoder.setW(3);
-		adaptiveScalarEncoder.setMinVal(1);
-		adaptiveScalarEncoder.setMaxVal(8);
-		adaptiveScalarEncoder.setN(14);
-		adaptiveScalarEncoder.setResolution(0.5);
-		exception.expect(IllegalStateException.class);
-		adaptiveScalarEncoder.init();
+	public void testAdaptiveScalarEncoder() {
+		setUp();
+		initASE();
+		Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
 	}
 
 	@Test
 	public void testInit() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-		adaptiveScalarEncoder.setW(3);
-		adaptiveScalarEncoder.setMinVal(1);
-		adaptiveScalarEncoder.setMaxVal(8);
-		adaptiveScalarEncoder.setN(14);
-		adaptiveScalarEncoder.setRadius(1.5);
-		adaptiveScalarEncoder.setResolution(0.5);
-		adaptiveScalarEncoder.setForced(true);
-		adaptiveScalarEncoder.init();
+		setUp();
+		initASE();
+		Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+		ase.setW(3);
+		ase.setMinVal(1);
+		ase.setMaxVal(8);
+		ase.setN(14);
+		ase.setRadius(1.5);
+		ase.setResolution(0.5);
+		ase.setForced(true);
+		ase.init();
 	}
 
 	/**
@@ -181,10 +118,91 @@ public class AdaptiveScalarEncoderTest {
 	 */
 	@Test
 	public void testInitEncoder() {
-		AdaptiveScalarEncoder adaptiveScalarEncoder = new AdaptiveScalarEncoder();
-		adaptiveScalarEncoder.initEncoder(3, 1, 8, 14, 1.5, 0.5);
-		Assert.assertNotNull("AdaptiveScalarEncoder class is null",
-				adaptiveScalarEncoder);
-
+		setUp();
+		initASE();
+		ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
+		Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+	}
+	
+	@Test
+	public void testMissingData() {
+		setUp();
+		initASE();
+		ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
+		ase.setName("mv");
+		ase.setPeriodic(false);
+		
+		int[] empty = ase.encode(Encoder.SENTINEL_VALUE_FOR_MISSING_DATA);
+		System.out.println("\nEncoded missing data as: " + Arrays.toString(empty));
+		int[] expected = new int[14];
+		assertTrue(Arrays.equals(expected, empty));
+	}
+	
+	@Test
+	public void testNonPeriodicEncoderMinMaxSpec() {
+		initASE();
+		
+		int[] res = ase.encode(1.0);
+		System.out.println("\nEncoded data as: " + Arrays.toString(res));
+		assertTrue(Arrays.equals(new int[] { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
+		
+		res = ase.encode(2.0);
+		System.out.println("\nEncoded data as: " + Arrays.toString(res));
+		assertTrue(Arrays.equals(new int[] { 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, res));
+		
+		res = ase.encode(8.0);
+		System.out.println("\nEncoded data as: " + Arrays.toString(res));
+		assertTrue(Arrays.equals(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 }, res));
+	}
+	
+	@Test
+	public void testTopDownDecode() {
+		initASE();
+		
+		double minVal = ase.getMinVal();
+		System.out.println("\nThe min value is:" + minVal);
+		double resolution = ase.getResolution();
+		System.out.println(String.format("\nTesting non-periodic encoder decoding, resolution of %f ...", resolution));
+		double maxVal = ase.getMaxVal();
+		System.out.println("\nThe max value is:" + maxVal);
+		
+		while(minVal < maxVal) {
+			int[] output = ase.encode(minVal);
+			DecodeResult decoded = ase.decode(output, "");
+			System.out.println("\nDecoding " + Arrays.toString(output) + String.format("(%f)", minVal) + " => " + decoded.toString());
+			Map<String, RangeList> fields = decoded.getFields();
+			
+			Assert.assertEquals("Number of keys not matching", 1, fields.keySet().size());
+			System.out.println("\nField Key: " + fields.keySet().iterator().next());
+			
+			Assert.assertEquals("Number of range not matching", 1, fields.get(fields.keySet().iterator().next()).size());
+			System.out.println("\nField Range Value: " + fields.get(fields.keySet().iterator().next()).get(0));
+			Assert.assertEquals("Range max and min are not matching", fields.get(fields.keySet().iterator().next()).getRange(0).max(),
+					fields.get(fields.keySet().iterator().next()).getRange(0).min(), 0);
+			
+			assertTrue(Math.abs(fields.get(fields.keySet().iterator().next()).getRange(0).min() - minVal) < ase.getResolution());
+			
+			java.util.List<EncoderResult> topDown = ase.topDownCompute(output);
+			assertTrue(topDown.size() == 1);
+			System.out.println("\nTopDown => " + topDown.toString());
+			
+			int[] bucketIndices = ase.getBucketIndices(minVal);
+			assertTrue("The bucket indice size is not matching", bucketIndices.length == 1);
+			System.out.println("Bucket indices => " + Arrays.toString(bucketIndices));
+			List<EncoderResult> bucketInfoList = ase.getBucketInfo(bucketIndices);
+			assertTrue((Math.abs((double)bucketInfoList.get(0).getValue() - minVal)) <= (ase.getResolution() / 2));
+			System.out.println("Bucket info value: " + bucketInfoList.get(0).getValue());
+			System.out.println("Minval: " + minVal + " Abs(BucketVal - Minval): " + Math.abs((double)bucketInfoList.get(0).getValue() - minVal));
+			System.out.println("Resolution: " + ase.getResolution() + " Resolution/2: " + ase.getResolution() / 2);
+			assertTrue((double)bucketInfoList.get(0).getValue() == (double)ase.getBucketValues(Double.class).toArray()[bucketIndices[0]]);
+			System.out.println("\nBucket info scalar: " + bucketInfoList.get(0).getScalar());
+			System.out.println("\nBucket info value: " + bucketInfoList.get(0).getValue());
+			assertTrue(bucketInfoList.get(0).getScalar().doubleValue() == (double)bucketInfoList.get(0).getValue());
+			System.out.println("\nBucket info encoding: " + bucketInfoList.get(0).getEncoding());
+			System.out.println("\nOriginal encoding: " + Arrays.toString(output));
+			assertTrue(bucketInfoList.get(0).getEncoding().equalsIgnoreCase(Arrays.toString(output)));
+			
+			minVal += resolution / 4;
+		}
 	}
 }
