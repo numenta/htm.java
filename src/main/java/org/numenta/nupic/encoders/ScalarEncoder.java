@@ -763,7 +763,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		
 		return Arrays.asList(
 			new EncoderResult[] { 
-				new EncoderResult(inputVal, inputVal, Arrays.toString(encoding)) });
+				new EncoderResult(inputVal, inputVal, encoding) });
 			
 	}
 	

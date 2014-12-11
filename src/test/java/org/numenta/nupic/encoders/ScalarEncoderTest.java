@@ -21,26 +21,21 @@
  */
 package org.numenta.nupic.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
+import org.junit.Test;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-import org.numenta.nupic.encoders.DecodeResult;
-import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.encoders.EncoderResult;
-import org.numenta.nupic.encoders.RangeList;
-import org.numenta.nupic.encoders.ScalarEncoder;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.Tuple;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
@@ -177,7 +172,7 @@ public class ScalarEncoderTest {
 			
 			EncoderResult topDown = se.topDownCompute(output).get(0);
 			System.out.println("topdown => " + topDown);
-			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
+			assertTrue(Arrays.toString(topDown.getEncoding()).equals(Arrays.toString(output)));
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
 			
 			//Test bucket support
@@ -187,7 +182,7 @@ public class ScalarEncoderTest {
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
 			assertEquals(topDown.get(1), se.getBucketValues(Double.class).toArray()[bucketIndices[0]]);
 			assertEquals(topDown.get(2), topDown.get(1));
-			assertTrue(topDown.get(3).equals(Arrays.toString(output)));
+			assertTrue(Arrays.toString(topDown.getEncoding()).equals(Arrays.toString(output)));
 		}
 		
 		// -----------------------------------------------------------------------
@@ -320,7 +315,7 @@ public class ScalarEncoderTest {
 			List<EncoderResult> topDowns = se.topDownCompute(output);
 			EncoderResult topDown = topDowns.get(0);
 			System.out.println("topDown => " + topDown);
-			assertEquals(topDown.getEncoding(), Arrays.toString(output));
+			assertEquals(Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
 			assertTrue(Math.abs(((double)topDown.getValue()) - v) <= se.getResolution());
 			
 			//Test bucket support
@@ -329,7 +324,7 @@ public class ScalarEncoderTest {
 			topDown = se.getBucketInfo(bucketIndices).get(0);
 			assertTrue(Math.abs(((double)topDown.getValue()) - v) <= se.getResolution() / 2);
 			assertEquals(topDown.getScalar(), topDown.getValue());
-			assertEquals(topDown.getEncoding(), Arrays.toString(output));
+			assertEquals( Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
 			
 			// Next value
 			v += se.getResolution() / 4;

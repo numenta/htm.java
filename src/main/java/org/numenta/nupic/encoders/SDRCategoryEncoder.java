@@ -17,17 +17,16 @@ import gnu.trove.set.hash.TIntHashSet;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class SDRCategoryEncoder extends Encoder<String> {
     //TODO this should be moved to  the base class
@@ -53,7 +52,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
     def __init__(self, n, w, categoryList = None, name="category", verbosity=0,
                encoderSeed=1, forced=False):
     */
-    private void init(int n, int w, Set<String> categoryList, String name, int verbosity,
+    private void init(int n, int w, List<String> categoryList, String name, int verbosity,
                       int encoderSeed, boolean forced) {
 
     /*n is  total bits in output
@@ -197,7 +196,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
     *No parentFieldName parameter method overload for  {@link #decode()}
     */
     public DecodeResult decode(int[] encoded) {
-      return decode(encoded, null);
+        return decode(encoded, null);
     }
 
     @Override
@@ -235,10 +234,10 @@ public class SDRCategoryEncoder extends Encoder<String> {
             }
         });
         StringBuilder resultString = new StringBuilder();
-        List<MinMax> resultRanges  = new ArrayList<>();
+        List<MinMax> resultRanges = new ArrayList<>();
         String fieldName;
         for (int index : matchingCategories) {
-            if(resultString.length() != 0){
+            if (resultString.length() != 0) {
                 resultString.append(" ");
             }
             resultString.append(categories.get(index));
@@ -255,6 +254,54 @@ public class SDRCategoryEncoder extends Encoder<String> {
         return new DecodeResult(fieldsDict, Arrays.asList(fieldName));
     }
 
+
+    private List<EncoderResult> getEncoderResultsByIndex(SparseObjectMatrix<int[]> topDownMapping, int categoryIndex) {
+        List<EncoderResult> result = new ArrayList<>();
+        String category = categories.get(categoryIndex);
+        int[] encoding = topDownMapping.getObject(categoryIndex);
+        result.add(new EncoderResult(category, categoryIndex, encoding));
+        return result;
+    }
+
+    @Override
+    public List<EncoderResult> topDownCompute(int[] encoded) {
+        if (ncategories == 0) {
+            return new ArrayList<>();
+        }
+        //TODO the rightVecProd method belongs to SparseBinaryMatrix in Nupic Core, In python this method call stack: topDownCompute [sdrcategory.py:317]/rightVecProd [math.py:4474] -->return _math._SparseMatrix32_rightVecProd(self, *args)
+        int categoryIndex = ArrayUtils.argmax(rightVecProd(getTopDownMapping(), encoded));
+        return getEncoderResultsByIndex(getTopDownMapping(), categoryIndex);
+    }
+
+
+    @Override public List<EncoderResult> getBucketInfo(int[] buckets) {
+        if (ncategories == 0) {
+          return new ArrayList<>();
+        }
+        int categoryIndex = buckets[0];
+        return getEncoderResultsByIndex(getTopDownMapping(), categoryIndex);
+    }
+
+
+
+    /*
+            """ Return the interal _topDownMappingM matrix used for handling the
+        bucketInfo() and topDownCompute() methods. This is a matrix, one row per
+        category (bucket) where each row contains the encoded output for that
+        category.
+        """*/
+    public SparseObjectMatrix<int[]> getTopDownMapping() {
+        if (topDownMapping == null) {
+            topDownMapping = new SparseObjectMatrix<>(
+                    new int[]{ncategories});
+            int[] outputSpace = new int[getN()];
+            for (int i = 0; i < categories.size(); i++) {
+                encodeIntoArray(categories.get(i), outputSpace);
+                topDownMapping.set(i, Arrays.copyOf(outputSpace, outputSpace.length));
+            }
+        }
+        return topDownMapping;
+    }
 
     //TODO this code repeats in most of subclasses of Encoder, why don't we move this to Encoder as default
     @Override public void setLearning(boolean learningEnabled) {
@@ -274,10 +321,11 @@ public class SDRCategoryEncoder extends Encoder<String> {
 
 
     public void addCategory(String category) {
-        if (!this.categories.add(category)) {
+        if (this.categories.contains(category)) {
             throw new IllegalArgumentException(String.format("Attempt to add encoder category '%s' that already exists",
                                                              category));
         }
+        this.categories.add(category);
         if (this.sdrs == null) {
             assert ncategories == 0;
             assert categoryToIndex.size() == 0;
@@ -286,6 +334,8 @@ public class SDRCategoryEncoder extends Encoder<String> {
         sdrs.add(newRep());
         categoryToIndex.put(category, ncategories);
         ncategories += 1;
+        //reset topDown mapping
+        topDownMapping=null;
     }
 
     //replacement for Python sorted(self.random.sample(xrange(self.n), self.w))
@@ -338,7 +388,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
     public static final class Builder {
         private int n;
         private int w;
-        private Set<String> categoryList = new HashSet<>();
+        private List<String> categoryList = new ArrayList<>();
         private String name = "category";
         private int verbosity = 0;
         private int encoderSeed = 1;
@@ -366,7 +416,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
             return this;
         }
 
-        public Builder setCategoryList(Set<String> categoryList) {
+        public Builder setCategoryList(List<String> categoryList) {
             this.categoryList = categoryList;
             return this;
         }

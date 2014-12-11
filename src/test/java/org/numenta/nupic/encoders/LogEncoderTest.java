@@ -21,20 +21,18 @@
  */
 package org.numenta.nupic.encoders;
 
-import static org.junit.Assert.*;
 import gnu.trove.list.array.TDoubleArrayList;
+import org.junit.Test;
+import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.util.MinMax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.encoders.DecodeResult;
-import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.encoders.EncoderResult;
-import org.numenta.nupic.encoders.RangeList;
-import org.numenta.nupic.util.MinMax;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class LogEncoderTest {
 	private LogEncoder le;
@@ -168,8 +166,8 @@ public class LogEncoderTest {
 					   (Double)topDown.getScalar() <= maxTopDown);
 			
 			// The the encoding portion of our EncoderResult matched the result of encode()
-			String encoding = topDown.getEncoding();
-			assertTrue(encoding.equals(Arrays.toString(output)));
+			int[] encoding = topDown.getEncoding();
+			assertTrue(Arrays.toString(encoding).equals(Arrays.toString(output)));
 			
 			// Verify out reconstructed value is the same as the bucket value
 			List<Double> bucketValues = le.getBucketValues(Double.class);

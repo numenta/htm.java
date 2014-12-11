@@ -21,21 +21,17 @@
  */
 package org.numenta.nupic.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.MinMax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-import org.numenta.nupic.encoders.CategoryEncoder;
-import org.numenta.nupic.encoders.DecodeResult;
-import org.numenta.nupic.encoders.EncoderResult;
-import org.numenta.nupic.encoders.RangeList;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.MinMax;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CategoryEncoderTest {
 	private CategoryEncoder ce;
@@ -91,7 +87,7 @@ public class CategoryEncoderTest {
 			topDown = ce.getBucketInfo(bucketIndices).get(0);
 			assertEquals(v, topDown.getValue());
 			assertEquals((int)ce.getScalars(v).get(0), (int)topDown.getScalar().doubleValue());
-			assertEquals(topDown.getEncoding(), Arrays.toString(output));
+			assertEquals(Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
 			assertEquals(topDown.getValue(), ce.getBucketValues(String.class).get(bucketIndices[0]));
 		}
 		
