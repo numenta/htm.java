@@ -1,17 +1,28 @@
-/**
- * Copyright (c) 2011, Peace Technology, Inc.
- * $Author:$
- * $Revision:$
- * $Date:$
- * $NoKeywords$
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
  */
-
 package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.numenta.nupic.util.ArrayUtils;
@@ -22,25 +33,82 @@ import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
+/**
+ * Encodes a list of discrete categories (described by strings), that aren't
+ * related to each other.
+ * Each  encoding is an SDR in which w out of n bits are turned on.
+ * <p/>
+ * Unknown categories are encoded as a single
+ *
+ * @see Encoder
+ * @see EncoderResult
+ */
 public class SDRCategoryEncoder extends Encoder<String> {
     //TODO this should be moved to  the base class
     protected List<Tuple> description = new ArrayList<>();
-
     private Random random;
-    private double averageOverlap;
     private int thresholdOverlap;
-    private TObjectIntMap<String> categoryToIndex;
-    private int ncategories;
-    private List<String> categories;//check uniqueness on insert
-    private List<int[]> sdrs;
+    private final SDRByCategoryMap sdrByCategory = new SDRByCategoryMap();
 
+    /**
+     * Inner class for keeping Categories and SDRs in ordered way
+     */
+    private static final class SDRByCategoryMap extends LinkedHashMap<String, int[]> {
 
+        public int[] getSdr(int index) {
+            Map.Entry<String, int[]> entry = this.getEntry(index);
+            if (entry == null) return null;
+            return entry.getValue();
+        }
+
+        public String getCategory(int index) {
+            Map.Entry<String, int[]> entry = this.getEntry(index);
+            if (entry == null) return null;
+            return entry.getKey();
+        }
+
+        public int getIndexByCategory(String category) {
+            Set<String> categories = this.keySet();
+            int inx = 0;
+            for (String s : categories) {
+                if (s.equals(category)) {
+                    return inx;
+                }
+                inx++;
+            }
+            return 0;
+        }
+
+        private Map.Entry<String, int[]> getEntry(int i) {
+            Set<Map.Entry<String, int[]>> entries = entrySet();
+            if (i < 0 || i > entries.size()) {
+                throw new IllegalArgumentException("Index should be in following range:[0," + entries.size() + "]");
+            }
+            int j = 0;
+            for (Map.Entry<String, int[]> entry : entries)
+                if (j++ == i) return entry;
+
+            return null;
+
+        }
+
+    }
+
+    /**
+     * Returns a builder for building {@code SDRCategoryEncoder}s.
+     * This is the only way to instantiate {@code SDRCategoryEncoder}
+     *
+     * @return a {@code SDRCategoryEncoder.Builder}
+     */
     public static SDRCategoryEncoder.Builder builder() {
         return new Builder();
     }
@@ -55,11 +123,11 @@ public class SDRCategoryEncoder extends Encoder<String> {
     private void init(int n, int w, List<String> categoryList, String name, int verbosity,
                       int encoderSeed, boolean forced) {
 
-    /*n is  total bits in output
-    w is the number of bits that are turned on for each rep
-    categoryList is a list of strings that define the categories.
-    If "none" then categories will automatically be added as they are encountered.
-    forced (default False) : if True, skip checks for parameters' settings; see encoders/scalar.py for details*/
+        /*Python ref: n is  total bits in output
+        w is the number of bits that are turned on for each rep
+        categoryList is a list of strings that define the categories.
+        If "none" then categories will automatically be added as they are encountered.
+        forced (default False) : if True, skip checks for parameters' settings; see encoders/scalar.py for details*/
         this.n = n;
         this.w = w;
         this.encLearningEnabled = true;
@@ -80,37 +148,33 @@ public class SDRCategoryEncoder extends Encoder<String> {
             }
 
         }
-    /*
-    #Calculate average overlap of SDRs for decoding
-    #Density is fraction of bits on, and it is also the
-    #probability that any individual bit is on.
-    */
+        /*
+        #Calculate average overlap of SDRs for decoding
+        #Density is fraction of bits on, and it is also the
+        #probability that any individual bit is on.
+        */
         double density = (double)this.w / this.n;
-        this.averageOverlap = w * density;
-    /*
-    # We can do a better job of calculating the threshold. For now, just
-    # something quick and dirty, which is the midway point between average
-    # and full overlap. averageOverlap is always < w,  so the threshold
-    # is always < w.
-    */
-        this.thresholdOverlap = (int)(this.averageOverlap + this.w) / 2;
-    /*
-    #  1.25 -- too sensitive for decode test, so make it less sensitive
-    */
+        double averageOverlap = w * density;
+        /*
+        # We can do a better job of calculating the threshold. For now, just
+        # something quick and dirty, which is the midway point between average
+        # and full overlap. averageOverlap is always < w,  so the threshold
+        # is always < w.
+        */
+        this.thresholdOverlap = (int)(averageOverlap + this.w) / 2;
+        /*
+        #  1.25 -- too sensitive for decode test, so make it less sensitive
+        */
         if (this.thresholdOverlap < this.w - 3) {
             this.thresholdOverlap = this.w - 3;
         }
         this.verbosity = verbosity;
         this.description.add(new Tuple(2, name, 0));
         this.name = name;
-        this.categoryToIndex = new TObjectIntHashMap<>();
-        this.ncategories = 0;
-        this.categories = new ArrayList<>();
-        this.sdrs = null;
-    /*
-    # Always include an 'unknown' category for
-    # edge cases
-    */
+        /*
+        # Always include an 'unknown' category for
+        # edge cases
+        */
         this.addCategory("<UNKNOWN>");
         if (categoryList == null || categoryList.size() == 0) {
             this.setLearningEnabled(true);
@@ -119,30 +183,28 @@ public class SDRCategoryEncoder extends Encoder<String> {
             for (String category : categoryList) {
                 this.addCategory(category);
             }
-            assert this.ncategories == categoryList.size() + 1;
         }
-    /*
-    # Not used by this class. Used for decoding (scalarsToStr())
-    */
-        //self.encoders = None
-    /*
-    # This matrix is used for the topDownCompute. We build it the first time
-    #  topDownCompute is called
-    */
-        //self._topDownMappingM = None
-        //self._topDownValues = None
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getWidth() {
         return this.getN();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isDelta() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void encodeIntoArray(String input, int[] output) {
         int index;
@@ -151,8 +213,8 @@ public class SDRCategoryEncoder extends Encoder<String> {
             index = 0;
         } else {
             index = getBucketIndices(input)[0];
-            int[] category = sdrs.get(index);
-            System.arraycopy(category, 0, output, 0, category.length);
+            int[] categoryEncoding = sdrByCategory.getSdr(index);
+            System.arraycopy(categoryEncoding, 0, output, 0, categoryEncoding.length);
         }
         if (verbosity >= 2) {
             System.out.println("input:" + input + ", index:" + index + ", output:" + ArrayUtils.intArrayToString(
@@ -161,44 +223,53 @@ public class SDRCategoryEncoder extends Encoder<String> {
         }
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int[] getBucketIndices(String input) {
         return new int[]{(int)getScalars(input).get(0)};
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
+    //TODO TDoubleList return type force unnecessary boxing above, why don't we use generic array here
     public <S> TDoubleList getScalars(S input) {
         String inputCasted = (String)input;
-        int index;
+        int index = 0;
         TDoubleList result = new TDoubleArrayList();
         if (inputCasted == null || inputCasted.isEmpty()) {
             result.add(0);
             return result;
         }
-        if (!categoryToIndex.containsKey(input)) {
+        if (!sdrByCategory.containsKey(input)) {
             if (isEncoderLearningEnabled()) {
+                index = sdrByCategory.size();
                 addCategory(inputCasted);
-                index = ncategories - 1;
-                assert index == categoryToIndex.get(input);
-            } else {
-                index = 0;
             }
         } else {
-            index = categoryToIndex.get(input);
+            index = sdrByCategory.getIndexByCategory(inputCasted);
         }
         result.add(index);
         return result;
     }
 
 
-    /*
-    *No parentFieldName parameter method overload for  {@link #decode()}
-    */
+    /**
+     * No parentFieldName parameter method overload for the {@link #decode(int[], String)}.
+     *
+     * @param encoded - bit array to be decoded
+     * @return
+     */
     public DecodeResult decode(int[] encoded) {
         return decode(encoded, null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DecodeResult decode(int[] encoded, String parentFieldName) {
         //assert (encoded[0:self.n] <= 1.0).all()
@@ -209,9 +280,9 @@ public class SDRCategoryEncoder extends Encoder<String> {
             }
         });
         //overlaps =  (self.sdrs * encoded[0:self.n]).sum(axis=1)
-        int[] overlap = new int[sdrs.size()];
-        for (int i = 0; i < sdrs.size(); i++) {
-            int[] sdr = sdrs.get(i);
+        int[] overlap = new int[sdrByCategory.size()];
+        for (int i = 0; i < sdrByCategory.size(); i++) {
+            int[] sdr = sdrByCategory.getSdr(i);
             for (int j = 0; j < sdr.length; j++) {
                 if (sdr[j] == encoded[j] && encoded[j] == 1) {
                     overlap[i]++;
@@ -221,7 +292,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
         if (verbosity >= 2) {
             System.out.println("Overlaps for decoding:");
             int inx = 0;
-            for (String category : categories) {
+            for (String category : sdrByCategory.keySet()) {
                 System.out.println(overlap[inx] + " " + category);
                 inx++;
             }
@@ -240,7 +311,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
             if (resultString.length() != 0) {
                 resultString.append(" ");
             }
-            resultString.append(categories.get(index));
+            resultString.append(sdrByCategory.getCategory(index));
             resultRanges.add(new MinMax(index, index));
         }
         if (parentFieldName == null || parentFieldName.isEmpty()) {
@@ -255,17 +326,12 @@ public class SDRCategoryEncoder extends Encoder<String> {
     }
 
 
-    private List<EncoderResult> getEncoderResultsByIndex(SparseObjectMatrix<int[]> topDownMapping, int categoryIndex) {
-        List<EncoderResult> result = new ArrayList<>();
-        String category = categories.get(categoryIndex);
-        int[] encoding = topDownMapping.getObject(categoryIndex);
-        result.add(new EncoderResult(category, categoryIndex, encoding));
-        return result;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<EncoderResult> topDownCompute(int[] encoded) {
-        if (ncategories == 0) {
+        if (sdrByCategory.size() == 0) {
             return new ArrayList<>();
         }
         //TODO the rightVecProd method belongs to SparseBinaryMatrix in Nupic Core, In python this method call stack: topDownCompute [sdrcategory.py:317]/rightVecProd [math.py:4474] -->return _math._SparseMatrix32_rightVecProd(self, *args)
@@ -273,69 +339,97 @@ public class SDRCategoryEncoder extends Encoder<String> {
         return getEncoderResultsByIndex(getTopDownMapping(), categoryIndex);
     }
 
-
-    @Override public List<EncoderResult> getBucketInfo(int[] buckets) {
-        if (ncategories == 0) {
-          return new ArrayList<>();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<EncoderResult> getBucketInfo(int[] buckets) {
+        if (sdrByCategory.size() == 0) {
+            return new ArrayList<>();
         }
         int categoryIndex = buckets[0];
         return getEncoderResultsByIndex(getTopDownMapping(), categoryIndex);
     }
 
-
-
-    /*
-            """ Return the interal _topDownMappingM matrix used for handling the
-        bucketInfo() and topDownCompute() methods. This is a matrix, one row per
-        category (bucket) where each row contains the encoded output for that
-        category.
-        """*/
+    /**
+     * Return the internal topDownMapping matrix used for handling the
+     * {@link #getBucketInfo(int[])}  and {@link #topDownCompute(int[])} methods. This is a matrix, one row per
+     * category (bucket) where each row contains the encoded output for that
+     * category.
+     *
+     * @return {@link SparseObjectMatrix}
+     */
     public SparseObjectMatrix<int[]> getTopDownMapping() {
         if (topDownMapping == null) {
             topDownMapping = new SparseObjectMatrix<>(
-                    new int[]{ncategories});
+                    new int[]{sdrByCategory.size()});
             int[] outputSpace = new int[getN()];
-            for (int i = 0; i < categories.size(); i++) {
-                encodeIntoArray(categories.get(i), outputSpace);
-                topDownMapping.set(i, Arrays.copyOf(outputSpace, outputSpace.length));
+            Set<String> categories = sdrByCategory.keySet();
+            int inx = 0;
+            for (String category : categories) {
+                encodeIntoArray(category, outputSpace);
+                topDownMapping.set(inx, Arrays.copyOf(outputSpace, outputSpace.length));
+                inx++;
             }
         }
         return topDownMapping;
     }
 
     //TODO this code repeats in most of subclasses of Encoder, why don't we move this to Encoder as default
-    @Override public void setLearning(boolean learningEnabled) {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setLearning(boolean learningEnabled) {
         setLearningEnabled(learningEnabled);
     }
 
-    //TODO this method can be default implementation in Encoder instead of abstract. We just move description variable to the base class and initialize it in init method
+    //TODO this method should have default implementation in Encoder instead of abstract. We just move description variable to the base class and initialize it in init method
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Tuple> getDescription() {
         return description;
     }
 
 
-    @Override public <S> List<S> getBucketValues(Class<S> returnType) {
-        return null;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <S> List<S> getBucketValues(Class<S> returnType) {
+        return new ArrayList<>((Collection<S>)this.sdrByCategory.keySet());
+    }
+
+    /**
+     * Returns list of registered SDRs for this encoder
+     *
+     * @return {@link Collection}
+     */
+    public Collection<int[]> getSDRs() {
+        return Collections.unmodifiableCollection(sdrByCategory.values());
     }
 
 
-    public void addCategory(String category) {
-        if (this.categories.contains(category)) {
+    private List<EncoderResult> getEncoderResultsByIndex(SparseObjectMatrix<int[]> topDownMapping, int categoryIndex) {
+        List<EncoderResult> result = new ArrayList<>();
+        String category = sdrByCategory.getCategory(categoryIndex);
+        int[] encoding = topDownMapping.getObject(categoryIndex);
+        result.add(new EncoderResult(category, categoryIndex, encoding));
+        return result;
+    }
+
+    private void addCategory(String category) {
+        if (this.sdrByCategory.containsKey(category)) {
             throw new IllegalArgumentException(String.format("Attempt to add encoder category '%s' that already exists",
                                                              category));
         }
-        this.categories.add(category);
-        if (this.sdrs == null) {
-            assert ncategories == 0;
-            assert categoryToIndex.size() == 0;
-            sdrs = new ArrayList<>(16);
-        }
-        sdrs.add(newRep());
-        categoryToIndex.put(category, ncategories);
-        ncategories += 1;
+        sdrByCategory.put(category, newRep());
         //reset topDown mapping
-        topDownMapping=null;
+        topDownMapping = null;
     }
 
     //replacement for Python sorted(self.random.sample(xrange(self.n), self.w))
@@ -363,7 +457,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
                 int oneBitInx = oneBits[i];
                 sdr[oneBitInx] = 1;
             }
-            for (int[] existingSdr : this.sdrs) {
+            for (int[] existingSdr : this.sdrByCategory.values()) {
                 if (Arrays.equals(sdr, existingSdr)) {
                     foundUnique = false;
                     break;
@@ -375,16 +469,18 @@ public class SDRCategoryEncoder extends Encoder<String> {
         }
         if (!foundUnique) {
             throw new RuntimeException(String.format("Error, could not find unique pattern %d after %d attempts",
-                                                     ncategories, maxAttempts));
+                                                     sdrByCategory.size(), maxAttempts));
         }
         return sdr;
     }
 
-    public List<int[]> getSdrs() {
-        return Collections.unmodifiableList(sdrs);
-    }
-
-
+    /**
+     * Builder class for {@code SDRCategoryEncoder}
+     * <p>N is  total bits in output</p>
+     * <p>W is the number of bits that are turned on for each rep</p>
+     * <p>categoryList is a list of strings that define the categories.If no categories provided, then they will automatically be added as they are encountered.</p>
+     * <p>forced (default false) : if true, skip checks for parameters settings</p>
+     */
     public static final class Builder {
         private int n;
         private int w;

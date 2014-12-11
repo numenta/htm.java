@@ -1,9 +1,23 @@
-/**
- * Copyright (c) 2011, Peace Technology, Inc.
- * $Author:$
- * $Revision:$
- * $Date:$
- * $NoKeywords$
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
  */
 
 package org.numenta.nupic.encoders;
@@ -40,8 +54,8 @@ public class SDRCategoryEncoderTest {
                 .setForced(true).build();
 
         //internal check
-        assertEquals(sdrCategoryEncoder.getSdrs().size(), 23);
-        assertEquals(sdrCategoryEncoder.getSdrs().get(0).length, fieldWidth);
+        assertEquals(sdrCategoryEncoder.getSDRs().size(), 23);
+        assertEquals(sdrCategoryEncoder.getSDRs().iterator().next().length, fieldWidth);
         //ES
         int[] es = sdrCategoryEncoder.encode("ES");
         assertEquals(ArrayUtils.aggregateArray(es), bitsOn);
@@ -119,7 +133,8 @@ public class SDRCategoryEncoderTest {
             System.out.println(String.format("US: %s", ArrayUtils.intArrayToString(us)));
             System.out.println(String.format("unknown: %s", ArrayUtils.intArrayToString(unknown)));
             System.out.println(String.format("Sum: %s", ArrayUtils.intArrayToString(newrep)));
-            System.out.println(String.format("%s: %s", othercategory,  ArrayUtils.intArrayToString(sdrCategoryEncoder.encode(othercategory))));
+            System.out.println(String.format("%s: %s", othercategory, ArrayUtils.intArrayToString(
+                    sdrCategoryEncoder.encode(othercategory))));
             throw new RuntimeException("Decoding failure");
         }
 
