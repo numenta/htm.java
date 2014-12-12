@@ -33,7 +33,12 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 	
 	
 	public GeospatialCoordinateEncoder() {
-		
+        Tuple desc = new Tuple(2, "longitude", 0);
+        Tuple desc2 = new Tuple(2, "lattitude", 1);
+        Tuple desc3 = new Tuple(2, "speed", 2);
+        description.add(desc);
+        description.add(desc2);
+        description.add(desc3);
 	}
 	
 	/**
@@ -45,26 +50,7 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 	public static GeospatialCoordinateEncoder.Builder geobuilder() {
 		return new GeospatialCoordinateEncoder.Builder();
 	}
-	
-	/**
-	 * Returns a {@link List} of {@link Tuple}s containing
-	 * [String:"name", int:offset]
-	 * 
-	 * @return List of Tuple(String, int)'s
-	 * @see Encoder for more information
-	 */
-	@Override
-	public List<Tuple> getDescription() {
-		List<Tuple> retVal = new ArrayList<Tuple>();
-		Tuple desc = new Tuple(2, "longitude", 0);
-		Tuple desc2 = new Tuple(2, "lattitude", 1);
-		Tuple desc3 = new Tuple(2, "speed", 2);
-		retVal.add(desc);
-		retVal.add(desc2);
-		retVal.add(desc3);
-		
-		return retVal;
-	}
+
 	
 	/**
 	 * {@inheritDoc}
