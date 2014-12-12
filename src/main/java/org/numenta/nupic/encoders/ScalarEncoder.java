@@ -24,13 +24,6 @@ package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
@@ -38,6 +31,12 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -238,6 +237,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		if(!isForced()) {
 			checkReasonableSettings();
 		}
+        description.add(new Tuple(2, (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
 	}
 	
 	/**
@@ -288,27 +288,7 @@ public class ScalarEncoder extends Encoder<Double> {
 			setN((int)Math.ceil(nFloat));
 		}
 	}
-	
-	/**
-	 * Set whether learning is enabled.
-	 * @param 	learningEnabled		flag indicating whether learning is enabled
-	 */
-	public void setLearning(boolean learningEnabled) {
-		setLearningEnabled(learningEnabled);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 * @return		Tuple containing 
-	 */
-	@Override
-	public List<Tuple> getDescription() {
-		//Throws UnsupportedOperationException if you try to add to the list
-		//returned by Arrays.asList() ??? So we wrap it in yet another List?
-		String name = (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name;
-		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2, name, 0) }));
-	}
-	
+
 	/**
 	 * Return the bit offset of the first bit to be set in the encoder output.
      * For periodic encoders, this can be a negative number when the encoded output

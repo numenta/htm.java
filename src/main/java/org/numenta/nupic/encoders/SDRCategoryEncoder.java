@@ -53,8 +53,6 @@ import java.util.Set;
  * @see EncoderResult
  */
 public class SDRCategoryEncoder extends Encoder<String> {
-    //TODO this should be moved to  the base class
-    protected List<Tuple> description = new ArrayList<>();
     private Random random;
     private int thresholdOverlap;
     private final SDRByCategoryMap sdrByCategory = new SDRByCategoryMap();
@@ -138,7 +136,6 @@ public class SDRCategoryEncoder extends Encoder<String> {
         if (!forced) {
             if (n / w < 2) {
                 throw new IllegalArgumentException(String.format(
-                        //TODO this message from in /nupic/nupic/encoders/sdrcategory.py::67 is not clear
                         "Number of ON bits in SDR (%d) must be much smaller than the output width (%d)", w, n));
             }
             if (w < 21) {
@@ -235,7 +232,6 @@ public class SDRCategoryEncoder extends Encoder<String> {
      * {@inheritDoc}
      */
     @Override
-    //TODO TDoubleList return type force unnecessary boxing above, why don't we use generic array here
     public <S> TDoubleList getScalars(S input) {
         String inputCasted = (String)input;
         int index = 0;
@@ -375,27 +371,6 @@ public class SDRCategoryEncoder extends Encoder<String> {
         return topDownMapping;
     }
 
-    //TODO this code repeats in most of subclasses of Encoder, why don't we move this to Encoder as default
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setLearning(boolean learningEnabled) {
-        setLearningEnabled(learningEnabled);
-    }
-
-    //TODO this method should have default implementation in Encoder instead of abstract. We just move description variable to the base class and initialize it in init method
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Tuple> getDescription() {
-        return description;
-    }
-
-
     /**
      * {@inheritDoc}
      */
@@ -481,15 +456,11 @@ public class SDRCategoryEncoder extends Encoder<String> {
      * <p>categoryList is a list of strings that define the categories.If no categories provided, then they will automatically be added as they are encountered.</p>
      * <p>forced (default false) : if true, skip checks for parameters settings</p>
      */
-    public static final class Builder {
-        private int n;
-        private int w;
+    public static final class Builder extends Encoder.Builder<Builder, SDRCategoryEncoder> {
         private List<String> categoryList = new ArrayList<>();
-        private String name = "category";
-        private int verbosity = 0;
         private int encoderSeed = 1;
-        private boolean forced = false;
 
+        @Override
         public SDRCategoryEncoder build() {
             if (n == 0) {
                 throw new IllegalStateException("\"N\" should be set");
@@ -497,33 +468,15 @@ public class SDRCategoryEncoder extends Encoder<String> {
             if (w == 0) {
                 throw new IllegalStateException("\"W\" should be set");
             }
-            SDRCategoryEncoder encoder = new SDRCategoryEncoder();
-            encoder.init(n, w, categoryList, name, verbosity, encoderSeed, forced);
-            return encoder;
-        }
+            SDRCategoryEncoder sdrCategoryEncoder = new SDRCategoryEncoder();
+            sdrCategoryEncoder.init(n, w, categoryList, name, encVerbosity, encoderSeed, forced);
+            return sdrCategoryEncoder;
 
-        public Builder n(int n) {
-            this.n = n;
-            return this;
-        }
 
-        public Builder w(int w) {
-            this.w = w;
-            return this;
         }
 
         public Builder categoryList(List<String> categoryList) {
             this.categoryList = categoryList;
-            return this;
-        }
-
-        public Builder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder verbosity(int verbosity) {
-            this.verbosity = verbosity;
             return this;
         }
 
@@ -532,9 +485,33 @@ public class SDRCategoryEncoder extends Encoder<String> {
             return this;
         }
 
-        public Builder forced(boolean forced) {
-            this.forced = forced;
-            return this;
+        @Override
+        public Builder radius(double radius) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
+        }
+
+        @Override
+        public Builder resolution(double resolution) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
+        }
+
+        @Override public Builder periodic(boolean periodic) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
+        }
+
+        @Override
+        public Builder clipInput(boolean clipInput) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
+        }
+
+        @Override
+        public Builder maxVal(double maxVal) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
+        }
+
+        @Override
+        public Builder minVal(double minVal) {
+            throw new IllegalArgumentException("Not supported for this SDRCategoryEncoder");
         }
     }
 }
