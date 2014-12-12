@@ -172,7 +172,7 @@ public class ScalarEncoderTest {
 			
 			EncoderResult topDown = se.topDownCompute(output).get(0);
 			System.out.println("topdown => " + topDown);
-			assertTrue(Arrays.toString(topDown.getEncoding()).equals(Arrays.toString(output)));
+			assertTrue(Arrays.equals(topDown.getEncoding(),output));
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
 			
 			//Test bucket support
@@ -182,7 +182,7 @@ public class ScalarEncoderTest {
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
 			assertEquals(topDown.get(1), se.getBucketValues(Double.class).toArray()[bucketIndices[0]]);
 			assertEquals(topDown.get(2), topDown.get(1));
-			assertTrue(Arrays.toString(topDown.getEncoding()).equals(Arrays.toString(output)));
+			assertTrue(Arrays.equals(topDown.getEncoding(), output));
 		}
 		
 		// -----------------------------------------------------------------------
@@ -315,7 +315,7 @@ public class ScalarEncoderTest {
 			List<EncoderResult> topDowns = se.topDownCompute(output);
 			EncoderResult topDown = topDowns.get(0);
 			System.out.println("topDown => " + topDown);
-			assertEquals(Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
+			assertTrue(Arrays.equals(topDown.getEncoding(),output));
 			assertTrue(Math.abs(((double)topDown.getValue()) - v) <= se.getResolution());
 			
 			//Test bucket support
@@ -324,7 +324,7 @@ public class ScalarEncoderTest {
 			topDown = se.getBucketInfo(bucketIndices).get(0);
 			assertTrue(Math.abs(((double)topDown.getValue()) - v) <= se.getResolution() / 2);
 			assertEquals(topDown.getScalar(), topDown.getValue());
-			assertEquals( Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
+			assertTrue(Arrays.equals(topDown.getEncoding(), output));
 			
 			// Next value
 			v += se.getResolution() / 4;

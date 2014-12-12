@@ -167,7 +167,7 @@ public class LogEncoderTest {
 			
 			// The the encoding portion of our EncoderResult matched the result of encode()
 			int[] encoding = topDown.getEncoding();
-			assertTrue(Arrays.toString(encoding).equals(Arrays.toString(output)));
+			assertTrue(Arrays.equals(encoding,output));
 			
 			// Verify out reconstructed value is the same as the bucket value
 			List<Double> bucketValues = le.getBucketValues(Double.class);

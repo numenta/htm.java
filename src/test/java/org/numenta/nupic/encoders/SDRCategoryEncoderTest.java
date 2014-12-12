@@ -47,11 +47,11 @@ public class SDRCategoryEncoderTest {
         int bitsOn = 10;
 
         SDRCategoryEncoder sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .setN(fieldWidth)
-                .setW(bitsOn)
-                .setCategoryList(Arrays.asList(categories))
-                .setName("foo")
-                .setForced(true).build();
+                .n(fieldWidth)
+                .w(bitsOn)
+                .categoryList(Arrays.asList(categories))
+                .name("foo")
+                .forced(true).build();
 
         //internal check
         assertEquals(sdrCategoryEncoder.getSDRs().size(), 23);
@@ -139,10 +139,10 @@ public class SDRCategoryEncoderTest {
         }
 
         sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .setN(fieldWidth)
-                .setW(bitsOn)
-                .setName("bar")
-                .setForced(true).build();
+                .n(fieldWidth)
+                .w(bitsOn)
+                .name("bar")
+                .forced(true).build();
         es = sdrCategoryEncoder.encode("ES");
         assertEquals(ArrayUtils.aggregateArray(es), bitsOn);
         assertEquals(es.length, (fieldWidth));
@@ -184,11 +184,11 @@ public class SDRCategoryEncoderTest {
         newCategories.add("ES");
         try {
             sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                    .setN(fieldWidth)
-                    .setW(bitsOn)
-                    .setCategoryList(newCategories)
-                    .setName("foo")
-                    .setForced(true).build();
+                    .n(fieldWidth)
+                    .w(bitsOn)
+                    .categoryList(newCategories)
+                    .name("foo")
+                    .forced(true).build();
         } catch (IllegalArgumentException e) {
             caughtException = true;
         }
@@ -204,11 +204,11 @@ public class SDRCategoryEncoderTest {
         int bitsOn = 10;
 
         SDRCategoryEncoder sdrCategoryEncoder = SDRCategoryEncoder.builder()
-                .setN(fieldWidth)
-                .setW(bitsOn)
-                .setName("foo")
-                .setVerbosity(2)
-                .setForced(true).build();
+                .n(fieldWidth)
+                .w(bitsOn)
+                .name("foo")
+                .verbosity(2)
+                .forced(true).build();
         int[] encoded = new int[fieldWidth];
         Arrays.fill(encoded, 0);
         assertEquals(sdrCategoryEncoder.topDownCompute(encoded).get(0).getValue(), "<UNKNOWN>");

@@ -87,7 +87,7 @@ public class CategoryEncoderTest {
 			topDown = ce.getBucketInfo(bucketIndices).get(0);
 			assertEquals(v, topDown.getValue());
 			assertEquals((int)ce.getScalars(v).get(0), (int)topDown.getScalar().doubleValue());
-			assertEquals(Arrays.toString(topDown.getEncoding()), Arrays.toString(output));
+			assertTrue(Arrays.equals(topDown.getEncoding(), output));
 			assertEquals(topDown.getValue(), ce.getBucketValues(String.class).get(bucketIndices[0]));
 		}
 		

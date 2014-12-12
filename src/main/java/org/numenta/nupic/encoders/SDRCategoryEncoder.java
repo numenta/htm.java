@@ -502,37 +502,37 @@ public class SDRCategoryEncoder extends Encoder<String> {
             return encoder;
         }
 
-        public Builder setN(int n) {
+        public Builder n(int n) {
             this.n = n;
             return this;
         }
 
-        public Builder setW(int w) {
+        public Builder w(int w) {
             this.w = w;
             return this;
         }
 
-        public Builder setCategoryList(List<String> categoryList) {
+        public Builder categoryList(List<String> categoryList) {
             this.categoryList = categoryList;
             return this;
         }
 
-        public Builder setName(String name) {
+        public Builder name(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder setVerbosity(int verbosity) {
+        public Builder verbosity(int verbosity) {
             this.verbosity = verbosity;
             return this;
         }
 
-        public Builder setEncoderSeed(int encoderSeed) {
+        public Builder encoderSeed(int encoderSeed) {
             this.encoderSeed = encoderSeed;
             return this;
         }
 
-        public Builder setForced(boolean forced) {
+        public Builder forced(boolean forced) {
             this.forced = forced;
             return this;
         }
