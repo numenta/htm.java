@@ -28,18 +28,17 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.SparseObjectMatrix;
-import org.numenta.nupic.util.Tuple;
 
 /**
  * Encodes a list of discrete categories (described by strings), that aren't
@@ -84,7 +83,6 @@ public class CategoryEncoder extends Encoder<String> {
 	protected List<String> categoryList;
 	
 	protected int width;
-	protected Tuple description;
 
 	private ScalarEncoder scalarEncoder;
 	
@@ -144,7 +142,7 @@ public class CategoryEncoder extends Encoder<String> {
 				"Width != w (num bits to represent output item) * #categories");
 		}
 		
-		description = new Tuple(2, name, 0);
+		description.add(new Tuple(2, name, 0));
 	}
 	
 	/**
@@ -379,15 +377,5 @@ public class CategoryEncoder extends Encoder<String> {
 		return false;
 	}
 
-	@Override
-	public void setLearning(boolean learningEnabled) {
-		setLearningEnabled(learningEnabled);		
-	}
 
-	@Override
-	public List<Tuple> getDescription() {
-	ArrayList<Tuple> list = new ArrayList<Tuple>();
-	 list.add(description);
-	 return list;
-	}
 }

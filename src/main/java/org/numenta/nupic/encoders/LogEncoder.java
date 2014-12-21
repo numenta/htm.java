@@ -173,11 +173,6 @@ public class LogEncoder extends Encoder<Double> {
 	}
 
 	@Override
-	public void setLearning(boolean learningEnabled) {
-		setLearningEnabled(learningEnabled);
-	}
-
-	@Override
 	public List<Tuple> getDescription() {
 		return encoder.getDescription();
 	}
