@@ -93,7 +93,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 			List<EncoderResult> res = new ArrayList<EncoderResult>();
 			int[] enArray = new int[this.getN()];
 			Arrays.fill(enArray, 0);
-			EncoderResult ecResult = new EncoderResult(0, 0, Arrays.toString(enArray));
+			EncoderResult ecResult = new EncoderResult(0, 0, enArray);
 			res.add(ecResult);
 			return res;
 		}

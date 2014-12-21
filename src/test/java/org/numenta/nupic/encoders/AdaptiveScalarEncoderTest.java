@@ -200,7 +200,7 @@ public class AdaptiveScalarEncoderTest {
 			assertTrue(bucketInfoList.get(0).getScalar().doubleValue() == (double)bucketInfoList.get(0).getValue());
 			System.out.println("\nBucket info encoding: " + bucketInfoList.get(0).getEncoding());
 			System.out.println("\nOriginal encoding: " + Arrays.toString(output));
-			assertTrue(bucketInfoList.get(0).getEncoding().equalsIgnoreCase(Arrays.toString(output)));
+			assertTrue(Arrays.equals(bucketInfoList.get(0).getEncoding(), output));
 			
 			minVal += resolution / 4;
 		}
