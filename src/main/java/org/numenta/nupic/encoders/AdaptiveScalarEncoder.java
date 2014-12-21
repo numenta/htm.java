@@ -36,7 +36,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		this.setPeriodic(false);
 		super.init();
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 

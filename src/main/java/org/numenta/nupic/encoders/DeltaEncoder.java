@@ -22,6 +22,50 @@
 
 package org.numenta.nupic.encoders;
 
-public class DeltaEncoder {
+public class DeltaEncoder extends AdaptiveScalarEncoder {
 
+	/**
+	 * 
+	 */
+	public DeltaEncoder() {
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#init()
+	 */
+	@Override
+	public void init() {
+		super.init();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#initEncoder(int, double, double, int, double, double)
+	 */
+	@Override
+	public void initEncoder(int w, double minVal, double maxVal, int n,
+			double radius, double resolution) {
+		super.initEncoder(w, minVal, maxVal, n, radius, resolution);
+	}
+
+	/**
+	 * Returns a builder for building DeltaEncoder. This builder may be
+	 * reused to produce multiple builders
+	 * 
+	 * @return a {@code DeltaEncoder.Builder}
+	 */
+	public static DeltaEncoder.Builder deltaBuilder() {
+		return new DeltaEncoder.Builder();
+	}
+
+	public static class Builder extends Encoder.Builder<DeltaEncoder.Builder, DeltaEncoder> {
+		private Builder() {}
+
+		@Override
+		public DeltaEncoder build() {
+			encoder = new DeltaEncoder();
+			super.build();
+			((DeltaEncoder) encoder).init();
+			return (DeltaEncoder) encoder;
+		}
+	}
 }

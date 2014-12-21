@@ -33,9 +33,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * @author sambit
@@ -45,9 +43,6 @@ public class AdaptiveScalarEncoderTest {
 
 	private AdaptiveScalarEncoder ase;
 	private AdaptiveScalarEncoder.Builder builder;
-
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	/**
 	 * @throws java.lang.Exception
@@ -205,4 +200,46 @@ public class AdaptiveScalarEncoderTest {
 			minVal += resolution / 4;
 		}
 	}
+	
+	@Test
+	public void testFillHoles() {
+		initASE();
+		int[] inputArray = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1 };
+		double minVal = ase.getMinVal();
+		
+		DecodeResult decoded = ase.decode(inputArray, "");
+		System.out.println("\nDecoding " + Arrays.toString(inputArray) + String.format("(%f)", minVal) + " => " + decoded.toString());
+		Map<String, RangeList> fields = decoded.getFields();
+		assertTrue(fields.size() == 1);
+		
+		Assert.assertEquals("Number of keys not matching", 1, fields.keySet().size());
+		System.out.println("\nField Key: " + fields.keySet().iterator().next());
+		
+		Assert.assertEquals("Number of range not matching", 2, fields.get(fields.keySet().iterator().next()).size());
+		System.out.println("\nField Range Value: " + fields.get(fields.keySet().iterator().next()).get(0));
+		Assert.assertEquals("Range max and min are not matching", fields.get(fields.keySet().iterator().next()).getRange(0).max(),
+				fields.get(fields.keySet().iterator().next()).getRange(0).min(), 0);
+		
+		assertTrue(fields.get(fields.keySet().iterator().next()).getRange(1).min() == 8.00);
+		assertTrue(fields.get(fields.keySet().iterator().next()).getRange(1).max() == 8.00);
+		
+		int[] newArray = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1 };
+		DecodeResult newDecoded = ase.decode(newArray, "");
+		System.out.println("\nDecoding new array " + Arrays.toString(newArray) + String.format("(%f)", minVal) + " => " + newDecoded.toString());
+		Map<String, RangeList> newFields = newDecoded.getFields();
+		assertTrue(newFields.size() == 1);
+		
+		Assert.assertEquals("Number of keys not matching", 1, newFields.keySet().size());
+		System.out.println("\nField Key: " + newFields.keySet().iterator().next());
+		
+		Assert.assertEquals("Number of range not matching", 2, newFields.get(newFields.keySet().iterator().next()).size());
+		System.out.println("\nField Range Value: " + newFields.get(newFields.keySet().iterator().next()).get(0));
+		Assert.assertEquals("Range max and min are not matching", newFields.get(newFields.keySet().iterator().next()).getRange(0).max(),
+				newFields.get(newFields.keySet().iterator().next()).getRange(0).min(), 0);
+		
+		assertTrue(newFields.get(newFields.keySet().iterator().next()).getRange(1).min() == 8.00);
+		assertTrue(newFields.get(newFields.keySet().iterator().next()).getRange(1).max() == 8.00);
+		
+	}
+	
 }
