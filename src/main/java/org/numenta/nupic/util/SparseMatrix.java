@@ -32,7 +32,8 @@ import java.util.Arrays;
  * Allows storage of array data in sparse form, meaning that the indexes
  * of the data stored are maintained while empty indexes are not. This allows
  * savings in memory and computational efficiency because iterative algorithms
- * need only query indexes containing valid data.
+ * need only query indexes containing valid data. The dimensions of matrix defined
+ * at construction time and immutable - matrix fixed size data structure.
  * 
  * @author David Ray
  *
@@ -331,12 +332,12 @@ public abstract class SparseMatrix<T> {
     protected int[] initDimensionMultiples(int[] dimensions) {
         int holder = 1;
         int len = dimensions.length;
-        int[] result = new int[numDimensions];
+        int[] dimensionMultiples = new int[numDimensions];
         for(int i = 0;i < len;i++) {
             holder *= (i == 0 ? 1 : dimensions[len - i]);
-            result[len - 1 - i] = holder;
+            dimensionMultiples[len - 1 - i] = holder;
         }
-        return result;
+        return dimensionMultiples;
     }
     
     /**
