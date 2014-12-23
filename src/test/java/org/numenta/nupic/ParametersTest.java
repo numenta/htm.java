@@ -22,14 +22,14 @@
 
 package org.numenta.nupic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.numenta.nupic.util.MersenneTwister;
 
 import java.util.Arrays;
 import java.util.Random;
 
-import org.junit.Test;
-import org.numenta.nupic.util.MersenneTwister;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ParametersTest {
     @SuppressWarnings("unused")
@@ -48,11 +48,20 @@ public class ParametersTest {
     }
 
     @Test
-    public void testDefaults() {
+    public void testDefaultsAndUpdates() {
         Parameters params = Parameters.getAllDefaultParameters();
         assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), 32);
         assertEquals(params.getParameterByKey(Parameters.KEY.SEED), 42);
         assertEquals(true, ((Random)params.getParameterByKey(Parameters.KEY.RANDOM)).getClass().equals(MersenneTwister.class));
+        System.out.println("All Defaults:\n" + Parameters.getAllDefaultParameters());
+        System.out.println("Spatial Defaults:\n" + Parameters.getSpatialDefaultParameters());
+        System.out.println("Temporal Defaults:\n" + Parameters.getTemporalDefaultParameters());
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.setParameterByKey(Parameters.KEY.INPUT_DIMENSIONS, new int[]{64, 64});
+        parameters.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[]{32, 32});
+        parameters.setParameterByKey(Parameters.KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 0.02*64*64);
+        System.out.println("Updated/Combined:\n" + parameters);
+
     }
 
     public static class DummyContainerBase {
