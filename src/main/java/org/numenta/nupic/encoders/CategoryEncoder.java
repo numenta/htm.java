@@ -28,17 +28,17 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.SparseObjectMatrix;
-import org.numenta.nupic.util.Tuple;
 
 /**
  * Encodes a list of discrete categories (described by strings), that aren't
@@ -74,7 +74,7 @@ import org.numenta.nupic.util.Tuple;
  * @see EncoderResult
  * @see Parameters
  */
-public class CategoryEncoder extends ScalarEncoder {
+public class CategoryEncoder extends Encoder<String> {
 	protected int ncategories;
 	
 	protected TObjectIntMap<String> categoryToIndex = new TObjectIntHashMap<String>();
@@ -83,7 +83,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	protected List<String> categoryList;
 	
 	protected int width;
-	protected Tuple description;
+
+	private ScalarEncoder scalarEncoder;
 	
 	/**
 	 * Constructs a new {@code CategoryEncoder}
@@ -97,8 +98,7 @@ public class CategoryEncoder extends ScalarEncoder {
 	 * 
 	 * @return a {@code CategoryEncoder.Builder}
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Encoder.Builder builder() {
+	public static Encoder.Builder<CategoryEncoder.Builder, CategoryEncoder> builder() {
 		return new CategoryEncoder.Builder();
 	}
 	
@@ -108,7 +108,14 @@ public class CategoryEncoder extends ScalarEncoder {
 		minVal = 0;
 		maxVal = ncategories - 1;
 		
-		super.init();
+		scalarEncoder = ScalarEncoder.builder()
+		        .n(this.n)
+		        .w(this.w)
+		        .radius(this.radius)
+		        .minVal(this.minVal)
+		        .maxVal(this.maxVal)
+		        .periodic(this.periodic)
+		        .forced(this.forced).build();
 		
 		indexToCategory.put(0, "<UNKNOWN>");
 		if(categoryList != null && !categoryList.isEmpty()) {
@@ -119,13 +126,23 @@ public class CategoryEncoder extends ScalarEncoder {
 			}
 		}
 		
+		
 		width = n = w * ncategories;
+		
+		//TODO this is what the CategoryEncoder was doing before I added the ScalarEncoder delegate.
+		//I'm concerned because we're changing n without calling init again on the scalar encoder.  
+		//In other words, if I move the scalarEncoder = ...build() from to here, the test cases fail
+		//which indicates significant fragility and at some level a violation of encapsulation.
+		scalarEncoder.n = n;
+		
+	
+		
 		if(getWidth() != width) {
 			throw new IllegalStateException(
 				"Width != w (num bits to represent output item) * #categories");
 		}
 		
-		description = new Tuple(2, name, 0);
+		description.add(new Tuple(2, name, 0));
 	}
 	
 	/**
@@ -142,14 +159,14 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public int[] getBucketIndices(String input) {
 		if(input == null) return null;
-		return super.getBucketIndices(categoryToIndex.get(input));
+		return scalarEncoder.getBucketIndices(categoryToIndex.get(input));
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int[] encodeIntoArray(String input, int[] output) {
+	public void encodeIntoArray(String input, int[] output) {
 		String val = null;
 		double value = 0;
 		if(input == null) {
@@ -157,7 +174,7 @@ public class CategoryEncoder extends ScalarEncoder {
 		}else{
 			value = categoryToIndex.get(input);
 			value = value == categoryToIndex.getNoEntryValue() ? 0 : value;
-			super.encodeIntoArray(value, output);
+			scalarEncoder.encodeIntoArray(value, output);
 		}
 		
 		if(verbosity >= 2) {
@@ -165,8 +182,6 @@ public class CategoryEncoder extends ScalarEncoder {
 				String.format("input: %s,  val: %s, value: %d, output: %s",
 					input, val, value, Arrays.toString(output)));
 		}
-		
-		return output;
 	}
 
 	/**
@@ -175,7 +190,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// Get the scalar values from the underlying scalar encoder
-		DecodeResult result = super.decode(encoded, parentFieldName);
+		DecodeResult result = scalarEncoder.decode(encoded, parentFieldName);
+		
 		if(result.getFields().size() == 0) {
 			return result;
 		}
@@ -252,7 +268,7 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public <T> List<T> getBucketValues(Class<T> t) {
 		if(bucketValues == null) {
-			SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
+			SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
 			bucketValues = new ArrayList<String>();
 			for(int i = 0;i < numBuckets;i++) {
@@ -269,7 +285,7 @@ public class CategoryEncoder extends ScalarEncoder {
 	@Override
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
 		// For the category encoder, the bucket index is the category index
-		List<EncoderResult> bucketInfo = super.getBucketInfo(buckets);
+		List<EncoderResult> bucketInfo = scalarEncoder.getBucketInfo(buckets);
 		
 		int categoryIndex = (int)Math.round((double)bucketInfo.get(0).getValue());
 		String category = indexToCategory.get(categoryIndex);
@@ -283,8 +299,11 @@ public class CategoryEncoder extends ScalarEncoder {
 	 */
 	@Override
 	public List<EncoderResult> topDownCompute(int[] encoded) {
-		List<EncoderResult> encoderResult = super.topDownCompute(encoded);
-		return encoderResult;
+		//Get/generate the topDown mapping table
+		SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();		
+		// See which "category" we match the closest.
+		int category = ArrayUtils.argmax(rightVecProd(topDownMapping, encoded));		
+		return getBucketInfo(new int[] { category });
 	}
 
     public List<String> getCategoryList() {
@@ -299,8 +318,8 @@ public class CategoryEncoder extends ScalarEncoder {
 	 * Returns a {@link EncoderBuilder} for constructing {@link CategoryEncoder}s
 	 * 
 	 * The base class architecture is put together in such a way where boilerplate
-	 * initialization can be kept to a minimum for implementing subclasses. 
-	 * Hopefully! :-)
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
 	 * 
 	 * @see ScalarEncoder.Builder#setStuff(int)
 	 */
@@ -347,4 +366,16 @@ public class CategoryEncoder extends ScalarEncoder {
 			return this;
 		}
 	}
+
+	@Override
+	public int getWidth() {
+		return getN();
+	}
+
+	@Override
+	public boolean isDelta() {
+		return false;
+	}
+
+
 }

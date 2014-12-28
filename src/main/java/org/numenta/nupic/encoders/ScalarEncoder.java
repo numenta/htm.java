@@ -24,13 +24,6 @@ package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
@@ -38,6 +31,12 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -153,7 +152,7 @@ import org.numenta.nupic.util.Tuple;
  * 
  * @author metaware
  */
-public class ScalarEncoder extends Encoder {
+public class ScalarEncoder extends Encoder<Double> {
 	/**
 	 * Constructs a new {@code ScalarEncoder}
 	 */
@@ -211,7 +210,7 @@ public class ScalarEncoder extends Encoder {
 	    // bits to the right of the center bit of maxval
 		setPadding(isPeriodic() ? 0 : getHalfWidth());
 		
-		if(getMinVal() != 0 && getMaxVal() != 0) {
+		if(!Double.isNaN(getMinVal()) && !Double.isNaN(getMinVal())) {
 			if(getMinVal() >= getMaxVal()) {
 				throw new IllegalStateException("maxVal must be > minVal");
 			}
@@ -238,6 +237,7 @@ public class ScalarEncoder extends Encoder {
 		if(!isForced()) {
 			checkReasonableSettings();
 		}
+        description.add(new Tuple(2, (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
 	}
 	
 	/**
@@ -288,27 +288,7 @@ public class ScalarEncoder extends Encoder {
 			setN((int)Math.ceil(nFloat));
 		}
 	}
-	
-	/**
-	 * Set whether learning is enabled.
-	 * @param 	learningEnabled		flag indicating whether learning is enabled
-	 */
-	public void setLearning(boolean learningEnabled) {
-		setLearningEnabled(learningEnabled);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 * @return		Tuple containing 
-	 */
-	@Override
-	public List<Tuple> getDescription() {
-		//Throws UnsupportedOperationException if you try to add to the list
-		//returned by Arrays.asList() ??? So we wrap it in yet another List?
-		String name = (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name;
-		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2, name, 0) }));
-	}
-	
+
 	/**
 	 * Return the bit offset of the first bit to be set in the encoder output.
      * For periodic encoders, this can be a negative number when the encoded output
@@ -434,9 +414,10 @@ public class ScalarEncoder extends Encoder {
 	 * @return
 	 */
 	@Override
-	public int[] encodeIntoArray(double input, int[] output) {
+	public void encodeIntoArray(Double input, int[] output) {
 		if(Double.isNaN(input)) {
-			return new int[0];
+			Arrays.fill(output, 0);
+			return;
 		}
 		
 		Integer bucketVal = getFirstOnBit(input);
@@ -472,16 +453,6 @@ public class ScalarEncoder extends Encoder {
 			System.out.println("output: " + Arrays.toString(output));
 			System.out.println("input desc: " + decode(output, ""));
 		}
-		
-		return output;
-	}
-	
-	/**
-	 * NO-OP 
-	 */
-	@Override
-	public int[] encodeIntoArray(String inputData, int[] output) {
-		return null;
 	}
 
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
@@ -711,11 +682,11 @@ public class ScalarEncoder extends Encoder {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * @param <T>	the input value, in this case a double
+	 * @param <S>	the input value, in this case a double
 	 * @return	a list of one input double
 	 */
 	@Override
-	public <T> TDoubleList getScalars(T d) {
+	public <S> TDoubleList getScalars(S d) {
 		TDoubleList retVal = new TDoubleArrayList();
 		retVal.add((Double)d);
 		return retVal;
@@ -739,7 +710,7 @@ public class ScalarEncoder extends Encoder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> List<T> getBucketValues(Class<T> t) {
+	public <S> List<S> getBucketValues(Class<S> t) {
 		if(bucketValues == null) {
 			SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 			int numBuckets = topDownMapping.getMaxIndex() + 1;
@@ -748,7 +719,7 @@ public class ScalarEncoder extends Encoder {
 				((List<Double>)bucketValues).add((Double)getBucketInfo(new int[] { i }).get(0).get(1));
 			}
 		}
-		return (List<T>)bucketValues;
+		return (List<S>)bucketValues;
 	}
 	
 	/**
@@ -772,7 +743,7 @@ public class ScalarEncoder extends Encoder {
 		
 		return Arrays.asList(
 			new EncoderResult[] { 
-				new EncoderResult(inputVal, inputVal, Arrays.toString(encoding)) });
+				new EncoderResult(inputVal, inputVal, encoding) });
 			
 	}
 	
@@ -785,7 +756,7 @@ public class ScalarEncoder extends Encoder {
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 		
 		// See which "category" we match the closest.
-		int category = ArrayUtils.argmax(topDownMapping.rightVecProd(encoded));
+		int category = ArrayUtils.argmax(rightVecProd(topDownMapping, encoded));
 		
 		return getBucketInfo(new int[] { category });
 	}
@@ -824,8 +795,8 @@ public class ScalarEncoder extends Encoder {
 	 * Returns a {@link EncoderBuilder} for constructing {@link ScalarEncoder}s
 	 * 
 	 * The base class architecture is put together in such a way where boilerplate
-	 * initialization can be kept to a minimum for implementing subclasses. 
-	 * Hopefully! :-)
+	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
+	 * the mistake-proneness of extremely long argument lists.
 	 * 
 	 * @see ScalarEncoder.Builder#setStuff(int)
 	 */
