@@ -22,6 +22,9 @@
 
 package org.numenta.nupic.encoders;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.numenta.nupic.util.Tuple;
@@ -71,79 +74,41 @@ import org.numenta.nupic.util.Tuple;
  * - refer to Parameters, which where these parameters are defined.
  */
 
-public class DateEncoder extends Encoder {
+public class DateEncoder extends Encoder<Date> {
 
     protected int width;
 
-    protected List<Tuple> description;
+    //See DateEncoder.Builder for default values.
 
-    protected int season;
-    protected int dayOfWeek;
-    protected int weekend;
-    protected int holiday;
-    protected int timeOfDay;
-    protected int customDays;
+    protected Tuple season;
+    protected ScalarEncoder seasonEncoder;
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
+    protected Tuple dayOfWeek;
+    protected ScalarEncoder dayOfWeekEncoder;
 
-    public void setDescription(List<Tuple> description) {
-        this.description = description;
-    }
+    protected Tuple weekend;
+    protected ScalarEncoder weekendEncoder;
 
-    public int getSeason() {
-        return season;
-    }
+    protected Tuple customDays;
+    protected ScalarEncoder customDaysEncoder;
 
-    public void setSeason(int season) {
-        this.season = season;
-    }
+    protected Tuple holiday;
+    protected ScalarEncoder holidayEncoder;
 
-    public int getDayOfWeek() {
-        return dayOfWeek;
-    }
+    protected Tuple timeOfDay;
+    protected ScalarEncoder timeOfDayEncoder;
 
-    public void setDayOfWeek(int dayOfWeek) {
-        this.dayOfWeek = dayOfWeek;
-    }
-
-    public int getWeekend() {
-        return weekend;
-    }
-
-    public void setWeekend(int weekend) {
-        this.weekend = weekend;
-    }
-
-    public int getHoliday() {
-        return holiday;
-    }
-
-    public void setHoliday(int holiday) {
-        this.holiday = holiday;
-    }
-
-    public int getTimeOfDay() {
-        return timeOfDay;
-    }
-
-    public void setTimeOfDay(int timeOfDay) {
-        this.timeOfDay = timeOfDay;
-    }
-
-    public int getCustomDays() {
-        return customDays;
-    }
-
-    public void setCustomDays(int customDays) {
-        this.customDays = customDays;
-    }
+    protected ArrayList<EncoderTuple> childEncoders = new ArrayList<EncoderTuple>();
+    protected ArrayList<Integer> customDaysList = new ArrayList<Integer>();
 
     /**
      * Constructs a new {@code DateEncoder}
+     *
+     * Package private to encourage construction using the Builder Pattern
+     * but still allow inheritance.
      */
-    public DateEncoder() {}
+    DateEncoder() {
+    }
 
     /**
      * Returns a builder for building DateEncoder.
@@ -157,80 +122,276 @@ public class DateEncoder extends Encoder {
 
     /**
      * Init the {@code DateEncoder} with parameters
-     *
-     * season=0, dayOfWeek=0, weekend=0, holiday=0, timeOfDay=0, customDays=0,
-     * name = '', forced=True
      */
     public void init() {
 
+        width = 0;
+
+        if(null != season)
+        {
+            seasonEncoder = ScalarEncoder.builder()
+                    .w((int) season.get(0))
+                    .radius((double) season.get(1))
+                    .minVal(0)
+                    .maxVal(366)
+                    .periodic(true)
+                    .name("season")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(seasonEncoder, width);
+            width += seasonEncoder.getWidth();
+        }
+
+        if(null != dayOfWeek)
+        {
+            dayOfWeekEncoder = ScalarEncoder.builder()
+                    .w((int) dayOfWeek.get(0))
+                    .radius((double) dayOfWeek.get(1))
+                    .minVal(0)
+                    .maxVal(7)
+                    .periodic(true)
+                    .name("day of week")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(dayOfWeekEncoder, width);
+            width += dayOfWeekEncoder.getWidth();
+        }
+
+        if(null != weekend)
+        {
+            weekendEncoder = ScalarEncoder.builder()
+                    .w((int) weekend.get(0))
+                    .radius((double) weekend.get(1))
+                    .minVal(0)
+                    .maxVal(1)
+                    .periodic(true)
+                    .name("weekend")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(weekendEncoder, width);
+            width += weekendEncoder.getWidth();
+        }
+
+        if(null != customDays)
+        {
+            customDaysEncoder = ScalarEncoder.builder()
+                    .w((int) customDays.get(0))
+                    .radius(1)
+                    .minVal(0)
+                    .maxVal(1)
+                    .periodic(true)
+                    .name("customdays")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(customDaysEncoder, width);
+            width += customDaysEncoder.getWidth();
+
+            addCustomDays((ArrayList<String>) customDays.get(1));
+        }
+
+        if(null != holiday)
+        {
+            holidayEncoder = ScalarEncoder.builder()
+                    .w((int) holiday.get(0))
+                    .radius((double) holiday.get(1))
+                    .minVal(0)
+                    .maxVal(1)
+                    .periodic(true)
+                    .name("holiday")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(holidayEncoder, width);
+            width += holidayEncoder.getWidth();
+        }
+
+        if(null != timeOfDay) {
+            timeOfDayEncoder = ScalarEncoder.builder()
+                    .w((int) timeOfDay.get(0))
+                    .radius((double) timeOfDay.get(1))
+                    .minVal(0)
+                    .maxVal(24)
+                    .periodic(true)
+                    .name("time of day")
+                    .forced(this.isForced())
+                    .build();
+            addChildEncoder(timeOfDayEncoder, width);
+            width += timeOfDayEncoder.getWidth();
+        }
+    }
+
+    protected void addChildEncoder(ScalarEncoder encoder, int offset) {
+        childEncoders.add(new EncoderTuple(encoder.getName(), encoder, offset));
+        description.add(new Tuple(2, encoder.getName(), offset));
+    }
+
+    protected void addCustomDays(ArrayList<String> daysList) {
+        for(String dayStr : daysList)
+        {
+            switch (dayStr.toLowerCase())
+            {
+                case "mon":
+                case "monday":
+                    customDaysList.add(0);
+                    break;
+                case "tue":
+                case "tuesday":
+                    customDaysList.add(1);
+                    break;
+                case "wed":
+                case "wednesday":
+                    customDaysList.add(2);
+                    break;
+                case "thu":
+                case "thursday":
+                    customDaysList.add(3);
+                    break;
+                case "fri":
+                case "friday":
+                    customDaysList.add(4);
+                    break;
+                case "sat":
+                case "saturday":
+                    customDaysList.add(5);
+                    break;
+                case "sun":
+                case "sunday":
+                    customDaysList.add(6);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid custom day: " + dayStr);
+            }
+        }
+    }
+
+    public Tuple getSeason() {
+        return season;
+    }
+
+    public void setSeason(Tuple season) {
+        this.season = season;
+    }
+
+    public Tuple getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public void setDayOfWeek(Tuple dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public Tuple getWeekend() {
+        return weekend;
+    }
+
+    public void setWeekend(Tuple weekend) {
+        this.weekend = weekend;
+    }
+
+    public Tuple getCustomDays() {
+        return customDays;
+    }
+
+    public void setCustomDays(Tuple customDays) {
+        this.customDays = customDays;
+    }
+
+    public Tuple getHoliday() {
+        return holiday;
+    }
+
+    public void setHoliday(Tuple holiday) {
+        this.holiday = holiday;
+    }
+
+    public Tuple getTimeOfDay() {
+        return timeOfDay;
+    }
+
+    public void setTimeOfDay(Tuple timeOfDay) {
+        this.timeOfDay = timeOfDay;
     }
 
     /**
-     * Should return the output width, in bits.
+     * {@inheritDoc}
      */
     @Override
     public int getWidth() {
-        return width;
+        return this.width;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isDelta() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * TODO Port encodeIntoArray from Python
+     */
     @Override
-    public int[] encodeIntoArray(double inputData, int[] output) {
-        return new int[0];
+    public void encodeIntoArray(Date inputData, int[] output) {
+
     }
 
+    /**
+     * TODO Figure out the correspondence in Python
+     */
     @Override
-    public int[] encodeIntoArray(String inputData, int[] output) {
-        return new int[0];
+    public <S> List<S> getBucketValues(Class<S> returnType) {
+        return null;
     }
 
     @Override
     public void setLearning(boolean learningEnabled) {
+        super.setLearning(learningEnabled);
 
+        for(EncoderTuple t : childEncoders)
+        {
+            ScalarEncoder e = (ScalarEncoder)t.getEncoder();
+            e.setLearning(learningEnabled);
+        }
     }
 
     /**
-     * This returns a list of tuples, each containing (name, offset).
-     * The 'name' is a string description of each sub-field, and offset is the bit
-     * offset of the sub-field for that encoder.
-     *
-     * For now, only the 'multi' and 'date' encoders have multiple (name, offset)
-     * pairs. All other encoders have a single pair, where the offset is 0.
-     *
-     * @return		list of tuples, each containing (name, offset)
-     */
-    @Override
-    public List<Tuple> getDescription() {
-        return description;
-    }
-
-    @Override
-    public <T> List<T> getBucketValues(Class<T> returnType) {
-        return null;
-    }
-
-
-    /**
-     * Returns a {@link EncoderBuilder} for constructing {@link DateEncoder}s
+     * Returns a {@link Encoder.Builder} for constructing {@link DateEncoder}s
      *
      * The base class architecture is put together in such a way where boilerplate
      * initialization can be kept to a minimum for implementing subclasses.
      * Hopefully! :-)
      *
-     * @see DateEncoder.Builder#setStuff(int)
+     * @see ScalarEncoder.Builder#setStuff(int)
      */
     public static class Builder extends Encoder.Builder<DateEncoder.Builder, DateEncoder> {
 
-        protected int season;
-        protected int dayOfWeek;
-        protected int weekend;
-        protected int holiday;
-        protected int timeOfDay;
-        protected int customDays;
+        //    Ignore leapyear differences -- assume 366 days in a year
+        //    Radius = 91.5 days = length of season
+        //    Value is number of days since beginning of year (0 - 355)
+        protected Tuple season = new Tuple(2, 0, 91.5);
+
+        // Value is day of week (floating point)
+        // Radius is 1 day
+        protected Tuple dayOfWeek = new Tuple(2, 0, 1);
+
+        // Binary value.
+        protected Tuple weekend = new Tuple(2, 0, 1);
+
+        // Custom days encoder, first argument in tuple is width
+        // second is either a single day of the week or a list of the days
+        // you want encoded as ones.
+        protected Tuple customDays = new Tuple(2, 0, new ArrayList<String>());
+
+        // A "continuous" binary value. = 1 on the holiday itself and smooth ramp
+        //  0->1 on the day before the holiday and 1->0 on the day after the holiday.
+        protected Tuple holiday = new Tuple(2, 0, 1);
+
+        // Value is time of day in hours
+        // Radius = 4 hours, e.g. morning, afternoon, evening, early night,
+        //  late night, etc.
+        protected Tuple timeOfDay = new Tuple(2, 0, 4);
 
         private Builder() {}
 
@@ -264,8 +425,23 @@ public class DateEncoder extends Encoder {
         /**
          * Set how many bits are used to encode season
          */
+        public DateEncoder.Builder season(int season, int radius) {
+            this.season = new Tuple(2, season, radius);
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode season
+         */
         public DateEncoder.Builder season(int season) {
-            this.season = season;
+            return this.season(season, (int) this.season.get(1));
+        }
+
+        /**
+         * Set how many bits are used to encode dayOfWeek
+         */
+        public DateEncoder.Builder dayOfWeek(int dayOfWeek, int radius) {
+            this.dayOfWeek = new Tuple(2, dayOfWeek, radius);
             return this;
         }
 
@@ -273,24 +449,29 @@ public class DateEncoder extends Encoder {
          * Set how many bits are used to encode dayOfWeek
          */
         public DateEncoder.Builder dayOfWeek(int dayOfWeek) {
-            this.dayOfWeek = dayOfWeek;
-            return this;
+            return this.dayOfWeek(dayOfWeek, (int) this.dayOfWeek.get(1));
         }
 
-
         /**
-         * Set how many bits are used to encode holiday
+         * Set how many bits are used to encode weekend
          */
-        public DateEncoder.Builder holiday(int holiday) {
-            this.holiday = holiday;
+        public DateEncoder.Builder weekend(int weekend, int radius) {
+            this.weekend = new Tuple(2, weekend, radius);
             return this;
         }
 
         /**
-         * Set how many bits are used to encode timeOfDay
+         * Set how many bits are used to encode weekend
          */
-        public DateEncoder.Builder timeOfDay(int timeOfDay) {
-            this.timeOfDay = timeOfDay;
+        public DateEncoder.Builder weekend(int weekend) {
+            return this.weekend(weekend, (int) this.weekend.get(1));
+        }
+
+        /**
+         * Set how many bits are used to encode customDays
+         */
+        public DateEncoder.Builder customDays(int customDays, ArrayList<String> customDaysList) {
+            this.customDays = new Tuple(2, customDays, customDaysList);
             return this;
         }
 
@@ -298,8 +479,37 @@ public class DateEncoder extends Encoder {
          * Set how many bits are used to encode customDays
          */
         public DateEncoder.Builder customDays(int customDays) {
-            this.customDays = customDays;
+            return this.customDays(customDays, (ArrayList<String>) this.customDays.get(1));
+        }
+
+        /**
+         * Set how many bits are used to encode holiday
+         */
+        public DateEncoder.Builder holiday(int holiday, int radius) {
+            this.holiday = new Tuple(2, holiday, radius);
             return this;
+        }
+
+        /**
+         * Set how many bits are used to encode holiday
+         */
+        public DateEncoder.Builder holiday(int holiday) {
+            return this.holiday(holiday, (int) this.holiday.get(1));
+        }
+
+        /**
+         * Set how many bits are used to encode timeOfDay
+         */
+        public DateEncoder.Builder timeOfDay(int timeOfDay, int radius) {
+            this.timeOfDay = new Tuple(2, timeOfDay, radius);
+            return this;
+        }
+
+        /**
+         * Set how many bits are used to encode timeOfDay
+         */
+        public DateEncoder.Builder timeOfDay(int timeOfDay) {
+            return this.timeOfDay(timeOfDay, (int) this.timeOfDay.get(1));
         }
 
         /**
@@ -310,13 +520,6 @@ public class DateEncoder extends Encoder {
             return this;
         }
 
-        /**
-         * Set how many bits are used to encode weekend
-         */
-        public DateEncoder.Builder weekend(int weekend) {
-            this.weekend = weekend;
-            return this;
-        }
 
     }
 }
