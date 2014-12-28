@@ -27,9 +27,8 @@ public class DateEncoderTest {
 
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
-
-        //FIXME how to pass the datetime in, it should not be string
-        bits = de.encode(dt.toString("yyyy-MM-dd HH:mm:ss"));
+        
+        bits = de.encode(dt.toDate());
 
         //
         //dt.getMillis();
