@@ -22,11 +22,13 @@
 
 package org.numenta.nupic.encoders;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.array.TDoubleArrayList;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.Interval;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -98,8 +100,14 @@ public class DateEncoder extends Encoder<Date> {
     protected Tuple timeOfDay;
     protected ScalarEncoder timeOfDayEncoder;
 
-    protected ArrayList<EncoderTuple> childEncoders = new ArrayList<EncoderTuple>();
-    protected ArrayList<Integer> customDaysList = new ArrayList<Integer>();
+    protected List<EncoderTuple> childEncoders = new ArrayList<EncoderTuple>();
+    protected List<Integer> customDaysList = new ArrayList<Integer>();
+
+    // Currently the only holiday we know about is December 25
+    // holidays is a list of holidays that occur on a fixed date every year
+    protected List<Tuple> HolidaysList = Arrays.asList(
+            new Tuple(2, 12, 25)
+    );
 
     /**
      * Constructs a new {@code DateEncoder}
@@ -127,8 +135,16 @@ public class DateEncoder extends Encoder<Date> {
 
         width = 0;
 
-        if(null != season)
-        {
+        //TODO figure out how to remove this
+        //forced (default True)
+        setForced(true);
+
+        // Adapted from MultiEncoder
+        // TODO figure out why a initial EncoderTuple
+        encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
+        encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
+
+        if(isValidEncoderPropertyTuple(season)) {
             seasonEncoder = ScalarEncoder.builder()
                     .w((int) season.get(0))
                     .radius((double) season.get(1))
@@ -138,11 +154,10 @@ public class DateEncoder extends Encoder<Date> {
                     .name("season")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(seasonEncoder, width);
+            addChildEncoder(seasonEncoder);
         }
 
-        if(null != dayOfWeek)
-        {
+        if(isValidEncoderPropertyTuple(dayOfWeek)) {
             dayOfWeekEncoder = ScalarEncoder.builder()
                     .w((int) dayOfWeek.get(0))
                     .radius((double) dayOfWeek.get(1))
@@ -152,25 +167,23 @@ public class DateEncoder extends Encoder<Date> {
                     .name("day of week")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(dayOfWeekEncoder, width);
+            addChildEncoder(dayOfWeekEncoder);
         }
 
-        if(null != weekend)
-        {
+        if(isValidEncoderPropertyTuple(weekend)) {
             weekendEncoder = ScalarEncoder.builder()
                     .w((int) weekend.get(0))
                     .radius((double) weekend.get(1))
                     .minVal(0)
                     .maxVal(1)
-                    .periodic(true)
+                    .periodic(false)
                     .name("weekend")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(weekendEncoder, width);
+            addChildEncoder(weekendEncoder);
         }
 
-        if(null != customDays)
-        {
+        if(isValidEncoderPropertyTuple(customDays)) {
             customDaysEncoder = ScalarEncoder.builder()
                     .w((int) customDays.get(0))
                     .radius(1)
@@ -180,13 +193,12 @@ public class DateEncoder extends Encoder<Date> {
                     .name("customdays")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(customDaysEncoder, width);
+            addChildEncoder(customDaysEncoder);
 
             addCustomDays((ArrayList<String>) customDays.get(1));
         }
 
-        if(null != holiday)
-        {
+        if(isValidEncoderPropertyTuple(holiday)) {
             holidayEncoder = ScalarEncoder.builder()
                     .w((int) holiday.get(0))
                     .radius((double) holiday.get(1))
@@ -196,10 +208,10 @@ public class DateEncoder extends Encoder<Date> {
                     .name("holiday")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(holidayEncoder, width);
+            addChildEncoder(holidayEncoder);
         }
 
-        if(null != timeOfDay) {
+        if(isValidEncoderPropertyTuple(timeOfDay)) {
             timeOfDayEncoder = ScalarEncoder.builder()
                     .w((int) timeOfDay.get(0))
                     .radius((double) timeOfDay.get(1))
@@ -209,14 +221,32 @@ public class DateEncoder extends Encoder<Date> {
                     .name("time of day")
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(timeOfDayEncoder, width);
+            addChildEncoder(timeOfDayEncoder);
         }
     }
 
-    protected void addChildEncoder(ScalarEncoder encoder, int offset) {
-        childEncoders.add(new EncoderTuple(encoder.getName(), encoder, offset));
-        description.add(new Tuple(2, encoder.getName(), offset));
-        width += encoder.getWidth();
+    private boolean isValidEncoderPropertyTuple(Tuple encoderPropertyTuple) {
+        System.out.println(String.format("%d", (int)encoderPropertyTuple.get(0)));
+        return encoderPropertyTuple != null && (int)encoderPropertyTuple.get(0) != 0;
+    }
+
+    // Adapted from MultiEncoder
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void addEncoder(String name, Encoder child) {
+        super.addEncoder(this, name, child, width);
+
+        for (Object d : child.getDescription()) {
+            Tuple dT = (Tuple) d;
+            description.add(new Tuple(2, dT.get(0), (int)dT.get(1) + getWidth()));
+        }
+        width += child.getWidth();
+    }
+
+    protected void addChildEncoder(ScalarEncoder encoder) {
+        this.addEncoder(encoder.getName(), encoder);
+//        childEncoders.add(new EncoderTuple(encoder.getName(), encoder, offset));
+//        description.add(new Tuple(2, encoder.getName(), offset));
+//        width += encoder.getWidth();
     }
 
     protected void addCustomDays(ArrayList<String> daysList) {
@@ -306,12 +336,19 @@ public class DateEncoder extends Encoder<Date> {
         this.timeOfDay = timeOfDay;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getWidth() {
-        return this.width;
+        return width;
+    }
+
+    @Override
+    public int getN() {
+        return width;
+    }
+
+    @Override
+    public int getW() {
+        return width;
     }
 
     /**
@@ -324,30 +361,159 @@ public class DateEncoder extends Encoder<Date> {
 
     /**
      * {@inheritDoc}
-     *
-     * TODO Port encodeIntoArray from Python
      */
+    // Adapted from MultiEncoder
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void encodeIntoArray(Date inputData, int[] output) {
+        //TODO deal with bad inputData
+//        if input == SENTINEL_VALUE_FOR_MISSING_DATA:
+//        output[0:] = 0
+//        else:
+//        if not isinstance(input, datetime.datetime):
+//        raise ValueError("Input is type %s, expected datetime. Value: %s" % (
+//                type(input), str(input)))
 
+        // Get the scalar values for each sub-field
+        TDoubleList scalars = getScalars(inputData);
+
+        int fieldCounter = 0;
+        for (EncoderTuple t : getEncoders(this)) {
+            String name = t.getName();
+            Encoder encoder = t.getEncoder();
+            int offset = t.getOffset();
+
+            int[] tempArray = new int[encoder.getWidth()];
+            encoder.encodeIntoArray(scalars.get(fieldCounter), tempArray);
+
+            for (int i = 0; i < tempArray.length; i++) {
+                output[i + offset] = tempArray[i];
+            }
+
+            ++fieldCounter;
+        }
     }
 
     /**
-     * TODO Figure out the correspondence in Python
+     * {@inheritDoc}
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public TDoubleList getScalars(Date d) {
+        TDoubleList retVals = new TDoubleArrayList();
+        List<String> encodedValues = getEncodedValues(d);
+
+        for (String v : encodedValues) {
+            //TODO swap it with getEncodedValues():
+            // not Double.parseDouble() here , but String.valueOf() there
+            retVals.add(Double.parseDouble(v));
+        }
+
+        return retVals;
+    }
+
+    public List<String> getEncodedValues(Date inputData) {
+        //TODO check null (if date is null, it acts like new DateTime())
+        if(inputData == null) {
+            //TODO return a proper fallback value
+            return new ArrayList<String>();
+        }
+
+        List<String> values = new ArrayList<String>();
+
+        DateTime date = new DateTime(inputData);
+
+        //Get the scalar values for each sub-field
+
+        double timeOfDay = date.getHourOfDay() + date.getMinuteOfHour() / 60.0;
+
+        int dayOfWeek = date.getDayOfWeek(); // + timeOfDay / 24.0
+
+        if(seasonEncoder != null) {
+            // The day of year was 1 based, so convert to 0 based
+            double dayOfYear = date.getDayOfYear() - 1;
+            values.add(String.valueOf(dayOfYear));
+        }
+
+        if(dayOfWeekEncoder != null) {
+            values.add(String.valueOf(dayOfWeek));
+        }
+
+        if(weekendEncoder != null) {
+
+            //saturday, sunday or friday evening
+            boolean isWeekend = dayOfWeek == 6 || dayOfWeek == 5 ||
+                    (dayOfWeek == 4 && timeOfDay > 18);
+
+            int weekend = isWeekend ? 1 : 0;
+
+            values.add(String.valueOf(weekend));
+        }
+
+        if(customDaysEncoder != null) {
+            boolean isCustomDays = customDaysList.contains(dayOfWeek);
+
+            int customDay = isCustomDays ? 1 : 0;
+
+            values.add(String.valueOf(customDay));
+        }
+
+        if(holidayEncoder != null) {
+            // A "continuous" binary value. = 1 on the holiday itself and smooth ramp
+            //  0->1 on the day before the holiday and 1->0 on the day after the holiday.
+            Tuple dateTuple = new Tuple(date.getMonthOfYear(), date.getDayOfMonth());
+
+            double holidayness = 0;
+
+            for(Tuple h : HolidaysList) {
+                //hdate is midnight on the holiday
+                DateTime hdate = new DateTime(date.getYear(), (int)h.get(0), (int)h.get(1), 0, 0, 0);
+
+                if(date.isAfter(hdate)) {
+                    Duration diff = new Interval(hdate, date).toDuration();
+                    long days = diff.getStandardDays();
+                    if(days == 0) {
+                        //return 1 on the holiday itself
+                        holidayness = 1;
+                        break;
+                    } else if(days == 1) {
+                        //ramp smoothly from 1 -> 0 on the next day
+                        holidayness = 1.0 - (diff.getStandardSeconds() / 86400.0);
+                        break;
+                    }
+
+                } else {
+                    //TODO this is not the same as when date.isAfter(hdate), why?
+                    Duration diff = new Interval(date, hdate).toDuration();
+                    long days = diff.getStandardDays();
+                    if(days == 0) {
+                        //ramp smoothly from 0 -> 1 on the previous day
+                        holidayness = 1.0 - (diff.getStandardSeconds() / 86400.0);
+                        break;
+                    }
+                }
+            }
+
+            values.add(String.valueOf(holidayness));
+        }
+
+        if(timeOfDayEncoder != null) {
+            values.add(String.valueOf(timeOfDay));
+        }
+
+        return values;
+    }
+
     @Override
     public <S> List<S> getBucketValues(Class<S> returnType) {
         return null;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void setLearning(boolean learningEnabled) {
-        super.setLearning(learningEnabled);
-
-        for(EncoderTuple t : childEncoders)
-        {
-            ScalarEncoder e = (ScalarEncoder)t.getEncoder();
-            e.setLearning(learningEnabled);
+        for (EncoderTuple t : getEncoders(this)) {
+            Encoder encoder = t.getEncoder();
+            encoder.setLearningEnabled(learningEnabled);
         }
     }
 

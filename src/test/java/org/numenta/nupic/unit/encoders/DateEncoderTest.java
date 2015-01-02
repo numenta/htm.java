@@ -77,20 +77,20 @@ public class DateEncoderTest {
         assertEquals("season", descSeason.get(0));
         assertEquals(0, descSeason.get(1));
 
-        Tuple descDayOfWeek = desc.get(0);
+        Tuple descDayOfWeek = desc.get(1);
         assertNotNull(descDayOfWeek);
         assertEquals("day of week", descDayOfWeek.get(0));
         assertEquals(12, descDayOfWeek.get(1));
 
-        Tuple descWeekend = desc.get(0);
+        Tuple descWeekend = desc.get(2);
         assertNotNull(descWeekend);
         assertEquals("weekend", descWeekend.get(0));
         assertEquals(19, descWeekend.get(1));
 
-        Tuple descTimeOfDay = desc.get(0);
+        Tuple descTimeOfDay = desc.get(3);
         assertNotNull(descTimeOfDay);
         assertEquals("time of day", descTimeOfDay.get(0));
-        assertEquals(25, descWeekend.get(1));
+        assertEquals(25, descTimeOfDay.get(1));
 
         assertTrue(Arrays.equals(expected, bits));
 
