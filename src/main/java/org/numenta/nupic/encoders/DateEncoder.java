@@ -226,7 +226,6 @@ public class DateEncoder extends Encoder<Date> {
     }
 
     private boolean isValidEncoderPropertyTuple(Tuple encoderPropertyTuple) {
-        System.out.println(String.format("%d", (int)encoderPropertyTuple.get(0)));
         return encoderPropertyTuple != null && (int)encoderPropertyTuple.get(0) != 0;
     }
 
@@ -426,7 +425,8 @@ public class DateEncoder extends Encoder<Date> {
 
         double timeOfDay = date.getHourOfDay() + date.getMinuteOfHour() / 60.0;
 
-        int dayOfWeek = date.getDayOfWeek(); // + timeOfDay / 24.0
+        // The day of week was 1 based, so convert to 0 based
+        int dayOfWeek = date.getDayOfWeek() - 1; // + timeOfDay / 24.0
 
         if(seasonEncoder != null) {
             // The day of year was 1 based, so convert to 0 based
