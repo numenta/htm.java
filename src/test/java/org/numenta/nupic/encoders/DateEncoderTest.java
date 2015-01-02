@@ -1,5 +1,6 @@
 package org.numenta.nupic.encoders;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,29 +69,24 @@ public class DateEncoderTest {
         setUp();
         initDE();
 
-        List<Tuple> desc = de.getDescription();
-        assertNotNull(desc);
+        List<Tuple> descs = de.getDescription();
+        assertNotNull(descs);
         // should be [("season", 0), ("day of week", 12), ("weekend", 19), ("time of day", 25)]
 
-        Tuple descSeason = desc.get(0);
-        assertNotNull(descSeason);
-        assertEquals("season", descSeason.get(0));
-        assertEquals(0, descSeason.get(1));
+        List<Tuple> expectedDescs = new ArrayList<Tuple>(Arrays.asList(
+                new Tuple(2, "season", 0),
+                new Tuple(2, "day of week", 12),
+                new Tuple(2, "weekend", 19),
+                new Tuple(2, "time of day", 25)
+        ));
 
-        Tuple descDayOfWeek = desc.get(1);
-        assertNotNull(descDayOfWeek);
-        assertEquals("day of week", descDayOfWeek.get(0));
-        assertEquals(12, descDayOfWeek.get(1));
+        assertEquals(expectedDescs.size(), descs.size());
 
-        Tuple descWeekend = desc.get(2);
-        assertNotNull(descWeekend);
-        assertEquals("weekend", descWeekend.get(0));
-        assertEquals(19, descWeekend.get(1));
-
-        Tuple descTimeOfDay = desc.get(3);
-        assertNotNull(descTimeOfDay);
-        assertEquals("time of day", descTimeOfDay.get(0));
-        assertEquals(25, descTimeOfDay.get(1));
+        for (int i = 0; i < expectedDescs.size(); ++i) {
+            Tuple desc = descs.get(i);
+            assertNotNull(desc);
+            assertEquals(expectedDescs.get(i), desc);
+        }
 
         assertTrue(Arrays.equals(expected, bits));
 
