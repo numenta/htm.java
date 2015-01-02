@@ -1,4 +1,4 @@
-package org.numenta.nupic.unit.encoders;
+package org.numenta.nupic.encoders;
 
 import java.util.Arrays;
 import java.util.List;
