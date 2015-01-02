@@ -100,8 +100,7 @@ public class DateEncoder extends Encoder<Date> {
     protected Tuple timeOfDay;
     protected ScalarEncoder timeOfDayEncoder;
 
-    protected List<EncoderTuple> childEncoders = new ArrayList<EncoderTuple>();
-    protected List<Integer> customDaysList = new ArrayList<Integer>();
+    protected List<Integer> customDaysList = new ArrayList<>();
 
     // Currently the only holiday we know about is December 25
     // holidays is a list of holidays that occur on a fixed date every year
@@ -141,8 +140,11 @@ public class DateEncoder extends Encoder<Date> {
 
         // Adapted from MultiEncoder
         // TODO figure out why a initial EncoderTuple
-        encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
+        encoders = new LinkedHashMap<>();
         encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
+
+        // Note: The order of adding encoders matters, must be in the following
+        // season, dayOfWeek, weekend, customDays, holiday, timeOfDay
 
         if(isValidEncoderPropertyTuple(season)) {
             seasonEncoder = ScalarEncoder.builder()
@@ -414,10 +416,10 @@ public class DateEncoder extends Encoder<Date> {
         //TODO check null (if date is null, it acts like new DateTime())
         if(inputData == null) {
             //TODO return a proper fallback value
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
 
-        List<String> values = new ArrayList<String>();
+        List<String> values = new ArrayList<>();
 
         DateTime date = new DateTime(inputData);
 
@@ -502,6 +504,8 @@ public class DateEncoder extends Encoder<Date> {
 
         return values;
     }
+
+    //TODO Should delegate Encoder.getScalarNames() to Encoder.getScalarNames(null) ?
 
     @Override
     public <S> List<S> getBucketValues(Class<S> returnType) {

@@ -73,7 +73,7 @@ public class DateEncoderTest {
         assertNotNull(descs);
         // should be [("season", 0), ("day of week", 12), ("weekend", 19), ("time of day", 25)]
 
-        List<Tuple> expectedDescs = new ArrayList<Tuple>(Arrays.asList(
+        List<Tuple> expectedDescs = new ArrayList<>(Arrays.asList(
                 new Tuple(2, "season", 0),
                 new Tuple(2, "day of week", 12),
                 new Tuple(2, "weekend", 19),
