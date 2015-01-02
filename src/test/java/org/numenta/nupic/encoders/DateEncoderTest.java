@@ -1,8 +1,6 @@
 package org.numenta.nupic.encoders;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -11,6 +9,7 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 public class DateEncoderTest {
     private DateEncoder de;
@@ -95,5 +94,44 @@ public class DateEncoderTest {
         de.pprint(bits, "");
         System.out.println();
     }
+
+    //TODO testMissingValues in Python can't be ported
+    // because SENTINEL_VALUE_FOR_MISSING_DATA is not a Date
+
+    /**
+     * Decoding date
+     */
+    @Test
+    public void testDecoding() {
+        setUp();
+        initDE();
+
+        Tuple decoded = de.decode(bits, null);
+
+        Map<String, Tuple> fieldsMap = (Map<String, Tuple>)decoded.get(0);
+        List<String> fieldsOrder = (List<String>)decoded.get(1);
+
+        assertNotNull(fieldsMap);
+        assertNotNull(fieldsOrder);
+        assertEquals(4, fieldsMap.size());
+
+        //TODO can't assert on the length of Tuple yet
+
+        Map<String, Tuple> expectedFieldsMap = new HashMap<>();
+        expectedFieldsMap.put("season", new Tuple(2, 305.0, 305.0));
+        expectedFieldsMap.put("time of day", new Tuple(2, 14.4, 14.4));
+        expectedFieldsMap.put("day of week", new Tuple(2, 3.0, 3.0));
+        expectedFieldsMap.put("weekend", new Tuple(2, 0.0, 0.0));
+
+//        for (String key : expectedFieldsMap.keySet()) {
+//            Tuple expected = expectedFieldsMap.get(key);
+//            Tuple actual = fieldsMap.get(key);
+//            assertEquals(expected, actual);
+//        }
+
+        System.out.println(decoded.toString());
+        System.out.println(String.format("decodedToStr=>%s", de.decodedToStr(decoded)));
+    }
+
 }
 
