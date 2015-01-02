@@ -139,7 +139,6 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(seasonEncoder, width);
-            width += seasonEncoder.getWidth();
         }
 
         if(null != dayOfWeek)
@@ -154,7 +153,6 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(dayOfWeekEncoder, width);
-            width += dayOfWeekEncoder.getWidth();
         }
 
         if(null != weekend)
@@ -169,7 +167,6 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(weekendEncoder, width);
-            width += weekendEncoder.getWidth();
         }
 
         if(null != customDays)
@@ -184,7 +181,6 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(customDaysEncoder, width);
-            width += customDaysEncoder.getWidth();
 
             addCustomDays((ArrayList<String>) customDays.get(1));
         }
@@ -201,7 +197,6 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(holidayEncoder, width);
-            width += holidayEncoder.getWidth();
         }
 
         if(null != timeOfDay) {
@@ -215,13 +210,13 @@ public class DateEncoder extends Encoder<Date> {
                     .forced(this.isForced())
                     .build();
             addChildEncoder(timeOfDayEncoder, width);
-            width += timeOfDayEncoder.getWidth();
         }
     }
 
     protected void addChildEncoder(ScalarEncoder encoder, int offset) {
         childEncoders.add(new EncoderTuple(encoder.getName(), encoder, offset));
         description.add(new Tuple(2, encoder.getName(), offset));
+        width += encoder.getWidth();
     }
 
     protected void addCustomDays(ArrayList<String> daysList) {
