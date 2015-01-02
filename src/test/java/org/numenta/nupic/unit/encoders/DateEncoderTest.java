@@ -23,7 +23,10 @@ public class DateEncoderTest {
         // use of forced is not recommended, used here for readability.
         builder = DateEncoder.builder();
 
-        builder.season(3).dayOfWeek(1).weekend(3).timeOfDay(5);
+        de = builder.season(3)
+                .dayOfWeek(1)
+                .weekend(3)
+                .timeOfDay(5).build();
 
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
