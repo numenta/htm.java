@@ -2,6 +2,8 @@ package org.numenta.nupic.encoders;
 
 import java.util.*;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.numenta.nupic.encoders.*;
@@ -135,6 +137,55 @@ public class DateEncoderTest {
 
         System.out.println(decoded.toString());
         System.out.println(String.format("decodedToStr=>%s", de.decodedToStr(decoded)));
+    }
+
+    /**
+     * Check topDownCompute
+     */
+    @Test
+    public void testTopDownCompute() {
+        setUp();
+        initDE();
+
+        List<EncoderResult> topDown = de.topDownCompute(bits);
+
+        List<Double> expectedList = Arrays.asList(320.25, 3.5, .167, 14.8);
+
+        for (int i = 0; i < topDown.size(); i++) {
+            EncoderResult r = topDown.get(i);
+            double actual = (double)r.getValue();
+            double expected = expectedList.get(i);
+            assertEquals(expected, actual, 4.0);
+        }
+    }
+
+    /**
+     * Check bucket index support
+     */
+    @Test
+    public void testBucketIndexSupport() {
+
+        setUp();
+        initDE();
+
+        int[] bucketIndices = de.getBucketIndices(dt.toDate());
+        System.out.println(String.format("bucket indices: %s", String.valueOf(bucketIndices)));
+        List<EncoderResult> bucketInfo = de.getBucketInfo(bucketIndices);
+
+        List<Double> expectedList = Arrays.asList(320.25, 3.5, .167, 14.8);
+
+        TIntList encodings = new TIntArrayList();
+
+        for (int i = 0; i < bucketInfo.size(); i++) {
+            EncoderResult r = bucketInfo.get(i);
+            double actual = (double)r.getValue();
+            double expected = expectedList.get(i);
+            assertEquals(expected, actual, 4.0);
+
+            encodings.addAll(r.getEncoding());
+        }
+
+        assertArrayEquals(expected, encodings.toArray());
     }
 
 }

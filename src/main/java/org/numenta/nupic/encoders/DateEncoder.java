@@ -25,7 +25,9 @@ package org.numenta.nupic.encoders;
 import java.util.*;
 
 import gnu.trove.list.TDoubleList;
+import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
@@ -510,6 +512,25 @@ public class DateEncoder extends Encoder<Date> {
     @Override
     public <S> List<S> getBucketValues(Class<S> returnType) {
         return null;
+    }
+
+    public int[] getBucketIndices(Date input) {
+
+        TDoubleList scalars = getScalars(input);
+
+        TIntList l = new TIntArrayList();
+        List<EncoderTuple> encoders = getEncoders(this);
+        if(encoders != null && encoders.size() > 0) {
+            int i = 0;
+            for(EncoderTuple t : encoders) {
+                l.addAll(t.getEncoder().getBucketIndices(scalars.get(i)));
+                ++i;
+            }
+        }else{
+            throw new IllegalStateException("Should be implemented in base classes that are not " +
+                    "containers for other encoders");
+        }
+        return l.toArray();
     }
 
     @SuppressWarnings("rawtypes")
