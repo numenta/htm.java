@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 import org.numenta.nupic.encoders.*;
 import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
 import static org.junit.Assert.*;
@@ -108,7 +109,7 @@ public class DateEncoderTest {
 
         Tuple decoded = de.decode(bits, null);
 
-        Map<String, Tuple> fieldsMap = (Map<String, Tuple>)decoded.get(0);
+        Map<String, RangeList> fieldsMap = (Map<String, RangeList>)decoded.get(0);
         List<String> fieldsOrder = (List<String>)decoded.get(1);
 
         assertNotNull(fieldsMap);
@@ -117,17 +118,20 @@ public class DateEncoderTest {
 
         //TODO can't assert on the length of Tuple yet
 
-        Map<String, Tuple> expectedFieldsMap = new HashMap<>();
-        expectedFieldsMap.put("season", new Tuple(2, 305.0, 305.0));
-        expectedFieldsMap.put("time of day", new Tuple(2, 14.4, 14.4));
-        expectedFieldsMap.put("day of week", new Tuple(2, 3.0, 3.0));
-        expectedFieldsMap.put("weekend", new Tuple(2, 0.0, 0.0));
+        Map<String, Double> expectedMap = new HashMap<>();
+        expectedMap.put("season", 305.0);
+        expectedMap.put("time of day", 14.4);
+        expectedMap.put("day of week", 3.0);
+        expectedMap.put("weekend", 0.0);
 
-//        for (String key : expectedFieldsMap.keySet()) {
-//            Tuple expected = expectedFieldsMap.get(key);
-//            Tuple actual = fieldsMap.get(key);
-//            assertEquals(expected, actual);
-//        }
+        for (String key : expectedMap.keySet()) {
+            double expected = expectedMap.get(key);
+            RangeList actual = fieldsMap.get(key);
+            assertEquals(1, actual.size());
+            MinMax minmax = actual.getRange(0);
+            assertEquals(expected, minmax.min(), de.getResolution());
+            assertEquals(expected, minmax.max(), de.getResolution());
+        }
 
         System.out.println(decoded.toString());
         System.out.println(String.format("decodedToStr=>%s", de.decodedToStr(decoded)));
