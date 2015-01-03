@@ -90,7 +90,7 @@ public class DateEncoderTest {
             assertEquals(expectedDescs.get(i), desc);
         }
 
-        assertTrue(Arrays.equals(expected, bits));
+        assertArrayEquals(expected, bits);
 
         System.out.println();
         de.pprintHeader("");
@@ -169,7 +169,7 @@ public class DateEncoderTest {
         initDE();
 
         int[] bucketIndices = de.getBucketIndices(dt.toDate());
-        System.out.println(String.format("bucket indices: %s", String.valueOf(bucketIndices)));
+        System.out.println(String.format("bucket indices: %s", Arrays.toString(bucketIndices)));
         List<EncoderResult> bucketInfo = de.getBucketInfo(bucketIndices);
 
         List<Double> expectedList = Arrays.asList(320.25, 3.5, .167, 14.8);
@@ -186,6 +186,34 @@ public class DateEncoderTest {
         }
 
         assertArrayEquals(expected, encodings.toArray());
+    }
+
+    /**
+     * look at holiday more carefully because of the smooth transition
+     */
+    @Test
+    public void testHoliday() {
+        //use of forced is not recommended, used here for readability, see ScalarEncoder
+        DateEncoder e = DateEncoder.builder().holiday(5).forced(true).build();
+        int [] holiday = new int[]{0,0,0,0,0,1,1,1,1,1};
+        int [] notholiday = new int[]{1,1,1,1,1,0,0,0,0,0};
+        int [] holiday2 = new int[]{0,0,0,1,1,1,1,1,0,0};
+
+        Date d = new DateTime(2010, 12, 25, 4, 55).toDate();
+        //System.out.println(String.format("1:%s", Arrays.toString(e.encode(d))));
+        assertArrayEquals(holiday, e.encode(d));
+
+        d = new DateTime(2008, 12, 27, 4, 55).toDate();
+        //System.out.println(String.format("2:%s", Arrays.toString(e.encode(d))));
+        assertArrayEquals(notholiday, e.encode(d));
+
+        d = new DateTime(1999, 12, 26, 8, 00).toDate();
+        //System.out.println(String.format("3:%s", Arrays.toString(e.encode(d))));
+        assertArrayEquals(holiday2, e.encode(d));
+
+        d = new DateTime(2011, 12, 24, 16, 00).toDate();
+        //System.out.println(String.format("4:%s", Arrays.toString(e.encode(d))));
+        assertArrayEquals(holiday2, e.encode(d));
     }
 
 }

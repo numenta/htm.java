@@ -208,7 +208,7 @@ public class DateEncoder extends Encoder<Date> {
                     .radius((double) holiday.get(1))
                     .minVal(0)
                     .maxVal(1)
-                    .periodic(true)
+                    .periodic(false)
                     .name("holiday")
                     .forced(this.isForced())
                     .build();
@@ -464,7 +464,6 @@ public class DateEncoder extends Encoder<Date> {
         if(holidayEncoder != null) {
             // A "continuous" binary value. = 1 on the holiday itself and smooth ramp
             //  0->1 on the day before the holiday and 1->0 on the day after the holiday.
-            Tuple dateTuple = new Tuple(date.getMonthOfYear(), date.getDayOfMonth());
 
             double holidayness = 0;
 
@@ -481,7 +480,7 @@ public class DateEncoder extends Encoder<Date> {
                         break;
                     } else if(days == 1) {
                         //ramp smoothly from 1 -> 0 on the next day
-                        holidayness = 1.0 - (diff.getStandardSeconds() / 86400.0);
+                        holidayness = 1.0 - ((diff.getStandardSeconds() - 86400.0 * days) / 86400.0);
                         break;
                     }
 
@@ -491,8 +490,8 @@ public class DateEncoder extends Encoder<Date> {
                     long days = diff.getStandardDays();
                     if(days == 0) {
                         //ramp smoothly from 0 -> 1 on the previous day
-                        holidayness = 1.0 - (diff.getStandardSeconds() / 86400.0);
-                        break;
+                        holidayness = 1.0 - ((diff.getStandardSeconds() - 86400.0 * days) / 86400.0);
+                        //TODO why no break?
                     }
                 }
             }
