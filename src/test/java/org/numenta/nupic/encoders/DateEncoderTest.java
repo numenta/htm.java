@@ -109,6 +109,7 @@ public class DateEncoderTest {
         setUp();
         initDE();
 
+        //TODO Why null is needed?
         Tuple decoded = de.decode(bits, null);
 
         Map<String, RangeList> fieldsMap = (Map<String, RangeList>)decoded.get(0);
@@ -216,5 +217,48 @@ public class DateEncoderTest {
         assertArrayEquals(holiday2, e.encode(d));
     }
 
+    /**
+     * Test weekend encoder
+     */
+    @Test
+    public void testWeekend() {
+        //use of forced is not recommended, used here for readability, see ScalarEncoder
+        DateEncoder e = DateEncoder.builder().customDays(21, Arrays.asList(
+                "sat", "sun", "fri"
+        )).forced(true).build();
+        DateEncoder mon = DateEncoder.builder().customDays(21, Arrays.asList(
+                "Monday"
+        )).forced(true).build();
+        DateEncoder e2 = DateEncoder.builder().weekend(21, 1).forced(true).build();
+        DateTime d = new DateTime(1988,5,29,20,00);
+
+        assertArrayEquals(e.encode(d.toDate()), e2.encode(d.toDate()));
+
+        for (int i = 0; i < 300; i++) {
+            DateTime curDate = d.plusDays(i + 1);
+            assertArrayEquals(e.encode(curDate.toDate()), e2.encode(curDate.toDate()));
+
+            //Make sure
+            Tuple decoded = mon.decode(mon.encode(curDate.toDate()), null);
+
+            Map<String, RangeList> fieldsMap = (Map<String, RangeList>)decoded.get(0);
+            List<String> fieldsOrder = (List<String>)decoded.get(1);
+
+            assertNotNull(fieldsMap);
+            assertNotNull(fieldsOrder);
+            assertEquals(1, fieldsMap.size());
+
+            RangeList range = fieldsMap.get("Monday");
+            assertEquals(1, range.size());
+            assertEquals(1, ((List<MinMax>)range.get(0)).size());
+            MinMax minmax = range.getRange(0);
+
+            if(minmax.min() == 1.0) {
+                assertEquals(1, curDate.getDayOfWeek());
+            } else {
+                assertNotEquals(1, curDate.getDayOfWeek());
+            }
+        }
+    }
 }
 

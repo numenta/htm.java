@@ -188,18 +188,30 @@ public class DateEncoder extends Encoder<Date> {
         }
 
         if(isValidEncoderPropertyTuple(customDays)) {
+            List<String> days = (List<String>) customDays.get(1);
+
+            StringBuilder customDayEncoderName = new StringBuilder();
+
+            if(days.size() == 1) {
+                customDayEncoderName.append(days.get(0));
+            } else {
+                for(String day : days) {
+                    customDayEncoderName.append(day).append(" ");
+                }
+            }
+
             customDaysEncoder = ScalarEncoder.builder()
                     .w((int) customDays.get(0))
                     .radius(1)
                     .minVal(0)
                     .maxVal(1)
-                    .periodic(true)
-                    .name("customdays")
+                    .periodic(false)
+                    .name(customDayEncoderName.toString())
                     .forced(this.isForced())
                     .build();
-            addChildEncoder(customDaysEncoder);
-
-            addCustomDays((ArrayList<String>) customDays.get(1));
+            //customDaysEncoder is special in naming
+            addEncoder("customdays", customDaysEncoder);
+            addCustomDays(days);
         }
 
         if(isValidEncoderPropertyTuple(holiday)) {
@@ -247,12 +259,9 @@ public class DateEncoder extends Encoder<Date> {
 
     protected void addChildEncoder(ScalarEncoder encoder) {
         this.addEncoder(encoder.getName(), encoder);
-//        childEncoders.add(new EncoderTuple(encoder.getName(), encoder, offset));
-//        description.add(new Tuple(2, encoder.getName(), offset));
-//        width += encoder.getWidth();
     }
 
-    protected void addCustomDays(ArrayList<String> daysList) {
+    protected void addCustomDays(List<String> daysList) {
         for(String dayStr : daysList)
         {
             switch (dayStr.toLowerCase())
@@ -286,7 +295,9 @@ public class DateEncoder extends Encoder<Date> {
                     customDaysList.add(6);
                     break;
                 default:
-                    throw new IllegalArgumentException("Invalid custom day: " + dayStr);
+                    throw new IllegalArgumentException(
+                            String.format("Unable to understand %s as a day of week", dayStr)
+                    );
             }
         }
     }
@@ -655,7 +666,7 @@ public class DateEncoder extends Encoder<Date> {
         /**
          * Set how many bits are used to encode customDays
          */
-        public DateEncoder.Builder customDays(int customDays, ArrayList<String> customDaysList) {
+        public DateEncoder.Builder customDays(int customDays, List<String> customDaysList) {
             this.customDays = new Tuple(2, customDays, customDaysList);
             return this;
         }
