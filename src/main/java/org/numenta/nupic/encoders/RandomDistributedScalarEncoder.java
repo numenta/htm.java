@@ -30,8 +30,6 @@ import java.util.List;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
 
-import com.oracle.jrockit.jfr.InvalidValueException;
-
 /**
  * <pre>
  * A scalar encoder encodes a numeric (floating point) value into an array
@@ -192,9 +190,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * bucket indices as necessary.
 	 * 
 	 * @param index
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
-	public void createBucket(int index) throws InvalidValueException {
+	public void createBucket(int index) throws IllegalStateException {
 		if (index < getMinIndex()) {
 			if (index == getMinIndex() - 1) {
 				/*
@@ -230,10 +228,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * 
 	 * @param index
 	 * @param newIndex
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
 	public List<Integer> newRepresentation(int index, int newIndex)
-			throws InvalidValueException {
+			throws IllegalStateException {
 		List<Integer> newRepresentation = new ArrayList<Integer>(
 				bucketMap.get(index));
 
@@ -267,14 +265,14 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @param newRep
 	 * @param newIndex
 	 * @return
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
 	public boolean newRepresentationOK(List<Integer> newRep, int newIndex)
-			throws InvalidValueException {
+			 {
 		if (newRep.size() != getW())
 			return false;
 		if (newIndex < getMinIndex() - 1 || newIndex > getMaxIndex() + 1)
-			throw new InvalidValueException(
+			throw new IllegalStateException(
 					"newIndex must be within one of existing indices");
 
 		// A binary representation of newRep. We will use this to test
@@ -386,9 +384,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @param i
 	 * @param j
 	 * @return
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
-	public boolean overlapOK(int i, int j) throws InvalidValueException {
+	public boolean overlapOK(int i, int j) throws IllegalStateException {
 		return overlapOK(i, j, countOverlapIndices(i, j));
 	}
 
@@ -398,9 +396,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @param i
 	 * @param j
 	 * @return
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
-	public int countOverlapIndices(int i, int j) throws InvalidValueException {
+	public int countOverlapIndices(int i, int j) throws IllegalStateException {
 		boolean containsI = bucketMap.containsKey(i);
 		boolean containsJ = bucketMap.containsKey(j);
 		if (containsI && containsJ) {
@@ -408,9 +406,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			List<Integer> rep2 = bucketMap.get(j);
 			return countOverlap(rep1, rep2);
 		} else if (!containsI)
-			throw new InvalidValueException("index " + i + " don't exist");
+			throw new IllegalStateException("index " + i + " don't exist");
 		else
-			throw new InvalidValueException("index " + j + " don't exist");
+			throw new IllegalStateException("index " + j + " don't exist");
 	}
 
 	/**
@@ -420,10 +418,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * 
 	 * @param index 
 	 * @return The list of active bits in the representation
-	 * @throws InvalidValueException
+	 * @throws IllegalStateException
 	 */
 	public List<Integer> mapBucketIndexToNonZeroBits(int index)
-			throws InvalidValueException {
+			throws IllegalStateException {
 		if (index < 0)
 			index = 0;
 
@@ -661,7 +659,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				indices = mapBucketIndexToNonZeroBits(bucketIdx[0]);
 				for (int index : indices)
 					output[index] = 1;
-			} catch (InvalidValueException e) {
+			} catch (IllegalStateException e) {
 				e.printStackTrace();
 			}
 		}

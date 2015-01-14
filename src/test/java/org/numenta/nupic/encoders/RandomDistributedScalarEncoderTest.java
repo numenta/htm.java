@@ -15,8 +15,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.numenta.nupic.util.Tuple;
 
-import com.oracle.jrockit.jfr.InvalidValueException;
-
 /**
  * Unit tests for RandomDistributedScalarEncoder class
  * 
@@ -138,7 +136,7 @@ public class RandomDistributedScalarEncoderTest {
 					areListsEqual(rdse.mapBucketIndexToNonZeroBits(-1),rdse.bucketMap.get(0)));
 			assertTrue("mapBucketIndexToNonZeroBits did not handle negative index", 
 					areListsEqual(rdse.mapBucketIndexToNonZeroBits(1000),rdse.bucketMap.get(9)));
-		} catch (InvalidValueException e) {
+		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -270,8 +268,8 @@ public class RandomDistributedScalarEncoderTest {
 			assertEquals("countOverlapIndices didn't work", 4, rdse.countOverlapIndices(midIdx-1,midIdx-2));
 			assertEquals("countOverlapIndices didn't work", 2, rdse.countOverlapIndices(midIdx+1,midIdx-2));
 			assertEquals("countOverlapIndices didn't work", 0, rdse.countOverlapIndices(midIdx-2,midIdx+3));
-		} catch (InvalidValueException e) {
-			Assert.fail("countOverlapIndices raised an InvalidValueException");
+		} catch (IllegalStateException e) {
+			Assert.fail("countOverlapIndices raised an IllegalStateException");
 			e.printStackTrace();
 		}
 	}
@@ -314,7 +312,7 @@ public class RandomDistributedScalarEncoderTest {
 			assertFalse("overlapOK didn't work for far values", rdse.overlapOK(48, 50, 2));
 			assertFalse("overlapOK didn't work for far values", rdse.overlapOK(46, 50, 2));
 			assertFalse("overlapOK didn't work for far values", rdse.overlapOK(50, 50, 6));
-		} catch (InvalidValueException e) {
+		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -388,7 +386,7 @@ public class RandomDistributedScalarEncoderTest {
 				try {
 					if(!encoder.overlapOK(i, j))
 						return false;
-				} catch (InvalidValueException e) {
+				} catch (IllegalStateException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
