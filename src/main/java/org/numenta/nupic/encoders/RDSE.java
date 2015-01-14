@@ -126,7 +126,10 @@ public class RDSE extends Encoder<Double> {
 
 		// MersenneTwister says it is better to pass an int seed even though it
 		// accepts long??
-		rng = new MersenneTwister(seed);
+		if(seed == -1)
+			rng = new MersenneTwister();
+		else
+			rng = new MersenneTwister(seed);
 
 		initializeBucketMap(getMaxBuckets(), getOffset());
 
