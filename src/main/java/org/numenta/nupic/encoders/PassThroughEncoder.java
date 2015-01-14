@@ -162,11 +162,6 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	}
 
 	@Override
-	public List<Tuple> getDescription() {
-		return null;
-	}
-
-	@Override
 	public <T> List<T> getBucketValues(Class<T> returnType) { 
 		return null;
 	}

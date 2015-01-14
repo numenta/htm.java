@@ -22,21 +22,22 @@
 
 package org.numenta.nupic;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.research.ComputeCycle;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
+
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -53,7 +54,7 @@ public class Parameters {
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
-    
+
 
     static {
         Map<KEY, Object> defaultParams = new ParametersMap();
@@ -190,7 +191,7 @@ public class Parameters {
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
         SP_VERBOSITY("spVerbosity", Integer.class, 0, 10);
 
-        private static Map<String, KEY> fieldMap = new HashMap<String, KEY>();
+        private static final Map<String, KEY> fieldMap = new HashMap<>();
 
         static {
             for (KEY key : KEY.values()) {
@@ -264,10 +265,12 @@ public class Parameters {
      * Save guard decorator around params map
      */
     private static class ParametersMap extends EnumMap<KEY, Object> {
-        /** Default serialvers */
-		private static final long serialVersionUID = 1L;
+        /**
+         * Default serialvers
+         */
+        private static final long serialVersionUID = 1L;
 
-		ParametersMap() {
+        ParametersMap() {
             super(Parameters.KEY.class);
         }
 
@@ -381,8 +384,7 @@ public class Parameters {
     }
 
     /**
-     * @param key
-     * IMPORTANT! This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
+     * @param key IMPORTANT! This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
      */
     public void clearParameter(KEY key) {
         paramMap.remove(key);
@@ -810,40 +812,38 @@ public class Parameters {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{ Spatial\n")
-            .append("\t").append("inputDimensions :  ").append(getParameterByKey(KEY.INPUT_DIMENSIONS)).append("\n")
-            .append("\t").append("potentialRadius :  ").append(getParameterByKey(KEY.POTENTIAL_RADIUS)).append("\n")
-            .append("\t").append("potentialPct :  ").append(getParameterByKey(KEY.POTENTIAL_PCT)).append("\n")
-            .append("\t").append("globalInhibition :  ").append(getParameterByKey(KEY.GLOBAL_INHIBITIONS)).append("\n")
-            .append("\t").append("inhibitionRadius :  ").append(getParameterByKey(KEY.INHIBITION_RADIUS)).append("\n")
-            .append("\t").append("localAreaDensity :  ").append(getParameterByKey(KEY.LOCAL_AREA_DENSITY)).append("\n")
-            .append("\t").append("numActiveColumnsPerInhArea :  ").append(getParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA)).append("\n")
-            .append("\t").append("stimulusThreshold :  ").append(getParameterByKey(KEY.STIMULUS_THRESHOLD)).append("\n")
-            .append("\t").append("synPermInactiveDec :  ").append(getParameterByKey(KEY.SYN_PERM_INACTIVE_DEC)).append("\n")
-            .append("\t").append("synPermActiveInc :  ").append(getParameterByKey(KEY.SYN_PERM_ACTIVE_INC)).append("\n")
-            .append("\t").append("synPermConnected :  ").append(getParameterByKey(KEY.SYN_PERM_CONNECTED)).append("\n")
-            .append("\t").append("synPermBelowStimulusInc :  ").append(getParameterByKey(KEY.SYN_PERM_BELOW_STIMULUS_INC)).append("\n")
-            .append("\t").append("minPctOverlapDutyCycles :  ").append(getParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE)).append("\n")
-            .append("\t").append("minPctActiveDutyCycles :  ").append(getParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE)).append("\n")
-            .append("\t").append("dutyCyclePeriod :  ").append(getParameterByKey(KEY.DUTY_CYCLE_PERIOD)).append("\n")
-            .append("\t").append("maxBoost :  ").append(getParameterByKey(KEY.MAX_BOOST)).append("\n")
-            .append("\t").append("spVerbosity :  ").append(getParameterByKey(KEY.SP_VERBOSITY)).append("\n")
-            .append("}\n\n")
+        StringBuilder result = new StringBuilder("{\n");
+        StringBuilder spatialInfo = new StringBuilder();
+        StringBuilder temporalInfo = new StringBuilder();
+        StringBuilder otherInfo = new StringBuilder();
+        this.paramMap.keySet();
+        for (KEY key : paramMap.keySet()) {
+            if (DEFAULTS_SPATIAL.containsKey(key)) {
+                buildParamStr(spatialInfo, key);
+            } else if (DEFAULTS_TEMPORAL.containsKey(key)) {
+                buildParamStr(temporalInfo, key);
+            } else {
+                buildParamStr(otherInfo, key);
+            }
+        }
+        if (spatialInfo.length() > 0) {
+            result.append("\tSpatial: {\n").append(spatialInfo).append("\t}\n");
+        }
+        if (temporalInfo.length() > 0) {
+            result.append("\tTemporal: {\n").append(temporalInfo).append("\t}\n");
+        }
+        if (otherInfo.length() > 0) {
+            result.append("\tOther: {\n").append(otherInfo).append("\t}\n");
+        }
+        return result.append("}").toString();
+    }
 
-            .append("{ Temporal\n")
-            .append("\t").append("activationThreshold :  ").append(getParameterByKey(KEY.ACTIVATION_THRESHOLD)).append("\n")
-            .append("\t").append("cellsPerColumn :  ").append(getParameterByKey(KEY.CELLS_PER_COLUMN)).append("\n")
-            .append("\t").append("columnDimensions :  ").append(getParameterByKey(KEY.COLUMN_DIMENSIONS)).append("\n")
-            .append("\t").append("connectedPermanence :  ").append(getParameterByKey(KEY.CONNECTED_PERMANENCE)).append("\n")
-            .append("\t").append("initialPermanence :  ").append(getParameterByKey(KEY.INITIAL_PERMANENCE)).append("\n")
-            .append("\t").append("maxNewSynapseCount :  ").append(getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT)).append("\n")
-            .append("\t").append("minThreshold :  ").append(getParameterByKey(KEY.MIN_THRESHOLD)).append("\n")
-            .append("\t").append("permanenceIncrement :  ").append(getParameterByKey(KEY.PERMANENCE_INCREMENT)).append("\n")
-            .append("\t").append("permanenceDecrement :  ").append(getParameterByKey(KEY.PERMANENCE_DECREMENT)).append("\n")
-            .append("}\n\n");
-
-        return sb.toString();
+    private void buildParamStr(StringBuilder spatialInfo, KEY key) {
+        Object value = getParameterByKey(key);
+        if (value instanceof int[]) {
+            value = ArrayUtils.intArrayToString(value);
+        }
+        spatialInfo.append("\t\t").append(key.getFieldName()).append(":").append(value).append("\n");
     }
 
 }
