@@ -23,17 +23,17 @@ import com.oracle.jrockit.jfr.InvalidValueException;
  * @author Anubhav Chaturvedi
  *
  */
-public class RDSETest {
+public class RandomDistributedScalarEncoderTest {
 
-	private RDSE rdse;
-	private RDSE.Builder builder;
+	private RandomDistributedScalarEncoder rdse;
+	private RandomDistributedScalarEncoder.Builder builder;
 	
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 	
 	void setUp()
 	{
-		builder =  RDSE.builder()
+		builder =  RandomDistributedScalarEncoder.builder()
 			        .n(500)
 			        .w(23)
 			        .resolution(1)
@@ -43,7 +43,7 @@ public class RDSETest {
 	@Test
 	public void testEncoding()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
 				.w(23)
@@ -83,7 +83,7 @@ public class RDSETest {
 	@Test
 	public void testMissingValues()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
@@ -98,7 +98,7 @@ public class RDSETest {
 	@Test
 	public void testResolution()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
@@ -119,7 +119,7 @@ public class RDSETest {
 	
 	@Test
 	public void testMapBucketIndexToNonZeroBits(){
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.resolution(1)
 				.w(11)
 				.n(150);
@@ -167,11 +167,11 @@ public class RDSETest {
 	@Test
 	public void testOverlapStatistics()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.resolution(1)
 				.w(11)
 				.n(150)
-				.setSeed(RDSE.DEFAULT_SEED);
+				.setSeed(RandomDistributedScalarEncoder.DEFAULT_SEED);
 		rdse = builder.build();
 		
 		rdse.encode(0.0);
@@ -184,7 +184,7 @@ public class RDSETest {
 	@Test
 	public void testGetMethods()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("theName")
 				.resolution(1)
 				.n(500);
@@ -201,7 +201,7 @@ public class RDSETest {
 	@Test
 	public void testOffset()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
@@ -209,7 +209,7 @@ public class RDSETest {
 		int[] e23 = rdse.encode(23.0);
 		assertEquals("Offset not initialized to specified constructor parameter",23, rdse.getOffset(), 0);
 		
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
 				.setOffset(25.0);
@@ -222,14 +222,14 @@ public class RDSETest {
 	@Test
 	public void testSeed()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1);
 		
-		RDSE encoder1 = builder.setSeed(42).build();
-		RDSE encoder2 = builder.setSeed(42).build();
-		RDSE encoder3 = builder.setSeed(-1).build();
-		RDSE encoder4 = builder.setSeed(-1).build();
+		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
+		RandomDistributedScalarEncoder encoder2 = builder.setSeed(42).build();
+		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-1).build();
+		RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
 		
 		int[] e1 = encoder1.encode(23.0);
 		int[] e2 = encoder2.encode(23.0);
@@ -244,7 +244,7 @@ public class RDSETest {
 	@Test
 	public void testCountOverlapIndices()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
 				.w(5)
@@ -279,7 +279,7 @@ public class RDSETest {
 	@Test
 	public void testOverlapOK()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
 				.w(5)
@@ -323,7 +323,7 @@ public class RDSETest {
 	@Test
 	public void testCountOverlap()
 	{
-		builder = RDSE.builder()
+		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
 				.n(500);
@@ -380,7 +380,7 @@ public class RDSETest {
 		return Arrays.asList(arr);
 	}
 	
-	private boolean validateEncoder(RDSE encoder, int subsampling)
+	private boolean validateEncoder(RandomDistributedScalarEncoder encoder, int subsampling)
 	{
 		for(int i = encoder.minIndex; i<= encoder.maxIndex; i++){
 			for(int j = i+1; j<= encoder.maxIndex; j+=subsampling)

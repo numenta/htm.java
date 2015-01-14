@@ -75,7 +75,7 @@ import com.oracle.jrockit.jfr.InvalidValueException;
  * @author Anubhav Chaturvedi
  */
 
-public class RDSE extends Encoder<Double> {
+public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	public static final long DEFAULT_SEED = 42;
 
@@ -92,11 +92,11 @@ public class RDSE extends Encoder<Double> {
 
 	HashMap<Integer, List<Integer>> bucketMap;
 
-	RDSE() {
+	RandomDistributedScalarEncoder() {
 	}
 
-	public static Encoder.Builder<RDSE.Builder, RDSE> builder() {
-		return new RDSE.Builder();
+	public static Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> builder() {
+		return new RandomDistributedScalarEncoder.Builder();
 	}
 
 	public void init() {
@@ -577,7 +577,7 @@ public class RDSE extends Encoder<Double> {
 		return dumpString.toString();
 	}
 
-	public static class Builder extends Encoder.Builder<RDSE.Builder, RDSE> {
+	public static class Builder extends Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> {
 
 		private int maxOverlap;
 		private int maxBuckets;
@@ -603,13 +603,13 @@ public class RDSE extends Encoder<Double> {
 		}
 
 		@Override
-		public RDSE build() {
+		public RandomDistributedScalarEncoder build() {
 			// Must be instantiated so that super class can initialize
 			// boilerplate variables.
-			encoder = new RDSE();
+			encoder = new RandomDistributedScalarEncoder();
 
 			// Call super class here
-			RDSE partialBuild = super.build();
+			RandomDistributedScalarEncoder partialBuild = super.build();
 
 			// //////////////////////////////////////////////////////
 			// Implementing classes would do setting of specific //
@@ -626,22 +626,22 @@ public class RDSE extends Encoder<Double> {
 			return partialBuild;
 		}
 
-		public RDSE.Builder setOffset(double offset) {
+		public RandomDistributedScalarEncoder.Builder setOffset(double offset) {
 			this.offset = Double.valueOf(offset);
 			return this;
 		}
 
-		public RDSE.Builder setMaxBuckets(int maxBuckets) {
+		public RandomDistributedScalarEncoder.Builder setMaxBuckets(int maxBuckets) {
 			this.maxBuckets = maxBuckets;
 			return this;
 		}
 
-		public RDSE.Builder setMaxOverlap(int maxOverlap) {
+		public RandomDistributedScalarEncoder.Builder setMaxOverlap(int maxOverlap) {
 			this.maxOverlap = maxOverlap;
 			return this;
 		}
 
-		public RDSE.Builder setSeed(long seed) {
+		public RandomDistributedScalarEncoder.Builder setSeed(long seed) {
 			this.seed = seed;
 			return this;
 		}
