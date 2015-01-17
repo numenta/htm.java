@@ -505,14 +505,12 @@ public class RandomDistributedScalarEncoderTest {
 	}
 
 	private int[] range(int start, int stop, int step) {
-		// TODO verify implementation
-		int[] r = new int[(stop - start) / step];// TODO correct initialization?
+		int[] r = new int[(stop - start) / step];
 		int i = 0;
-		for (int x = start; x <= stop; x += step) {
+		for (int x = start; x < stop; x += step) {
 			r[i] = x;
 			i++;
 		}
 		return r;
 	}
-
 }

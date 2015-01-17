@@ -551,10 +551,20 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * Return the overlap between bucket indices {@code i} and {@code j}.
 		 *
 		 * @param i
+		 *            the index of one bucket
 		 * @param j
-		 * @return
+		 *            the index of another bucket
+		 * @return the overlap between the two buckets' representations
+		 * @throws IllegalArgumentException
+		 *             if either bucket i or j don't exist
 		 */
 		protected int countOverlap(int i, int j) {
+			if (!containsKey(i)) {
+				throw new IllegalArgumentException("Invalid bucket index: " + i);
+			}
+			if (!containsKey(j)) {
+				throw new IllegalArgumentException("Invalid bucket index: " + j);
+			}
 			return countOverlap(get(i), get(j));
 		}
 
