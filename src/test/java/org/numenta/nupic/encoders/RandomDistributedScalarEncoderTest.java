@@ -21,17 +21,18 @@
  */
 package org.numenta.nupic.encoders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.numenta.nupic.FieldMetaType;
 
 /**
  * Unit tests for {@link RandomDistributedScalarEncoder}.
@@ -85,6 +86,313 @@ public class RandomDistributedScalarEncoderTest {
 				+ "new buckets have been created", e0, enc.encode(-0.1));
 		assertEquals("Encodings are not consistent - they have changed after "
 				+ "new buckets have been created", e1, enc.encode(1.0));
+	}
+
+	/**
+	 * Test that missing values and {@code null} return all zeros.
+	 */
+	@Test
+	public void testMissingValues() {
+		Encoder<Double> enc = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).build();
+
+		int[] empty = enc.encode(Encoder.SENTINEL_VALUE_FOR_MISSING_DATA);
+		assertEquals(sum(empty), 0);
+
+		empty = enc.encode(null);
+		assertEquals(sum(empty), 0);
+	}
+
+	/**
+	 * Test that numbers within the same resolution return the same encoding.
+	 * Numbers outside the resolution should return different encodings.
+	 */
+	@Test
+	public void testResolution() {
+		Encoder<Double> enc = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).build();
+		// Since 23.0 is the first encoded number, it will be the offset.
+		// Since resolution is 1, 22.9 and 23.4 should have the same bucket
+		// index and encoding.
+		int[] e23 = enc.encode(23.0);
+		int[] e23_1 = enc.encode(23.1);
+		int[] e22_9 = enc.encode(22.9);
+		int[] e24 = enc.encode(24.0);
+		assertEquals(sum(e23), enc.w);
+		assertEquals("Numbers within resolution don't have the same encoding",
+				e23, e23_1);
+		assertEquals("Numbers within resolution don't have the same encoding",
+				e23, e22_9);
+		assertNotEquals("Numbers outside resolution have the same encoding",
+				e23, e24);
+
+		e22_9 = enc.encode(22.5);
+		assertNotEquals("Numbers outside resolution have the same encoding",
+				e23, e22_9);
+	}
+
+	/**
+	 * Test that mapBucketIndexToNonZeroBits works and that max buckets and
+	 * clipping are handled properly.
+	 */
+	@Test
+	public void testMapBucketIndexToNonZeroBits() {
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().resolution(1.0).w(11).n(150).build();
+		// Set a low number of max buckets
+		// TODO enc._initializeBucketMap(10, null);
+		enc.encode(0.0);
+		enc.encode(-7.0);
+		enc.encode(7.0);
+
+		assertEquals("_maxBuckets exceeded", enc.getMaxBuckets(), enc
+				.getBucketMap().size());
+		assertTrue("mapBucketIndexToNonZeroBits did not handle negative index",
+				enc.mapBucketIndexToNonZeroBits(-1) == enc.getBucketMap()
+						.get(0));
+		assertTrue("mapBucketIndexToNonZeroBits did not handle negative index",
+				enc.mapBucketIndexToNonZeroBits(1000) == enc.getBucketMap()
+						.get(9));
+
+		int[] e23 = enc.encode(23.0);
+		int[] e6 = enc.encode(6.0);
+		assertEquals("Values not clipped correctly during encoding", e23, e6);
+
+		int[] e_8 = enc.encode(-8.0);
+		int[] e_7 = enc.encode(-7.0);
+		assertEquals("Values not clipped correctly during encoding", e_8, e_7);
+
+		assertEquals("getBucketIndices returned negative bucket index", 0,
+				enc.getBucketIndices(-8)[0]);
+		assertEquals(
+				"getBucketIndices returned bucket index that is too large",
+				enc.getMaxBuckets() - 1, enc.getBucketIndices(23)[0]);
+	}
+
+	/**
+	 * Test that some bad construction parameters get handled.
+	 */
+	@Test
+	public void testParameterChecks() {
+		// n must be >= 6 * w
+		exception.expect(IllegalArgumentException.class);
+		exception.expectMessage("TODO expect message");
+		RandomDistributedScalarEncoder.builder().n((int) (5.9 * 21)).build();
+
+		// w can 't be negative
+		exception.expect(IllegalArgumentException.class);
+		exception.expectMessage("TODO expect message");
+		RandomDistributedScalarEncoder.builder().w(-1).build();
+
+		// resolution can 't be negative
+		exception.expect(IllegalArgumentException.class);
+		exception.expectMessage("TODO expect message");
+		RandomDistributedScalarEncoder.builder().resolution(-2).build();
+	}
+
+	/**
+	 * Check that the overlaps for the encodings are within the expected range.
+	 * Here we ask the encoder to create a bunch of representations under
+	 * somewhat stressful conditions, and then verify they are correct.We rely
+	 * on the fact that the overlapOK and _countOverlapIndices methods are
+	 * working correctly.
+	 */
+	@Test
+	public void testOverlapStatistics() {
+		// Generate and log a 32-bit compatible seed value.
+		long time = Calendar.getInstance().getTimeInMillis();
+		int seed = (int) (time % 10000) * 10;
+		// Generate about 600 encodings.Set n relatively low to increase
+		// chance of false overlaps
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().resolution(1.0).w(11).n(150).seed(seed).build();
+		enc.encode(0.0);
+		enc.encode(-300.0);
+		enc.encode(300.0);
+		assertTrue("Illegal overlap encountered in encoder",
+				validateEncoder(enc, 3));
+	}
+
+	/**
+	 * Test that the getWidth, getDescription, and getDecoderOutputFieldTypes
+	 */
+	@Test
+	public void testGetMethods() {
+		Encoder<Double> enc = RandomDistributedScalarEncoder.builder()
+				.name("theName").resolution(1.0).n(500).build();
+		assertEquals("getWidth doesn't return the correct result", 500,
+				enc.getWidth());
+		assertEquals("getDescription doesn't return the correct result",
+				"theName", enc.getDescription());
+		assertEquals(
+				"getDecoderOutputFieldTypes doesn't return the correct result",
+				(FieldMetaType.FLOAT), enc.getDecoderOutputFieldTypes());
+	}
+
+	/**
+	 * Test that offset is working properly
+	 */
+	@Test
+	public void testOffset() {
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().name("enc").resolution(1.0).build();
+		enc.encode(23.0);
+		assertEquals("Offset not specified and not initialized to first input",
+				Double.valueOf(23.0), enc.getOffset());
+
+		enc = RandomDistributedScalarEncoder.builder().name("enc")
+				.resolution(1.0).offset(25.0).build();
+		enc.encode(23.0);
+		assertEquals(
+				"Offset not initialized to specified constructor parameter",
+				Double.valueOf(25.0), enc.getOffset());
+	}
+
+	/**
+	 * Test that initializing twice with the same seed returns identical
+	 * encodings and different when not specified
+	 */
+	@Test
+	public void testSeed() {
+		Encoder<Double> enc1 = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).seed(42).build();
+		Encoder<Double> enc2 = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).seed(42).build();
+		Encoder<Double> enc3 = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).seed(-1).build();
+		Encoder<Double> enc4 = RandomDistributedScalarEncoder.builder()
+				.name("enc").resolution(1.0).seed(-1).build();
+		int[] e1 = enc1.encode(23.0);
+		int[] e2 = enc2.encode(23.0);
+		int[] e3 = enc3.encode(23.0);
+		int[] e4 = enc4.encode(23.0);
+		assertEquals("Same seed gives rise to different encodings", e1, e2);
+		assertNotEquals("Different seeds gives rise to same encodings", e1, e3);
+		assertNotEquals("seeds of -1 give rise to same encodings", e3, e4);
+	}
+
+	/**
+	 * Test that the internal method _countOverlapIndices works as expected.
+	 */
+	@Test
+	public void testCountOverlapIndices() {
+		// Create a fake set of encodings.
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().name("enc").resolution(1.0).w(5).n(5 * 20).build();
+		int midIdx = enc.getMaxBuckets() / 2;
+		enc.getBucketMap().put(midIdx - 2, range(3, 8));
+		enc.getBucketMap().put(midIdx - 1, range(4, 9));
+		enc.getBucketMap().put(midIdx, range(5, 10));
+		enc.getBucketMap().put(midIdx + 1, range(6, 11));
+		enc.getBucketMap().put(midIdx + 2, range(7, 12));
+		enc.getBucketMap().put(midIdx + 3, range(8, 13));
+		enc.setMinIndex(midIdx - 2);
+		enc.setMaxIndex(midIdx + 3);
+		// Indices must exist
+		exception.expect(IllegalArgumentException.class);
+		enc.countOverlapIndices(midIdx - 3, midIdx - 2);
+		exception.expect(IllegalArgumentException.class);
+		enc.countOverlapIndices(midIdx - 2, midIdx - 3);
+		// Test some overlaps
+		assertEquals("countOverlapIndices didn't work", 5,
+				enc.countOverlapIndices(midIdx - 2, midIdx - 2));
+		assertEquals("countOverlapIndices didn't work", 4,
+				enc.countOverlapIndices(midIdx - 1, midIdx - 2));
+		assertEquals("countOverlapIndices didn't work", 2,
+				enc.countOverlapIndices(midIdx + 1, midIdx - 2));
+		assertEquals("countOverlapIndices didn't work", 0,
+				enc.countOverlapIndices(midIdx - 2, midIdx + 3));
+	}
+
+	/**
+	 * Test that the internal method overlapOK works as expected.
+	 */
+	@Test
+	public void testOverlapOK() {
+		// Create a fake set of encodings.
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().name("enc").resolution(1.0).w(5).n(5 * 20).build();
+		int midIdx = enc.getMaxBuckets() / 2;
+		enc.getBucketMap().put(midIdx - 3, range(4, 9));// Not ok with midIdx -1
+		enc.getBucketMap().put(midIdx - 2, range(3, 8));
+		enc.getBucketMap().put(midIdx - 1, range(4, 9));
+		enc.getBucketMap().put(midIdx, range(5, 10));
+		enc.getBucketMap().put(midIdx + 1, range(6, 11));
+		enc.getBucketMap().put(midIdx + 2, range(7, 12));
+		enc.getBucketMap().put(midIdx + 3, range(8, 13));
+		enc.setMinIndex(midIdx - 3);
+		enc.setMaxIndex(midIdx + 3);
+
+		assertTrue("overlapOK didn't work", enc.overlapOK(midIdx, midIdx - 1));
+		assertTrue("overlapOK didn't work",
+				enc.overlapOK(midIdx - 2, midIdx + 3));
+		assertFalse("overlapOK didn't work",
+				enc.overlapOK(midIdx - 3, midIdx - 1));
+
+		// We 'll just use our own numbers
+		assertTrue("overlapOK didn't work for far values",
+				enc.overlapOK(100, 50, 0));
+		assertTrue("overlapOK didn't work for far values", enc.overlapOK(100,
+				50, RandomDistributedScalarEncoder.MAX_OVERLAP));
+		assertFalse("overlapOK didn't work for far values", enc.overlapOK(100,
+				50, RandomDistributedScalarEncoder.MAX_OVERLAP + 1));
+		assertTrue("overlapOK didn't work for near values",
+				enc.overlapOK(50, 50, 5));
+		assertTrue("overlapOK didn't work for near values",
+				enc.overlapOK(48, 50, 3));
+		assertTrue("overlapOK didn't work for near values",
+				enc.overlapOK(46, 50, 1));
+		assertTrue("overlapOK didn't work for near values", enc.overlapOK(45,
+				50, RandomDistributedScalarEncoder.MAX_OVERLAP));
+		assertFalse("overlapOK didn't work for near values",
+				enc.overlapOK(48, 50, 4));
+		assertFalse("overlapOK didn't work for near values",
+				enc.overlapOK(48, 50, 2));
+		assertFalse("overlapOK didn't work for near values",
+				enc.overlapOK(46, 50, 2));
+		assertFalse("overlapOK didn't work for near values",
+				enc.overlapOK(50, 50, 6));
+
+	}
+
+	/**
+	 * Test that the internal method
+	 * {@link RandomDistributedScalarEncoder#countOverlap} works as expected.
+	 */
+	@Test
+	public void testCountOverlap() {
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().name("enc").resolution(1.0).n(500).build();
+
+		int[] r01 = new int[] { 1, 2, 3, 4, 5, 6 };
+		int[] r02 = new int[] { 1, 2, 3, 4, 5, 6 };
+		assertEquals("countOverlap result is incorrect", 6,
+				enc.countOverlap(r01, r02));
+
+		int[] r03 = new int[] { 1, 2, 3, 4, 5, 6 };
+		int[] r04 = new int[] { 1, 2, 3, 4, 5, 7 };
+		assertEquals("countOverlap result is incorrect", 5,
+				enc.countOverlap(r03, r04));
+
+		int[] r05 = new int[] { 1, 2, 3, 4, 5, 6 };
+		int[] r06 = new int[] { 6, 5, 4, 3, 2, 1 };
+		assertEquals("countOverlap result is incorrect", 6,
+				enc.countOverlap(r05, r06));
+
+		int[] r07 = new int[] { 1, 2, 8, 4, 5, 6 };
+		int[] r08 = new int[] { 1, 2, 3, 4, 9, 6 };
+		assertEquals("countOverlap result is incorrect", 4,
+				enc.countOverlap(r07, r08));
+
+		int[] r09 = new int[] { 1, 2, 3, 4, 5, 6 };
+		int[] r10 = new int[] { 1, 2, 3 };
+		assertEquals("countOverlap result is incorrect", 3,
+				enc.countOverlap(r09, r10));
+
+		int[] r11 = new int[] { 7, 8, 9, 10, 11, 12 };
+		int[] r12 = new int[] { 1, 2, 3, 4, 5, 6 };
+		assertEquals("countOverlap result is incorrect", 0,
+				enc.countOverlap(r11, r12));
 	}
 
 	/**
@@ -157,6 +465,42 @@ public class RandomDistributedScalarEncoderTest {
 			}
 		}
 		return overlap;
+	}
+
+	/**
+	 * Given an encoder, calculate overlaps statistics and ensure everything is
+	 * ok. We don't check every possible combination for speed reasons.
+	 *
+	 * @param enc
+	 *            the encoder under test
+	 * @param subsampling
+	 * @return
+	 */
+	private boolean validateEncoder(RandomDistributedScalarEncoder enc,
+			int subsampling) {
+		for (int i : range(enc.getMinIndex(), enc.getMaxIndex() + 1, 1)) {
+			for (int j : range(i + 1, enc.getMaxIndex() + 1, subsampling)) {
+				if (!enc.overlapOK(i, j)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private int[] range(int start, int stop) {
+		return range(start, stop, 1);
+	}
+
+	private int[] range(int start, int stop, int step) {
+		// TODO verify implementation
+		int[] r = new int[(stop - start) / step];// TODO correct initialization?
+		int i = 0;
+		for (int x = start; x <= stop; x += step) {
+			r[i] = x;
+			i++;
+		}
+		return r;
 	}
 
 }

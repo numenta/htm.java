@@ -76,8 +76,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	private static final int DEFAULT_SEED = 42;
 	private static final int DEFAULT_VERBOSITY = 0;
 	private static final int DEFAULT_MAX_BUCKETS = 1000;
+
 	// The largest overlap we allow for non-adjacent encodings
-	private static final int MAX_OVERLAP = 2;
+	// TODO protected just for tests..? no way!
+	protected static final int MAX_OVERLAP = 2;
 
 	// TODO use org.numenta.nupic.util.MersenneTwister instead of
 	// java.util.Random?
@@ -289,6 +291,28 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		return bucketMap;
 	}
 
+	protected int getMinIndex() {
+		return minIndex;
+	}
+
+	@Deprecated
+	protected void setMinIndex(int minIndex) {
+		this.minIndex = minIndex;
+	}
+
+	protected int getMaxIndex() {
+		return maxIndex;
+	}
+
+	@Deprecated
+	protected void setMaxIndex(int maxIndex) {
+		this.maxIndex = maxIndex;
+	}
+
+	protected int getMaxBuckets() {
+		return maxBuckets;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -360,6 +384,43 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public boolean isDelta() {
+		return false;
+	}
+
+	/**
+	 * Return the overlap between two representations. rep1 and rep2 are lists
+	 * of non-zero indices.
+	 *
+	 * @param rep1
+	 * @param rep2
+	 * @return
+	 */
+	protected int countOverlap(int[] rep1, int[] rep2) {
+		// TODO implement
+		return -1;
+	}
+
+	protected int countOverlapIndices(int i, int j) {
+		// TODO implement
+		return -1;
+	}
+
+	/**
+	 * Returns {@code true} if the given overlap between bucket indices
+	 * {@code i} and {@code j} are acceptable. If overlap is not specified,
+	 * calculate it from the {@link #bucketMap}.
+	 *
+	 * @param i
+	 * @param j
+	 * @return {@code true} if the overlap between buckets is ok
+	 */
+	protected boolean overlapOK(int i, int j) {
+		// TODO implement
+		return false;
+	}
+
+	protected boolean overlapOK(int i, int j, int overlap) {
+		// TODO implement
 		return false;
 	}
 
