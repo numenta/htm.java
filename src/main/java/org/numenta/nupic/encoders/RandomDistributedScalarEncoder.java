@@ -23,7 +23,6 @@ package org.numenta.nupic.encoders;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -41,20 +40,18 @@ import java.util.Random;
  * which determines the resolution of input values.
  * </p>
  * Scalar values are mapped to a bucket. The class maintains a random
- * distributed encoding for each bucket. The following properties are
- * maintained by {@code RandomDistributedScalarEncoder}:
- * <br/>
- * 1) Similar scalars should have high overlap. Overlap should decrease
- * smoothly as scalars become less similar. Specifically, neighboring bucket
- * indices must overlap by a linearly decreasing number of bits.
- * <br/>
+ * distributed encoding for each bucket. The following properties are maintained
+ * by {@code RandomDistributedScalarEncoder}: <br/>
+ * 1) Similar scalars should have high overlap. Overlap should decrease smoothly
+ * as scalars become less similar. Specifically, neighboring bucket indices must
+ * overlap by a linearly decreasing number of bits. <br/>
  * 2) Dissimilar scalars should have very low overlap so that the SP does not
  * confuse representations. Specifically, buckets that are more than {@code w}
  * indices apart should have at most MAX_OVERLAP bits of overlap. We arbitrarily
- * (and safely) define "very low" to be 2 bits of overlap or lower.
- * <br/>
+ * (and safely) define "very low" to be 2 bits of overlap or lower. <br/>
  * Properties 1 and 2 lead to the following overlap rules for buckets {@code i}
  * and {@code j}:
+ *
  * <pre>
  *     <code>
  *   if abs(i-j) < w then:
@@ -63,298 +60,330 @@ import java.util.Random;
  *              overlap(i,j) <= MAX_OVERLAP
  *     </code>
  * </pre>
+ *
  * <br/>
- * 3) The representation for a scalar must not change during the lifetime of
- * the object. Specifically, as new buckets are created and the min/max range
- * is extended, the representation for previously in-range scalars and
- * previously created buckets must not change.
- * </p>
+ * 3) The representation for a scalar must not change during the lifetime of the
+ * object. Specifically, as new buckets are created and the min/max range is
+ * extended, the representation for previously in-range scalars and previously
+ * created buckets must not change. </p>
  *
  * @author Sean Connolly
  */
 public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
-    private static final int DEFAULT_SEED = 42;
-    private static final int DEFAULT_MAX_BUCKETS = 1000;
-    // The largest overlap we allow for non-adjacent encodings
-    private static final int MAX_OVERLAP = 2;
+	private static final int DEFAULT_W = 21;
+	private static final int DEFAULT_N = 400;
+	private static final int DEFAULT_SEED = 42;
+	private static final int DEFAULT_VERBOSITY = 0;
+	private static final int DEFAULT_MAX_BUCKETS = 1000;
+	// The largest overlap we allow for non-adjacent encodings
+	private static final int MAX_OVERLAP = 2;
 
-    // TODO use org.numenta.nupic.util.MersenneTwister instead of java.util.Random?
-    private final Random random = new Random();
-    private int seed = DEFAULT_SEED;
+	// TODO use org.numenta.nupic.util.MersenneTwister instead of
+	// java.util.Random?
+	private final Random random = new Random();
+	private int seed = DEFAULT_SEED;
 
+	// The first bucket index will be _maxBuckets / 2 and bucket indices will be
+	// allowed to grow lower or higher as long as they don't become negative.
+	// _maxBuckets is required because the current CLA Classifier assumes bucket
+	// indices must be non-negative. This normally does not need to be changed
+	// but if altered, should be set to an even number.
+	// TODO maxBuckets can be static
+	private final int maxBuckets = DEFAULT_MAX_BUCKETS;
+	private int minIndex = maxBuckets / 2;
+	private int maxIndex = maxBuckets / 2;
 
-    // The first bucket index will be _maxBuckets / 2 and bucket indices will be
-    // allowed to grow lower or higher as long as they don't become negative.
-    // _maxBuckets is required because the current CLA Classifier assumes bucket
-    // indices must be non-negative. This normally does not need to be changed
-    // but if altered, should be set to an even number.
-    // TODO maxBuckets can be static
-    private final int maxBuckets = DEFAULT_MAX_BUCKETS;
-    private int minIndex = maxBuckets / 2;
-    private int maxIndex = maxBuckets / 2;
+	// The scalar offset used to map scalar values to bucket indices.The middle
+	// bucket will correspond to numbers in the range
+	// [offset - resolution / 2, offset + resolution / 2).
+	// The bucket index for a number x will be:
+	// maxBuckets / 2 +int(round((x - offset) / resolution))
+	private Double offset;
 
-    // The scalar offset used to map scalar values to bucket indices.The middle
-    // bucket will correspond to numbers in the range
-    // [offset - resolution / 2, offset + resolution / 2).
-    // The bucket index for a number x will be:
-    // maxBuckets / 2 +int(round((x - offset) / resolution))
-    private Double offset;
+	// This dictionary maps a bucket index into its bit representation
+	private final BucketMap bucketMap = new BucketMap();
 
-    // This dictionary maps a bucket index into its bit representation
-    private final BucketMap bucketMap = new BucketMap();
+	// How often we need to retry when generating valid encodings
+	private final int numTries = 0;
 
+	/**
+	 * Returns a builder for building RandomDistributedScalarEncoder.<br/>
+	 * This builder may be reused to produce multiple builders.
+	 *
+	 * @return a {@code RandomDistributedScalarEncoder.Builder}
+	 */
+	public static Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> builder() {
+		return new RandomDistributedScalarEncoder.Builder();
+	}
 
-    // How often we need to retry when generating valid encodings
-    private final int numTries = 0;
+	public RandomDistributedScalarEncoder(double resolution) {
+		this(resolution, DEFAULT_W, DEFAULT_N, DEFAULT_SEED, DEFAULT_VERBOSITY);
+	}
 
-    /**
-     * Returns a builder for building RandomDistributedScalarEncoder.<br/>
-     * This builder may be reused to produce multiple builders.
-     *
-     * @return a {@code RandomDistributedScalarEncoder.Builder}
-     */
-    public static Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> builder() {
-        return new RandomDistributedScalarEncoder.Builder();
-    }
+	public RandomDistributedScalarEncoder(double resolution, int w, int n,
+			int seed, int verbosity) {
+		this(resolution, w, n, null, null, seed, verbosity);
+	}
 
-    public void init() {
-        validateState();
-        if (seed != -1) {
-            random.setSeed(seed);
-        }
-        bucketMap.init();
-        // TODO set 'name' to toString() or getClass().getSimpleName()?
-        if (verbosity > 0) {
-            // TODO utilize a real logging mechanism
-            System.out.println(toString());
-        }
-    }
+	public RandomDistributedScalarEncoder(double resolution, int w, int n,
+			String name, Double offset, int seed, int verbosity) {
+		this.resolution = resolution;
+		this.w = w;
+		this.n = n;
+		this.name = name;
+		this.offset = offset;
+		this.seed = seed;
+		this.verbosity = verbosity;
+	}
 
-    /**
-     * Validate the encoder parameters.
-     *
-     * @throws IllegalStateException if the current state is invalid
-     */
-    private void validateState() throws IllegalStateException {
-        if (w <= 0 || w % 2 == 0) {
-            throw new IllegalStateException("w must be an odd positive integer");
-        }
-        if (resolution <= 0) {
-            throw new IllegalStateException("resolution must be a positive number");
-        }
-        if (n <= 6 * w) {
-            throw new IllegalStateException("n must be an int strictly greater than 6*w. For " +
-                    "good results we recommend n be strictly greater " +
-                    "than 11*w");
-        }
-    }
+	public void init() {
+		validateState();
+		if (seed != -1) {
+			random.setSeed(seed);
+		}
+		bucketMap.init();
+		// TODO set 'name' to toString() or getClass().getSimpleName()?
+		if (verbosity > 0) {
+			// TODO utilize a real logging mechanism
+			System.out.println(toString());
+		}
+	}
 
+	/**
+	 * Validate the encoder parameters.
+	 *
+	 * @throws IllegalStateException
+	 *             if the current state is invalid
+	 */
+	private void validateState() throws IllegalStateException {
+		if (w <= 0 || w % 2 == 0) {
+			throw new IllegalStateException(
+					"w must be an odd positive integer: " + w);
+		}
+		if (resolution <= 0) {
+			throw new IllegalStateException(
+					"resolution must be a positive number: " + resolution);
+		}
+		if (n <= 6 * w) {
+			throw new IllegalStateException(
+					"n must be an int strictly greater than 6*w. For "
+							+ "good results we recommend n be strictly greater "
+							+ "than 11*w");
+		}
+	}
 
-    /**
-     * @return the random number generator seed.
-     */
-    public int getSeed() {
-        return seed;
-    }
+	/**
+	 * @return the random number generator seed.
+	 */
+	public int getSeed() {
+		return seed;
+	}
 
-    /**
-     * Set the seed used for the random number generator. If set to {@code -1}
-     * the generator will be initialized without a fixed seed.
-     * <br/>
-     * <b>Note:</b> call {@link #init()} after changing the seed to reinitialize
-     * the generator.
-     *
-     * @param seed the random number generator seed
-     */
-    public void setSeed(int seed) {
-        // TODO drop class variable and pass directly to random.setSet(seed)?
-        this.seed = seed;
-    }
+	/**
+	 * Set the seed used for the random number generator. If set to {@code -1}
+	 * the generator will be initialized without a fixed seed. <br/>
+	 * <b>Note:</b> call {@link #init()} after changing the seed to reinitialize
+	 * the generator.
+	 *
+	 * @param seed
+	 *            the random number generator seed
+	 */
+	public void setSeed(int seed) {
+		// TODO drop class variable and pass directly to random.setSet(seed)?
+		this.seed = seed;
+	}
 
-    /**
-     * @return the offset used to map scalar inputs to bucket indices
-     */
-    public Double getOffset() {
-        return offset;
-    }
+	/**
+	 * @return the offset used to map scalar inputs to bucket indices
+	 */
+	public Double getOffset() {
+		return offset;
+	}
 
-    /**
-     * Set the floating point offset used to map scalar inputs to bucket
-     * indices. The middle bucket will correspond to numbers in the range
-     * {@code [offset - resolution/2, offset + resolution/2)}. If set to
-     * {@code null}, the very first input that is encoded will be used to
-     * determine the offset.
-     *
-     * @param offset the offset used to map scalar inputs to bucket indices
-     */
-    public void setOffset(Double offset) {
-        this.offset = offset;
-    }
+	/**
+	 * Set the floating point offset used to map scalar inputs to bucket
+	 * indices. The middle bucket will correspond to numbers in the range
+	 * {@code [offset - resolution/2, offset + resolution/2)}. If set to
+	 * {@code null}, the very first input that is encoded will be used to
+	 * determine the offset.
+	 *
+	 * @param offset
+	 *            the offset used to map scalar inputs to bucket indices
+	 */
+	public void setOffset(Double offset) {
+		this.offset = offset;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void encodeIntoArray(Double inputData, int[] output) {
-        if (inputData == null) {
-            throw new IllegalArgumentException("null data to encode.");
-        }
-        Integer bucketIndex = getBucketIndices(inputData)[0];
-        // null is returned for missing value in which case we return all 0's.
-        if (bucketIndex != null) {
-            int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
-            for (int onBit : onBits) {
-                output[onBit] = 1;
-            }
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void encodeIntoArray(Double inputData, int[] output) {
+		if (inputData == null) {
+			throw new IllegalArgumentException("null data to encode.");
+		}
+		Integer bucketIndex = getBucketIndices(inputData)[0];
+		// null is returned for missing value in which case we return all 0's.
+		if (bucketIndex != null) {
+			int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
+			for (int onBit : onBits) {
+				output[onBit] = 1;
+			}
+		}
+	}
 
-    @Override
-    public int[] getBucketIndices(double input) {
-        /*
-        if type(x) is float and math.isnan(x):
-        x = SENTINEL_VALUE_FOR_MISSING_DATA
+	/**
+	 * Returns an array containing the sub-field bucket indices for each
+	 * sub-field of the inputData. To get the associated field names for each of
+	 * the buckets, call getScalarNames().
+	 *
+	 * @param input
+	 *            The data from the source; in this case, a scalar.
+	 *
+	 * @return array of bucket indices
+	 */
+	@Override
+	public int[] getBucketIndices(double input) {
+		if (offset == null) {
+			offset = input;
+		}
+		int index = maxBuckets / 2
+				+ (int) Math.round((input - offset) / resolution);
+		if (index < 0) {
+			index = 0;
+		} else if (index >= maxBuckets) {
+			index = maxBuckets - 1;
+		}
+		return new int[] { index };
+	}
 
-        if x == SENTINEL_VALUE_FOR_MISSING_DATA:
-        return [None]
+	/**
+	 * Given a bucket index, return the list of non-zero bits. If the bucket
+	 * index does not exist, it is created. If the index falls outside our range
+	 * we clip it.
+	 *
+	 * @param index
+	 *            the bucket index
+	 *
+	 * @return non-zero bits in the bucket
+	 */
+	public int[] mapBucketIndexToNonZeroBits(int index) {
+		if (index < 0) {
+			index = 0;
+		}
+		if (index >= maxBuckets) {
+			index = maxBuckets - 1;
+		}
+		if (!bucketMap.containsKey(index)) {
+			if (verbosity >= 2) {
+				System.out.println("Adding additional buckets to handle index="
+						+ index);
+			}
+			bucketMap.createBucket(index);
+		}
+		return bucketMap.get(index);
+	}
 
-        if self._offset is None:
-        self._offset = x
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public <S> List<S> getBucketValues(Class<S> returnType) {
+		return null;
+	}
 
-        bucketIdx = (
-                self._maxBuckets/2 + int( round( (x - self._offset) / self.resolution) )
-        )
+	/**
+	 * <p>
+	 * Returns a {@link Encoder.Builder} for constructing
+	 * {@link RandomDistributedScalarEncoder}s.
+	 * </p>
+	 * <p>
+	 * The base class architecture is put together in such a way where
+	 * boilerplate initialization can be kept to a minimum for implementing
+	 * subclasses, while avoiding the mistake-proneness of extremely long
+	 * argument lists.
+	 * </p>
+	 */
+	public static class Builder
+			extends
+			Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> {
 
-        if bucketIdx < 0:
-        bucketIdx = 0
-        elif bucketIdx >= self._maxBuckets:
-        bucketIdx = self._maxBuckets-1
+		private int seed;
+		private Double offset;
 
-        return [bucketIdx]
-        */
-        if (offset == null) {
-            offset = input;
-        }
-        int bucketIdx = (
-                maxBuckets / 2 +int(round((x - self._offset) / self.resolution))
-        );
-        return super.getBucketIndices(input);
-    }
+		private Builder() {
+		}
 
-    /**
-     * Given a bucket index, return the list of non-zero bits. If the bucket
-     * index does not exist, it is created. If the index falls outside our range
-     * we clip it.
-     *
-     * @param index the bucket index
-     * @return non-zero bits in the bucket
-     */
-    public int[] mapBucketIndexToNonZeroBits(int index) {
-        if (index < 0) {
-            index = 0;
-        }
-        if (index >= maxBuckets) {
-            index = maxBuckets - 1;
-        }
-        if (!bucketMap.containsKey(index)) {
-            if (verbosity >= 2) {
-                System.out.println("Adding additional buckets to handle index=" + index);
-            }
-            bucketMap.createBucket(index);
-        }
-        return bucketMap.get(index);
-    }
+		@Override
+		public RandomDistributedScalarEncoder build() {
+			encoder = new RandomDistributedScalarEncoder(resolution);
+			w = DEFAULT_W;
+			n = DEFAULT_N;
+			seed = DEFAULT_SEED;
+			encVerbosity = DEFAULT_VERBOSITY;
+			super.build();
+			((RandomDistributedScalarEncoder) encoder).setSeed(this.seed);
+			((RandomDistributedScalarEncoder) encoder).setOffset(this.offset);
+			((RandomDistributedScalarEncoder) encoder).init();
+			return (RandomDistributedScalarEncoder) encoder;
+		}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <S> List<S> getBucketValues(Class<S> returnType) {
-        return null;
-    }
+		public RandomDistributedScalarEncoder.Builder seed(int seed) {
+			this.seed = seed;
+			return this;
+		}
 
-    /**
-     * <p>
-     * Returns a {@link Encoder.Builder} for constructing
-     * {@link RandomDistributedScalarEncoder}s.
-     * </p>
-     * <p>
-     * The base class architecture is put together in such a way where
-     * boilerplate initialization can be kept to a minimum for implementing
-     * subclasses, while avoiding the mistake-proneness of extremely long
-     * argument lists.
-     * </p>
-     */
-    public static class Builder extends Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> {
+		public RandomDistributedScalarEncoder.Builder offset(Double offset) {
+			this.offset = offset;
+			return this;
+		}
 
-        private int seed;
-        private Double offset;
+	}
 
-        private Builder() {
-        }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getWidth() {
+		return getN();
+	}
 
-        @Override
-        public RandomDistributedScalarEncoder build() {
-            encoder = new RandomDistributedScalarEncoder();
-            super.build();
-            ((RandomDistributedScalarEncoder) encoder).setSeed(this.seed);
-            ((RandomDistributedScalarEncoder) encoder).setOffset(this.offset);
-            ((RandomDistributedScalarEncoder) encoder).init();
-            return (RandomDistributedScalarEncoder) encoder;
-        }
+	/**
+	 * {@inheritDoc} <br/>
+	 * <b>Note:</b> Always returns {@code false} for
+	 * {@link RandomDistributedScalarEncoder}.
+	 */
+	@Override
+	public boolean isDelta() {
+		return false;
+	}
 
-        public RandomDistributedScalarEncoder.Builder seed(int seed) {
-            this.seed = seed;
-            return this;
-        }
+	/**
+	 * Maps ...?
+	 *
+	 * @author Sean Connolly
+	 */
+	private final class BucketMap extends HashMap<Integer, int[]> {
 
-        public RandomDistributedScalarEncoder.Builder offset(Double offset) {
-            this.offset = offset;
-            return this;
-        }
+		/**
+		 * Initialize the bucket map assuming the given number of maxBuckets.
+		 */
+		private void init() {
+			clear();
+			// We initialize the class with a single bucket with index 0
+			int[] bucket = new int[w]; // a bucket consists of w ON bits
+			for (int i = 0; i < w; i++) { // create w ON bits
+				// ON bits are in the range 0 (inclusive) to n (exclusive)
+				// TODO 0 (inclusive) to n (exclusive).. should be n+1?
+				bucket[i] = random.nextInt(n);
+			}
+			put(minIndex, bucket);
+		}
 
-    }
+		void createBucket(int index) {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getWidth() {
-        return getN();
-    }
-
-    /**
-     * {@inheritDoc}
-     * <br/>
-     * <b>Note:</b> Always returns {@code false} for {@link RandomDistributedScalarEncoder}.
-     */
-    @Override
-    public boolean isDelta() {
-        return false;
-    }
-
-    /**
-     *
-     */
-    private final class BucketMap extends HashMap<Integer, int[]> {
-
-        /**
-         * Initialize the bucket map assuming the given number of maxBuckets.
-         */
-        private void init() {
-            // self.bucketMap = {}
-            // self.bucketMap[self.minIndex] = self.random.permutation(self.n)[0:self.w]
-            clear();
-            // We initialize the class with a single bucket with index 0
-            int[] bucket = new int[w];
-            for (int i = 0; i < n; i++) {
-                bucket[i] = random.nextInt(n); // TODO 0 (inclusive) to n (exclusive).. should be n+1?
-            }
-            put(minIndex, bucket);
-        }
-
-    }
+		}
+	}
 
 }
-
