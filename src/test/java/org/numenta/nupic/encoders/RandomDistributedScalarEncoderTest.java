@@ -195,9 +195,12 @@ public class RandomDistributedScalarEncoderTest {
 	/**
 	 * Check that the overlaps for the encodings are within the expected range.
 	 * Here we ask the encoder to create a bunch of representations under
-	 * somewhat stressful conditions, and then verify they are correct.We rely
-	 * on the fact that the overlapOK and _countOverlapIndices methods are
-	 * working correctly.
+	 * somewhat stressful conditions, and then verify they are correct. We rely
+	 * on the fact that the
+	 * {@link RandomDistributedScalarEncoder.BucketMap#overlapOK(int i, int j)}
+	 * and
+	 * {@link RandomDistributedScalarEncoder.BucketMap#countOverlap(int i, int j)}
+	 * methods are working correctly.
 	 */
 	@Test
 	public void testOverlapStatistics() {
@@ -208,9 +211,13 @@ public class RandomDistributedScalarEncoderTest {
 		// chance of false overlaps
 		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
 				.builder().resolution(1.0).w(11).n(150).seed(seed).build();
+		System.out.println("Encoding  0.0");
 		enc.encode(0.0);
-		enc.encode(-300.0);
-		enc.encode(300.0);
+		System.out.println("Encoding -3.0");
+		enc.encode(-3.0);
+		System.out.println("Encoding  3.0");
+		enc.encode(3.0);
+		System.out.println("Validating encoder..");
 		assertTrue("Illegal overlap encountered in encoder",
 				validateEncoder(enc, 3));
 	}
@@ -277,7 +284,9 @@ public class RandomDistributedScalarEncoderTest {
 	}
 
 	/**
-	 * Test that the internal method _countOverlapIndices works as expected.
+	 * Test that the internal method
+	 * {@link RandomDistributedScalarEncoder.BucketMap#countOverlap(int i, int j)}
+	 * works as expected.
 	 */
 	@Test
 	public void testCountOverlapIndices() {
@@ -367,8 +376,8 @@ public class RandomDistributedScalarEncoderTest {
 
 	/**
 	 * Test that the internal method
-	 * {@link RandomDistributedScalarEncoder.BucketMap#countOverlap} works as
-	 * expected.
+	 * {@link RandomDistributedScalarEncoder.BucketMap#countOverlap(int[] rep1, int[] rep2)}
+	 * works as expected.
 	 */
 	@Test
 	public void testCountOverlap() {
@@ -490,6 +499,7 @@ public class RandomDistributedScalarEncoderTest {
 	 */
 	private boolean validateEncoder(RandomDistributedScalarEncoder enc,
 			int subsampling) {
+		System.out.println("Validating encoder!");
 		for (int i : range(enc.getMinIndex(), enc.getMaxIndex() + 1, 1)) {
 			for (int j : range(i + 1, enc.getMaxIndex() + 1, subsampling)) {
 				if (!enc.getBucketMap().overlapOK(i, j)) {

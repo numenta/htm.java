@@ -293,6 +293,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @return non-zero bits in the bucket
 	 */
 	public int[] mapBucketIndexToNonZeroBits(int index) {
+		System.out.println("Mapping bucket index to non-zero bits..");
 		if (index < 0) {
 			index = 0;
 		}
@@ -306,6 +307,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			}
 			bucketMap.createBucket(index);
 		}
+		System.out.println("Getting bucket mapping..");
 		return bucketMap.get(index);
 	}
 
@@ -314,16 +316,22 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public void encodeIntoArray(Double inputData, int[] output) {
+		// TODO are we certain output is zeros?.. Arrays.fill(output, 0);
 		if (inputData == null) {
 			throw new IllegalArgumentException("null data to encode.");
 		}
-		Integer bucketIndex = getBucketIndices(inputData)[0];
-		// null is returned for missing value in which case we return all 0's.
-		if (bucketIndex != null) {
-			int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
-			for (int onBit : onBits) {
-				output[onBit] = 1;
-			}
+		System.out.println("Encoding into array: " + inputData);
+		int[] bucketIndices = getBucketIndices(inputData);
+		if (bucketIndices.length == 0) {
+			// null is returned for missing value in which case we return all
+			// 0's.
+			return;
+		}
+		int bucketIndex = bucketIndices[0];
+		System.out.println("Bucket index: " + bucketIndex);
+		int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
+		for (int onBit : onBits) {
+			output[onBit] = 1;
 		}
 	}
 
@@ -391,6 +399,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * @param index
 		 */
 		void createBucket(int index) {
+			System.out.println("Creating bucket @ " + index);
 			if (index < minIndex) {
 				if (index == minIndex - 1) {
 					// Create a new representation that has exactly w-1
@@ -416,6 +425,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 					createBucket(index);
 				}
 			}
+			System.out.println("Created bucket @ " + index);
 		}
 
 		/**
@@ -426,6 +436,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * @param newIndex
 		 */
 		private int[] newRepresentation(int index, int newIndex) {
+			System.out.println("Creating new representation for " + newIndex
+					+ " (overlaps with " + index + ")");
 			int[] newRepresentation = bucketMap.get(index).clone();
 			// Choose the bit we will replace in this representation. We need to
 			// shift this bit deterministically. If this is always chosen
@@ -465,8 +477,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			// A binary representation of newRepresentation.
 			// We will use this to test containment.
 			boolean[] representationBinary = new boolean[n];
-			for (int i = 0; i < n; i++) {
-				representationBinary[i] = newRepresentation[i] != 0;
+			for (int i : newRepresentation) {
+				representationBinary[i] = true;
 			}
 			// Midpoint
 			int midIndex = maxBuckets / 2;
@@ -477,9 +489,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				return false;
 			}
 			// Compute running overlaps all the way to the midpoint
-			for (int i = minIndex + 1; i <= midIndex + 1; i++) {
+			for (int i = minIndex + 1; i <= midIndex; i++) {
 				// This is the bit that is going to change
-				int newBit = (i - 1 % w);
+				int newBit = (i - 1) % w;
 				// Update our running overlap
 				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
 					runningOverlap -= 1;
@@ -492,12 +504,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 					return false;
 				}
 			}
-			// At this point, runningOverlap contains the overlap for midIdx
+			// At this point, runningOverlap contains the overlap for midIndex
 			// Compute running overlaps all the way to maxIndex
-			for (int i = midIndex + 1; i <= maxIndex + 1; i++) {
+			for (int i = midIndex + 1; i <= maxIndex; i++) {
 				// This is the bit that is going to change
 				int newBit = i % w;
-				// Update our running overlap
 				// Update our running overlap
 				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
 					runningOverlap -= 1;
