@@ -306,6 +306,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 						+ index);
 			}
 			bucketMap.createBucket(index);
+		} else {
+			System.out.println("Bucket already existed.");
 		}
 		System.out.println("Got bucket mapping with "
 				+ bucketMap.get(index).length + " bits on.");
@@ -317,7 +319,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public void encodeIntoArray(Double inputData, int[] output) {
-		// TODO are we certain output is zeros?.. Arrays.fill(output, 0);
+		// TODO are we certain output is zeros?..
+		Arrays.fill(output, 0);
 		if (inputData == null) {
 			throw new IllegalArgumentException("null data to encode.");
 		}
@@ -331,7 +334,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		int bucketIndex = bucketIndices[0];
 		System.out.println("Bucket index: " + bucketIndex);
 		int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
+		System.out.println("Encoding " + onBits.length + " bits");
 		for (int onBit : onBits) {
+			if (output[onBit] == 1) {
+				System.out.println(Arrays.toString(onBits));
+				throw new IllegalArgumentException("On bit already on: "
+						+ onBit);
+			}
 			output[onBit] = 1;
 		}
 	}
@@ -383,17 +392,21 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private void init() {
 			clear();
-			System.out.println("Initializing bucket map for buckets of w=" + w);
-			// We initialize the class with a single bucket with index 0
-			int[] bucket = new int[w]; // a bucket consists of w ON bits
-			for (int i = 0; i < w; i++) { // create w ON bits
-				// ON bits are in the range 0 (inclusive) to n (exclusive)
-				// TODO 0 (inclusive) to n (exclusive).. should be n+1?
-				bucket[i] = random.nextInt(n);
+			// We initialize the class with a single bucket at the first index
+			put(minIndex, randomBucket());
+		}
+
+		private int[] randomBucket() {
+			Set<Integer> bucketList = new TreeSet<>();
+			while (bucketList.size() < w) {
+				bucketList.add(random.nextInt(n));
 			}
-			System.out.println("Initialized " + minIndex + " with "
-					+ bucket.length + " on bits.");
-			put(minIndex, bucket);
+			Iterator<Integer> bucketIter = bucketList.iterator();
+			int[] bucket = new int[w];
+			for (int i = 0; i < bucket.length; i++) {
+				bucket[i] = bucketIter.next();
+			}
+			return bucket;
 		}
 
 		/**
