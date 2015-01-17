@@ -21,9 +21,10 @@
  */
 package org.numenta.nupic.encoders;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * <p>
@@ -71,6 +72,16 @@ import java.util.Random;
  */
 public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
+	/**
+	 * Returns a builder for building RandomDistributedScalarEncoder.<br/>
+	 * This builder may be reused to produce multiple builders.
+	 *
+	 * @return a {@code RandomDistributedScalarEncoder.Builder}
+	 */
+	public static Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> builder() {
+		return new RandomDistributedScalarEncoder.Builder();
+	}
+
 	private static final int DEFAULT_W = 21;
 	private static final int DEFAULT_N = 400;
 	private static final int DEFAULT_SEED = 42;
@@ -81,8 +92,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	// TODO protected just for tests..? no way!
 	protected static final int MAX_OVERLAP = 2;
 
-	// TODO use org.numenta.nupic.util.MersenneTwister instead of
-	// java.util.Random?
+	// TODO org.numenta.nupic.util.MersenneTwister instead of java.util.Random?
 	private final Random random = new Random();
 	private int seed = DEFAULT_SEED;
 
@@ -106,19 +116,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	// This dictionary maps a bucket index into its bit representation
 	private final BucketMap bucketMap = new BucketMap();
 
-	// How often we need to retry when generating valid encodings
-	private final int numTries = 0;
-
-	/**
-	 * Returns a builder for building RandomDistributedScalarEncoder.<br/>
-	 * This builder may be reused to produce multiple builders.
-	 *
-	 * @return a {@code RandomDistributedScalarEncoder.Builder}
-	 */
-	public static Encoder.Builder<RandomDistributedScalarEncoder.Builder, RandomDistributedScalarEncoder> builder() {
-		return new RandomDistributedScalarEncoder.Builder();
-	}
-
 	public RandomDistributedScalarEncoder(double resolution) {
 		this(resolution, DEFAULT_W, DEFAULT_N, DEFAULT_SEED, DEFAULT_VERBOSITY);
 	}
@@ -137,6 +134,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.offset = offset;
 		this.seed = seed;
 		this.verbosity = verbosity;
+		this.description.add(new Tuple(2, name, 0));
 	}
 
 	public void init() {
@@ -176,6 +174,14 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<FieldMetaType> getDecoderOutputFieldTypes() {
+		return Arrays.asList(FieldMetaType.FLOAT);
+	}
+
+	/**
 	 * @return the random number generator seed.
 	 */
 	public int getSeed() {
@@ -192,7 +198,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 *            the random number generator seed
 	 */
 	public void setSeed(int seed) {
-		// TODO drop class variable and pass directly to random.setSet(seed)?
+		// TODO drop class variable and pass directly to random.setSeed(seed)?
 		this.seed = seed;
 	}
 
@@ -217,36 +223,52 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.offset = offset;
 	}
 
+	protected int getMinIndex() {
+		return minIndex;
+	}
+
+	@Deprecated
+	protected void setMinIndex(int minIndex) {
+		this.minIndex = minIndex;
+	}
+
+	protected int getMaxIndex() {
+		return maxIndex;
+	}
+
+	@Deprecated
+	protected void setMaxIndex(int maxIndex) {
+		this.maxIndex = maxIndex;
+	}
+
+	protected int getMaxBuckets() {
+		return maxBuckets;
+	}
+
+	public BucketMap getBucketMap() {
+		return bucketMap;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void encodeIntoArray(Double inputData, int[] output) {
-		if (inputData == null) {
-			throw new IllegalArgumentException("null data to encode.");
-		}
-		Integer bucketIndex = getBucketIndices(inputData)[0];
-		// null is returned for missing value in which case we return all 0's.
-		if (bucketIndex != null) {
-			int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
-			for (int onBit : onBits) {
-				output[onBit] = 1;
-			}
-		}
+	public <S> List<S> getBucketValues(Class<S> returnType) {
+		// TODO implement
+		return null;
 	}
 
 	/**
-	 * Returns an array containing the sub-field bucket indices for each
-	 * sub-field of the inputData. To get the associated field names for each of
-	 * the buckets, call getScalarNames().
+	 * {@inheritDoc}
 	 *
 	 * @param input
 	 *            The data from the source; in this case, a scalar.
-	 *
-	 * @return array of bucket indices
 	 */
 	@Override
 	public int[] getBucketIndices(double input) {
+		if (input == Encoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
+			return new int[0];
+		}
 		if (offset == null) {
 			offset = input;
 		}
@@ -287,38 +309,280 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		return bucketMap.get(index);
 	}
 
-	public BucketMap getBucketMap() {
-		return bucketMap;
-	}
-
-	protected int getMinIndex() {
-		return minIndex;
-	}
-
-	@Deprecated
-	protected void setMinIndex(int minIndex) {
-		this.minIndex = minIndex;
-	}
-
-	protected int getMaxIndex() {
-		return maxIndex;
-	}
-
-	@Deprecated
-	protected void setMaxIndex(int maxIndex) {
-		this.maxIndex = maxIndex;
-	}
-
-	protected int getMaxBuckets() {
-		return maxBuckets;
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void encodeIntoArray(Double inputData, int[] output) {
+		if (inputData == null) {
+			throw new IllegalArgumentException("null data to encode.");
+		}
+		Integer bucketIndex = getBucketIndices(inputData)[0];
+		// null is returned for missing value in which case we return all 0's.
+		if (bucketIndex != null) {
+			int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
+			for (int onBit : onBits) {
+				output[onBit] = 1;
+			}
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public <S> List<S> getBucketValues(Class<S> returnType) {
-		return null;
+	public int getWidth() {
+		return getN();
+	}
+
+	/**
+	 * {@inheritDoc} <br/>
+	 * <b>Note:</b> Always returns {@code false} for
+	 * {@link RandomDistributedScalarEncoder}.
+	 */
+	@Override
+	public boolean isDelta() {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		// Eek!
+		String string = getClass().getSimpleName() + ":" + "\n  minIndex:   "
+				+ minIndex + "\n  maxIndex:   " + maxIndex + "\n  w:          "
+				+ w + "\n  n:          " + getWidth() + "\n  resolution: "
+				+ resolution + "\n  offset:     " + offset + "\n  numTries:   "
+				+ getBucketMap().numTries + "\n  name:       " + name;
+		if (verbosity > 2) {
+			string += "\n  All buckets:     " + bucketMap;
+		}
+		return string;
+	}
+
+	/**
+	 * Maps ...?
+	 *
+	 * @author Sean Connolly
+	 */
+	protected final class BucketMap extends HashMap<Integer, int[]> {
+
+		// How often we need to retry when generating valid encodings
+		private int numTries = 0;
+
+		/**
+		 * Initialize the bucket map assuming the given number of maxBuckets.
+		 */
+		private void init() {
+			clear();
+			// We initialize the class with a single bucket with index 0
+			int[] bucket = new int[w]; // a bucket consists of w ON bits
+			for (int i = 0; i < w; i++) { // create w ON bits
+				// ON bits are in the range 0 (inclusive) to n (exclusive)
+				// TODO 0 (inclusive) to n (exclusive).. should be n+1?
+				bucket[i] = random.nextInt(n);
+			}
+			put(minIndex, bucket);
+		}
+
+		/**
+		 * Create the given bucket index. Recursively create as many in-between
+		 * bucket indices as necessary.
+		 *
+		 * @param index
+		 */
+		void createBucket(int index) {
+			if (index < minIndex) {
+				if (index == minIndex - 1) {
+					// Create a new representation that has exactly w-1
+					// overlapping bits as the min representation
+					bucketMap.put(index, newRepresentation(minIndex, index));
+					minIndex = index;
+				} else {
+					// Recursively create all the indices above and then this
+					// index
+					createBucket(index + 1);
+					createBucket(index);
+				}
+			} else {
+				if (index == maxIndex + 1) {
+					// Create a new representation that has exactly w-1
+					// overlapping bits as the max representation
+					bucketMap.put(index, newRepresentation(maxIndex, index));
+					maxIndex = index;
+				} else {
+					// Recursively create all the indices below and then this
+					// index
+					createBucket(index - 1);
+					createBucket(index);
+				}
+			}
+		}
+
+		/**
+		 * Return a new representation for newIndex that overlaps with the
+		 * representation at index by exactly w-1 bits
+		 *
+		 * @param index
+		 * @param newIndex
+		 */
+		private int[] newRepresentation(int index, int newIndex) {
+			int[] newRepresentation = bucketMap.get(index).clone();
+			// Choose the bit we will replace in this representation. We need to
+			// shift this bit deterministically. If this is always chosen
+			// randomly then there is a 1 in w chance of the same bit being
+			// replaced in neighboring representations, which is fairly high
+			int ri = newIndex % w;
+			// Now we choose a bit such that the overlap rules are satisfied.
+			int newBit = random.nextInt(n);
+			newRepresentation[ri] = newBit;
+			while (bucketMap.containsKey(newBit)
+					|| !newRepresentationOK(newRepresentation, newIndex)) {
+				numTries++;
+				newBit = random.nextInt(n);
+				newRepresentation[ri] = newBit;
+			}
+			return newRepresentation;
+		}
+
+		/**
+		 * Return {@code true} if this new candidate representation satisfies
+		 * all our overlap rules. Since we know that neighboring representations
+		 * differ by at most one bit, we compute running overlaps.
+		 *
+		 * @param newRepresentation
+		 * @param newIndex
+		 * @return
+		 */
+		private boolean newRepresentationOK(int[] newRepresentation,
+				int newIndex) {
+			if (newRepresentation.length != w) {
+				return false;
+			}
+			if (newIndex < minIndex - 1 || newIndex > maxIndex + 1) {
+				throw new IllegalArgumentException(
+						"newIndex must be within one of existing indices");
+			}
+			// A binary representation of newRepresentation.
+			// We will use this to test containment.
+			boolean[] representationBinary = new boolean[n];
+			for (int i = 0; i < n; i++) {
+				representationBinary[i] = newRepresentation[i] != 0;
+			}
+			// Midpoint
+			int midIndex = maxBuckets / 2;
+			// Start by checking the overlap at minIndex
+			int runningOverlap = countOverlap(bucketMap.get(minIndex),
+					newRepresentation);
+			if (!overlapOK(minIndex, newIndex, runningOverlap)) {
+				return false;
+			}
+			// Compute running overlaps all the way to the midpoint
+			for (int i = minIndex + 1; i <= midIndex + 1; i++) {
+				// This is the bit that is going to change
+				int newBit = (i - 1 % w);
+				// Update our running overlap
+				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
+					runningOverlap -= 1;
+				}
+				if (representationBinary[bucketMap.get(i)[newBit]]) {
+					runningOverlap += 1;
+				}
+				// Verify our rules
+				if (!overlapOK(i, newIndex, runningOverlap)) {
+					return false;
+				}
+			}
+			// At this point, runningOverlap contains the overlap for midIdx
+			// Compute running overlaps all the way to maxIndex
+			for (int i = midIndex + 1; i <= maxIndex + 1; i++) {
+				// This is the bit that is going to change
+				int newBit = i % w;
+				// Update our running overlap
+				// Update our running overlap
+				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
+					runningOverlap -= 1;
+				}
+				if (representationBinary[bucketMap.get(i)[newBit]]) {
+					runningOverlap += 1;
+				}
+				// Verify our rules
+				if (!overlapOK(i, newIndex, runningOverlap)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		/**
+		 * Returns {@code true} if the calculated overlap between bucket indices
+		 * {@code i} and {@code j} are acceptable.
+		 *
+		 * @param i
+		 *            index of one bucket
+		 * @param j
+		 *            index of another bucket
+		 * @return {@code true} if the overlap between buckets is ok
+		 */
+		protected boolean overlapOK(int i, int j) {
+			int overlap = countOverlap(i, j);
+			return overlapOK(i, j, overlap);
+		}
+
+		/**
+		 * Returns {@code true} if the given overlap between bucket indices
+		 * {@code i} and {@code j} are acceptable.
+		 *
+		 * @param i
+		 *            index of one bucket
+		 * @param j
+		 *            index of another bucket
+		 * @return {@code true} if the overlap between buckets is ok
+		 */
+		protected boolean overlapOK(int i, int j, int overlap) {
+			int diff = Math.abs(i - j);
+			if (diff < w) {
+				return overlap == (w - diff);
+			} else {
+				return overlap <= MAX_OVERLAP;
+			}
+		}
+
+		/**
+		 * Return the overlap between bucket indices {@code i} and {@code j}.
+		 *
+		 * @param i
+		 * @param j
+		 * @return
+		 */
+		protected int countOverlap(int i, int j) {
+			return countOverlap(get(i), get(j));
+		}
+
+		/**
+		 * Return the overlap between two representations.
+		 *
+		 * @param rep1
+		 *            random distributes scalar representation; array of
+		 *            non-zero indices
+		 * @param rep2
+		 *            random distributes scalar representation; array of
+		 *            non-zero indices
+		 * @return the count of overlap between the two
+		 */
+		protected int countOverlap(int[] rep1, int[] rep2) {
+			List<Integer> xList = new ArrayList<>(rep1.length);
+			for (int next : rep1) {
+				xList.add(next);
+			}
+			int overlap = 0;
+			for (int next : rep2) {
+				if (xList.contains(next)) {
+					overlap++;
+				}
+			}
+			return overlap;
+		}
+
 	}
 
 	/**
@@ -368,92 +632,4 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int getWidth() {
-		return getN();
-	}
-
-	/**
-	 * {@inheritDoc} <br/>
-	 * <b>Note:</b> Always returns {@code false} for
-	 * {@link RandomDistributedScalarEncoder}.
-	 */
-	@Override
-	public boolean isDelta() {
-		return false;
-	}
-
-	/**
-	 * Return the overlap between two representations. rep1 and rep2 are lists
-	 * of non-zero indices.
-	 *
-	 * @param rep1
-	 * @param rep2
-	 * @return
-	 */
-	protected int countOverlap(int[] rep1, int[] rep2) {
-		// TODO implement
-		return -1;
-	}
-
-	protected int countOverlapIndices(int i, int j) {
-		// TODO implement
-		return -1;
-	}
-
-	/**
-	 * Returns {@code true} if the given overlap between bucket indices
-	 * {@code i} and {@code j} are acceptable. If overlap is not specified,
-	 * calculate it from the {@link #bucketMap}.
-	 *
-	 * @param i
-	 * @param j
-	 * @return {@code true} if the overlap between buckets is ok
-	 */
-	protected boolean overlapOK(int i, int j) {
-		// TODO implement
-		return false;
-	}
-
-	protected boolean overlapOK(int i, int j, int overlap) {
-		// TODO implement
-		return false;
-	}
-
-	/**
-	 * Maps ...?
-	 *
-	 * @author Sean Connolly
-	 */
-	protected final class BucketMap extends HashMap<Integer, int[]> {
-
-		/**
-		 * Initialize the bucket map assuming the given number of maxBuckets.
-		 */
-		private void init() {
-			clear();
-			// We initialize the class with a single bucket with index 0
-			int[] bucket = new int[w]; // a bucket consists of w ON bits
-			for (int i = 0; i < w; i++) { // create w ON bits
-				// ON bits are in the range 0 (inclusive) to n (exclusive)
-				// TODO 0 (inclusive) to n (exclusive).. should be n+1?
-				bucket[i] = random.nextInt(n);
-			}
-			put(minIndex, bucket);
-		}
-
-		void createBucket(int index) {
-
-		}
-
-		public int size() {
-			return keySet().size();
-		}
-
-	}
-
 }
