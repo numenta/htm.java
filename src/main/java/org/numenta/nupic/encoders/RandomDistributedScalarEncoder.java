@@ -293,7 +293,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @return non-zero bits in the bucket
 	 */
 	public int[] mapBucketIndexToNonZeroBits(int index) {
-		System.out.println("Mapping bucket index to non-zero bits..");
+		System.out.println("Mapping bucket index to non-zero bits @ " + index);
 		if (index < 0) {
 			index = 0;
 		}
@@ -307,7 +307,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			}
 			bucketMap.createBucket(index);
 		}
-		System.out.println("Getting bucket mapping..");
+		System.out.println("Got bucket mapping with "
+				+ bucketMap.get(index).length + " bits on.");
 		return bucketMap.get(index);
 	}
 
@@ -382,6 +383,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private void init() {
 			clear();
+			System.out.println("Initializing bucket map for buckets of w=" + w);
 			// We initialize the class with a single bucket with index 0
 			int[] bucket = new int[w]; // a bucket consists of w ON bits
 			for (int i = 0; i < w; i++) { // create w ON bits
@@ -389,6 +391,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				// TODO 0 (inclusive) to n (exclusive).. should be n+1?
 				bucket[i] = random.nextInt(n);
 			}
+			System.out.println("Initialized " + minIndex + " with "
+					+ bucket.length + " on bits.");
 			put(minIndex, bucket);
 		}
 
@@ -453,6 +457,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				newBit = random.nextInt(n);
 				newRepresentation[ri] = newBit;
 			}
+			System.out.println("Created new representation: "
+					+ newRepresentation.length);
 			return newRepresentation;
 		}
 
@@ -467,6 +473,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private boolean newRepresentationOK(int[] newRepresentation,
 				int newIndex) {
+			System.out.println("Checking if representation is ok: "
+					+ Arrays.toString(newRepresentation));
 			if (newRepresentation.length != w) {
 				return false;
 			}
@@ -476,9 +484,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			}
 			// A binary representation of newRepresentation.
 			// We will use this to test containment.
-			boolean[] representationBinary = new boolean[n];
+			boolean[] newRepresentationBinary = new boolean[n];
 			for (int i : newRepresentation) {
-				representationBinary[i] = true;
+				newRepresentationBinary[i] = true;
 			}
 			// Midpoint
 			int midIndex = maxBuckets / 2;
@@ -493,10 +501,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				// This is the bit that is going to change
 				int newBit = (i - 1) % w;
 				// Update our running overlap
-				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
+				if (newRepresentationBinary[bucketMap.get(i - 1)[newBit]]) {
 					runningOverlap -= 1;
 				}
-				if (representationBinary[bucketMap.get(i)[newBit]]) {
+				if (newRepresentationBinary[bucketMap.get(i)[newBit]]) {
 					runningOverlap += 1;
 				}
 				// Verify our rules
@@ -510,10 +518,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				// This is the bit that is going to change
 				int newBit = i % w;
 				// Update our running overlap
-				if (representationBinary[bucketMap.get(i - 1)[newBit]]) {
+				if (newRepresentationBinary[bucketMap.get(i - 1)[newBit]]) {
 					runningOverlap -= 1;
 				}
-				if (representationBinary[bucketMap.get(i)[newBit]]) {
+				if (newRepresentationBinary[bucketMap.get(i)[newBit]]) {
 					runningOverlap += 1;
 				}
 				// Verify our rules
@@ -552,8 +560,12 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		protected boolean overlapOK(int i, int j, int overlap) {
 			int diff = Math.abs(i - j);
 			if (diff < w) {
+				System.out.println("overlapOK " + overlap + " == " + (w - diff)
+						+ " :" + (overlap == (w - diff)));
 				return overlap == (w - diff);
 			} else {
+				System.out.println("overlapOK " + overlap + " <= 2 :"
+						+ (overlap <= MAX_OVERLAP));
 				return overlap <= MAX_OVERLAP;
 			}
 		}
@@ -626,15 +638,15 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		private Double offset;
 
 		private Builder() {
+			w = DEFAULT_W;
+			n = DEFAULT_N;
+			seed = DEFAULT_SEED;
+			encVerbosity = DEFAULT_VERBOSITY;
 		}
 
 		@Override
 		public RandomDistributedScalarEncoder build() {
 			encoder = new RandomDistributedScalarEncoder(resolution);
-			w = DEFAULT_W;
-			n = DEFAULT_N;
-			seed = DEFAULT_SEED;
-			encVerbosity = DEFAULT_VERBOSITY;
 			super.build();
 			((RandomDistributedScalarEncoder) encoder).setSeed(this.seed);
 			((RandomDistributedScalarEncoder) encoder).setOffset(this.offset);

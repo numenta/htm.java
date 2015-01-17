@@ -27,9 +27,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,10 +82,11 @@ public class RandomDistributedScalarEncoderTest {
 		assertTrue("Overlap is too high", overlap(e0, e25) < 4);
 		// Test encoding consistency. The encodings for previous numbers
 		// shouldn't change even though we have added additional buckets
-		assertEquals("Encodings are not consistent - they have changed after "
-				+ "new buckets have been created", e0, enc.encode(-0.1));
-		assertEquals("Encodings are not consistent - they have changed after "
-				+ "new buckets have been created", e1, enc.encode(1.0));
+		assertThat("Encodings are not consistent - they have changed after "
+				+ "new buckets have been created", e0,
+				equalTo(enc.encode(-0.1)));
+		assertThat("Encodings are not consistent - they have changed after "
+				+ "new buckets have been created", e1, equalTo(enc.encode(1.0)));
 	}
 
 	/**
@@ -475,13 +474,10 @@ public class RandomDistributedScalarEncoderTest {
 	 * of bits where x[i] and y[i] are both 1
 	 */
 	private int overlap(int[] x, int[] y) {
-		List<Integer> xList = new ArrayList<>(x.length);
-		for (int next : x) {
-			xList.add(next);
-		}
+		assertEquals(x.length, y.length);
 		int overlap = 0;
-		for (int next : y) {
-			if (xList.contains(next)) {
+		for (int i = 0; i < x.length; i++) {
+			if (x[i] == 1 && y[i] == 1) {
 				overlap++;
 			}
 		}
