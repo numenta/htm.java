@@ -26,12 +26,17 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * @author Sean Connolly
  */
 public class RandomDistributedScalarEncoderTest {
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	/**
 	 * Test that nothing is printed out when {@code verbosity = 0}.
@@ -54,6 +59,26 @@ public class RandomDistributedScalarEncoderTest {
 				outContent.toString());
 		assertEquals("zero verbosity doesn't lead to zero err output", "",
 				errContent.toString());
+	}
+
+	/**
+	 * Test that the {@link RandomDistributedScalarEncoder} only encodes
+	 * {@code Double}.<br/>
+	 * Note: This is well covered by our, ahem, statically typed compiler.
+	 * Included here for completeness of consistency with the Python project.
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testEncodeInvalidInputType() {
+		// Given
+		Encoder encoder = RandomDistributedScalarEncoder.builder().name("enc")
+				.resolution(1.0).verbosity(0).build();
+		// Then
+		exception.expect(ClassCastException.class);
+		exception
+				.expectMessage("java.lang.String cannot be cast to java.lang.Double");
+		// When
+		encoder.encode("String");
 	}
 
 }
