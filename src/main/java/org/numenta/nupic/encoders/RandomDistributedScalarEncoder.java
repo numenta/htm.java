@@ -285,6 +285,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		return bucketMap.get(index);
 	}
 
+	public BucketMap getBucketMap() {
+		return bucketMap;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -364,7 +368,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 *
 	 * @author Sean Connolly
 	 */
-	private final class BucketMap extends HashMap<Integer, int[]> {
+	protected final class BucketMap extends HashMap<Integer, int[]> {
 
 		/**
 		 * Initialize the bucket map assuming the given number of maxBuckets.
@@ -384,6 +388,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		void createBucket(int index) {
 
 		}
+
+		public int size() {
+			return keySet().size();
+		}
+
 	}
 
 }
