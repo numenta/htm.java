@@ -452,7 +452,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private void init() {
 			clear();
-			bucketValues.clear();
 			minIndex = maxBuckets / 2;
 			maxIndex = maxBuckets / 2;
 			// We initialize the class with a single bucket at the first index
