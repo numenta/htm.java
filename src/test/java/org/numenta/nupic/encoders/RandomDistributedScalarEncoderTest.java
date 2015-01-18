@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
+import static org.numenta.nupic.util.ArrayUtils.range;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -570,42 +571,6 @@ public class RandomDistributedScalarEncoderTest {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * Generate an array of contiguous integers from {@code start} (inclusive)
-	 * to {@code stop} (exclusive).
-	 *
-	 * @param start
-	 *            the starting integer
-	 * @param stop
-	 *            the stopping integer
-	 * @return an array of the range of integers
-	 */
-	private int[] range(int start, int stop) {
-		return range(start, stop, 1);
-	}
-
-	/**
-	 * Generate an array of every {@code step} integers from {@code start}
-	 * (inclusive) to {@code stop} (exclusive).
-	 *
-	 * @param start
-	 *            the starting integer
-	 * @param stop
-	 *            the stopping integer
-	 * @param step
-	 *            the step size between integers
-	 * @return an array of the range of integers
-	 */
-	private int[] range(int start, int stop, int step) {
-		int[] r = new int[(int) Math.ceil((stop - start) / (double) step)];
-		int i = 0;
-		for (int x = start; x < stop; x += step) {
-			r[i] = x;
-			i++;
-		}
-		return r;
 	}
 
 }
