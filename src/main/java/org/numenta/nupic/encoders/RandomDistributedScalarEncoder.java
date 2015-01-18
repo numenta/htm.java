@@ -140,7 +140,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			random.setSeed(seed);
 		}
 		bucketMap.init();
-		// TODO set 'name' to toString() or getClass().getSimpleName()?
+		if (name == null) {
+			name = "[" + resolution + "]";
+		}
 		if (verbosity > 0) {
 			// TODO utilize a real logging mechanism
 			System.out.println(toString());
