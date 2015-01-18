@@ -30,6 +30,13 @@ package org.numenta.nupic.util;
  */
 public class MinMax {
 
+	/**
+	 * Return the min and max values of the given array.
+	 *
+	 * @param array
+	 *            the array of values
+	 * @return the min and max
+	 */
 	public static MinMax of(int[] array) {
 		int min = Integer.MIN_VALUE;
 		int max = Integer.MAX_VALUE;
@@ -38,6 +45,27 @@ public class MinMax {
 				min = next;
 			}
 			if (max == Integer.MAX_VALUE || next > max) {
+				max = next;
+			}
+		}
+		return new MinMax(min, max);
+	}
+
+	/**
+	 * Return the min and max values of the given array.
+	 *
+	 * @param array
+	 *            the array of values
+	 * @return the min and max
+	 */
+	public static MinMax of(double[] array) {
+		double min = Double.MIN_VALUE;
+		double max = Double.MAX_VALUE;
+		for (double next : array) {
+			if (min == Double.MIN_VALUE || next < min) {
+				min = next;
+			}
+			if (max == Double.MAX_VALUE || next > max) {
 				max = next;
 			}
 		}
