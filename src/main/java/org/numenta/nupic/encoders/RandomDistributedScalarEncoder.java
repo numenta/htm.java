@@ -347,9 +347,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public <S> List<S> getBucketValues(Class<S> returnType) {
-		// TODO implement
-		return null;
+		// TODO what is the correct implementation?
+		return (List<S>) bucketValues;
 	}
 
 	/**
@@ -451,6 +452,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private void init() {
 			clear();
+			bucketValues.clear();
 			minIndex = maxBuckets / 2;
 			maxIndex = maxBuckets / 2;
 			// We initialize the class with a single bucket at the first index
