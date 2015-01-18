@@ -101,7 +101,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	// _maxBuckets is required because the current CLA Classifier assumes bucket
 	// indices must be non-negative. This normally does not need to be changed
 	// but if altered, should be set to an even number.
-	// TODO maxBuckets can be static
+	// TODO maxBuckets can be final
 	private int maxBuckets = DEFAULT_MAX_BUCKETS;
 	private int minIndex = maxBuckets / 2;
 	private int maxIndex = maxBuckets / 2;
@@ -188,13 +188,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	}
 
 	/**
-	 * @return the random number generator seed.
-	 */
-	public int getSeed() {
-		return seed;
-	}
-
-	/**
 	 * Set the seed used for the random number generator. If set to {@code -1}
 	 * the generator will be initialized without a fixed seed. <br/>
 	 * <b>Note:</b> call {@link #init()} after changing the seed to reinitialize
@@ -238,6 +231,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * <b>Note:</b> call {@link #bucketMap#init()} after changing this.
 	 *
 	 * @param maxBuckets
+	 *            the maximum number of buckets
 	 */
 	public void setMaxBuckets(int maxBuckets) {
 		this.maxBuckets = maxBuckets;
@@ -249,6 +243,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		return minIndex;
 	}
 
+	/**
+	 * Set the minimum index used in the bucket map.
+	 *
+	 * @param minIndex
+	 *            the new minimum index
+	 * @deprecated {@code minIndex} should only be modified by the bucket map
+	 */
 	@Deprecated
 	protected void setMinIndex(int minIndex) {
 		this.minIndex = minIndex;
@@ -259,8 +260,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	}
 
 	/**
+	 * Set the maximum index used in the bucket map.
 	 *
 	 * @param maxIndex
+	 *            the new maximum index
+	 * @deprecated {@code maxIndex} should only be modified by the bucket map
 	 */
 	@Deprecated
 	protected void setMaxIndex(int maxIndex) {
@@ -448,6 +452,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private void init() {
 			clear();
+			minIndex = maxBuckets / 2;
+			maxIndex = maxBuckets / 2;
 			// We initialize the class with a single bucket at the first index
 			put(minIndex, randomBucket());
 		}
@@ -470,6 +476,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * bucket indices as necessary.
 		 *
 		 * @param index
+		 *            the index of the bucket to create
 		 */
 		void createBucket(int index) {
 			if (index < minIndex) {
@@ -500,11 +507,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 		/**
-		 * Return a new representation for newIndex that overlaps with the
-		 * representation at index by exactly w-1 bits
+		 * Return a new representation for {@code newIndex} that overlaps with
+		 * the representation at {@code index} by exactly {@code w-1} bits.
 		 *
 		 * @param index
+		 *            the index of the existing representation to overlap with
 		 * @param newIndex
+		 *            the index of the new representation
 		 */
 		private int[] newRepresentation(int index, int newIndex) {
 			int[] newRepresentation = bucketMap.get(index).clone();
@@ -531,8 +540,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * differ by at most one bit, we compute running overlaps.
 		 *
 		 * @param newRepresentation
+		 *            the new representation to check
 		 * @param newIndex
-		 * @return
+		 *            the index of the new representation
+		 * @return {@code true} if the new representation is Ok
 		 */
 		private boolean newRepresentationOK(int[] newRepresentation,
 				int newIndex) {

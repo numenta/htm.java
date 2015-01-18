@@ -139,7 +139,7 @@ public class RandomDistributedScalarEncoderTest {
 	 * Identify point at which resolution forces values into different buckets;
 	 * uses increasing values.
 	 *
-	 * @see {@link #testBucketIndexIncreasing()}
+	 * @see {@link #testBucketIndexDecreasing()}
 	 */
 	@Test
 	public void testBucketIndexIncreasing() {
@@ -557,7 +557,8 @@ public class RandomDistributedScalarEncoderTest {
 	 * @param enc
 	 *            the encoder under test
 	 * @param subsampling
-	 * @return
+	 *            the amount of sub-sampling to perform
+	 * @return {@code true} if the encoder validates
 	 */
 	private boolean validateEncoder(RandomDistributedScalarEncoder enc,
 			int subsampling) {
