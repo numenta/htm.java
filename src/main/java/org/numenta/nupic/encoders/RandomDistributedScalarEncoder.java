@@ -293,15 +293,37 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		if (offset == null) {
 			offset = input;
 		}
-		// TODO we use floor() rather than round() as in Python, Ok?
-		int index = maxBuckets / 2
-				+ (int) Math.floor((input - offset) / resolution);
+		int index = maxBuckets / 2 + round((input - offset) / resolution);
 		if (index < 0) {
 			index = 0;
 		} else if (index >= maxBuckets) {
 			index = maxBuckets - 1;
 		}
 		return new int[] { index };
+	}
+
+	/**
+	 * A <a href="http://en.wikipedia.org/wiki/Rounding#Round_half_to_even">
+	 * "round half away from zero"</a> implementation of rounding, as in Python.
+	 * Note that Java's {@link Math#round(double a)} implements the <a
+	 * href="http://en.wikipedia.org/wiki/Rounding#Round_half_up"
+	 * >"round half up"</a> method to rounding and so is not a drop-in
+	 * replacement in ported Python code.
+	 *
+	 * @param input
+	 *            a floating-point value to be rounded to an int.
+	 * @return the value of the argument rounded to the nearest int value.
+	 */
+	private int round(double input) {
+		// TODO implement without if/else..
+		if (input > 0) {
+			return (int) Math.round(input);
+		} else if (input < 0) {
+			return (int) Math.round(Math.abs(input)) * -1;
+		} else {
+			return 0;
+		}
+		// TODO extract to utilities class for reuse?
 	}
 
 	/**
@@ -315,7 +337,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @return non-zero bits in the bucket
 	 */
 	public int[] mapBucketIndexToNonZeroBits(int index) {
-		System.out.println("Mapping bucket index to non-zero bits @ " + index);
 		if (index < 0) {
 			index = 0;
 		}
@@ -328,11 +349,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 						+ index);
 			}
 			bucketMap.createBucket(index);
-		} else {
-			System.out.println("Bucket already existed.");
 		}
-		System.out.println("Got bucket mapping with "
-				+ bucketMap.get(index).length + " bits on.");
 		return bucketMap.get(index);
 	}
 
@@ -345,17 +362,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		if (inputData == null) {
 			throw new IllegalArgumentException("null data to encode.");
 		}
-		System.out.println("Encoding into array: " + inputData);
 		Integer bucketIndex = getBucketIndex(inputData);
 		if (bucketIndex == null) {
 			// null is returned for missing value, return all 0's.
 			// TODO is this possible? what is a 'missing value'?
 			return;
 		}
-		System.out.println("Bucket index for " + inputData + " is "
-				+ bucketIndex);
 		int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
-		System.out.println("Encoding " + onBits.length + " bits");
 		for (int onBit : onBits) {
 			if (output[onBit] == 1) {
 				System.out.println(Arrays.toString(onBits));
@@ -437,7 +450,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * @param index
 		 */
 		void createBucket(int index) {
-			System.out.println("Creating bucket @ " + index);
 			if (index < minIndex) {
 				if (index == minIndex - 1) {
 					// Create a new representation that has exactly w-1
@@ -463,7 +475,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 					createBucket(index);
 				}
 			}
-			System.out.println("Created bucket @ " + index);
 		}
 
 		/**
@@ -474,8 +485,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * @param newIndex
 		 */
 		private int[] newRepresentation(int index, int newIndex) {
-			System.out.println("Creating new representation for " + newIndex
-					+ " (overlaps with " + index + ")");
 			int[] newRepresentation = bucketMap.get(index).clone();
 			// Choose the bit we will replace in this representation. We need to
 			// shift this bit deterministically. If this is always chosen
@@ -491,8 +500,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 				newBit = random.nextInt(n);
 				newRepresentation[ri] = newBit;
 			}
-			System.out.println("Created new representation: "
-					+ newRepresentation.length);
 			return newRepresentation;
 		}
 
@@ -507,8 +514,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		private boolean newRepresentationOK(int[] newRepresentation,
 				int newIndex) {
-			System.out.println("Checking if representation is ok: "
-					+ Arrays.toString(newRepresentation));
 			if (newRepresentation.length != w) {
 				return false;
 			}
@@ -594,12 +599,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		protected boolean overlapOK(int i, int j, int overlap) {
 			int diff = Math.abs(i - j);
 			if (diff < w) {
-				System.out.println("overlapOK " + overlap + " == " + (w - diff)
-						+ " :" + (overlap == (w - diff)));
 				return overlap == (w - diff);
 			} else {
-				System.out.println("overlapOK " + overlap + " <= 2 :"
-						+ (overlap <= MAX_OVERLAP));
 				return overlap <= MAX_OVERLAP;
 			}
 		}

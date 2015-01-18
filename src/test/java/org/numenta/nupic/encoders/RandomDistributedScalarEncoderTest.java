@@ -130,7 +130,7 @@ public class RandomDistributedScalarEncoderTest {
 		assertThat("Numbers outside resolution have the same encoding", e24,
 				not(equalTo(e23)));
 
-		int[] e22_5 = enc.encode(22.4);
+		int[] e22_5 = enc.encode(22.5);
 		assertThat("Numbers outside resolution have the same encoding", e22_5,
 				not(equalTo(e23)));
 	}
@@ -270,7 +270,6 @@ public class RandomDistributedScalarEncoderTest {
 	 * methods are working correctly.
 	 */
 	@Test
-	@Ignore
 	public void testOverlapStatistics() {
 		// Generate and log a 32-bit compatible seed value.
 		long time = Calendar.getInstance().getTimeInMillis();
@@ -279,13 +278,9 @@ public class RandomDistributedScalarEncoderTest {
 		// chance of false overlaps
 		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
 				.builder().resolution(1.0).w(11).n(150).seed(seed).build();
-		System.out.println("Encoding  0.0");
 		enc.encode(0.0);
-		System.out.println("Encoding -3.0");
 		enc.encode(-3.0);
-		System.out.println("Encoding  3.0");
 		enc.encode(3.0);
-		System.out.println("Validating encoder..");
 		assertTrue("Illegal overlap encountered in encoder",
 				validateEncoder(enc, 3));
 	}
