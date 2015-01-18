@@ -292,10 +292,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public int[] getBucketIndices(double input) {
-		if (input == Encoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
-			// TODO this should throw an IllegalArgumentException
+		if (Double.isNaN(input)) {
+			// TODO should this throw an IllegalArgumentException?
 			return new int[0];
 		}
+		// TODO should we check for Double.isInfinity(input)?
 		if (offset == null) {
 			offset = input;
 		}
@@ -366,7 +367,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public void encodeIntoArray(Double inputData, int[] output) {
 		// TODO are we certain output is zeros?.. Arrays.fill(output, 0);
 		if (inputData == null) {
-			throw new IllegalArgumentException("null data to encode.");
+			return;
 		}
 		Integer bucketIndex = getBucketIndex(inputData);
 		if (bucketIndex == null) {
@@ -377,7 +378,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
 		for (int onBit : onBits) {
 			if (output[onBit] == 1) {
-				System.out.println(Arrays.toString(onBits));
 				throw new IllegalArgumentException("On bit already on: "
 						+ onBit);
 			}

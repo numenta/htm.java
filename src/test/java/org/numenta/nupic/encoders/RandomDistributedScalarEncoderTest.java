@@ -102,10 +102,10 @@ public class RandomDistributedScalarEncoderTest {
 				.name("enc").resolution(1.0).build();
 
 		int[] empty = enc.encode(Encoder.SENTINEL_VALUE_FOR_MISSING_DATA);
-		assertEquals(sum(empty), 0);
+		assertEquals(0, sum(empty));
 
 		empty = enc.encode(null);
-		assertEquals(sum(empty), 0);
+		assertEquals(0, sum(empty));
 	}
 
 	/**
