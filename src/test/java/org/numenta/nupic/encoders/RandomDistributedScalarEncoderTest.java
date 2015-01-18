@@ -129,9 +129,57 @@ public class RandomDistributedScalarEncoderTest {
 		assertThat("Numbers outside resolution have the same encoding", e24,
 				not(equalTo(e23)));
 
-		e22_9 = enc.encode(22.5);
-		assertThat("Numbers outside resolution have the same encoding", e22_9,
+		int[] e22_5 = enc.encode(22.4);
+		assertThat("Numbers outside resolution have the same encoding", e22_5,
 				not(equalTo(e23)));
+	}
+
+	/**
+	 * Identify point at which resolution forces values into different buckets;
+	 * uses increasing values.
+	 *
+	 * @see {@link #testBucketIndexIncreasing()}
+	 */
+	@Test
+	public void testBucketIndexIncreasing() {
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().resolution(1.0).build();
+		assertEquals(500, (int) enc.getBucketIndex(23.0));
+		assertEquals(500, (int) enc.getBucketIndex(23.1));
+		assertEquals(500, (int) enc.getBucketIndex(23.2));
+		assertEquals(500, (int) enc.getBucketIndex(23.3));
+		assertEquals(500, (int) enc.getBucketIndex(23.4));
+		assertEquals(500, (int) enc.getBucketIndex(23.5));
+		assertEquals(500, (int) enc.getBucketIndex(23.6));
+		assertEquals(500, (int) enc.getBucketIndex(23.7));
+		assertEquals(500, (int) enc.getBucketIndex(23.8));
+		assertEquals(500, (int) enc.getBucketIndex(23.9));
+		assertEquals(501, (int) enc.getBucketIndex(24.0));
+		assertEquals(501, (int) enc.getBucketIndex(24.1));
+	}
+
+	/**
+	 * Identify point at which resolution forces values into different buckets;
+	 * uses decreasing values.
+	 *
+	 * @see {@link #testBucketIndexIncreasing()}
+	 */
+	@Test
+	public void testBucketIndexDecreasing() {
+		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
+				.builder().resolution(1.0).build();
+		assertEquals(500, (int) enc.getBucketIndex(23.0));
+		assertEquals(499, (int) enc.getBucketIndex(22.9));
+		assertEquals(499, (int) enc.getBucketIndex(22.8));
+		assertEquals(499, (int) enc.getBucketIndex(22.7));
+		assertEquals(499, (int) enc.getBucketIndex(22.6));
+		assertEquals(499, (int) enc.getBucketIndex(22.5));
+		assertEquals(499, (int) enc.getBucketIndex(22.4));
+		assertEquals(499, (int) enc.getBucketIndex(22.3));
+		assertEquals(499, (int) enc.getBucketIndex(22.2));
+		assertEquals(499, (int) enc.getBucketIndex(22.1));
+		assertEquals(499, (int) enc.getBucketIndex(22.0));
+		assertEquals(498, (int) enc.getBucketIndex(21.9));
 	}
 
 	/**

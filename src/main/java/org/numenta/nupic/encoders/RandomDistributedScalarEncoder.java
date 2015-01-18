@@ -259,21 +259,43 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	}
 
 	/**
+	 * Returns the sub-field bucket index for the {@code input}.
+	 *
+	 * @param input
+	 *            The data from the source; a scalar.
+	 *
+	 * @return the bucket index, or {@code null} if {@code input} is
+	 *         {@link Double#NaN}
+	 */
+	public Integer getBucketIndex(double input) {
+		int[] bucketIndices = getBucketIndices(input);
+		if (bucketIndices.length == 0) {
+			return null;
+		} else {
+			return bucketIndices[0];
+		}
+	}
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @param input
-	 *            The data from the source; in this case, a scalar.
+	 *            The data from the source; a scalar.
+	 * @return array of bucket indices, or an empty {@code int[]} of size
+	 *         {@code 0} if {@code input} is {@link Double#NaN}
 	 */
 	@Override
 	public int[] getBucketIndices(double input) {
 		if (input == Encoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
+			// TODO this should throw an IllegalArgumentException
 			return new int[0];
 		}
 		if (offset == null) {
 			offset = input;
 		}
+		// TODO we use floor() rather than round() as in Python, Ok?
 		int index = maxBuckets / 2
-				+ (int) Math.round((input - offset) / resolution);
+				+ (int) Math.floor((input - offset) / resolution);
 		if (index < 0) {
 			index = 0;
 		} else if (index >= maxBuckets) {
@@ -319,20 +341,19 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public void encodeIntoArray(Double inputData, int[] output) {
-		// TODO are we certain output is zeros?..
-		Arrays.fill(output, 0);
+		// TODO are we certain output is zeros?.. Arrays.fill(output, 0);
 		if (inputData == null) {
 			throw new IllegalArgumentException("null data to encode.");
 		}
 		System.out.println("Encoding into array: " + inputData);
-		int[] bucketIndices = getBucketIndices(inputData);
-		if (bucketIndices.length == 0) {
-			// null is returned for missing value in which case we return all
-			// 0's.
+		Integer bucketIndex = getBucketIndex(inputData);
+		if (bucketIndex == null) {
+			// null is returned for missing value, return all 0's.
+			// TODO is this possible? what is a 'missing value'?
 			return;
 		}
-		int bucketIndex = bucketIndices[0];
-		System.out.println("Bucket index: " + bucketIndex);
+		System.out.println("Bucket index for " + inputData + " is "
+				+ bucketIndex);
 		int[] onBits = mapBucketIndexToNonZeroBits(bucketIndex);
 		System.out.println("Encoding " + onBits.length + " bits");
 		for (int onBit : onBits) {
