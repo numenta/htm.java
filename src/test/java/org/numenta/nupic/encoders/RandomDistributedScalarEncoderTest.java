@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.encoders;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
@@ -225,21 +226,37 @@ public class RandomDistributedScalarEncoderTest {
 	 * Test that some bad construction parameters get handled.
 	 */
 	@Test
-	public void testParameterChecks() {
+	public void testParameterCheckWithInvalidN() {
 		// n must be >= 6 * w
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("TODO expect message");
-		RandomDistributedScalarEncoder.builder().n((int) (5.9 * 21)).build();
+		exception.expect(IllegalStateException.class);
+		exception
+				.expectMessage(startsWith("n must be an int strictly greater than 6*w"));
+		RandomDistributedScalarEncoder.builder().n((int) (5.9 * 21)).w(21)
+				.resolution(1).build();
+	}
 
+	/**
+	 * Test that some bad construction parameters get handled.
+	 */
+	@Test
+	public void testParameterCheckWithInvalidW() {
 		// w can 't be negative
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("TODO expect message");
+		exception.expect(IllegalStateException.class);
+		exception
+				.expectMessage(startsWith("w must be an odd positive integer"));
 		RandomDistributedScalarEncoder.builder().w(-1).build();
+	}
 
+	/**
+	 * Test that some bad construction parameters get handled.
+	 */
+	@Test
+	public void testParameterCheckWithInvalidResolution() {
 		// resolution can 't be negative
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("TODO expect message");
-		RandomDistributedScalarEncoder.builder().resolution(-2).build();
+		exception.expect(IllegalStateException.class);
+		exception
+				.expectMessage(startsWith("resolution must be a positive number"));
+		RandomDistributedScalarEncoder.builder().resolution(-1).build();
 	}
 
 	/**
