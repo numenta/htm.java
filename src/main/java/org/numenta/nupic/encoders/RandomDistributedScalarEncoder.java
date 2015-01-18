@@ -270,17 +270,14 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.maxIndex = maxIndex;
 	}
 
+	/**
+	 * Returns the mapping between bucket indices and bucket representations (on
+	 * bits).
+	 *
+	 * @return the bucket map
+	 */
 	public BucketMap getBucketMap() {
 		return bucketMap;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public <S> List<S> getBucketValues(Class<S> returnType) {
-		// TODO implement
-		return null;
 	}
 
 	/**
@@ -345,6 +342,15 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public <S> List<S> getBucketValues(Class<S> returnType) {
+		// TODO implement
+		return null;
+	}
+
+	/**
 	 * Given a bucket index, return the list of non-zero bits. If the bucket
 	 * index does not exist, it is created. If the index falls outside our range
 	 * we clip it.
@@ -354,7 +360,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 *
 	 * @return non-zero bits in the bucket
 	 */
-	public int[] mapBucketIndexToNonZeroBits(int index) {
+	int[] mapBucketIndexToNonZeroBits(int index) {
 		if (index < 0) {
 			index = 0;
 		}
@@ -737,4 +743,5 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 	}
+
 }
