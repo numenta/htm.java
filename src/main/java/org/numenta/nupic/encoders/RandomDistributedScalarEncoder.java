@@ -89,7 +89,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	private static final int DEFAULT_MAX_BUCKETS = 1000;
 
 	// The largest overlap we allow for non-adjacent encodings
-	// TODO protected just for tests..? no way!
 	private static final int MAX_OVERLAP = 2;
 
 	// TODO org.numenta.nupic.util.MersenneTwister instead of java.util.Random?
@@ -101,7 +100,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	// _maxBuckets is required because the current CLA Classifier assumes bucket
 	// indices must be non-negative. This normally does not need to be changed
 	// but if altered, should be set to an even number.
-	// TODO maxBuckets can be final
 	private int maxBuckets = DEFAULT_MAX_BUCKETS;
 	private int minIndex = maxBuckets / 2;
 	private int maxIndex = maxBuckets / 2;
@@ -199,6 +197,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public void setSeed(int seed) {
 		// TODO drop class variable and pass directly to random.setSeed(seed)?
 		this.seed = seed;
+		// TODO reinitialize random?
 	}
 
 	/**
@@ -222,7 +221,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.offset = offset;
 	}
 
-	protected int getMaxBuckets() {
+	int getMaxBuckets() {
 		return maxBuckets;
 	}
 
@@ -239,7 +238,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.maxIndex = maxBuckets / 2;
 	}
 
-	protected int getMinIndex() {
+	int getMinIndex() {
 		return minIndex;
 	}
 
@@ -251,11 +250,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @deprecated {@code minIndex} should only be modified by the bucket map
 	 */
 	@Deprecated
-	protected void setMinIndex(int minIndex) {
+	void setMinIndex(int minIndex) {
 		this.minIndex = minIndex;
 	}
 
-	protected int getMaxIndex() {
+	int getMaxIndex() {
 		return maxIndex;
 	}
 
@@ -267,7 +266,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @deprecated {@code maxIndex} should only be modified by the bucket map
 	 */
 	@Deprecated
-	protected void setMaxIndex(int maxIndex) {
+	void setMaxIndex(int maxIndex) {
 		this.maxIndex = maxIndex;
 	}
 
@@ -313,7 +312,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	@Override
 	public int[] getBucketIndices(double input) {
 		if (Double.isNaN(input)) {
-			// TODO should this throw an IllegalArgumentException?
 			return new int[0];
 		}
 		// TODO should we check for Double.isInfinity(input)?
@@ -342,14 +340,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @return the value of the argument rounded to the nearest int value.
 	 */
 	private int round(double input) {
-		// TODO implement without if/else..
-		if (input > 0) {
-			return (int) Math.round(input);
-		} else if (input < 0) {
-			return (int) Math.round(Math.abs(input)) * -1;
-		} else {
-			return 0;
-		}
+		return input < 0 ? -(int) Math.round(-input) : (int) Math.round(input);
 		// TODO extract to utilities class for reuse?
 	}
 
@@ -442,7 +433,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 *
 	 * @author Sean Connolly
 	 */
-	protected final class BucketMap extends HashMap<Integer, int[]> {
+	final class BucketMap extends HashMap<Integer, int[]> {
 
 		// How often we need to retry when generating valid encodings
 		private int numTries = 0;
