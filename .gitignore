@@ -1,9 +1,10 @@
 /bin
 /build
 /doc
-.idea/
 .gradle
 .settings
 .classpath
 /target
 /.classpath
+.idea/
+*.iml
