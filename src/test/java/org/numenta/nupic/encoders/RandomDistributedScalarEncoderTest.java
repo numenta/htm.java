@@ -31,7 +31,6 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Calendar;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -189,17 +188,16 @@ public class RandomDistributedScalarEncoderTest {
 	 * clipping are handled properly.
 	 */
 	@Test
-	@Ignore
 	public void testMapBucketIndexToNonZeroBits() {
 		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
-				.builder().resolution(1.0).w(11).n(150).build();
-		// Set a low number of max buckets
-		// TODO enc._initializeBucketMap(10, null);
+				.builder().resolution(1.0).w(11).n(150).offset(null)
+				// Set a low number of max buckets
+				.maxBuckets(10).build();
 		enc.encode(0.0);
 		enc.encode(-7.0);
 		enc.encode(7.0);
 
-		assertEquals("_maxBuckets exceeded", enc.getMaxBuckets(), enc
+		assertEquals("maxBuckets exceeded", enc.getMaxBuckets(), enc
 				.getBucketMap().size());
 		assertTrue("mapBucketIndexToNonZeroBits did not handle negative index",
 				enc.mapBucketIndexToNonZeroBits(-1) == enc.getBucketMap()
@@ -210,11 +208,13 @@ public class RandomDistributedScalarEncoderTest {
 
 		int[] e23 = enc.encode(23.0);
 		int[] e6 = enc.encode(6.0);
-		assertEquals("Values not clipped correctly during encoding", e23, e6);
+		assertThat("Values not clipped correctly during encoding", e6,
+				equalTo(e23));
 
 		int[] e_8 = enc.encode(-8.0);
 		int[] e_7 = enc.encode(-7.0);
-		assertEquals("Values not clipped correctly during encoding", e_8, e_7);
+		assertThat("Values not clipped correctly during encoding", e_7,
+				equalTo(e_8));
 
 		assertEquals("getBucketIndices returned negative bucket index", 0,
 				enc.getBucketIndices(-8)[0]);

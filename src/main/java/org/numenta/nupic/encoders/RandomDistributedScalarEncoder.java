@@ -102,7 +102,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	// indices must be non-negative. This normally does not need to be changed
 	// but if altered, should be set to an even number.
 	// TODO maxBuckets can be static
-	private final int maxBuckets = DEFAULT_MAX_BUCKETS;
+	private int maxBuckets = DEFAULT_MAX_BUCKETS;
 	private int minIndex = maxBuckets / 2;
 	private int maxIndex = maxBuckets / 2;
 
@@ -229,6 +229,22 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.offset = offset;
 	}
 
+	protected int getMaxBuckets() {
+		return maxBuckets;
+	}
+
+	/**
+	 * Set the maximum number of buckets available to be used.<br/>
+	 * <b>Note:</b> call {@link #bucketMap#init()} after changing this.
+	 *
+	 * @param maxBuckets
+	 */
+	public void setMaxBuckets(int maxBuckets) {
+		this.maxBuckets = maxBuckets;
+		this.minIndex = maxBuckets / 2;
+		this.maxIndex = maxBuckets / 2;
+	}
+
 	protected int getMinIndex() {
 		return minIndex;
 	}
@@ -242,13 +258,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		return maxIndex;
 	}
 
+	/**
+	 *
+	 * @param maxIndex
+	 */
 	@Deprecated
 	protected void setMaxIndex(int maxIndex) {
 		this.maxIndex = maxIndex;
-	}
-
-	protected int getMaxBuckets() {
-		return maxBuckets;
 	}
 
 	public BucketMap getBucketMap() {
@@ -437,7 +453,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 		private int[] randomBucket() {
-			Set<Integer> bucketList = new TreeSet<>();
+			Set<Integer> bucketList = new HashSet<>();
 			while (bucketList.size() < w) {
 				bucketList.add(random.nextInt(n));
 			}
@@ -681,11 +697,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 		private int seed;
 		private Double offset;
+		private int maxBuckets;
 
 		private Builder() {
 			w = DEFAULT_W;
 			n = DEFAULT_N;
 			seed = DEFAULT_SEED;
+			maxBuckets = DEFAULT_MAX_BUCKETS;
 			encVerbosity = DEFAULT_VERBOSITY;
 		}
 
@@ -695,6 +713,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			super.build();
 			((RandomDistributedScalarEncoder) encoder).setSeed(this.seed);
 			((RandomDistributedScalarEncoder) encoder).setOffset(this.offset);
+			((RandomDistributedScalarEncoder) encoder)
+					.setMaxBuckets(this.maxBuckets);
 			((RandomDistributedScalarEncoder) encoder).init();
 			return (RandomDistributedScalarEncoder) encoder;
 		}
@@ -706,6 +726,11 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 		public RandomDistributedScalarEncoder.Builder offset(Double offset) {
 			this.offset = offset;
+			return this;
+		}
+
+		public RandomDistributedScalarEncoder.Builder maxBuckets(int maxBuckets) {
+			this.maxBuckets = maxBuckets;
 			return this;
 		}
 
