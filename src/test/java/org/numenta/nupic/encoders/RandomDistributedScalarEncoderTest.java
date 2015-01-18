@@ -413,13 +413,13 @@ public class RandomDistributedScalarEncoderTest {
 				bucketMap.overlapOK(midIdx - 3, midIdx - 1));
 
 		// We 'll just use our own numbers
+		int maxOverlap = 2;
 		assertTrue("overlapOK didn't work for far values",
 				bucketMap.overlapOK(100, 50, 0));
-		assertTrue("overlapOK didn't work for far values", bucketMap.overlapOK(
-				100, 50, RandomDistributedScalarEncoder.MAX_OVERLAP));
+		assertTrue("overlapOK didn't work for far values",
+				bucketMap.overlapOK(100, 50, maxOverlap));
 		assertFalse("overlapOK didn't work for far values",
-				bucketMap.overlapOK(100, 50,
-						RandomDistributedScalarEncoder.MAX_OVERLAP + 1));
+				bucketMap.overlapOK(100, 50, maxOverlap + 1));
 		assertTrue("overlapOK didn't work for near values",
 				bucketMap.overlapOK(50, 50, 5));
 		assertTrue("overlapOK didn't work for near values",
@@ -427,8 +427,7 @@ public class RandomDistributedScalarEncoderTest {
 		assertTrue("overlapOK didn't work for near values",
 				bucketMap.overlapOK(46, 50, 1));
 		assertTrue("overlapOK didn't work for near values",
-				bucketMap.overlapOK(45, 50,
-						RandomDistributedScalarEncoder.MAX_OVERLAP));
+				bucketMap.overlapOK(45, 50, maxOverlap));
 		assertFalse("overlapOK didn't work for near values",
 				bucketMap.overlapOK(48, 50, 4));
 		assertFalse("overlapOK didn't work for near values",

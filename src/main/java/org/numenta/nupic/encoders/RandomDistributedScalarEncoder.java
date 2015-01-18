@@ -90,7 +90,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	// The largest overlap we allow for non-adjacent encodings
 	// TODO protected just for tests..? no way!
-	protected static final int MAX_OVERLAP = 2;
+	private static final int MAX_OVERLAP = 2;
 
 	// TODO org.numenta.nupic.util.MersenneTwister instead of java.util.Random?
 	private final Random random = new Random();
@@ -385,7 +385,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public void encodeIntoArray(Double inputData, int[] output) {
-		// TODO are we certain output is zeros?.. Arrays.fill(output, 0);
+		Arrays.fill(output, 0);
 		if (inputData == null) {
 			return;
 		}
