@@ -150,11 +150,11 @@ public class RandomDistributedScalarEncoderTest {
 		assertEquals(500, (int) enc.getBucketIndex(23.2));
 		assertEquals(500, (int) enc.getBucketIndex(23.3));
 		assertEquals(500, (int) enc.getBucketIndex(23.4));
-		assertEquals(500, (int) enc.getBucketIndex(23.5));
-		assertEquals(500, (int) enc.getBucketIndex(23.6));
-		assertEquals(500, (int) enc.getBucketIndex(23.7));
-		assertEquals(500, (int) enc.getBucketIndex(23.8));
-		assertEquals(500, (int) enc.getBucketIndex(23.9));
+		assertEquals(501, (int) enc.getBucketIndex(23.5));
+		assertEquals(501, (int) enc.getBucketIndex(23.6));
+		assertEquals(501, (int) enc.getBucketIndex(23.7));
+		assertEquals(501, (int) enc.getBucketIndex(23.8));
+		assertEquals(501, (int) enc.getBucketIndex(23.9));
 		assertEquals(501, (int) enc.getBucketIndex(24.0));
 		assertEquals(501, (int) enc.getBucketIndex(24.1));
 	}
@@ -170,17 +170,17 @@ public class RandomDistributedScalarEncoderTest {
 		RandomDistributedScalarEncoder enc = RandomDistributedScalarEncoder
 				.builder().resolution(1.0).build();
 		assertEquals(500, (int) enc.getBucketIndex(23.0));
-		assertEquals(499, (int) enc.getBucketIndex(22.9));
-		assertEquals(499, (int) enc.getBucketIndex(22.8));
-		assertEquals(499, (int) enc.getBucketIndex(22.7));
-		assertEquals(499, (int) enc.getBucketIndex(22.6));
+		assertEquals(500, (int) enc.getBucketIndex(22.9));
+		assertEquals(500, (int) enc.getBucketIndex(22.8));
+		assertEquals(500, (int) enc.getBucketIndex(22.7));
+		assertEquals(500, (int) enc.getBucketIndex(22.6));
 		assertEquals(499, (int) enc.getBucketIndex(22.5));
 		assertEquals(499, (int) enc.getBucketIndex(22.4));
 		assertEquals(499, (int) enc.getBucketIndex(22.3));
 		assertEquals(499, (int) enc.getBucketIndex(22.2));
 		assertEquals(499, (int) enc.getBucketIndex(22.1));
 		assertEquals(499, (int) enc.getBucketIndex(22.0));
-		assertEquals(498, (int) enc.getBucketIndex(21.9));
+		assertEquals(499, (int) enc.getBucketIndex(21.9));
 	}
 
 	/**
