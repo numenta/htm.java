@@ -528,7 +528,6 @@ public class RandomDistributedScalarEncoderTest {
 	 * Compute the sum of all on bits; equivelant to the number of on bits.
 	 */
 	private int sum(int[] x) {
-		System.out.println("Getting sum for " + Arrays.toString(x));
 		int count = 0;
 		for (int next : x) {
 			count += next;
@@ -562,7 +561,6 @@ public class RandomDistributedScalarEncoderTest {
 	 */
 	private boolean validateEncoder(RandomDistributedScalarEncoder enc,
 			int subsampling) {
-		System.out.println("Validating encoder!");
 		for (int i : range(enc.getMinIndex(), enc.getMaxIndex() + 1, 1)) {
 			for (int j : range(i + 1, enc.getMaxIndex() + 1, subsampling)) {
 				if (!enc.getBucketMap().overlapOK(i, j)) {
@@ -578,7 +576,7 @@ public class RandomDistributedScalarEncoderTest {
 	}
 
 	private int[] range(int start, int stop, int step) {
-		int[] r = new int[(stop - start) / step];
+		int[] r = new int[(int) Math.ceil((stop - start) / (double) step)];
 		int i = 0;
 		for (int x = start; x < stop; x += step) {
 			r[i] = x;
@@ -586,4 +584,5 @@ public class RandomDistributedScalarEncoderTest {
 		}
 		return r;
 	}
+
 }

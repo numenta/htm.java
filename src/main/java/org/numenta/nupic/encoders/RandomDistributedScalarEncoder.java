@@ -531,6 +531,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			// We will use this to test containment.
 			boolean[] newRepresentationBinary = new boolean[n];
 			for (int i : newRepresentation) {
+				if (newRepresentationBinary[i]) {
+					// Representation contains duplicates
+					return false;
+				}
 				newRepresentationBinary[i] = true;
 			}
 			// Midpoint
