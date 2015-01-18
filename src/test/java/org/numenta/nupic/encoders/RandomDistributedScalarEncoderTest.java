@@ -36,6 +36,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Unit tests for {@link RandomDistributedScalarEncoder}.
@@ -295,10 +296,11 @@ public class RandomDistributedScalarEncoderTest {
 		assertEquals("getWidth doesn't return the correct result", 500,
 				enc.getWidth());
 		assertEquals("getDescription doesn't return the correct result",
-				"theName", enc.getDescription());
+				Arrays.asList(new Tuple(1, "theName", 0)), enc.getDescription());
 		assertEquals(
 				"getDecoderOutputFieldTypes doesn't return the correct result",
-				(FieldMetaType.FLOAT), enc.getDecoderOutputFieldTypes());
+				Arrays.asList(FieldMetaType.FLOAT),
+				enc.getDecoderOutputFieldTypes());
 	}
 
 	/**

@@ -134,7 +134,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		this.offset = offset;
 		this.seed = seed;
 		this.verbosity = verbosity;
-		this.description.add(new Tuple(2, name, 0));
 	}
 
 	public void init() {
@@ -179,6 +178,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	@Override
 	public List<FieldMetaType> getDecoderOutputFieldTypes() {
 		return Arrays.asList(FieldMetaType.FLOAT);
+	}
+
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		description.clear();
+		description.add(new Tuple(1, name, 0));
 	}
 
 	/**
