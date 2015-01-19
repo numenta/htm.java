@@ -122,12 +122,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public void initEncoder(double resolution, int w, int n, Double offset,
 			long seed) {
 
-		// MersenneTwister says it is better to pass an int seed even though it
-		// accepts long??
-		if(seed == -1)
-			rng = new MersenneTwister();
-		else
-			rng = new MersenneTwister(seed);
+		rng = seed == -1 ? new MersenneTwister() : new MersenneTwister(seed);
 
 		initializeBucketMap(getMaxBuckets(), getOffset());
 
@@ -370,12 +365,20 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * @return
 	 */
 	public boolean overlapOK(int i, int j, int overlap) {
-		if (Math.abs(i - j) < getW() && (overlap == (getW() - Math.abs(i - j))))
-			return true;
-		else if (overlap <= getMaxOverlap())
-			return true;
+		if (Math.abs(i - j) < getW())
+		{
+			if((overlap == (getW() - Math.abs(i - j))))
+				return true;
+			else
+				return false;
+		}
 		else
-			return false;
+		{
+			if(overlap <= getMaxOverlap())
+				return true;
+			else
+				return false;
+		}
 	}
 
 	/**
