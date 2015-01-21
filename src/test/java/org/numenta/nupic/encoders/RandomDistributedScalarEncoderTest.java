@@ -33,8 +33,12 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testEncoding() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
-				.resolution(1).w(23).n(500).setOffset(0);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.w(23)
+				.n(500)
+				.setOffset(0);
 		rdse = builder.build();
 
 		int e0[] = rdse.encode(-0.1);
@@ -67,7 +71,8 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testMissingValues() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
 
@@ -80,7 +85,8 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testResolution() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
 
@@ -104,7 +110,9 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testMapBucketIndexToNonZeroBits() {
-		builder = RandomDistributedScalarEncoder.builder().resolution(1).w(11)
+		builder = RandomDistributedScalarEncoder.builder()
+				.resolution(1)
+				.w(11)
 				.n(150);
 		rdse = builder.build();
 
@@ -148,7 +156,11 @@ public class RandomDistributedScalarEncoderTest {
 		// n must be >= 6 * w
 		exception.expect(IllegalStateException.class);
 		exception.expectMessage("n must be strictly greater than 6*w. For good results we recommend n be strictly greater than 11*w.");
-		RandomDistributedScalarEncoder.builder().n((int) (5.9 * 21)).w(21).resolution(1).build();
+		RandomDistributedScalarEncoder.builder()
+			.n((int) (5.9 * 21))
+			.w(21)
+			.resolution(1)
+			.build();
 	}
 
 	/**
@@ -159,7 +171,11 @@ public class RandomDistributedScalarEncoderTest {
 		// w can 't be negative
 		exception.expect(IllegalStateException.class);
 		exception.expectMessage("W must be an odd possitive integer (to eliminate centering difficulty)");
-		RandomDistributedScalarEncoder.builder().n(500).w(6).resolution(2).build();
+		RandomDistributedScalarEncoder.builder()
+			.n(500)
+			.w(6)
+			.resolution(2)
+			.build();
 	}
 
 	/**
@@ -170,13 +186,20 @@ public class RandomDistributedScalarEncoderTest {
 		// resolution can 't be negative
 		exception.expect(IllegalStateException.class);
 		exception.expectMessage("Resolution must be a possitive number");
-		RandomDistributedScalarEncoder.builder().n(500).w(5).resolution(-1).build();
+		RandomDistributedScalarEncoder.builder()
+			.n(500)
+			.w(5)
+			.resolution(-1)
+			.build();
 	}
 
 	@Test
 	public void testOverlapStatistics() {
-		builder = RandomDistributedScalarEncoder.builder().resolution(1).w(11)
-				.n(150).setSeed(RandomDistributedScalarEncoder.DEFAULT_SEED);
+		builder = RandomDistributedScalarEncoder.builder()
+				.resolution(1)
+				.w(11)
+				.n(150)
+				.setSeed(RandomDistributedScalarEncoder.DEFAULT_SEED);
 		rdse = builder.build();
 
 		rdse.encode(0.0);
@@ -189,8 +212,10 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testGetMethods() {
-		builder = RandomDistributedScalarEncoder.builder().name("theName")
-				.resolution(1).n(500);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("theName")
+				.resolution(1)
+				.n(500);
 		rdse = builder.build();
 
 		assertEquals("getWidth doesn't return the correct result", 500,
@@ -200,7 +225,6 @@ public class RandomDistributedScalarEncoderTest {
 				new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2,
 						"theName", 0) })), rdse.getDescription());
 
-		// TODO Discuss if this test is needed
 		assertThat(
 				"getDecoderOutputFieldTypes doesn't return the correct result",
 				rdse.getDecoderOutputFieldTypes(),
@@ -209,7 +233,8 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testOffset() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
 				.resolution(1);
 		rdse = builder.build();
 
@@ -218,8 +243,10 @@ public class RandomDistributedScalarEncoderTest {
 				"Offset not initialized to specified constructor parameter",
 				23, rdse.getOffset(), 0);
 
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
-				.resolution(1).setOffset(25.0);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.setOffset(25.0);
 		rdse = builder.build();
 
 		rdse.encode(23.0);
@@ -230,7 +257,8 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testSeed() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
 				.resolution(1);
 
 		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
@@ -253,8 +281,11 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testCountOverlapIndices() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
-				.resolution(1).w(5).n(5 * 20);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.w(5)
+				.n(5 * 20);
 		rdse = builder.build();
 
 		int midIdx = rdse.getMaxBuckets() / 2;
@@ -268,14 +299,6 @@ public class RandomDistributedScalarEncoderTest {
 		rdse.minIndex = midIdx - 2;
 		rdse.maxIndex = midIdx + 3;
 
-		// TODO Indices must exist
-		/*
-		exception.expect(IllegalStateException.class);
-		exception.expectMessage(allOf(startsWith("index"),endsWith("don't exist")));
-		rdse.countOverlapIndices(midIdx - 3, midIdx - 2);
-		rdse.countOverlapIndices(midIdx - 2, midIdx - 3);
-		*/
-		
 		// Test some overlaps
 		assertEquals("countOverlapIndices didn't work", 5,
 				rdse.countOverlapIndices(midIdx - 2, midIdx - 2));
@@ -286,11 +309,64 @@ public class RandomDistributedScalarEncoderTest {
 		assertEquals("countOverlapIndices didn't work", 0,
 				rdse.countOverlapIndices(midIdx - 2, midIdx + 3));
 	}
+	
+	@Test
+	public void testCountOverlapIndeciesWithWrongIndices_i_j() {
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.w(5)
+				.n(5 * 20);
+		rdse = builder.build();
+
+		int midIdx = rdse.getMaxBuckets() / 2;
+
+		rdse.bucketMap.put(midIdx - 2, getRangeAsList(3, 8));
+		rdse.bucketMap.put(midIdx - 1, getRangeAsList(4, 9));
+		rdse.bucketMap.put(midIdx, getRangeAsList(5, 10));
+		rdse.bucketMap.put(midIdx + 1, getRangeAsList(6, 11));
+		rdse.bucketMap.put(midIdx + 2, getRangeAsList(7, 12));
+		rdse.bucketMap.put(midIdx + 3, getRangeAsList(8, 13));
+		rdse.minIndex = midIdx - 2;
+		rdse.maxIndex = midIdx + 3;
+
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage( allOf( startsWith("index"), endsWith("don't exist") ) );
+		rdse.countOverlapIndices(midIdx - 3, midIdx - 4);
+	}
+	
+	@Test
+	public void testCountOverlapIndeciesWithWrongIndices_i() {
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.w(5)
+				.n(5 * 20);
+		rdse = builder.build();
+
+		int midIdx = rdse.getMaxBuckets() / 2;
+
+		rdse.bucketMap.put(midIdx - 2, getRangeAsList(3, 8));
+		rdse.bucketMap.put(midIdx - 1, getRangeAsList(4, 9));
+		rdse.bucketMap.put(midIdx, getRangeAsList(5, 10));
+		rdse.bucketMap.put(midIdx + 1, getRangeAsList(6, 11));
+		rdse.bucketMap.put(midIdx + 2, getRangeAsList(7, 12));
+		rdse.bucketMap.put(midIdx + 3, getRangeAsList(8, 13));
+		rdse.minIndex = midIdx - 2;
+		rdse.maxIndex = midIdx + 3;
+
+		exception.expect(IllegalStateException.class);
+		exception.expectMessage( allOf( startsWith("index"), endsWith("doesn't exist") ) );
+		rdse.countOverlapIndices(midIdx - 3, midIdx - 2);
+	}
 
 	@Test
 	public void testOverlapOK() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
-				.resolution(1).w(5).n(5 * 20);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.w(5)
+				.n(5 * 20);
 		rdse = builder.build();
 
 		int midIdx = rdse.getMaxBuckets() / 2;
@@ -337,8 +413,10 @@ public class RandomDistributedScalarEncoderTest {
 
 	@Test
 	public void testCountOverlap() {
-		builder = RandomDistributedScalarEncoder.builder().name("enc")
-				.resolution(1).n(500);
+		builder = RandomDistributedScalarEncoder.builder()
+				.name("enc")
+				.resolution(1)
+				.n(500);
 		rdse = builder.build();
 
 		int[] r1 = new int[] { 1, 2, 3, 4, 5, 6 };
@@ -390,6 +468,17 @@ public class RandomDistributedScalarEncoderTest {
 		return Arrays.asList(arr);
 	}
 
+	@Test
+	public void testGetOnBitsMethod()
+	{
+		int input1[] = new int[] {1,0,0,0,1};
+		int input2[] = new int[] {1,0,2,0,1};
+		
+		assertEquals("getOnBits returned wrong value ", 2, getOnBits(input1));
+		assertEquals("getOnBits did not return -1 for invalid input", -1, getOnBits(input2));
+	}
+	
+	
 	private boolean validateEncoder(RandomDistributedScalarEncoder encoder,
 			int subsampling) {
 		for (int i = encoder.minIndex; i <= encoder.maxIndex; i++) {
@@ -416,7 +505,12 @@ public class RandomDistributedScalarEncoderTest {
 	private int getOnBits(int[] input) {
 		int onBits = 0;
 		for (int i : input)
-			onBits += i;
+		{
+			if( i == 1 )
+				onBits += 1;
+			else if( i != 0 )
+				return -1;
+		}
 		return onBits;
 	}
 }

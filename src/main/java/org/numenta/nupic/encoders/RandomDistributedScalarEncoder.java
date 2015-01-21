@@ -387,10 +387,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public boolean overlapOK(int i, int j, int overlap) {
 		if (Math.abs(i - j) < getW() && overlap == (getW() - Math.abs(i - j)))
 			return true;
-		else if (Math.abs(i - j) >= getW() && overlap <= getMaxOverlap())
+		if (Math.abs(i - j) >= getW() && overlap <= getMaxOverlap())
 			return true;
-		else
-			return false;
+		
+		return false;
 	}
 
 	/**
@@ -424,9 +424,9 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		} else if (!containsI && !containsJ)
 			throw new IllegalStateException("index " + i + " and " + j + " don't exist");
 		else if(!containsI)
-			throw new IllegalStateException("index " + i + " don't exist");
+			throw new IllegalStateException("index " + i + " doesn't exist");
 		else
-			throw new IllegalStateException("index " + j + " don't exist");
+			throw new IllegalStateException("index " + j + " doesn't exist");
 	}
 
 	/**
