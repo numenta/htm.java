@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
  * Utilities for generating and manipulating patterns consisting of consecutive
  * sequences of numbers, for use in experimentation and tests.
  * 
+ * @author Chetan Surpur
  * @author David Ray
  *
  * @see PatternMachine
