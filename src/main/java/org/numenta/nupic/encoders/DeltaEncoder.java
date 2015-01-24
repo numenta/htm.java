@@ -23,6 +23,8 @@
 package org.numenta.nupic.encoders;
 
 public class DeltaEncoder extends AdaptiveScalarEncoder {
+	
+	public boolean learn;
 
 	/**
 	 * 
@@ -67,5 +69,17 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 			((DeltaEncoder) encoder).init();
 			return (DeltaEncoder) encoder;
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#encodeIntoArray(java.lang.Double, int[])
+	 */
+	@Override
+	public void encodeIntoArray(Double input, int[] output) {
+		if (!(input instanceof Double)) {
+			throw new IllegalArgumentException(
+					String.format("Expected a Double input but got input of type %s", input.toString()));
+		}
+		super.encodeIntoArray(input, output);
 	}
 }

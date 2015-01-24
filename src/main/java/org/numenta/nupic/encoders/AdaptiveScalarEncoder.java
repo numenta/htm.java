@@ -25,6 +25,12 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	 * dataset, and therefore does not reflect the statistical distribution of
 	 * the input data and may not be used to calculate the median, mean etc.
 	 */
+	
+	public int recordNum = 0;
+	public boolean learningEnabled = true;
+	public Double[] slidingWindow = new Double[0];
+	public int windowSize = 300;
+	public Double bucketValues;
 
 	/*
 	 * (non-Javadoc)
@@ -100,4 +106,75 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return super.topDownCompute(encoded);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#encodeIntoArray(java.lang.Double, int[])
+	 */
+	@Override
+	public void encodeIntoArray(Double input, int[] output) {
+		this.recordNum += 1;
+		boolean learn = false;
+		if (!this.encLearningEnabled) {
+			learn = true;
+		}
+		if (input == AdaptiveScalarEncoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
+			Arrays.fill(output, 0);
+		} else if (!Double.isNaN(input)) {
+			this.setMinAndMax(input, learn);
+		}
+		super.encodeIntoArray(input, output);
+	}
+
+	private void setMinAndMax(Double input, boolean learn) {
+		if (slidingWindow.length >= windowSize) {
+			slidingWindow = deleteItem(slidingWindow, 0);
+		}
+		slidingWindow = appendItem(slidingWindow, input);
+		
+		if (this.minVal == this.maxVal) {
+			this.minVal = input;
+			this.maxVal = input + 1;
+			setEncoderParams();
+		} else {
+			Double[] sorted = Arrays.copyOf(slidingWindow, slidingWindow.length);
+			Arrays.sort(sorted);
+			double minOverWindow = sorted[0];
+			double maxOverWindow = sorted[sorted.length - 1];
+			if (minOverWindow < this.minVal) {
+				if (this.verbosity >= 2) {
+					System.out.println(String.format("Input %s=%d smaller than minval %d. Adjusting minval to %d",
+							this.name, input, this.minVal, minOverWindow));
+					this.minVal = minOverWindow;
+					setEncoderParams();
+				}
+			}
+			if (maxOverWindow > this.maxVal) {
+				if (this.verbosity >= 2) {
+					System.out.println(String.format("Input %s=%d greater than maxval %d. Adjusting maxval to %d",
+							this.name, input, this.minVal, minOverWindow));
+					this.maxVal = maxOverWindow;
+					setEncoderParams();
+				}
+			}
+		}
+	}
+
+	private void setEncoderParams() {
+		this.rangeInternal = this.maxVal - this.minVal;
+		this.resolution = this.rangeInternal / (this.n - this.w);
+		this.radius = this.w * this.resolution;
+		this.range = this.rangeInternal + this.resolution;
+		this.nInternal = this.n - 2 * this.padding;
+		this.bucketValues = null;
+	}
+
+	private Double[] appendItem(Double[] a, Double input) {
+		a = Arrays.copyOf(a, a.length + 1);
+		a[a.length - 1] = input;
+		return a;
+	}
+
+	private Double[] deleteItem(Double[] a, int i) {
+		a = Arrays.copyOfRange(a, 1, a.length - 1);
+		return a;
+	}
 }
