@@ -200,7 +200,6 @@ public class CLAClassifier {
 		}
 		
 		patternNZHistory.append(new Tuple(2, learnIteration, patternNZ));
-		System.out.println("deque size = " + learnIteration + "  " + patternNZHistory);
 		
 		//------------------------------------------------------------------------
 	    // Inference:
