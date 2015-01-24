@@ -22,6 +22,7 @@
 
 package org.numenta.nupic;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -812,7 +813,7 @@ public class Parameters {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{ Spatial\n")
-            .append("\t").append("inputDimensions :  ").append(getParameterByKey(KEY.INPUT_DIMENSIONS)).append("\n")
+            .append("\t").append("inputDimensions :  ").append(Arrays.toString((int[])getParameterByKey(KEY.INPUT_DIMENSIONS))).append("\n")
             .append("\t").append("potentialRadius :  ").append(getParameterByKey(KEY.POTENTIAL_RADIUS)).append("\n")
             .append("\t").append("potentialPct :  ").append(getParameterByKey(KEY.POTENTIAL_PCT)).append("\n")
             .append("\t").append("globalInhibition :  ").append(getParameterByKey(KEY.GLOBAL_INHIBITIONS)).append("\n")
@@ -834,7 +835,7 @@ public class Parameters {
             .append("{ Temporal\n")
             .append("\t").append("activationThreshold :  ").append(getParameterByKey(KEY.ACTIVATION_THRESHOLD)).append("\n")
             .append("\t").append("cellsPerColumn :  ").append(getParameterByKey(KEY.CELLS_PER_COLUMN)).append("\n")
-            .append("\t").append("columnDimensions :  ").append(getParameterByKey(KEY.COLUMN_DIMENSIONS)).append("\n")
+            .append("\t").append("columnDimensions :  ").append(Arrays.toString((int[])getParameterByKey(KEY.COLUMN_DIMENSIONS))).append("\n")
             .append("\t").append("connectedPermanence :  ").append(getParameterByKey(KEY.CONNECTED_PERMANENCE)).append("\n")
             .append("\t").append("initialPermanence :  ").append(getParameterByKey(KEY.INITIAL_PERMANENCE)).append("\n")
             .append("\t").append("maxNewSynapseCount :  ").append(getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT)).append("\n")
