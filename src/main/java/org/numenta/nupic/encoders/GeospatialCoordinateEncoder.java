@@ -22,9 +22,6 @@
 
 package org.numenta.nupic.encoders;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.numenta.nupic.util.Tuple;
 
 public class GeospatialCoordinateEncoder extends CoordinateEncoder {
