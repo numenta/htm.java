@@ -26,15 +26,14 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.util.Tuple;
 
 /**
  * A MultiEncoder encodes a dictionary or object with
@@ -56,7 +55,6 @@ public class MultiEncoder extends Encoder<Object> {
 	protected List<Tuple> categoryList;
 	
 	protected int width;
-	protected List<Tuple> description = new ArrayList<Tuple>();
 	
 	/**
 	 * Constructs a new {@code MultiEncoder}
@@ -194,6 +192,8 @@ public class MultiEncoder extends Encoder<Object> {
 				return ScalarEncoder.builder();
 			case "SparsePassThroughEncoder":
 				return SparsePassThroughEncoder.sparseBuilder();
+            case "SDRCategoryEncoder":
+                return SDRCategoryEncoder.builder();
 			default:
 				throw new IllegalArgumentException("Invalid encoder: " + encoderName);
 		}
@@ -276,11 +276,6 @@ public class MultiEncoder extends Encoder<Object> {
 			Encoder encoder = t.getEncoder();
 			encoder.setLearningEnabled(learningEnabled);	
 		}
-	}
-
-	@Override
-	public List<Tuple> getDescription() {
-		return description;
 	}
     
 	@Override

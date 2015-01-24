@@ -25,12 +25,6 @@ package org.numenta.nupic.research;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
@@ -39,7 +33,11 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
-import org.numenta.nupic.util.TypeFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -86,7 +84,7 @@ public class SpatialPooler {
     public void initMatrices(final Connections c) {
     	SparseObjectMatrix<Column> mem = c.getMemory();
     	c.setMemory(mem == null ? 
-    		mem = new SparseObjectMatrix<Column>(c.getColumnDimensions()) : mem);
+    		mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
         
         //Calculate numInputs and numColumns
@@ -96,14 +94,7 @@ public class SpatialPooler {
         c.setNumColumns(numColumns);
         
         //Fill the sparse matrix with column objects
-        TypeFactory<Column> factory = new TypeFactory<Column>() {
-        	int index = 0;
-        	@Override public Column make(int... args) { return new Column(c.getCellsPerColumn(), index++); }
-        	@Override public Class<Column> typeClass() { return Column.class; }
-        };
-        Column[] columns = new SparseObjectMatrix<Column>(
-        	new int[] { numColumns }).asDense(factory);
-        for(int i = 0;i < numColumns;i++) { mem.set(i, columns[i]); }
+        for(int i = 0;i < numColumns;i++) { mem.set(i, new Column(c.getCellsPerColumn(), i)); }
         
         c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
         
@@ -175,7 +166,6 @@ public class SpatialPooler {
      *                          of the model. Setting learning to 'off' freezes the SP
      *                          and has many uses. For example, you might want to feed in
      *                          various inputs and examine the resulting SDR's.
-     * @param l
      */
     public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
@@ -440,6 +430,7 @@ public class SpatialPooler {
      */
     public void adaptSynapses(Connections c, int[] inputVector, int[] activeColumns) {
     	int[] inputIndices = ArrayUtils.where(inputVector, new Condition.Adapter<Object>() {
+            @Override
     		public boolean eval(int i) { return i > 0; }
     	});
     	double[] permChanges = new double[c.getNumInputs()];
@@ -483,14 +474,15 @@ public class SpatialPooler {
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
-     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * 'stimulusThreshold' overlaps in order to be considered during the
      * inhibition phase, columns without such minimal number of connections, even
      * if all the input bits they are connected to turn on, have no chance of
      * obtaining the minimum threshold. For such columns, the permanence values
      * are increased until the minimum number of connections are formed.
      * 
-     * @param l
-     * @param perm
+     * @param c					the {@link Connections} memory
+     * @param perm				the permanence values
+     * @param maskPotential			
      */
     public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
@@ -514,8 +506,8 @@ public class SpatialPooler {
      * 
      * Note: This method services the "sparse" versions of corresponding methods
      * 
-     * @param l
-     * @param perm
+     * @param c         The {@link Connections} memory
+     * @param perm		permanence values
      */
     public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
@@ -695,8 +687,7 @@ public class SpatialPooler {
         		ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
         			0.5));
         int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
-        int inputIndex = c.getInputMatrix().computeIndex(inputCoordInts);
-        return inputIndex;
+        return c.getInputMatrix().computeIndex(inputCoordInts);
     }
     
     /**
@@ -720,7 +711,7 @@ public class SpatialPooler {
      *   1-D index to 2-D position.
      * 
      * @param c	            {@link Connections} the main memory model
-     * @param index         The index identifying a column in the permanence, potential
+     * @param columnIndex   The index identifying a column in the permanence, potential
      *                      and connectivity matrices.
      * @param wrapAround    A boolean value indicating that boundaries should be
      *                      ignored.
@@ -734,9 +725,7 @@ public class SpatialPooler {
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
         
-        int[] sample = ArrayUtils.sample((int)Math.round(indices.size() * c.getPotentialPct()), indices, c.getRandom());
-        
-        return sample;
+        return ArrayUtils.sample((int)Math.round(indices.size() * c.getPotentialPct()), indices, c.getRandom());
     }
 
     /**
@@ -748,7 +737,7 @@ public class SpatialPooler {
      * defined as those columns that are 'radius' indices away from it in each
      * dimension. The method returns a list of the flat indices of these columns.
      * 
-     * @param poolerMem     		matrix configured to this {@code SpatialPooler}'s dimensions 
+     * @param c     		        matrix configured to this {@code SpatialPooler}'s dimensions
      *                      		for transformation work.
      * @param columnIndex   		The index identifying a column in the permanence, potential
      *                      		and connectivity matrices.
@@ -769,7 +758,7 @@ public class SpatialPooler {
     public TIntArrayList getNeighborsND(Connections c, int columnIndex, SparseMatrix<?> topology, int inhibitionRadius, boolean wrapAround) {
         final int[] dimensions = topology.getDimensions();
         int[] columnCoords = topology.computeCoordinates(columnIndex);
-        List<int[]> dimensionCoords = new ArrayList<int[]>();
+        List<int[]> dimensionCoords = new ArrayList<>();
         for(int i = 0;i < dimensions.length;i++) {
             int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
             int[] curRange = new int[range.length];
@@ -780,7 +769,6 @@ public class SpatialPooler {
                 }
             }else{
                 final int idx = i;
-                curRange = range;
                 curRange = ArrayUtils.retainLogicalAnd(range, 
                     new Condition[] {
                         new Condition.Adapter<Integer>() {
@@ -878,11 +866,11 @@ public class SpatialPooler {
     	overlaps = Arrays.copyOf(overlaps, overlaps.length);
     	
     	double density;
-    	double inhibitionArea = 0;
+    	double inhibitionArea;
     	if((density = c.getLocalAreaDensity()) <= 0) {
     		inhibitionArea = Math.pow(2 * c.getInhibitionRadius() + 1, c.getColumnDimensions().length);
     		inhibitionArea = Math.min(c.getNumColumns(), inhibitionArea);
-    		density = ((double)c.getNumActiveColumnsPerInhArea()) / inhibitionArea;
+    		density = c.getNumActiveColumnsPerInhArea() / inhibitionArea;
     		density = Math.min(density, 0.5);
     	}
     	
@@ -987,7 +975,7 @@ public class SpatialPooler {
     	final double[] activeDutyCycles = c.getActiveDutyCycles();
     	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
     	
-    	double[] boostInterim = null;
+    	double[] boostInterim;
     	if(mask.length < 1) {
     		boostInterim = c.getBoostFactors();
     	}else{
