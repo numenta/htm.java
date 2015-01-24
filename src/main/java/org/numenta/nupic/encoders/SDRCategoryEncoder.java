@@ -25,6 +25,7 @@ import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
@@ -60,7 +61,8 @@ public class SDRCategoryEncoder extends Encoder<String> {
     /**
      * Inner class for keeping Categories and SDRs in ordered way
      */
-    private static final class SDRByCategoryMap extends LinkedHashMap<String, int[]> {
+    @SuppressWarnings("serial")
+	private static final class SDRByCategoryMap extends LinkedHashMap<String, int[]> {
 
         public int[] getSdr(int index) {
             Map.Entry<String, int[]> entry = this.getEntry(index);
@@ -374,7 +376,8 @@ public class SDRCategoryEncoder extends Encoder<String> {
     /**
      * {@inheritDoc}
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public <S> List<S> getBucketValues(Class<S> returnType) {
         return new ArrayList<>((Collection<S>)this.sdrByCategory.keySet());
     }

@@ -38,6 +38,7 @@ import java.util.TreeMap;
  * Utilities for generating and manipulating patterns, for use in
  * experimentation and tests.
  * 
+ * @author Chetan Surpur
  * @author David Ray
  *
  * @see ConsecutivePatternMachine

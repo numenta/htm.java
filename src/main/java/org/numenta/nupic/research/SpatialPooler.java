@@ -92,9 +92,12 @@ public class SpatialPooler {
         int numColumns = c.getMemory().getMaxIndex() + 1;
         c.setNumInputs(numInputs);
         c.setNumColumns(numColumns);
+        
         //Fill the sparse matrix with column objects
         for(int i = 0;i < numColumns;i++) { mem.set(i, new Column(c.getCellsPerColumn(), i)); }
+        
         c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
+        
         c.setConnectedMatrix(new SparseBinaryMatrix(new int[] { numColumns, numInputs }));
         
         double[] tieBreaker = new double[numColumns];
@@ -471,13 +474,15 @@ public class SpatialPooler {
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
-     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * 'stimulusThreshold' overlaps in order to be considered during the
      * inhibition phase, columns without such minimal number of connections, even
      * if all the input bits they are connected to turn on, have no chance of
      * obtaining the minimum threshold. For such columns, the permanence values
      * are increased until the minimum number of connections are formed.
      * 
-     * @param perm
+     * @param c					the {@link Connections} memory
+     * @param perm				the permanence values
+     * @param maskPotential			
      */
     public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
@@ -501,7 +506,8 @@ public class SpatialPooler {
      * 
      * Note: This method services the "sparse" versions of corresponding methods
      * 
-     * @param perm
+     * @param c         The {@link Connections} memory
+     * @param perm		permanence values
      */
     public void raisePermanenceToThresholdSparse(Connections c, double[] perm) {
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
@@ -705,7 +711,7 @@ public class SpatialPooler {
      *   1-D index to 2-D position.
      * 
      * @param c	            {@link Connections} the main memory model
-     * @param columnIndex         The index identifying a column in the permanence, potential
+     * @param columnIndex   The index identifying a column in the permanence, potential
      *                      and connectivity matrices.
      * @param wrapAround    A boolean value indicating that boundaries should be
      *                      ignored.
