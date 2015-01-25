@@ -757,6 +757,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public <S> List<S> getBucketValues(Class<S> returnType) {
 		return new ArrayList<>((Collection<S>)this.bucketMap.keySet());
