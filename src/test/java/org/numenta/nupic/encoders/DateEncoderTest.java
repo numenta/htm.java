@@ -12,8 +12,8 @@ import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotNull;
 
+@SuppressWarnings("unchecked")
 public class DateEncoderTest {
     private DateEncoder de;
     private DateEncoder.Builder builder;
@@ -208,11 +208,11 @@ public class DateEncoderTest {
         //System.out.println(String.format("2:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(notholiday, e.encode(d));
 
-        d = new DateTime(1999, 12, 26, 8, 00).toDate();
+        d = new DateTime(1999, 12, 26, 8, 0).toDate();
         //System.out.println(String.format("3:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(holiday2, e.encode(d));
 
-        d = new DateTime(2011, 12, 24, 16, 00).toDate();
+        d = new DateTime(2011, 12, 24, 16, 0).toDate();
         //System.out.println(String.format("4:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(holiday2, e.encode(d));
     }
@@ -230,7 +230,7 @@ public class DateEncoderTest {
                 "Monday"
         )).forced(true).build();
         DateEncoder e2 = DateEncoder.builder().weekend(21, 1).forced(true).build();
-        DateTime d = new DateTime(1988,5,29,20,00);
+        DateTime d = new DateTime(1988,5,29,20,0);
 
         assertArrayEquals(e.encode(d.toDate()), e2.encode(d.toDate()));
 

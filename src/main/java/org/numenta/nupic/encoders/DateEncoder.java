@@ -106,7 +106,7 @@ public class DateEncoder extends Encoder<Date> {
 
     // Currently the only holiday we know about is December 25
     // holidays is a list of holidays that occur on a fixed date every year
-    protected List<Tuple> HolidaysList = Arrays.asList(
+    protected List<Tuple> holidaysList = Arrays.asList(
             new Tuple(2, 12, 25)
     );
 
@@ -132,6 +132,7 @@ public class DateEncoder extends Encoder<Date> {
     /**
      * Init the {@code DateEncoder} with parameters
      */
+    @SuppressWarnings("unchecked")
     public void init() {
 
         width = 0;
@@ -393,16 +394,13 @@ public class DateEncoder extends Encoder<Date> {
 
         int fieldCounter = 0;
         for (EncoderTuple t : getEncoders(this)) {
-            String name = t.getName();
             Encoder encoder = t.getEncoder();
             int offset = t.getOffset();
 
             int[] tempArray = new int[encoder.getWidth()];
             encoder.encodeIntoArray(scalars.get(fieldCounter), tempArray);
 
-            for (int i = 0; i < tempArray.length; i++) {
-                output[i + offset] = tempArray[i];
-            }
+            System.arraycopy(tempArray, 0, output, offset, tempArray.length);
 
             ++fieldCounter;
         }
@@ -478,7 +476,7 @@ public class DateEncoder extends Encoder<Date> {
 
             double holidayness = 0;
 
-            for(Tuple h : HolidaysList) {
+            for(Tuple h : holidaysList) {
                 //hdate is midnight on the holiday
                 DateTime hdate = new DateTime(date.getYear(), (int)h.get(0), (int)h.get(1), 0, 0, 0);
 
@@ -674,6 +672,7 @@ public class DateEncoder extends Encoder<Date> {
         /**
          * Set how many bits are used to encode customDays
          */
+        @SuppressWarnings("unchecked")
         public DateEncoder.Builder customDays(int customDays) {
             return this.customDays(customDays, (ArrayList<String>) this.customDays.get(1));
         }
