@@ -22,9 +22,15 @@
 
 package org.numenta.nupic.encoders;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	
-	public boolean learn;
+	public double prevAbsolute = 0;
+	public double prevDelta = 0;
+	public boolean stateLock = false;
 
 	/**
 	 * 
@@ -80,6 +86,80 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 			throw new IllegalArgumentException(
 					String.format("Expected a Double input but got input of type %s", input.toString()));
 		}
-		super.encodeIntoArray(input, output);
+		boolean learn = false;
+		double delta = 0;
+		if (this.encLearningEnabled == false) {
+			learn = this.learningEnabled;
+		}
+		if (input == DeltaEncoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
+			output = new int[this.n];
+			Arrays.fill(output, 0);
+		} else {
+			if (this.prevAbsolute == 0) {
+				this.prevAbsolute = input;
+			}
+			delta = input - this.prevAbsolute;
+			super.encodeIntoArray(input, output);
+		}
+		if (!this.stateLock) {
+			this.prevAbsolute = input;
+			this.prevDelta = delta;
+		}
+	}
+
+	/**
+	 * @return the stateLock
+	 */
+	public boolean isStateLock() {
+		return stateLock;
+	}
+
+	/**
+	 * @param stateLock the stateLock to set
+	 */
+	public void setStateLock(boolean stateLock) {
+		this.stateLock = stateLock;
+	}
+
+	public void setFieldStats(String fieldName, String[] fieldParameters) {
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public boolean isDelta() {
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#getBucketInfo(int[])
+	 */
+	@Override
+	public List<EncoderResult> getBucketInfo(int[] buckets) {
+		return super.getBucketInfo(buckets);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#topDownCompute(int[])
+	 */
+	@Override
+	public List<EncoderResult> topDownCompute(int[] encoded) {
+		if (this.prevAbsolute == 0 || this.prevDelta == 0) {
+			int[] initialBuckets = new int[this.n];
+			Arrays.fill(initialBuckets, 0);
+			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
+			EncoderResult encoderResult = new EncoderResult(0, 0, initialBuckets);
+			encoderResultList.add(encoderResult);
+			return encoderResultList;
+		}
+		List<EncoderResult> erList = super.topDownCompute(encoded);
+		if (this.prevAbsolute != 0) {
+			double objVal = (double)(erList.get(0).getValue()) + this.prevAbsolute;
+			double objScalar = erList.get(0).getScalar().doubleValue() + this.prevAbsolute;
+			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
+			EncoderResult encoderResult = new EncoderResult(objVal, objScalar, erList.get(0).getEncoding());
+			encoderResultList.add(encoderResult);
+			return encoderResultList;
+		}
+		return erList;
 	}
 }

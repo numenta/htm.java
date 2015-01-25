@@ -177,4 +177,54 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		a = Arrays.copyOfRange(a, 1, a.length - 1);
 		return a;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketIndices(java.lang.String)
+	 */
+	@Override
+	public int[] getBucketIndices(String inputString) {
+		double input = Double.parseDouble(inputString);
+		return calculateBucketIndices(input);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketIndices(double)
+	 */
+	@Override
+	public int[] getBucketIndices(double input) {
+		return calculateBucketIndices(input);
+	}
+
+	private int[] calculateBucketIndices(double input) {
+		this.recordNum += 1;
+		boolean learn = false;
+		if (!this.encLearningEnabled) {
+			learn = true;
+		}
+		if ((Double.isNaN(input)) && (Double.valueOf(input) instanceof Double)) {
+			input = AdaptiveScalarEncoder.SENTINEL_VALUE_FOR_MISSING_DATA;
+		}
+		if (input == AdaptiveScalarEncoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
+			return new int[this.n];
+		} else {
+			this.setMinAndMax(input, learn);
+		}
+		return super.getBucketIndices(input);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketInfo(int[])
+	 */
+	@Override
+	public List<EncoderResult> getBucketInfo(int[] buckets) {
+		if (this.minVal == 0 || this.maxVal == 0) {
+			int[] initialBuckets = new int[this.n];
+			Arrays.fill(initialBuckets, 0);
+			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
+			EncoderResult encoderResult = new EncoderResult(0, 0, initialBuckets);
+			encoderResultList.add(encoderResult);
+			return encoderResultList;
+		}
+		return super.getBucketInfo(buckets);
+	}
 }
