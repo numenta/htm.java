@@ -399,7 +399,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		}else{//for non-periodic encoders, the bucket index is the index of the left bit
 			bucketIdx = minbin;
 		}
-		System.out.println("----------------------------------------------------- >   bucketIdx == " + bucketIdx);
+		
 		return new int[] { bucketIdx };
 	}
 	
