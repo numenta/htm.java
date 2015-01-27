@@ -102,18 +102,21 @@ public class DistalDendrite extends Segment {
      * @return
      */
     public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
-        Set<Synapse> connectedSynapses = new LinkedHashSet<Synapse>();
+        Set<Synapse> connectedSynapses = null;
         
         if(!activeSynapsesForSegment.containsKey(this)) {
-            return connectedSynapses;
+            return Collections.emptySet();
         }
         
         for(Synapse s : activeSynapsesForSegment.get(this)) {
             if(s.getPermanence() >= permanenceThreshold) {
+            	if(connectedSynapses == null) {
+            		connectedSynapses = new LinkedHashSet<Synapse>();
+            	}
                 connectedSynapses.add(s);
             }
         }
-        return connectedSynapses;
+        return connectedSynapses == null ? Collections.emptySet() : connectedSynapses;
     }
     
     /**
