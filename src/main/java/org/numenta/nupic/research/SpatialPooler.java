@@ -642,7 +642,6 @@ public class SpatialPooler {
         }
         
         double[] perm = new double[c.getNumInputs()];
-        Arrays.fill(perm, 0);
         for(int idx : potentialPool) {
         	if(pick.contains(idx)) {
                 perm[idx] = initPermConnected(c);
@@ -902,7 +901,6 @@ public class SpatialPooler {
     	int numCols = c.getNumColumns();
     	int numActive = (int)(density * numCols);
     	int[] activeColumns = new int[numCols];
-    	Arrays.fill(activeColumns, 0);
     	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
     	Arrays.sort(winners);
     	return winners;
@@ -923,7 +921,6 @@ public class SpatialPooler {
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
     	int numCols = c.getNumColumns();
     	int[] activeColumns = new int[numCols];
-    	Arrays.fill(activeColumns, 0);
     	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
     	for(int i = 0;i < numCols;i++) {
     		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
