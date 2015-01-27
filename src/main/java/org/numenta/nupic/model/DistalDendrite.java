@@ -45,6 +45,8 @@ public class DistalDendrite extends Segment {
     private Cell cell;
     private int index;
     
+    private static final Set<Synapse> EMPTY_SYNAPSE_SET = Collections.emptySet();
+    
     /**
      * Constructs a new {@code Segment} object with the specified
      * owner {@link Cell} and the specified index.
@@ -105,7 +107,7 @@ public class DistalDendrite extends Segment {
         Set<Synapse> connectedSynapses = null;
         
         if(!activeSynapsesForSegment.containsKey(this)) {
-            return Collections.emptySet();
+            return EMPTY_SYNAPSE_SET;
         }
         
         for(Synapse s : activeSynapsesForSegment.get(this)) {
@@ -116,7 +118,7 @@ public class DistalDendrite extends Segment {
                 connectedSynapses.add(s);
             }
         }
-        return connectedSynapses == null ? Collections.emptySet() : connectedSynapses;
+        return connectedSynapses == null ? EMPTY_SYNAPSE_SET : connectedSynapses;
     }
     
     /**
