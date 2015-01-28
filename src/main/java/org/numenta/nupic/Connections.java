@@ -115,6 +115,10 @@ public class Connections {
      */
     private SparseBinaryMatrix connectedCounts;
     /**
+     * Lazily instantiated set view of columns
+     */
+    private LinkedHashSet<Column> columnSet;
+    /**
      * The inhibition radius determines the size of a column's local
      * neighborhood. of a column. A cortical column must overcome the overlap
      * score of columns in his neighborhood in order to become actives. This
