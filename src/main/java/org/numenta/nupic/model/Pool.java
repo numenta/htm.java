@@ -22,9 +22,9 @@
 
 package org.numenta.nupic.model;
 
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.TIntHashSet;
 
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.util.ArrayUtils;
@@ -44,8 +44,13 @@ import org.numenta.nupic.util.ArrayUtils;
 public class Pool {
 	int size;
 	
-	TIntArrayList synapseConnections = new TIntArrayList();
-	TIntObjectMap<Synapse> synapsesByIndex = new TIntObjectHashMap<Synapse>();
+	/** Allows fast removal of connected synapse indexes. */
+	private TIntHashSet synapseConnections = new TIntHashSet();
+	/** 
+	 * Indexed according to the source Input Vector Bit (for ProximalDendrites),
+	 * and source cell (for DistalDendrites).
+	 */
+	private TIntObjectMap<Synapse> synapsesBySourceIndex = new TIntObjectHashMap<>();
 	
 	public Pool(int size) {
 		this.size = size;
@@ -58,7 +63,7 @@ public class Pool {
 	 * @return	the permanence
 	 */
 	public double getPermanence(Synapse s) {
-		return synapsesByIndex.get(s.getInputIndex()).getPermanence();
+		return synapsesBySourceIndex.get(s.getInputIndex()).getPermanence();
 	}
 	
 	/**
@@ -79,11 +84,13 @@ public class Pool {
 	 */
 	public void updatePool(Connections c, Synapse s, double permanence) {
 		int inputIndex = s.getInputIndex();
-		if(synapsesByIndex.get(inputIndex) == null) {
-			synapsesByIndex.put(inputIndex, s);
+		if(synapsesBySourceIndex.get(inputIndex) == null) {
+			synapsesBySourceIndex.put(inputIndex, s);
 		}
 		if(permanence > c.getSynPermConnected()) {
 			synapseConnections.add(inputIndex);
+		}else {
+			synapseConnections.remove(inputIndex);
 		}
 	}
 	
@@ -103,7 +110,7 @@ public class Pool {
 	 * @return
 	 */
 	public Synapse getSynapseWithInput(int inputIndex) {
-		return synapsesByIndex.get(inputIndex);
+		return synapsesBySourceIndex.get(inputIndex);
 	}
 	
 	/**
@@ -113,15 +120,15 @@ public class Pool {
 	public double[] getSparsePermanences() {
 		int i = 0;
 		double[] retVal = new double[size];
-		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
+		int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
 		for(int idx : keys) {
-			retVal[i++] = synapsesByIndex.get(idx).getPermanence();
+			retVal[i++] = synapsesBySourceIndex.get(idx).getPermanence();
 		}
 		return retVal;
 	}
 	
 	/**
-	 * Returns the a dense array representing the potential pool permanences
+	 * Returns a dense array representing the potential pool permanences
 	 * 
 	 * Note: Only called from tests for now...
 	 * @param c
@@ -129,24 +136,25 @@ public class Pool {
 	 */
 	public double[] getDensePermanences(Connections c) {
 		double[] retVal = new double[c.getNumInputs()];
-		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
+		int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
 		for(int inputIndex : keys) {
-			retVal[inputIndex] = synapsesByIndex.get(inputIndex).getPermanence();
+			retVal[inputIndex] = synapsesBySourceIndex.get(inputIndex).getPermanence();
 		}
 		return retVal;
 	}
 	
 	/**
-	 * Returns an array of input bit indexes.
-	 * @return
+	 * Returns an array of input bit indexes indicating the index of the source. 
+	 * (input vector bit or lateral cell)
+	 * @return the sparse array
 	 */
 	public int[] getSparseConnections() {
-		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
+		int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
 		return keys;
 	}
 	
 	/**
-	 * Returns the a dense array representing the potential pool bits
+	 * Returns a dense array representing the potential pool bits
 	 * with the connected bits set to 1. 
 	 * 
 	 * Note: Only called from tests for now...

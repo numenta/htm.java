@@ -53,6 +53,14 @@ public class TemporalMemory {
      * Uses the specified {@link Connections} object to Build the structural 
      * anatomy needed by this {@code TemporalMemory} to implement its algorithms.
      * 
+     * The connections object holds the {@link Column} and {@link Cell} infrastructure,
+     * and is used by both the {@link SpatialPooler} and {@link TemporalMemory}. Either of
+     * these can be used separately, and therefore this Connections object may have its
+     * Columns and Cells initialized by either the init method of the SpatialPooler or the
+     * init method of the TemporalMemory. We check for this so that complete initialization
+     * of both Columns and Cells occurs, without either being redundant (initialized more than
+     * once).
+     * 
      * @param	c		{@link Connections} object
      */
     public void init(Connections c) {

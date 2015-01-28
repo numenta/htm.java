@@ -108,13 +108,9 @@ public class SpatialPooler {
         
         //Initialize state meta-management statistics
         c.setOverlapDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getOverlapDutyCycles(), 0);
         c.setActiveDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getActiveDutyCycles(), 0);
         c.setMinOverlapDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getOverlapDutyCycles(), 0);
         c.setMinActiveDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getMinActiveDutyCycles(), 0);
         c.setBoostFactors(new double[numColumns]);
         Arrays.fill(c.getBoostFactors(), 1);
     }
@@ -498,7 +494,7 @@ public class SpatialPooler {
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
-     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * 'stimulusThreshold' overlaps in order to be considered during the
      * inhibition phase, columns without such minimal number of connections, even
      * if all the input bits they are connected to turn on, have no chance of
      * obtaining the minimum threshold. For such columns, the permanence values
@@ -900,7 +896,6 @@ public class SpatialPooler {
     public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
     	int numCols = c.getNumColumns();
     	int numActive = (int)(density * numCols);
-    	int[] activeColumns = new int[numCols];
     	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
     	Arrays.sort(winners);
     	return winners;

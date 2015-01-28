@@ -109,7 +109,7 @@ public class Connections {
     private double[] tieBreaker;
     /** 
      * Stores the number of connected synapses for each column. This is simply
-     * a sum of each row of 'self._connectedSynapses'. again, while this
+     * a sum of each row of 'connectedSynapses'. again, while this
      * information is readily available from 'connectedSynapses', it is
      * stored separately for efficiency purposes.
      */
@@ -856,7 +856,7 @@ public class Connections {
      * used if the duty cycle is >= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
-     * 2 endpoints.
+     * 2 end points.
      * 
      * @param maxBoost
      */
