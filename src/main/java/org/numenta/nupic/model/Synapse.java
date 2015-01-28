@@ -51,6 +51,7 @@ public class Synapse {
     private Pool pool;
     private int synapseIndex;
     private int inputIndex;
+    private double permanence;
     
     
     /**
@@ -103,7 +104,7 @@ public class Synapse {
      * @return
      */
     public double getPermanence() {
-        return pool.getPermanence(this);
+        return permanence;
     }
     
     /**
@@ -111,7 +112,8 @@ public class Synapse {
      * @param perm
      */
     public void setPermanence(Connections c, double perm) {
-        pool.setPermanence(c, this, perm);
+        this.permanence = perm;
+        pool.updatePool(c, this, perm);
     }
     
     /**

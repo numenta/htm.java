@@ -22,16 +22,9 @@
 
 package org.numenta.nupic.model;
 
-import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
-
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.util.ArrayUtils;
@@ -51,11 +44,8 @@ import org.numenta.nupic.util.ArrayUtils;
 public class Pool {
 	int size;
 	
-	TObjectDoubleMap<Synapse> synapsePermanences = new TObjectDoubleHashMap<Synapse>();
 	TIntArrayList synapseConnections = new TIntArrayList();
-	Set<Synapse> synapseOrdering = new LinkedHashSet<Synapse>();
-	
-	TIntObjectMap<SynapsePair> connectionPerms = new TIntObjectHashMap<SynapsePair>();
+	TIntObjectMap<Synapse> connectionPerms = new TIntObjectHashMap<Synapse>();
 	
 	public Pool(int size) {
 		this.size = size;
@@ -68,7 +58,7 @@ public class Pool {
 	 * @return	the permanence
 	 */
 	public double getPermanence(Synapse s) {
-		return synapsePermanences.get(s);
+		return connectionPerms.get(s.getInputIndex()).getPermanence();//synapsePermanences.get(s);
 	}
 	
 	/**
@@ -77,16 +67,24 @@ public class Pool {
 	 * @param permanence
 	 */
 	public void setPermanence(Connections c, Synapse s, double permanence) {
-		SynapsePair synPerm = null;
-		if((synPerm = connectionPerms.get(s.getInputIndex())) == null) {
-			connectionPerms.put(s.getInputIndex(), synPerm = new SynapsePair(s, permanence));
-			synapseOrdering.add(s);
+		updatePool(c, s, permanence);
+		s.setPermanence(c, permanence);
+	}
+	
+	/**
+	 * Updates this {@code Pool}'s store of permanences for the specified {@link Synapse}
+	 * @param c				the connections memory
+	 * @param s				the synapse who's permanence is recorded
+	 * @param permanence	the permanence value to record
+	 */
+	public void updatePool(Connections c, Synapse s, double permanence) {
+		int inputIndex = s.getInputIndex();
+		if(connectionPerms.get(inputIndex) == null) {
+			connectionPerms.put(inputIndex, s);
 		}
 		if(permanence > c.getSynPermConnected()) {
-			synapseConnections.add(s.getInputIndex());
+			synapseConnections.add(inputIndex);
 		}
-		synapsePermanences.put(s, permanence);
-		synPerm.setPermanence(permanence);
 	}
 	
 	/**
@@ -105,7 +103,7 @@ public class Pool {
 	 * @return
 	 */
 	public Synapse getSynapseWithInput(int inputIndex) {
-		return connectionPerms.get(inputIndex).getSynapse();
+		return connectionPerms.get(inputIndex);
 	}
 	
 	/**
@@ -115,8 +113,9 @@ public class Pool {
 	public double[] getSparsePermanences() {
 		int i = 0;
 		double[] retVal = new double[size];
-		for(Synapse s : synapseOrdering) {
-			retVal[i++] = connectionPerms.get(s.getInputIndex()).getPermanence();
+		int[] keys = ArrayUtils.reverse(connectionPerms.keys());
+		for(int idx : keys) {
+			retVal[i++] = connectionPerms.get(idx).getPermanence();
 		}
 		return retVal;
 	}
@@ -130,7 +129,8 @@ public class Pool {
 	 */
 	public double[] getDensePermanences(Connections c) {
 		double[] retVal = new double[c.getNumInputs()];
-		for(int inputIndex : connectionPerms.keys()) {
+		int[] keys = ArrayUtils.reverse(connectionPerms.keys());
+		for(int inputIndex : keys) {
 			retVal[inputIndex] = connectionPerms.get(inputIndex).getPermanence();
 		}
 		return retVal;
@@ -159,33 +159,5 @@ public class Pool {
 			retVal[inputIndex] = 1;
 		}
 		return retVal;
-	}
-	
-	/**
-	 * Used internally to associated a {@link Synapse} with its current
-	 * permanence value.
-	 * 
-	 * @author David Ray
-	 */
-	private class SynapsePair {
-		private Synapse synapse;
-		private double permanence;
-		
-		public SynapsePair(Synapse s, double p) {
-			this.synapse = s;
-			this.permanence = p;
-		}
-		
-		public Synapse getSynapse() {
-			return synapse;
-		}
-		
-		public double getPermanence() {
-			return permanence;
-		}
-		
-		public void setPermanence(double permanence) {
-			this.permanence = permanence;
-		}
 	}
 }
