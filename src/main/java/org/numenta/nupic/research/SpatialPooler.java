@@ -51,7 +51,7 @@ import java.util.Random;
  * > Connections c = new Connections();
  * > sp.init(c);
  * > for line in file:
- * >   inputVector = numpy.array(line)
+ * >   inputVector = prepared int[] (containing 1's and 0's)
  * >   sp.compute(inputVector)
  * 
  * @author David Ray

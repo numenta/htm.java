@@ -45,7 +45,7 @@ public class Pool {
 	int size;
 	
 	TIntArrayList synapseConnections = new TIntArrayList();
-	TIntObjectMap<Synapse> connectionPerms = new TIntObjectHashMap<Synapse>();
+	TIntObjectMap<Synapse> synapsesByIndex = new TIntObjectHashMap<Synapse>();
 	
 	public Pool(int size) {
 		this.size = size;
@@ -58,7 +58,7 @@ public class Pool {
 	 * @return	the permanence
 	 */
 	public double getPermanence(Synapse s) {
-		return connectionPerms.get(s.getInputIndex()).getPermanence();//synapsePermanences.get(s);
+		return synapsesByIndex.get(s.getInputIndex()).getPermanence();
 	}
 	
 	/**
@@ -79,8 +79,8 @@ public class Pool {
 	 */
 	public void updatePool(Connections c, Synapse s, double permanence) {
 		int inputIndex = s.getInputIndex();
-		if(connectionPerms.get(inputIndex) == null) {
-			connectionPerms.put(inputIndex, s);
+		if(synapsesByIndex.get(inputIndex) == null) {
+			synapsesByIndex.put(inputIndex, s);
 		}
 		if(permanence > c.getSynPermConnected()) {
 			synapseConnections.add(inputIndex);
@@ -103,7 +103,7 @@ public class Pool {
 	 * @return
 	 */
 	public Synapse getSynapseWithInput(int inputIndex) {
-		return connectionPerms.get(inputIndex);
+		return synapsesByIndex.get(inputIndex);
 	}
 	
 	/**
@@ -113,9 +113,9 @@ public class Pool {
 	public double[] getSparsePermanences() {
 		int i = 0;
 		double[] retVal = new double[size];
-		int[] keys = ArrayUtils.reverse(connectionPerms.keys());
+		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
 		for(int idx : keys) {
-			retVal[i++] = connectionPerms.get(idx).getPermanence();
+			retVal[i++] = synapsesByIndex.get(idx).getPermanence();
 		}
 		return retVal;
 	}
@@ -129,9 +129,9 @@ public class Pool {
 	 */
 	public double[] getDensePermanences(Connections c) {
 		double[] retVal = new double[c.getNumInputs()];
-		int[] keys = ArrayUtils.reverse(connectionPerms.keys());
+		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
 		for(int inputIndex : keys) {
-			retVal[inputIndex] = connectionPerms.get(inputIndex).getPermanence();
+			retVal[inputIndex] = synapsesByIndex.get(inputIndex).getPermanence();
 		}
 		return retVal;
 	}
@@ -141,7 +141,7 @@ public class Pool {
 	 * @return
 	 */
 	public int[] getSparseConnections() {
-		int[] keys = ArrayUtils.reverse(connectionPerms.keys());
+		int[] keys = ArrayUtils.reverse(synapsesByIndex.keys());
 		return keys;
 	}
 	

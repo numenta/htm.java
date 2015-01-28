@@ -43,7 +43,7 @@ import org.numenta.nupic.util.Tuple;
  * <pre>
  * An encoder takes a value and encodes it with a partial sparse representation
  * of bits.  The Encoder superclass implements:
- * - encode() - returns a numpy array encoding the input; syntactic sugar
+ * - encode() - returns an array encoding the input; syntactic sugar
  *   on top of encodeIntoArray. If pprint, prints the encoding to the terminal
  * - pprintHeader() -- prints a header describing the encoding to the terminal
  * - pprint() -- prints an encoding to the terminal
@@ -53,7 +53,7 @@ import org.numenta.nupic.util.Tuple;
  *                                      [`nupic.data.fieldmeta.FieldMetaType.XXXXX`]
  *                                      (e.g., [nupic.data.fieldmetaFieldMetaType.float])
  * - getWidth()                     --  returns the output width, in bits
- * - encodeIntoArray()              --  encodes input and puts the encoded value into the numpy output array,
+ * - encodeIntoArray()              --  encodes input and puts the encoded value into the output array,
  *                                      which is a 1-D array of length returned by getWidth()
  * - getDescription()               --  returns a list of (name, offset) pairs describing the
  *                                      encoded output
@@ -586,7 +586,7 @@ public abstract class Encoder<T> {
 	public abstract boolean isDelta();
 
 	/**
-	 * Encodes inputData and puts the encoded value into the numpy output array,
+	 * Encodes inputData and puts the encoded value into the output array,
      * which is a 1-D array of length returned by {@link #getW()}.
 	 *
      * Note: The output array is reused, so clear it before updating it.
@@ -1154,7 +1154,7 @@ public abstract class Encoder<T> {
      *                          always an int or float, and can be used for
      *                          numeric comparisons.
 	 *
-     *        -# encoding       This is the encoded bit-array (numpy array)
+     *        -# encoding       This is the encoded bit-array
      *                          that represents the best-guess value.
      *                          That is, if 'value' was passed to
      *                          encode(), an identical bit-array should be
