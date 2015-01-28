@@ -184,7 +184,7 @@ public class TemporalMemory {
      *   - mark the best matching cell as winner cell
      *     - (learning)
      *       - if it has no matching segment
-     *         - (optimization) if there are prev winner cells
+     *         - (optimization) if there are previous winner cells
      *           - add a segment to it
      *       - mark the segment as learning
      * 
@@ -198,10 +198,8 @@ public class TemporalMemory {
     public void burstColumns(ComputeCycle cycle, Connections c, Set<Column> activeColumns, Set<Column> predictedColumns, 
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
         
-        Set<Column> unpred = new LinkedHashSet<Column>(activeColumns);
-        
-        unpred.removeAll(predictedColumns);
-        for(Column column : unpred) {
+    	activeColumns.removeAll(predictedColumns);
+        for(Column column : activeColumns) {
             List<Cell> cells = column.getCells();
             cycle.activeCells.addAll(cells);
             
