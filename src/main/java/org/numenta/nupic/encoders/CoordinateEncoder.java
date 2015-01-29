@@ -138,6 +138,7 @@ public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder
 	 * @return	A value in the interval [0, 1), representing the
      *          order of the coordinate
 	 */
+	@Override
 	public double orderForCoordinate(int[] coordinate) {
 		random.setSeed(coordinate);
 		return random.nextDouble();
