@@ -1201,7 +1201,7 @@ public abstract class Encoder<T> {
 					denom = 1.0;
 				}
 
-				closeness = 1.0 - (double)err/denom;
+				closeness = 1.0 - err/denom;
 				if(closeness < 0) {
 					closeness = 0;
 				}
@@ -1236,7 +1236,7 @@ public abstract class Encoder<T> {
     public int[] rightVecProd(SparseObjectMatrix<int[]> matrix, int[] encoded) {
     	int[] retVal = new int[matrix.getMaxIndex() + 1];
     	for(int i = 0;i < retVal.length;i++) {
-    		int[] slice = (int[])matrix.getObject(i);
+    		int[] slice = matrix.getObject(i);
     		for(int j = 0;j < slice.length;j++) {
     			retVal[i] += (slice[j] * encoded[j]);
     		}
