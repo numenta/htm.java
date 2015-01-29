@@ -171,6 +171,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	/**
 	 * Returns true if the underlying encoder works on deltas
 	 */
+	@Override
 	public boolean isDelta() {
 		return false;
 	}
@@ -237,7 +238,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		if(!isForced()) {
 			checkReasonableSettings();
 		}
-        description.add(new Tuple(2, (name = getName()) == "None" ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
+        description.add(new Tuple(2, (name = getName()).equals("None") ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
 	}
 	
 	/**
@@ -338,13 +339,12 @@ public class ScalarEncoder extends Encoder<Double> {
 		
 		int centerbin;
 		if(isPeriodic()) {
-			centerbin = (int)((int)((input - getMinVal()) *  getNInternal() / getRange())) + getPadding();
+			centerbin = ((int)((input - getMinVal()) *  getNInternal() / getRange())) + getPadding();
 		}else{
-			centerbin = (int)((int)(((input - getMinVal()) + getResolution()/2) / getResolution())) + getPadding();
+			centerbin = ((int)(((input - getMinVal()) + getResolution()/2) / getResolution())) + getPadding();
 		}
 		
-		int minbin = centerbin - getHalfWidth();
-		return minbin;
+		return centerbin - getHalfWidth();
 	}
 	
 	/**
@@ -363,12 +363,13 @@ public class ScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public List<FieldMetaType> getDecoderOutputFieldTypes() {
-		return Arrays.asList(new FieldMetaType[] { FieldMetaType.FLOAT });
+		return Arrays.asList(FieldMetaType.FLOAT);
 	}
 	
 	/**
 	 * Should return the output width, in bits.
 	 */
+	@Override
 	public int getWidth() {
 		return getN();
 	}
@@ -455,6 +456,16 @@ public class ScalarEncoder extends Encoder<Double> {
 		}
 	}
 
+	/**
+	 * Returns a {@link DecodeResult} which is a tuple of range names
+	 * and lists of {@link RangeLists} in the first entry, and a list 
+	 * of descriptions for each range in the second entry.
+	 * 
+	 * @param encoded			the encoded bit vector
+	 * @param parentFieldName	the field the vector corresponds with
+	 * @return
+	 */
+	@Override
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// For now, we simply assume any top-down output greater than 0
 	    // is ON. Eventually, we will probably want to incorporate the strength
@@ -504,6 +515,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		// ------------------------------------------------------------------------
 	    // Find each run of 1's.
 		int[] nz = ArrayUtils.where(tmpOutput, new Condition.Adapter<Integer>() {
+			@Override
 			public boolean eval(int n) {
 				return n > 0;
 			}
@@ -608,7 +620,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		Map<String, RangeList> fieldsDict = new HashMap<String, RangeList>();
 		fieldsDict.put(fieldName, inner);
 		
-		return new DecodeResult(fieldsDict, Arrays.asList(new String[] { fieldName }));
+		return new DecodeResult(fieldsDict, Arrays.asList(fieldName));
 	}
 	
 	/**
@@ -741,10 +753,7 @@ public class ScalarEncoder extends Encoder<Double> {
 			inputVal = getMinVal() + category * getResolution();
 		}
 		
-		return Arrays.asList(
-			new EncoderResult[] { 
-				new EncoderResult(inputVal, inputVal, encoding) });
-			
+		return Arrays.asList(new EncoderResult(inputVal, inputVal, encoding));
 	}
 	
 	/**
@@ -820,19 +829,6 @@ public class ScalarEncoder extends Encoder<Double> {
 			((ScalarEncoder)encoder).init();
 			
 			return (ScalarEncoder)encoder;
-		}
-		
-		/**
-		 * Never called - just here as an example of specialization for a specific 
-		 * subclass of Encoder.Builder
-		 * 
-		 * Example specific method!!
-		 * 
-		 * @param stuff
-		 * @return
-		 */
-		public ScalarEncoder.Builder setStuff(int stuff) {
-			return this;
 		}
 	}
 }
