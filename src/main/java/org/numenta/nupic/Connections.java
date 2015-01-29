@@ -115,10 +115,6 @@ public class Connections {
      */
     private SparseBinaryMatrix connectedCounts;
     /**
-     * Lazily instantiated set view of columns
-     */
-    private LinkedHashSet<Column> columnSet;
-    /**
      * The inhibition radius determines the size of a column's local
      * neighborhood. of a column. A cortical column must overcome the overlap
      * score of columns in his neighborhood in order to become actives. This
@@ -1382,7 +1378,7 @@ public class Connections {
     /**
      * If the number of synapses active on a segment is at least this
      * threshold, it is selected as the best matching
-     * cell in a bursing column.
+     * cell in a bursting column.
      * 
      * @param   minThreshold
      */
@@ -1409,7 +1405,7 @@ public class Connections {
     
     /**
      * Returns the maximum number of synapses added to a segment during
-     * learing.
+     * learning.
      * 
      * @return
      */
