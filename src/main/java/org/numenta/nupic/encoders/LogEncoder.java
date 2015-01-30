@@ -222,21 +222,21 @@ public class LogEncoder extends Encoder<Double> {
 	}
 	
 	/**
-	 * Encodes inputData and puts the encoded value into the numpy output array,
+	 * Encodes inputData and puts the encoded value into the output array,
      * which is a 1-D array of length returned by {@link Connections#getW()}.
 	 *
-     * Note: The numpy output array is reused, so clear it before updating it.
+     * Note: The output array is reused, so clear it before updating it.
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link Connections#getW()}
      * 
 	 * @return
 	 */
+	@Override
 	public void encodeIntoArray(Double input, int[] output) {
 		Double scaledVal = getScaledValue(input);
 		
 		if (scaledVal == null) {
 			Arrays.fill(output, 0);
-			return;
 		} else {
 			encoder.encodeIntoArray(scaledVal, output);
 			
@@ -251,6 +251,7 @@ public class LogEncoder extends Encoder<Double> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// Get the scalar values from the underlying scalar encoder
 		DecodeResult decodeResult = encoder.decode(encoded, parentFieldName);
@@ -274,7 +275,7 @@ public class LogEncoder extends Encoder<Double> {
 		String desc = "";
 		int numRanges = outRanges.size();
 		for (int i = 0; i < numRanges; i++) {
-			MinMax minMax = (MinMax) outRanges.getRange(i);
+			MinMax minMax = outRanges.getRange(i);
 			if (minMax.min() != minMax.max()) {
 				desc += String.format("%.2f-%.2f", minMax.min(), minMax.max());
 			} else {
@@ -330,9 +331,7 @@ public class LogEncoder extends Encoder<Double> {
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
 		
-		return Arrays.asList(
-			new EncoderResult[] { 
-				new EncoderResult(value, value, scaledResult.getEncoding()) });
+		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
 	}
 	
 	/**
@@ -344,14 +343,13 @@ public class LogEncoder extends Encoder<Double> {
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
 		
-		return Arrays.asList(
-			new EncoderResult[] { 
-				new EncoderResult(value, value, scaledResult.getEncoding()) });
+		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public TDoubleList closenessScores(TDoubleList expValues, TDoubleList actValues, boolean fractional) {
 		TDoubleList retVal = new TDoubleArrayList();
 		
@@ -374,8 +372,7 @@ public class LogEncoder extends Encoder<Double> {
 			pctErr = Math.min(1.0,  pctErr);
 			closeness = 1.0 - pctErr;
 		} else {
-			double err = Math.abs(expValue - actValue);
-			closeness = err;
+			closeness = Math.abs(expValue - actValue);;
 		}
 		
 		retVal.add(closeness);
@@ -411,19 +408,6 @@ public class LogEncoder extends Encoder<Double> {
 			((LogEncoder)encoder).init();
 			
 			return (LogEncoder)encoder;
-		}
-		
-		/**
-		 * Never called - just here as an example of specialization for a specific 
-		 * subclass of Encoder.Builder
-		 * 
-		 * Example specific method!!
-		 * 
-		 * @param stuff
-		 * @return
-		 */
-		public LogEncoder.Builder setStuff(int stuff) {
-			return this;
 		}
 	}
 }

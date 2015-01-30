@@ -163,7 +163,7 @@ public class CLAClassifier {
 	 * @param infer				if true, perform inference
 	 * 
 	 * @return					dict containing inference results, there is one entry for each
-     *           				step in self.steps, where the key is the number of steps, and
+     *           				step in steps, where the key is the number of steps, and
      *           				the value is an array containing the relative likelihood for
      *           				each bucketIdx starting from bucketIdx 0.
 	 *
@@ -292,7 +292,7 @@ public class CLAClassifier {
 			}
 			
 			// Train each pattern that we have in our history that aligns with the
-		    // steps we have in self.steps
+		    // steps we have in steps
 			int nSteps = -1;
 			int iteration = 0;
 			int[] learnPatternNZ = null;
