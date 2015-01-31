@@ -1,7 +1,11 @@
 package org.numenta.nupic.encoders;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,9 +41,29 @@ public class DeltaEncoderTest {
 
 	@Test
 	public void testDeltaEncoder() {
-		for (int i = 0; i < 5; i++) {
-			
+		int[] intArray = new int[100];
+		Arrays.fill(intArray, 0);
+		for (int i = 2; i < 5; i++) {
+			deBuilder.build().encodeIntoArray(Double.valueOf(i), intArray);
+			List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
+			System.out.println("Before lock val for: " + i + " " + res.get(0).getValue());
+			System.out.println("Before lock scalar for: " + i + " " + res.get(0).getScalar());
+			System.out.println("Before lock encoding for: " + i + " " + res.get(0).getEncoding());
 		}
+		deBuilder.build().setStateLock(true);
+		for (int i = 5; i < 7; i++) {
+			deBuilder.build().encodeIntoArray(Double.valueOf(i), intArray);
+			List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
+			System.out.println("After lock val for: " + i + " " + res.get(0).getValue());
+			System.out.println("After lock scalar for: " + i + " " + res.get(0).getScalar());
+			System.out.println("After lock encoding for: " + i + " " + res.get(0).getEncoding());
+		}
+		List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
+		Assert.assertEquals("The value is not matching with expected", res.get(0).getValue(), 6);
+	      /*self.assertEqual(res[0].value, 6)
+	      self.assertEqual(self._dencoder.topDownCompute(encarr)[0].value, res[0].value)
+	      self.assertEqual(self._dencoder.topDownCompute(encarr)[0].scalar, res[0].scalar)
+	      self.assertTrue((self._dencoder.topDownCompute(encarr)[0].encoding == res[0].encoding).all())*/
 	}
 
 }
