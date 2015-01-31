@@ -92,7 +92,22 @@ public class ClassifierResult<T> {
 	 * @return
 	 */
 	public T getMostProbableValue(int step) {
-		if(probabilities.get(step) == null) return null;
+		int idx = -1;
+		if(probabilities.get(step) == null || (idx = getMostProbableBucketIndex(step)) == -1) {
+			return null;
+		}
+		return getActualValue(idx);
+	}
+	
+	/**
+	 * Returns the bucket index corresponding with the highest probability
+	 * for the specified step.
+	 * 
+	 * @param step		the step key under which the most probable index will be returned.
+	 * @return			-1 if there is no such entry
+	 */
+	public int getMostProbableBucketIndex(int step) {
+		if(probabilities.get(step) == null) return -1;
 		
 		double max = 0;
 		int bucketIdx = -1;
@@ -104,7 +119,7 @@ public class ClassifierResult<T> {
 			}
 			++i;
 		}
-		return bucketIdx == -1 ? null : getActualValue(bucketIdx);
+		return bucketIdx;
 	}
 	
 	/**
