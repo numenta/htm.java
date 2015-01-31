@@ -85,6 +85,29 @@ public class ClassifierResult<T> {
 	}
 	
 	/**
+	 * Returns the input value corresponding with the highest probability
+	 * for the specified step.
+	 * 
+	 * @param step		the step key under which the most probable value will be returned.
+	 * @return
+	 */
+	public T getMostProbableValue(int step) {
+		if(probabilities.get(step) == null) return null;
+		
+		double max = 0;
+		int bucketIdx = -1;
+		int i = 0;
+		for(double d : probabilities.get(step)) {
+			if(d > max) {
+				max = d;
+				bucketIdx = i;
+			}
+			++i;
+		}
+		return bucketIdx == -1 ? null : getActualValue(bucketIdx);
+	}
+	
+	/**
 	 * Returns the count of steps
 	 * @return
 	 */
