@@ -105,7 +105,6 @@ public class LogEncoderTest {
 		int[] output = le.encode(value);
 		
 		int[] expected = new int[45];
-		//Arrays.fill(expected, 0);
 		for (int i = 0; i < 5; i++) {
 			expected[i] = 1;
 		}

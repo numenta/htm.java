@@ -23,17 +23,16 @@
 package org.numenta.nupic.encoders;
 
 import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * A MultiEncoder encodes a dictionary or object with
@@ -47,9 +46,6 @@ import java.util.Map;
  * @author wlmiller
  */
 public class MultiEncoder extends Encoder<Object> {
-	protected int ncategories;
-	
-	protected TObjectIntMap<String> categoryToIndex = new TObjectIntHashMap<String>();
 	protected TIntObjectMap<String> indexToCategory = new TIntObjectHashMap<String>();
 	
 	protected List<Tuple> categoryList;
@@ -100,9 +96,7 @@ public class MultiEncoder extends Encoder<Object> {
 			int[] tempArray = new int[encoder.getWidth()];
 			encoder.encodeIntoArray(getInputValue(input, name), tempArray);
 			
-			for (int i = 0; i < tempArray.length; i++) {
-				output[i + offset] = tempArray[i];
-			}
+			System.arraycopy(tempArray, 0, output, offset, tempArray.length);
 		}
 	}
 	

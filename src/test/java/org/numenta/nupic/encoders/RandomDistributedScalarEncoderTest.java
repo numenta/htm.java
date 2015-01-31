@@ -264,19 +264,22 @@ public class RandomDistributedScalarEncoderTest {
 		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder2 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-1).build();
-		RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
+		//RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
 
 		int[] e1 = encoder1.encode(23.0);
 		int[] e2 = encoder2.encode(23.0);
 		int[] e3 = encoder3.encode(23.0);
-		int[] e4 = encoder4.encode(23.0);
+		//int[] e4 = encoder4.encode(23.0);
 
 		assertThat("Same seed gives rise to different encodings", e1,
 				is(equalTo(e2)));
 		assertThat("Different seeds gives rise to same encodings", e1,
 				is(not(equalTo(e3))));
-		assertThat("seeds of -1 give rise to same encodings", e4,
-				is(not(equalTo(e3))));
+		//Removing this test because testing the RNG is not part of the scope of
+		//this test - and we cannot assure that the RNG will initialize the default
+		//seed to different values.
+		//assertThat("seeds of -1 give rise to same encodings", e4,
+		//		is(not(equalTo(e3))));
 	}
 
 	@Test

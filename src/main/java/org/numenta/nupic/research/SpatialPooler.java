@@ -51,7 +51,7 @@ import java.util.Random;
  * > Connections c = new Connections();
  * > sp.init(c);
  * > for line in file:
- * >   inputVector = numpy.array(line)
+ * >   inputVector = prepared int[] (containing 1's and 0's)
  * >   sp.compute(inputVector)
  * 
  * @author David Ray
@@ -108,13 +108,9 @@ public class SpatialPooler {
         
         //Initialize state meta-management statistics
         c.setOverlapDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getOverlapDutyCycles(), 0);
         c.setActiveDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getActiveDutyCycles(), 0);
         c.setMinOverlapDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getOverlapDutyCycles(), 0);
         c.setMinActiveDutyCycles(new double[numColumns]);
-        Arrays.fill(c.getMinActiveDutyCycles(), 0);
         c.setBoostFactors(new double[numColumns]);
         Arrays.fill(c.getBoostFactors(), 1);
     }
@@ -498,7 +494,7 @@ public class SpatialPooler {
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
-     * 'self._stimulusThreshold' overlaps in order to be considered during the
+     * 'stimulusThreshold' overlaps in order to be considered during the
      * inhibition phase, columns without such minimal number of connections, even
      * if all the input bits they are connected to turn on, have no chance of
      * obtaining the minimum threshold. For such columns, the permanence values
@@ -642,7 +638,6 @@ public class SpatialPooler {
         }
         
         double[] perm = new double[c.getNumInputs()];
-        Arrays.fill(perm, 0);
         for(int idx : potentialPool) {
         	if(pick.contains(idx)) {
                 perm[idx] = initPermConnected(c);
@@ -901,8 +896,6 @@ public class SpatialPooler {
     public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
     	int numCols = c.getNumColumns();
     	int numActive = (int)(density * numCols);
-    	int[] activeColumns = new int[numCols];
-    	Arrays.fill(activeColumns, 0);
     	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
     	Arrays.sort(winners);
     	return winners;
@@ -923,7 +916,6 @@ public class SpatialPooler {
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
     	int numCols = c.getNumColumns();
     	int[] activeColumns = new int[numCols];
-    	Arrays.fill(activeColumns, 0);
     	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
     	for(int i = 0;i < numCols;i++) {
     		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);

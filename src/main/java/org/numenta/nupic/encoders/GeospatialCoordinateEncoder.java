@@ -177,7 +177,7 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 		 */
 		public Builder scale(int scale) {
 			this.scale = scale;
-			return (Builder)this;
+			return this;
 		}
 		
 		/**
@@ -187,7 +187,7 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 		 */
 		public Builder timestep(int timestep) {
 			this.timestep = timestep;
-			return (Builder)this;
+			return this;
 		}
 	}
 }
