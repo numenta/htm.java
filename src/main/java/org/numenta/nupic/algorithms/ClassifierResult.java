@@ -26,6 +26,9 @@ public class ClassifierResult<T> {
 	 * @return
 	 */
 	public T getActualValue(int bucketIndex) {
+		if(actualValues == null || actualValues.length < bucketIndex + 1) {
+			return null;
+		}
 		return (T)actualValues[bucketIndex];
 	}
 	
