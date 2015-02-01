@@ -31,12 +31,14 @@ import java.util.List;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
  * A scalar encoder encodes a numeric (floating point) value into an array of
  * bits.
- * 
+ *
  * This class maps a scalar value into a random distributed representation that
  * is suitable as scalar input into the spatial pooler. The encoding scheme is
  * designed to replace a simple ScalarEncoder. It preserves the important
@@ -44,7 +46,7 @@ import org.numenta.nupic.util.Tuple;
  * and max range can be dynamically increased without any negative effects. The
  * only required parameter is resolution, which determines the resolution of
  * input values.
- * 
+ *
  * Scalar values are mapped to a bucket. The class maintains a random
  * distributed encoding for each bucket. The following properties are maintained
  * by RandomDistributedEncoder:
@@ -53,35 +55,37 @@ import org.numenta.nupic.util.Tuple;
  * <li>Similar scalars should have high overlap. Overlap should decrease
  * smoothly as scalars become less similar. Specifically, neighboring bucket
  * indices must overlap by a linearly decreasing number of bits.
- * 
+ *
  * <li>Dissimilar scalars should have very low overlap so that the SP does not
  * confuse representations. Specifically, buckets that are more than w indices
  * apart should have at most maxOverlap bits of overlap. We arbitrarily (and
  * safely) define "very low" to be 2 bits of overlap or lower.
- * 
+ *
  * Properties 1 and 2 lead to the following overlap rules for buckets i and j:<br>
- * 
+ *
  * <pre>
- * {@code 
+ * {@code
  * If abs(i-j) < w then:
  * 		overlap(i,j) = w - abs(i-j);
  * else:
  * 		overlap(i,j) <= maxOverlap;
  * }
  * </pre>
- * 
+ *
  * <li>The representation for a scalar must not change during the lifetime of
  * the object. Specifically, as new buckets are created and the min/max range is
  * extended, the representation for previously in-range scalars and previously
  * created buckets must not change.
  * </ol>
- * 
- * 
+ *
+ *
  * @author Numenta
  * @author Anubhav Chaturvedi
  */
 
 public class RandomDistributedScalarEncoder extends Encoder<Double> {
+
+	private static final Logger LOG = LoggerFactory.getLogger(RandomDistributedScalarEncoder.class);
 
 	public static final long DEFAULT_SEED = 42;
 
@@ -108,7 +112,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * Perform validation on state parameters and proceed with initialization of
 	 * the encoder.
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 *             Throws {@code IllegalStateException} containing appropriate
 	 *             message if some validation fails.
@@ -134,16 +138,15 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	/**
 	 * Perform the initialization of the encoder.
-	 * 
+	 *
 	 * @param resolution
 	 * @param w
 	 * @param n
 	 * @param offset
 	 * @param seed
 	 */
-	public void initEncoder(double resolution, int w, int n, Double offset,
-			long seed) {
-
+	// TODO why are none of these parameters used..?
+	public void initEncoder(double resolution, int w, int n, Double offset, long seed) {
 		rng = (seed == -1) ? new MersenneTwister() : new MersenneTwister(seed);
 
 		initializeBucketMap(getMaxBuckets(), getOffset());
@@ -152,14 +155,13 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			setName("[" + getResolution() + "]");
 		}
 
-		if (getVerbosity() > 0)
-			System.out.println(this.toString());
-
+		// TODO reduce logging level?
+		LOG.info(this.toString());
 	}
 
 	/**
 	 * Initialize the bucket map assuming the given number of maxBuckets.
-	 * 
+	 *
 	 * @param maxBuckets
 	 * @param offset
 	 */
@@ -205,7 +207,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * Create the given bucket index. Recursively create as many in-between
 	 * bucket indices as necessary.
-	 * 
+	 *
 	 * @param index the index at which bucket needs to be created
 	 * @throws IllegalStateException
 	 */
@@ -242,7 +244,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * Get a new representation for newIndex that overlaps with the
 	 * representation at index by exactly w-1 bits
-	 * 
+	 *
 	 * @param index
 	 * @param newIndex
 	 * @throws IllegalStateException
@@ -278,7 +280,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * Check if this new candidate representation satisfies all our
 	 * overlap rules. Since we know that neighboring representations differ by
 	 * at most one bit, we compute running overlaps.
-	 * 
+	 *
 	 * @param newRep Encoded SDR to be considered
 	 * @param newIndex The index being considered
 	 * @return {@code true} if newRep satisfies all our overlap rules
@@ -343,7 +345,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * Get the overlap between two representations. rep1 and rep2 are
 	 * {@link List} of non-zero indices.
-	 * 
+	 *
 	 * @param rep1 The first representation for overlap calculation
 	 * @param rep2 The second representation for overlap calculation
 	 * @return The number of 'on' bits that overlap
@@ -361,7 +363,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	/**
 	 * Get the overlap between two representations. rep1 and rep2 are arrays
 	 * of non-zero indices.
-	 * 
+	 *
 	 * @param rep1 The first representation for overlap calculation
 	 * @param rep2 The second representation for overlap calculation
 	 * @return The number of 'on' bits that overlap
@@ -378,7 +380,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	/**
 	 * Check if the given overlap between bucket indices i and j are acceptable.
-	 * 
+	 *
 	 * @param i The index of the bucket to be compared
 	 * @param j The index of the bucket to be compared
 	 * @param overlap The overlap between buckets at index i and j
@@ -389,14 +391,14 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			return true;
 		if (Math.abs(i - j) >= getW() && overlap <= getMaxOverlap())
 			return true;
-		
+
 		return false;
 	}
 
 	/**
 	 * Check if the overlap between the buckets at indices i and j are
 	 * acceptable. The overlap is calculate from the bucketMap.
-	 * 
+	 *
 	 * @param i The index of the bucket to be compared
 	 * @param j The index of the bucket to be compared
 	 * @return {@code true} if the given overlap is acceptable, else {@code false}
@@ -408,7 +410,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	/**
 	 * Get the overlap between bucket at indices i and j
-	 * 
+	 *
 	 * @param i The index of the bucket
 	 * @param j The index of the bucket
 	 * @return the overlap between bucket at indices i and j
@@ -433,7 +435,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * Given a bucket index, return the list of indices of the 'on' bits. If the
 	 * bucket index does not exist, it is created. If the index falls outside
 	 * our range we clip it.
-	 * 
+	 *
 	 * @param index The bucket index
 	 * @return The list of active bits in the representation
 	 * @throws IllegalStateException
@@ -447,10 +449,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			index = getMaxBuckets() - 1;
 
 		if (!bucketMap.containsKey(index)) {
-			if (getVerbosity() >= 2)
-				System.out
-						.println("Adding additional buckets to handle index= "
-								+ index);
+			LOG.trace("Adding additional buckets to handle index={}", index);
 			createBucket(index);
 		}
 		return bucketMap.get(index);
@@ -475,7 +474,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * Difference in the round function behavior for Python and Java In
 		 * Python, the absolute value is rounded up and sign is applied in Java,
 		 * value is rounded to next biggest integer
-		 * 
+		 *
 		 * so for Python, round(-0.5) => -1.0 whereas in Java, Math.round(-0.5)
 		 * => 0.0
 		 */
@@ -621,6 +620,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	@Override
 	public String toString() {
+		// TODO don't mix StringBuilder appending with String concatenation
 		StringBuilder dumpString = new StringBuilder(50);
 		dumpString.append("RandomDistributedScalarEncoder:\n");
 		dumpString.append("  minIndex: " + getMinIndex() + "\n");
@@ -631,15 +631,12 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		dumpString.append("  offset: " + getOffset() + "\n");
 		dumpString.append("  numTries: " + getNumRetry() + "\n");
 		dumpString.append("  name: " + getName() + "\n");
-
-		if (getVerbosity() > 2) {
-			dumpString.append("  All Buckets : \n");
-			for (int index : bucketMap.keySet())
-				dumpString.append("  [ " + index + " ]: "
-						+ Arrays.deepToString(bucketMap.get(index).toArray())
-						+ "\n");
+		dumpString.append("  buckets : \n");
+		for (int index : bucketMap.keySet()) {
+			dumpString.append("  [ " + index + " ]: "
+					+ Arrays.deepToString(bucketMap.get(index).toArray())
+					+ "\n");
 		}
-
 		return dumpString.toString();
 	}
 
@@ -654,7 +651,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * subclasses, while avoiding the mistake-proneness of extremely long
 	 * argument lists.
 	 * </p>
-	 * 
+	 *
 	 * @author Anubhav Chaturvedi
 	 */
 	public static class Builder
@@ -671,7 +668,6 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		private Builder() {
 			this.n(400);
 			this.w(21);
-			this.verbosity(0);
 			seed = 42;
 			maxBuckets = 1000;
 			maxOverlap = 2;

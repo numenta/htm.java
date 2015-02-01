@@ -38,29 +38,29 @@ import org.numenta.nupic.util.Tuple;
  * A MultiEncoder encodes a dictionary or object with
  * multiple components. A MultiEncode contains a number
  * of sub-encoders, each of which encodes a separate component.
- * 
+ *
  * @see Encoder
  * @see EncoderResult
  * @see Parameters
- * 
+ *
  * @author wlmiller
  */
 public class MultiEncoder extends Encoder<Object> {
 	protected TIntObjectMap<String> indexToCategory = new TIntObjectHashMap<String>();
-	
+
 	protected List<Tuple> categoryList;
-	
+
 	protected int width;
-	
+
 	/**
 	 * Constructs a new {@code MultiEncoder}
 	 */
 	private MultiEncoder() {}
-	
+
 	/**
-	 * Returns a builder for building MultiEncoders. 
+	 * Returns a builder for building MultiEncoders.
 	 * This builder may be reused to produce multiple builders
-	 * 
+	 *
 	 * @return a {@code MultiEncoder.Builder}
 	 */
 	public static Encoder.Builder<MultiEncoder.Builder, MultiEncoder> builder() {
@@ -71,7 +71,7 @@ public class MultiEncoder extends Encoder<Object> {
 		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
 		encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void setFieldStats(String fieldName, Map<String, Double> fieldStatistics) {
@@ -81,7 +81,7 @@ public class MultiEncoder extends Encoder<Object> {
 			encoder.setFieldStats(name, fieldStatistics);
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -92,84 +92,84 @@ public class MultiEncoder extends Encoder<Object> {
 			String name = t.getName();
 			Encoder encoder = t.getEncoder();
 			int offset = t.getOffset();
-			
+
 			int[] tempArray = new int[encoder.getWidth()];
 			encoder.encodeIntoArray(getInputValue(input, name), tempArray);
-			
+
 			System.arraycopy(tempArray, 0, output, offset, tempArray.length);
 		}
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public int[] encodeField(String fieldName, Object value) {
 		for (EncoderTuple t : getEncoders(this)) {
 			String name = t.getName();
 			Encoder encoder = t.getEncoder();
-			
+
 			if (name.equals(fieldName)) {
 				return encoder.encode(value);
 			}
 		}
 		return new int[]{};
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<int[]> encodeEachField(Object input) {
 		List<int[]> encodings = new ArrayList<int[]>();
-		
+
 		for (EncoderTuple t : getEncoders(this)) {
 			String name = t.getName();
 			Encoder encoder = t.getEncoder();
-			
+
 			encodings.add(encoder.encode(getInputValue(input, name)));
 		}
-		
+
 		return encodings;
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void addEncoder(String name, Encoder child) {
 		super.addEncoder(this, name, child, width);
-		
+
 		for (Object d : child.getDescription()) {
 			Tuple dT = (Tuple) d;
 			description.add(new Tuple(2, dT.get(0), (int)dT.get(1) + getWidth()));
 		}
 		width += child.getWidth();
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	public void addMultipleEncoders(Map<String, Map<String, Object>> fieldEncodings) {
 		// Sort the encoders so that they end up in a controlled order
 		List<String> sortedFields = new ArrayList<String>(fieldEncodings.keySet());
 		Collections.sort(sortedFields);
-		
+
 		for (String field : sortedFields) {
 			Map<String, Object> params = fieldEncodings.get(field);
-			
+
 			if (!params.containsKey("fieldname")) {
 				throw new IllegalArgumentException("Missing fieldname for encoder " + field);
 			}
 			String fieldName = (String) params.get("fieldname");
-			
+
 			if (!params.containsKey("type")) {
 				throw new IllegalArgumentException("Missing type for encoder " + field);
 			}
 			String encoderName = (String) params.get("type");
-			
+
 			Encoder.Builder builder = getBuilder(encoderName);
-			
+
 			for (String param : params.keySet()) {
 				if (!param.equals("fieldname") && !param.equals("type")) {
 					setValue(builder, param, params.get(param));
 				}
 			}
-			
+
 			Encoder encoder = (Encoder)builder.build();
 			this.addEncoder(fieldName, encoder);
 		}
 	}
-	
+
 	private Encoder.Builder<?,?> getBuilder(String encoderName) {
 		switch(encoderName) {
 			case "CategoryEncoder":
@@ -192,7 +192,7 @@ public class MultiEncoder extends Encoder<Object> {
 				throw new IllegalArgumentException("Invalid encoder: " + encoderName);
 		}
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void setValue(Encoder.Builder builder, String param, Object value)  {
 		switch(param) {
@@ -202,15 +202,12 @@ public class MultiEncoder extends Encoder<Object> {
 		case "w":
 			builder.w((int) value);
 			break;
-		case "verbosity":
-			builder.verbosity((int) value);
-			break;
 		case "minVal":
 			builder.minVal((double) value);
 			break;
 		case "maxVal":
 			builder.maxVal((double) value);
-			break;	
+			break;
 		case "radius":
 			builder.radius((double) value);
 			break;
@@ -241,17 +238,17 @@ public class MultiEncoder extends Encoder<Object> {
 	public int getWidth() {
 		return width;
 	}
-	
+
 	@Override
 	public int getN() {
 		return width;
 	}
-	
+
 	@Override
 	public int getW() {
 		return width;
 	}
-	
+
 	@Override
 	public String getName() {
 		if (name == null) return "";
@@ -268,35 +265,35 @@ public class MultiEncoder extends Encoder<Object> {
 	public void setLearning(boolean learningEnabled) {
 		for (EncoderTuple t : getEncoders(this)) {
 			Encoder encoder = t.getEncoder();
-			encoder.setLearningEnabled(learningEnabled);	
+			encoder.setLearningEnabled(learningEnabled);
 		}
 	}
-    
+
 	@Override
 	public <S> List<S> getBucketValues(Class<S> returnType) {
 		return null;
 	}
-	
+
     /**
 	 * Returns a {@link EncoderBuilder} for constructing {@link MultiEncoder}s
-	 * 
+	 *
 	 * The base class architecture is put together in such a way where boilerplate
 	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
 	 * the mistake-proneness of extremely long argument lists.
-	 * 
+	 *
 	 */
 	public static class Builder extends Encoder.Builder<MultiEncoder.Builder, MultiEncoder> {
 		private Builder() {}
 
 		@Override
 		public MultiEncoder build() {
-			//Must be instantiated so that super class can initialize 
+			//Must be instantiated so that super class can initialize
 			//boilerplate variables.
 			encoder = new MultiEncoder();
-			
+
 			//Call super class here
 			super.build();
-			
+
 			////////////////////////////////////////////////////////
 			//  Implementing classes would do setting of specific //
 			//  vars here together with any sanity checking       //
@@ -304,7 +301,7 @@ public class MultiEncoder extends Encoder<Object> {
 
 			//Call init
 			((MultiEncoder)encoder).init();
-			
+
 			return (MultiEncoder)encoder;
 		}
 	}
