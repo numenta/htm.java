@@ -31,6 +31,8 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +56,9 @@ import java.util.Set;
  * @see EncoderResult
  */
 public class SDRCategoryEncoder extends Encoder<String> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SDRCategoryEncoder.class);
+
     private Random random;
     private int thresholdOverlap;
     private final SDRByCategoryMap sdrByCategory = new SDRByCategoryMap();
@@ -120,7 +125,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
     def __init__(self, n, w, categoryList = None, name="category", verbosity=0,
                encoderSeed=1, forced=False):
     */
-    private void init(int n, int w, List<String> categoryList, String name, int verbosity,
+    private void init(int n, int w, List<String> categoryList, String name,
                       int encoderSeed, boolean forced) {
 
         /*Python ref: n is  total bits in output
@@ -167,7 +172,6 @@ public class SDRCategoryEncoder extends Encoder<String> {
         if (this.thresholdOverlap < this.w - 3) {
             this.thresholdOverlap = this.w - 3;
         }
-        this.verbosity = verbosity;
         this.description.add(new Tuple(2, name, 0));
         this.name = name;
         /*
@@ -215,11 +219,8 @@ public class SDRCategoryEncoder extends Encoder<String> {
             int[] categoryEncoding = sdrByCategory.getSdr(index);
             System.arraycopy(categoryEncoding, 0, output, 0, categoryEncoding.length);
         }
-        if (verbosity >= 2) {
-            System.out.println("input:" + input + ", index:" + index + ", output:" + ArrayUtils.intArrayToString(
-                    output));
-            System.out.println("decoded:" + decodedToStr(decode(output, "")));
-        }
+        LOG.trace("input:" + input + ", index:" + index + ", output:" + ArrayUtils.intArrayToString(output));
+        LOG.trace("decoded:" + decodedToStr(decode(output, "")));
     }
 
     /**
@@ -287,11 +288,11 @@ public class SDRCategoryEncoder extends Encoder<String> {
                 }
             }
         }
-        if (verbosity >= 2) {
-            System.out.println("Overlaps for decoding:");
+        LOG.trace("Overlaps for decoding:");
+        if (LOG.isTraceEnabled()){
             int inx = 0;
             for (String category : sdrByCategory.keySet()) {
-                System.out.println(overlap[inx] + " " + category);
+                LOG.trace(overlap[inx] + " " + category);
                 inx++;
             }
         }
@@ -472,7 +473,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
                 throw new IllegalStateException("\"W\" should be set");
             }
             SDRCategoryEncoder sdrCategoryEncoder = new SDRCategoryEncoder();
-            sdrCategoryEncoder.init(n, w, categoryList, name, encVerbosity, encoderSeed, forced);
+            sdrCategoryEncoder.init(n, w, categoryList, name, encoderSeed, forced);
             return sdrCategoryEncoder;
 
 
