@@ -420,33 +420,48 @@ public class DateEncoder extends Encoder<Date> {
     }
 
     /**
+     * Returns the input in the same format as is returned by topDownCompute().
+     * For most encoder types, this is the same as the input data.
+     * For instance, for scalar and category types, this corresponds to the numeric
+     * and string values, respectively, from the inputs. For datetime encoders, this
+     * returns the list of scalars for each of the sub-fields (timeOfDay, dayOfWeek, etc.)
+     *
+     * This method is essentially the same as getScalars() except that it returns
+     * strings
+     * @param inputData 	The input data in the format it is received from the data source
+     *
+     * @return A list of values, in the same format and in the same order as they
+     * are returned by topDownCompute.
+     *
+     * @return	list of encoded values in String form
+     */
+    public List<String> getEncodedValues(Date inputData) {
+        List<String> values = new ArrayList<>();
+
+        List<String> encodedValues = getEncodedValues(inputData);
+
+        for (String v : encodedValues) {
+            values.add(String.valueOf(v));
+        }
+
+        return values;
+    }
+
+    /**
      * Returns an {@link TDoubleList} containing the sub-field scalar value(s) for
      * each sub-field of the inputData. To get the associated field names for each of
      * the scalar values, call getScalarNames().
      *
-     * @param d	the input value, in this case a date object
+     * @param inputData	the input value, in this case a date object
      * @return	a list of one input double
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public TDoubleList getScalars(Date d) {
-        TDoubleList retVals = new TDoubleArrayList();
-        List<String> encodedValues = getEncodedValues(d);
-
-        for (String v : encodedValues) {
-            //TODO swap it with getEncodedValues():
-            // not Double.parseDouble() here , but String.valueOf() there
-            retVals.add(Double.parseDouble(v));
-        }
-
-        return retVals;
-    }
-
-    public List<String> getEncodedValues(Date inputData) {
+    public TDoubleList getScalars(Date inputData) {
         if(inputData == null) {
             throw new IllegalArgumentException("DateEncoder requires a valid Date object but got null");
         }
 
-        List<String> values = new ArrayList<>();
+        TDoubleList values = new TDoubleArrayList();
 
         DateTime date = new DateTime(inputData);
 
@@ -460,11 +475,11 @@ public class DateEncoder extends Encoder<Date> {
         if(seasonEncoder != null) {
             // The day of year was 1 based, so convert to 0 based
             double dayOfYear = date.getDayOfYear() - 1;
-            values.add(String.valueOf(dayOfYear));
+            values.add(dayOfYear);
         }
 
         if(dayOfWeekEncoder != null) {
-            values.add(String.valueOf(dayOfWeek));
+            values.add(dayOfWeek);
         }
 
         if(weekendEncoder != null) {
@@ -475,7 +490,7 @@ public class DateEncoder extends Encoder<Date> {
 
             int weekend = isWeekend ? 1 : 0;
 
-            values.add(String.valueOf(weekend));
+            values.add(weekend);
         }
 
         if(customDaysEncoder != null) {
@@ -483,7 +498,7 @@ public class DateEncoder extends Encoder<Date> {
 
             int customDay = isCustomDays ? 1 : 0;
 
-            values.add(String.valueOf(customDay));
+            values.add(customDay);
         }
 
         if(holidayEncoder != null) {
@@ -521,22 +536,33 @@ public class DateEncoder extends Encoder<Date> {
                 }
             }
 
-            values.add(String.valueOf(holidayness));
+            values.add(holidayness);
         }
 
         if(timeOfDayEncoder != null) {
-            values.add(String.valueOf(timeOfDay));
+            values.add(timeOfDay);
         }
 
         return values;
     }
 
-    // TODO Why can getBucketValues return null for some encoders, e.g. MultiEncoder
+    /**
+     * {@inheritDoc}
+     */
     @Override
+    // TODO Why can getBucketValues return null for some encoders, e.g. MultiEncoder
     public <S> List<S> getBucketValues(Class<S> returnType) {
         return null;
     }
 
+    /**
+     * Returns an array containing the sub-field bucket indices for
+     * each sub-field of the inputData. To get the associated field names for each of
+     * the buckets, call getScalarNames().
+     * @param  	input 	The data from the source. This is typically a object with members.
+     *
+     * @return 	array of bucket indices
+     */
     public int[] getBucketIndices(Date input) {
 
         TDoubleList scalars = getScalars(input);
@@ -556,6 +582,9 @@ public class DateEncoder extends Encoder<Date> {
         return l.toArray();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("rawtypes")
     @Override
     public void setLearning(boolean learningEnabled) {
