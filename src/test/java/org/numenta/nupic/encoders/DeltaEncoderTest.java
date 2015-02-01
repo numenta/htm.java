@@ -43,27 +43,38 @@ public class DeltaEncoderTest {
 	public void testDeltaEncoder() {
 		int[] intArray = new int[100];
 		Arrays.fill(intArray, 0);
+		de = deBuilder.build();
 		for (int i = 2; i < 5; i++) {
-			deBuilder.build().encodeIntoArray(Double.valueOf(i), intArray);
-			List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
-			System.out.println("Before lock val for: " + i + " " + res.get(0).getValue());
-			System.out.println("Before lock scalar for: " + i + " " + res.get(0).getScalar());
-			System.out.println("Before lock encoding for: " + i + " " + res.get(0).getEncoding());
+			de.encodeIntoArray(Double.valueOf(i), intArray);
 		}
-		deBuilder.build().setStateLock(true);
+		de.setStateLock(true);
 		for (int i = 5; i < 7; i++) {
-			deBuilder.build().encodeIntoArray(Double.valueOf(i), intArray);
-			List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
-			System.out.println("After lock val for: " + i + " " + res.get(0).getValue());
-			System.out.println("After lock scalar for: " + i + " " + res.get(0).getScalar());
-			System.out.println("After lock encoding for: " + i + " " + res.get(0).getEncoding());
+			de.encodeIntoArray(Double.valueOf(i), intArray);
 		}
-		List<EncoderResult> res = deBuilder.build().topDownCompute(intArray);
-		Assert.assertEquals("The value is not matching with expected", res.get(0).getValue(), 6);
-	      /*self.assertEqual(res[0].value, 6)
-	      self.assertEqual(self._dencoder.topDownCompute(encarr)[0].value, res[0].value)
-	      self.assertEqual(self._dencoder.topDownCompute(encarr)[0].scalar, res[0].scalar)
-	      self.assertTrue((self._dencoder.topDownCompute(encarr)[0].encoding == res[0].encoding).all())*/
+		List<EncoderResult> res = de.topDownCompute(intArray);
+		Assert.assertEquals("The value is not matching with expected", res.get(0).getValue(), 9.962025316455696);
+		Assert.assertEquals("The value is not matching with expected", res.get(0).getScalar(), 9.962025316455696);
 	}
-
+	
+	@Test
+	public void testEncodingVerification() {
+		int[] feedIn = { 1, 8, 4, 7, 8, 6, 3, 1 };
+		int[] expectedOut = { 1, 8, 4, 7, 8, 6, 3, 1 };
+		de = deBuilder.build();
+		ase = aseBuilder.build();
+		de.setLearningEnabled(true);
+		ase.setLearningEnabled(true);
+		for (int i = 0; i < feedIn.length; i++) {
+			int[] deArray = new int[100];
+			Arrays.fill(deArray, 0);
+			int[] aseArray = new int[100];
+			Arrays.fill(aseArray, 0);
+			ase.encodeIntoArray(Double.valueOf(expectedOut[i]), aseArray);
+			// System.out.println(Arrays.toString(aseArray));
+			de.encodeIntoArray(Double.valueOf(feedIn[i]), deArray);
+			// System.out.println(Arrays.toString(deArray));
+			Assert.assertTrue("The arrays are not matching", Arrays.equals(aseArray, deArray));
+		}
+	}
+	
 }
