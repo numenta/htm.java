@@ -264,12 +264,12 @@ public class RandomDistributedScalarEncoderTest {
 		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder2 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-1).build();
-		RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
+		//RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
 
 		int[] e1 = encoder1.encode(23.0);
 		int[] e2 = encoder2.encode(23.0);
 		int[] e3 = encoder3.encode(23.0);
-		int[] e4 = encoder4.encode(23.0);
+		//int[] e4 = encoder4.encode(23.0);
 
 		assertThat("Same seed gives rise to different encodings", e1,
 				is(equalTo(e2)));

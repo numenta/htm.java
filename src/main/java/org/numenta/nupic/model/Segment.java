@@ -27,7 +27,12 @@ import java.util.List;
 import org.numenta.nupic.Connections;
 
 /**
- * For now simply a marker interface
+ * Base class which handles the creation of {@link Synapses} on behalf of
+ * inheriting class types.
+ * 
+ * @author David Ray
+ * @see DistalDendrite
+ * @see ProximalDendrite
  */
 public abstract class Segment {
 	/**
@@ -47,7 +52,7 @@ public abstract class Segment {
      * @param sourceCell    the source cell which will activate the new {@code Synapse}
      * @param pool		    the new {@link Synapse}'s pool for bound variables.
      * @param index         the new {@link Synapse}'s index.
-     * @param inputIndex	the index of this {@link Synapse}'s input; be it a Cell or InputVector bit.
+     * @param inputIndex	the index of this {@link Synapse}'s input (source object); be it a Cell or InputVector bit.
      * 
      * @return
      */

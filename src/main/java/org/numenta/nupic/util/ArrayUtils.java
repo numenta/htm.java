@@ -143,7 +143,7 @@ public class ArrayUtils {
     }
 
     /**
-     * Returns a string representing a numpy array of 0's and 1's
+     * Returns a string representing an array of 0's and 1's
      *
      * @param arr an binary array (0's and 1's only)
      * @return

@@ -125,6 +125,7 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	 * @param input 
 	 * @param output
 	 */
+	@Override
 	public void encodeIntoArray(int[] input, int[] output){
 		if( input.length != output.length)
 			throw new IllegalArgumentException(String.format("Different input (%i) and output (%i) sizes", input.length, output.length));
@@ -138,11 +139,12 @@ public class PassThroughEncoder extends Encoder<int[]> {
 	/**
 	 * Not much real work to do here as this concept doesn't really apply.
 	 */
+	@Override
 	public Tuple decode(int[] encoded, String parentFieldName) {
 	    //TODO: these methods should be properly implemented (this comment in Python)		  
 		String fieldName = this.name;
-	    if (parentFieldName != null && parentFieldName.length() >0)
-	    	String.format("%s.%s", parentFieldName, this.name);
+	    if (verbosity >= 2 && parentFieldName != null && parentFieldName.length() > 0)
+	    	System.out.println(String.format("Decoding Field: %s.%s", parentFieldName, this.name));
 
 		List<MinMax> ranges = new ArrayList<MinMax>();
 		ranges.add(new MinMax(0,0));
@@ -152,8 +154,6 @@ public class PassThroughEncoder extends Encoder<int[]> {
 		
 	    //return ({fieldName: ([[0, 0]], "input")}, [fieldName])
 		return new DecodeResult(fieldsDict, Arrays.asList(new String[] { fieldName }));
-
-
 	}
 
 	@Override
