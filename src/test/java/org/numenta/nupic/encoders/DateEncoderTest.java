@@ -98,8 +98,12 @@ public class DateEncoderTest {
         System.out.println();
     }
 
-    //TODO testMissingValues in Python can't be ported
-    // because SENTINEL_VALUE_FOR_MISSING_DATA is not a Date
+    // TODO Current implementation of DateEncoder throws at invalid Date,
+    // but testMissingValues in Python expects it to encode it as all-zero bits:
+    //    def testMissingValues(self):
+    //            '''missing values'''
+    //    mvOutput = self._e.encode(SENTINEL_VALUE_FOR_MISSING_DATA)
+    //            self.assertEqual(sum(mvOutput), 0)
 
     /**
      * Decoding date
@@ -118,8 +122,6 @@ public class DateEncoderTest {
         assertNotNull(fieldsMap);
         assertNotNull(fieldsOrder);
         assertEquals(4, fieldsMap.size());
-
-        //TODO can't assert on the length of Tuple yet
 
         Map<String, Double> expectedMap = new HashMap<>();
         expectedMap.put("season", 305.0);

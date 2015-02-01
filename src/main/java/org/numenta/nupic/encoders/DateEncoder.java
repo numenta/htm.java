@@ -75,7 +75,8 @@ import org.numenta.nupic.util.Tuple;
  * - improve wording on unspecified attributes: "Each parameter describes one extra attribute(other than the datetime
  *   object itself) to encode. By default, the unspecified attributes are not encoded."
  * - change datetime.datetime object to joda-time object
- * - refer to Parameters, which where these parameters are defined.
+ * - refer to DateEncoder::Builder, which where these parameters are defined.
+ * - explain customDays here and at Python version
  */
 
 public class DateEncoder extends Encoder<Date> {
@@ -137,13 +138,19 @@ public class DateEncoder extends Encoder<Date> {
 
         width = 0;
 
-        //TODO figure out how to remove this
-        //forced (default True)
+        // Because most of the ScalarEncoder fields have less than 21 bits(recommended in
+        // ScalarEncoder.checkReasonableSettings), so for now we set forced to be true to
+        // override.
+        // TODO figure out how to remove this
         setForced(true);
 
         // Adapted from MultiEncoder
-        // TODO figure out why a initial EncoderTuple
         encoders = new LinkedHashMap<>();
+
+        // Encoder.getEncoderTuple() can return null, but logic in Encoder.addEncoder()
+        // expects at least one empty ArrayList<EncoderTuple>, so we need to prepare such
+        // an initial EncoderTuple.
+        // TODO figure out whether the solution can be moved to Encoder
         encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
 
         // Note: The order of adding encoders matters, must be in the following
@@ -351,16 +358,25 @@ public class DateEncoder extends Encoder<Date> {
         this.timeOfDay = timeOfDay;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getWidth() {
         return width;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getN() {
         return width;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getW() {
         return width;
@@ -381,13 +397,10 @@ public class DateEncoder extends Encoder<Date> {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void encodeIntoArray(Date inputData, int[] output) {
-        //TODO deal with bad inputData
-//        if input == SENTINEL_VALUE_FOR_MISSING_DATA:
-//        output[0:] = 0
-//        else:
-//        if not isinstance(input, datetime.datetime):
-//        raise ValueError("Input is type %s, expected datetime. Value: %s" % (
-//                type(input), str(input)))
+
+        if(inputData == null) {
+            throw new IllegalArgumentException("DateEncoder requires a valid Date object but got null");
+        }
 
         // Get the scalar values for each sub-field
         TDoubleList scalars = getScalars(inputData);
@@ -407,7 +420,12 @@ public class DateEncoder extends Encoder<Date> {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns an {@link TDoubleList} containing the sub-field scalar value(s) for
+     * each sub-field of the inputData. To get the associated field names for each of
+     * the scalar values, call getScalarNames().
+     *
+     * @param d	the input value, in this case a date object
+     * @return	a list of one input double
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public TDoubleList getScalars(Date d) {
@@ -424,10 +442,8 @@ public class DateEncoder extends Encoder<Date> {
     }
 
     public List<String> getEncodedValues(Date inputData) {
-        //TODO check null (if date is null, it acts like new DateTime())
         if(inputData == null) {
-            //TODO return a proper fallback value
-            return new ArrayList<>();
+            throw new IllegalArgumentException("DateEncoder requires a valid Date object but got null");
         }
 
         List<String> values = new ArrayList<>();
@@ -494,13 +510,13 @@ public class DateEncoder extends Encoder<Date> {
                     }
 
                 } else {
-                    //TODO this is not the same as when date.isAfter(hdate), why?
+                    //TODO This is not the same as when date.isAfter(hdate), why?
                     Duration diff = new Interval(date, hdate).toDuration();
                     long days = diff.getStandardDays();
                     if(days == 0) {
                         //ramp smoothly from 0 -> 1 on the previous day
                         holidayness = 1.0 - ((diff.getStandardSeconds() - 86400.0 * days) / 86400.0);
-                        //TODO why no break?
+                        //TODO Why no break?
                     }
                 }
             }
@@ -515,8 +531,7 @@ public class DateEncoder extends Encoder<Date> {
         return values;
     }
 
-    //TODO Should delegate Encoder.getScalarNames() to Encoder.getScalarNames(null) ?
-
+    // TODO Why can getBucketValues return null for some encoders, e.g. MultiEncoder
     @Override
     public <S> List<S> getBucketValues(Class<S> returnType) {
         return null;
