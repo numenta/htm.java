@@ -156,7 +156,7 @@ import java.util.Map;
  */
 public class ScalarEncoder extends Encoder<Double> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ScalarEncoder.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScalarEncoder.class);
 
 	/**
 	 * Constructs a new {@code ScalarEncoder}
@@ -310,7 +310,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		}else{
 			if(input < getMinVal()) {
 				if(clipInput() && !isPeriodic()) {
-					LOG.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
+					LOGGER.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
 					input = getMinVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") less than range (" +
@@ -327,7 +327,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		}else{
 			if(input > getMaxVal()) {
 				if(clipInput()) {
-					LOG.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
+					LOGGER.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
 					input = getMaxVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") greater than periodic range (" +
@@ -444,13 +444,13 @@ public class ScalarEncoder extends Encoder<Double> {
 			ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
 		}
 
-		LOG.trace("");
-		LOG.trace("input: " + input);
-		LOG.trace("range: " + getMinVal() + " - " + getMaxVal());
-		LOG.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
+		LOGGER.trace("");
+		LOGGER.trace("input: " + input);
+		LOGGER.trace("range: " + getMinVal() + " - " + getMaxVal());
+		LOGGER.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
 				"radius:" + getRadius() + "periodic:" + isPeriodic());
-		LOG.trace("output: " + Arrays.toString(output));
-		LOG.trace("input desc: " + decode(output, ""));
+		LOGGER.trace("output: " + Arrays.toString(output));
+		LOGGER.trace("input desc: " + decode(output, ""));
 	}
 
 	/**
@@ -503,9 +503,9 @@ public class ScalarEncoder extends Encoder<Double> {
 			}
 		}
 
-		LOG.trace("raw output:" + Arrays.toString(
-					ArrayUtils.sub(encoded, ArrayUtils.range(0, getN()))));
-		LOG.trace("filtered output:" + Arrays.toString(tmpOutput));
+		LOGGER.trace("raw output:" + Arrays.toString(
+				ArrayUtils.sub(encoded, ArrayUtils.range(0, getN()))));
+		LOGGER.trace("filtered output:" + Arrays.toString(tmpOutput));
 
 		// ------------------------------------------------------------------------
 	    // Find each run of 1's.

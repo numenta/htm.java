@@ -82,7 +82,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Encoder<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Encoder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Encoder.class);
 
 	/** Value used to represent no data */
 	public static final double SENTINEL_VALUE_FOR_MISSING_DATA = Double.NaN;
@@ -904,7 +904,7 @@ public abstract class Encoder<T> {
 	 * @param prefix
 	 */
 	public void pprintHeader(String prefix) {
-		LOG.info(prefix == null ? "" : prefix);
+		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
 		description.add(new Tuple(2, "end", getWidth()));
@@ -918,13 +918,13 @@ public abstract class Encoder<T> {
 			StringBuilder pname = new StringBuilder(name);
 			if(name.length() > width) pname.setLength(width);
 
-            LOG.info(String.format(formatStr, pname));
+            LOGGER.info(String.format(formatStr, pname));
 		}
 
 		len = getWidth() + (description.size() - 1)*3 - 1;
 		StringBuilder hyphens = new StringBuilder();
 		for(int i = 0;i < len;i++) hyphens.append("-");
-        LOG.info(new StringBuilder(prefix).append(hyphens).toString());
+        LOGGER.info(new StringBuilder(prefix).append(hyphens).toString());
     }
 
     /**
@@ -933,7 +933,7 @@ public abstract class Encoder<T> {
 	 * @param prefix
 	 */
 	public void pprint(int[] output, String prefix) {
-		LOG.info(prefix == null ? "" : prefix);
+		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
 		description.add(new Tuple(2, "end", getWidth()));
@@ -943,7 +943,7 @@ public abstract class Encoder<T> {
 			int offset = (int)description.get(i).get(1);
 			int nextOffset = (int)description.get(i + 1).get(1);
 
-            LOG.info(
+            LOGGER.info(
                     String.format("%s |",
                             ArrayUtils.bitsToString(
                                     ArrayUtils.sub(output, ArrayUtils.range(offset, nextOffset))
