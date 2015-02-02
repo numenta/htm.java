@@ -331,8 +331,11 @@ public class CLAClassifier {
 			System.out.println("   actual bucket values: " + Arrays.toString((T[])retVal.getActualValues()));
 			
 			for(int key : retVal.stepSet()) {
-				System.out.println(String.format("  %d steps: ", key, pFormatArray((double[])retVal.getActualValue(key))));
-				int bestBucketIdx = ArrayUtils.argmax((double[])retVal.getActualValue(key));
+				if(retVal.getActualValue(key) == null) continue;
+				
+				Object[] actual = new Object[] { (T)retVal.getActualValue(key) };
+				System.out.println(String.format("  %d steps: ", key, pFormatArray(actual)));
+				int bestBucketIdx = retVal.getMostProbableBucketIndex(key);
 				System.out.println(String.format("   most likely bucket idx: %d, value: %s ", bestBucketIdx, 
 					retVal.getActualValue(bestBucketIdx)));
 				
@@ -349,10 +352,12 @@ public class CLAClassifier {
 	 * @param arr
 	 * @return
 	 */
-	private String pFormatArray(double[] arr) {
+	private <T> String pFormatArray(T[] arr) {
+		if(arr == null) return "";
+		
 		StringBuilder sb = new StringBuilder("[ ");
-		for(double d : arr) {
-			sb.append(String.format("%.2f", d));
+		for(T t : arr) {
+			sb.append(String.format("%.2s", t));
 		}
 		sb.append(" ]");
 		return sb.toString();
