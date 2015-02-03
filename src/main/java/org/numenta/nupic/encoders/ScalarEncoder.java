@@ -411,9 +411,7 @@ public class ScalarEncoder extends Encoder<Double> {
      * Note: The output array is reused, so clear it before updating it.
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link Connections#getW()}
-     * 
-	 * @return
-	 */
+     */
 	@Override
 	public void encodeIntoArray(Double input, int[] output) {
 		if(Double.isNaN(input)) {

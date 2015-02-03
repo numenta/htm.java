@@ -455,7 +455,6 @@ public class DateEncoder extends Encoder<Date> {
      * @param inputData	the input value, in this case a date object
      * @return	a list of one input double
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public TDoubleList getScalars(Date inputData) {
         if(inputData == null) {
             throw new IllegalArgumentException("DateEncoder requires a valid Date object but got null");
@@ -605,7 +604,7 @@ public class DateEncoder extends Encoder<Date> {
      */
     public static class Builder extends Encoder.Builder<DateEncoder.Builder, DateEncoder> {
 
-        //    Ignore leapyear differences -- assume 366 days in a year
+        //    Ignore leap year differences -- assume 366 days in a year
         //    Radius = 91.5 days = length of season
         //    Value is number of days since beginning of year (0 - 355)
         protected Tuple season = new Tuple(2, 0, 91.5);
