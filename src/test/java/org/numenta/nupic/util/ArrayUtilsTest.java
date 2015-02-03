@@ -154,5 +154,9 @@ public class ArrayUtilsTest {
             return Array.newInstance(int.class, sizes);
         }
 
-
+	@Test
+	public void testConcatAll() {
+		assertTrue(Arrays.equals(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+				ArrayUtils.concatAll(new int[]{1, 2}, new int[]{3, 4, 5, 6, 7}, new int[]{8, 9, 0})));
+	}
 }
