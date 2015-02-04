@@ -13,7 +13,7 @@ Holding area for the development of the Java port of Numenta's online prediction
 
 For a more detailed discussion of <b>htm.java</b> see: <BR>
 * [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
-* [Java Docs](http://www.cognitionmission.com/nupic/java/doc/)
+* [Java Docs](http://numenta.org/docs/htm.java/)
 
 ### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html)
 
