@@ -1,31 +1,36 @@
 package org.numenta.nupic.encoders;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class AdaptiveScalarEncoder extends ScalarEncoder {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveScalarEncoder.class);
+
 	/*
 	 * This is an implementation of the scalar encoder that adapts the min and
 	 * max of the scalar encoder dynamically. This is essential to the streaming
 	 * model of the online prediction framework.
-	 * 
+	 *
 	 * Initialization of an adapive encoder using resolution or radius is not
 	 * supported; it must be intitialized with n. This n is kept constant while
 	 * the min and max of the encoder changes.
-	 * 
+	 *
 	 * The adaptive encoder must be have periodic set to false.
-	 * 
+	 *
 	 * The adaptive encoder may be initialized with a minval and maxval or with
 	 * `None` for each of these. In the latter case, the min and max are set as
 	 * the 1st and 99th percentile over a window of the past 100 records.
-	 * 
+	 *
 	 * *Note:** the sliding window may record duplicates of the values in the
 	 * dataset, and therefore does not reflect the statistical distribution of
 	 * the input data and may not be used to calculate the median, mean etc.
 	 */
-	
+
 	public int recordNum = 0;
 	public boolean learningEnabled = true;
 	public Double[] slidingWindow = new Double[0];
@@ -34,7 +39,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.numenta.nupic.encoders.ScalarEncoder#init()
 	 */
 	@Override
@@ -42,10 +47,10 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		this.setPeriodic(false);
 		super.init();
 	}
-	
+
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.numenta.nupic.encoders.ScalarEncoder#initEncoder(int, double,
 	 * double, int, double, double)
 	 */
@@ -71,7 +76,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	/**
 	 * Returns a builder for building AdaptiveScalarEncoder. This builder may be
 	 * reused to produce multiple builders
-	 * 
+	 *
 	 * @return a {@code AdaptiveScalarEncoder.Builder}
 	 */
 	public static AdaptiveScalarEncoder.Builder adaptiveBuilder() {
@@ -129,7 +134,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 			slidingWindow = deleteItem(slidingWindow, 0);
 		}
 		slidingWindow = appendItem(slidingWindow, input);
-		
+
 		if (this.minVal == this.maxVal) {
 			this.minVal = input;
 			this.maxVal = input + 1;
@@ -140,20 +145,16 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 			double minOverWindow = sorted[0];
 			double maxOverWindow = sorted[sorted.length - 1];
 			if (minOverWindow < this.minVal) {
-				if (this.verbosity >= 2) {
-					System.out.println(String.format("Input %s=%d smaller than minval %d. Adjusting minval to %d",
-							this.name, input, this.minVal, minOverWindow));
-					this.minVal = minOverWindow;
-					setEncoderParams();
-				}
+				LOGGER.trace("Input {}={} smaller than minVal {}. Adjusting minVal to {}",
+							this.name, input, this.minVal, minOverWindow);
+				this.minVal = minOverWindow;
+				setEncoderParams();
 			}
 			if (maxOverWindow > this.maxVal) {
-				if (this.verbosity >= 2) {
-					System.out.println(String.format("Input %s=%d greater than maxval %d. Adjusting maxval to %d",
-							this.name, input, this.minVal, minOverWindow));
-					this.maxVal = maxOverWindow;
-					setEncoderParams();
-				}
+				LOGGER.trace("Input {}={} greater than maxVal {}. Adjusting maxVal to {}",
+						this.name, input, this.minVal, minOverWindow);
+				this.maxVal = maxOverWindow;
+				setEncoderParams();
 			}
 		}
 	}
