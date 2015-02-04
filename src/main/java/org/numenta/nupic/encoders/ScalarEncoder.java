@@ -605,7 +605,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		String desc = generateRangeDescription(ranges);
 		String fieldName;
 		// Return result
-		if(!parentFieldName.isEmpty()) {
+		if(parentFieldName != null && !parentFieldName.isEmpty()) {
 			fieldName = String.format("%s.%s", parentFieldName, getName());
 		}else{
 			fieldName = getName();

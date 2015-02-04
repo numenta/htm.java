@@ -721,7 +721,11 @@ public abstract class Encoder<T> {
 	 *
      * For a simple scalar encoder, the scalar value is simply the input unmodified.
      * For category encoders, it is the scalar representing the category string
-     * that is passed in. For the datetime encoder, the scalar value is the
+     * that is passed in.
+     *
+     * TODO This is not correct for DateEncoder:
+     *
+     * For the datetime encoder, the scalar value is the
      * the number of seconds since epoch.
 	 *
      * The intent of the scalar representation of a sub-field is to provide a
