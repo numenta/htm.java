@@ -35,15 +35,17 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * DOCUMENTATION TAKEN DIRECTLY FROM THE PYTHON VERSION:
- * 
+ *
  * This class wraps the ScalarEncoder class.
  * A Log encoder represents a floating point value on a logarithmic scale.
- * valueToEncode = log10(input) 
- * 
+ * valueToEncode = log10(input)
+ *
  *   w -- number of bits to set in output
  *   minval -- minimum input value. must be greater than 0. Lower values are
  *             reset to this value
@@ -51,7 +53,7 @@ import org.numenta.nupic.util.Tuple;
  *   periodic -- If true, then the input value "wraps around" such that minval =
  *             maxval For a periodic value, the input must be strictly less than
  *             maxval, otherwise maxval is a true upper bound.
- *   
+ *
  *   Exactly one of n, radius, resolution must be set. "0" is a special
  *   value that means "not set".
  *   n -- number of bits in the representation (must be > w)
@@ -63,29 +65,31 @@ import org.numenta.nupic.util.Tuple;
  *                 in the output. In terms of the original input values, this
  *                 means 10^1 (1) and 10^1.1 (1.25) will be distinguishable.
  *   name -- an optional string which will become part of the description
- *   verbosity -- level of debugging output you want the encoder to provide.
  *   clipInput -- if true, non-periodic inputs smaller than minval or greater
  *                 than maxval will be clipped to minval/maxval
  *   forced -- (default False), if True, skip some safety checks
  */
 public class LogEncoder extends Encoder<Double> {
+
+	private static final Logger LOG = LoggerFactory.getLogger(LogEncoder.class);
+
 	private ScalarEncoder encoder;
 	private double minScaledValue, maxScaledValue;
 	/**
 	 * Constructs a new {@code LogEncoder}
 	 */
 	LogEncoder() {}
-	
+
 	/**
-	 * Returns a builder for building LogEncoders. 
+	 * Returns a builder for building LogEncoders.
 	 * This builder may be reused to produce multiple builders
-	 * 
+	 *
 	 * @return a {@code LogEncoder.Builder}
 	 */
 	public static Encoder.Builder<LogEncoder.Builder, LogEncoder> builder() {
 		return new LogEncoder.Builder();
 	}
-	
+
 	/**
 	 *   w -- number of bits to set in output
 	 *   minval -- minimum input value. must be greater than 0. Lower values are
@@ -94,7 +98,7 @@ public class LogEncoder extends Encoder<Double> {
 	 *   periodic -- If true, then the input value "wraps around" such that minval =
 	 *             maxval For a periodic value, the input must be strictly less than
 	 *             maxval, otherwise maxval is a true upper bound.
-	 *   
+	 *
 	 *   Exactly one of n, radius, resolution must be set. "0" is a special
 	 *   value that means "not set".
 	 *   n -- number of bits in the representation (must be > w)
@@ -106,7 +110,6 @@ public class LogEncoder extends Encoder<Double> {
 	 *                 in the output. In terms of the original input values, this
 	 *                 means 10^1 (1) and 10^1.1 (1.25) will be distinguishable.
 	 *   name -- an optional string which will become part of the description
-	 *   verbosity -- level of debugging output you want the encoder to provide.
 	 *   clipInput -- if true, non-periodic inputs smaller than minval or greater
 	 *                 than maxval will be clipped to minval/maxval
 	 *   forced -- (default False), if True, skip some safety checks
@@ -118,28 +121,28 @@ public class LogEncoder extends Encoder<Double> {
 		if (getW() == 0) {
 			setW(5);
 		}
-		
+
 		// maxVal defaults to 10000.
 		if (getMaxVal() == 0.0) {
 			setMaxVal(10000.);
 		}
-		
+
 		if (getMinVal() < lowLimit) {
 			setMinVal(lowLimit);
 		}
-		
+
 		if (getMinVal() >= getMaxVal()) {
-			throw new IllegalStateException("Max val must be larger than min val or the lower limit " + 
+			throw new IllegalStateException("Max val must be larger than min val or the lower limit " +
                        "for this encoder " + String.format("%.7f", lowLimit));
 		}
-		
+
 		minScaledValue = Math.log10(getMinVal());
 		maxScaledValue = Math.log10(getMaxVal());
-		
+
 		if(minScaledValue >= maxScaledValue) {
 			throw new IllegalStateException("Max val must be larger, in log space, than min val.");
 		}
-		
+
 		// There are three different ways of thinking about the representation. Handle
 	    // each case here.
 		encoder = ScalarEncoder.builder()
@@ -150,17 +153,16 @@ public class LogEncoder extends Encoder<Double> {
 				.n(getN())
 				.radius(getRadius())
 				.resolution(getResolution())
-				.verbosity(getVerbosity())
 				.clipInput(clipInput())
 				.forced(isForced())
 				.name(getName())
 				.build();
-		
+
 		setN(encoder.getN());
 		setResolution(encoder.getResolution());
 		setRadius(encoder.getRadius());
 	}
-	
+
 
 	@Override
 	public int getWidth() {
@@ -176,7 +178,7 @@ public class LogEncoder extends Encoder<Double> {
 	public List<Tuple> getDescription() {
 		return encoder.getDescription();
 	}
-		
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -184,7 +186,7 @@ public class LogEncoder extends Encoder<Double> {
 	public List<FieldMetaType> getDecoderOutputFieldTypes() {
 		return encoder.getDecoderOutputFieldTypes();
 	}
-	
+
 	/**
 	 * Convert the input, which is in normal space, into log space
 	 * @param input Value in normal space.
@@ -204,23 +206,23 @@ public class LogEncoder extends Encoder<Double> {
 			return Math.log10(val);
 		}
 	}
-	
+
 	/**
 	 * Returns the bucket indices.
-	 * 
-	 * @param	input 	
+	 *
+	 * @param	input
 	 */
 	@Override
 	public int[] getBucketIndices(double input) {
 		Double scaledVal = getScaledValue(input);
-		
+
 		if (scaledVal == null) {
 			return new int[]{};
 		} else {
 			return encoder.getBucketIndices(scaledVal);
 		}
 	}
-	
+
 	/**
 	 * Encodes inputData and puts the encoded value into the output array,
      * which is a 1-D array of length returned by {@link Connections#getW()}.
@@ -228,23 +230,21 @@ public class LogEncoder extends Encoder<Double> {
      * Note: The output array is reused, so clear it before updating it.
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link Connections#getW()}
-     * 
+     *
 	 * @return
 	 */
 	@Override
 	public void encodeIntoArray(Double input, int[] output) {
 		Double scaledVal = getScaledValue(input);
-		
+
 		if (scaledVal == null) {
 			Arrays.fill(output, 0);
 		} else {
 			encoder.encodeIntoArray(scaledVal, output);
-			
-			if (getVerbosity() >= 2) {
-				System.out.print("input: " + input);
-				System.out.print(" scaledVal: " + scaledVal);
-				System.out.println(" output: " + Arrays.toString(output));
-			}
+
+			LOG.trace("input: " + input);
+			LOG.trace(" scaledVal: " + scaledVal);
+			LOG.trace(" output: " + Arrays.toString(output));
 		}
 	}
 
@@ -255,22 +255,22 @@ public class LogEncoder extends Encoder<Double> {
 	public DecodeResult decode(int[] encoded, String parentFieldName) {
 		// Get the scalar values from the underlying scalar encoder
 		DecodeResult decodeResult = encoder.decode(encoded, parentFieldName);
-		
+
 		Map<String, RangeList> fields = decodeResult.getFields();
-		
+
 		if (fields.keySet().size() == 0) {
 			return decodeResult;
 		}
-		
+
 		// Convert each range into normal space
 		RangeList inRanges = (RangeList) fields.values().toArray()[0];
 		RangeList outRanges = new RangeList(new ArrayList<MinMax>(), "");
 		for (MinMax minMax : inRanges.getRanges()) {
-			MinMax scaledMinMax = new MinMax( Math.pow(10, minMax.min()), 
+			MinMax scaledMinMax = new MinMax( Math.pow(10, minMax.min()),
 											  Math.pow(10, minMax.max()));
 			outRanges.add(scaledMinMax);
 		}
-		
+
 		// Generate a text description of the ranges
 		String desc = "";
 		int numRanges = outRanges.size();
@@ -286,20 +286,20 @@ public class LogEncoder extends Encoder<Double> {
 			}
 		}
 		outRanges.setDescription(desc);
-		
+
 		String fieldName;
 		if (!parentFieldName.equals("")) {
 			fieldName = String.format("%s.%s", parentFieldName, getName());
 		} else {
 			fieldName = getName();
 		}
-		
+
 		Map<String, RangeList> outFields = new HashMap<String, RangeList>();
 		outFields.put(fieldName,  outRanges);
-		
+
 		List<String> fieldNames = new ArrayList<String>();
 		fieldNames.add(fieldName);
-		
+
 		return new DecodeResult(outFields, fieldNames);
 	}
 
@@ -309,11 +309,11 @@ public class LogEncoder extends Encoder<Double> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S> List<S> getBucketValues(Class<S> t) {
-		// Need to re-create?	
+		// Need to re-create?
 		if(bucketValues == null) {
 			List<S> scaledValues = encoder.getBucketValues(t);
 			bucketValues = new ArrayList<S>();
-			
+
 			for (S scaledValue : scaledValues) {
 				double value = Math.pow(10, (Double)scaledValue);
 				((List<Double>)bucketValues).add(value);
@@ -321,7 +321,7 @@ public class LogEncoder extends Encoder<Double> {
 		}
 		return (List<S>)bucketValues;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -330,10 +330,10 @@ public class LogEncoder extends Encoder<Double> {
 		EncoderResult scaledResult = encoder.getBucketInfo(buckets).get(0);
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
-		
+
 		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -342,17 +342,17 @@ public class LogEncoder extends Encoder<Double> {
 		EncoderResult scaledResult = encoder.topDownCompute(encoded).get(0);
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
-		
+
 		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public TDoubleList closenessScores(TDoubleList expValues, TDoubleList actValues, boolean fractional) {
 		TDoubleList retVal = new TDoubleArrayList();
-		
+
 		double expValue, actValue;
 		if (expValues.get(0) > 0) {
 			expValue = Math.log10(expValues.get(0));
@@ -364,7 +364,7 @@ public class LogEncoder extends Encoder<Double> {
 		} else {
 			actValue = minScaledValue;
 		}
-		
+
 		double closeness;
 		if (fractional) {
 			double err = Math.abs(expValue - actValue);
@@ -374,18 +374,18 @@ public class LogEncoder extends Encoder<Double> {
 		} else {
 			closeness = Math.abs(expValue - actValue);;
 		}
-		
+
 		retVal.add(closeness);
 		return retVal;
 	}
-	
+
 	/**
 	 * Returns a {@link EncoderBuilder} for constructing {@link ScalarEncoder}s
-	 * 
+	 *
 	 * The base class architecture is put together in such a way where boilerplate
 	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
 	 * the mistake-proneness of extremely long argument lists.
-	 * 
+	 *
 	 * @see ScalarEncoder.Builder#setStuff(int)
 	 */
 	public static class Builder extends Encoder.Builder<LogEncoder.Builder, LogEncoder> {
@@ -393,20 +393,20 @@ public class LogEncoder extends Encoder<Double> {
 
 		@Override
 		public LogEncoder build() {
-			//Must be instantiated so that super class can initialize 
+			//Must be instantiated so that super class can initialize
 			//boilerplate variables.
 			encoder = new LogEncoder();
-			
+
 			//Call super class here
 			super.build();
-			
+
 			////////////////////////////////////////////////////////
 			//  Implementing classes would do setting of specific //
 			//  vars here together with any sanity checking       //
 			////////////////////////////////////////////////////////
-			
+
 			((LogEncoder)encoder).init();
-			
+
 			return (LogEncoder)encoder;
 		}
 	}
