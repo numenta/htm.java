@@ -1,5 +1,8 @@
 package org.numenta.nupic.encoders;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.List;
  */
 public class AdaptiveScalarEncoder extends ScalarEncoder {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveScalarEncoder.class);
+
 	public int recordNum = 0;
 	public boolean learningEnabled = true;
 	public Double[] slidingWindow = new Double[0];
@@ -33,6 +38,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#init()
 	 */
 	@Override
 	public void init() {
@@ -42,6 +49,9 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @see org.numenta.nupic.encoders.ScalarEncoder#initEncoder(int, double,
+	 * double, int, double, double)
 	 */
 	@Override
 	public void initEncoder(int w, double minVal, double maxVal, int n,
@@ -65,7 +75,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	/**
 	 * Returns a builder for building AdaptiveScalarEncoder. This builder may be
 	 * reused to produce multiple builders
-	 * 
+	 *
 	 * @return a {@code AdaptiveScalarEncoder.Builder}
 	 */
 	public static AdaptiveScalarEncoder.Builder adaptiveBuilder() {
@@ -127,7 +137,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 			slidingWindow = deleteItem(slidingWindow, 0);
 		}
 		slidingWindow = appendItem(slidingWindow, input);
-		
+
 		if (this.minVal == this.maxVal) {
 			this.minVal = input;
 			this.maxVal = input + 1;
@@ -138,20 +148,16 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 			double minOverWindow = sorted[0];
 			double maxOverWindow = sorted[sorted.length - 1];
 			if (minOverWindow < this.minVal) {
-				if (this.verbosity >= 2) {
-					System.out.println(String.format("Input %s=%d smaller than minval %d. Adjusting minval to %d",
-							this.name, input, this.minVal, minOverWindow));
-					this.minVal = minOverWindow;
-					setEncoderParams();
-				}
+				LOGGER.trace("Input {}={} smaller than minVal {}. Adjusting minVal to {}",
+							this.name, input, this.minVal, minOverWindow);
+				this.minVal = minOverWindow;
+				setEncoderParams();
 			}
 			if (maxOverWindow > this.maxVal) {
-				if (this.verbosity >= 2) {
-					System.out.println(String.format("Input %s=%d greater than maxval %d. Adjusting maxval to %d",
-							this.name, input, this.minVal, minOverWindow));
-					this.maxVal = maxOverWindow;
-					setEncoderParams();
-				}
+				LOGGER.trace("Input {}={} greater than maxVal {}. Adjusting maxVal to {}",
+						this.name, input, this.minVal, minOverWindow);
+				this.maxVal = maxOverWindow;
+				setEncoderParams();
 			}
 		}
 	}

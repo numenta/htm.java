@@ -207,7 +207,6 @@ public class SDRCategoryEncoderTest {
                 .n(fieldWidth)
                 .w(bitsOn)
                 .name("foo")
-                .verbosity(2)
                 .forced(true).build();
         int[] encoded = new int[fieldWidth];
         Arrays.fill(encoded, 0);

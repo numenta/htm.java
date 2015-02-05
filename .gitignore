@@ -2,6 +2,7 @@
 /build
 /doc
 .idea/
+*.iml
 .gradle
 .settings
 .classpath
