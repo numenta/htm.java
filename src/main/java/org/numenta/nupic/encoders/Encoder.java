@@ -38,6 +38,8 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <pre>
@@ -79,6 +81,9 @@ import org.numenta.nupic.util.Tuple;
  * @author David Ray
  */
 public abstract class Encoder<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Encoder.class);
+
 	/** Value used to represent no data */
 	public static final double SENTINEL_VALUE_FOR_MISSING_DATA = Double.NaN;
     protected List<Tuple> description = new ArrayList<>();
@@ -119,7 +124,6 @@ public abstract class Encoder<T> {
     protected int nInternal;
     protected double rangeInternal;
     protected double range;
-    protected int verbosity;
     protected boolean encLearningEnabled;
     protected List<FieldMetaType> flattenedFieldTypeList;
     protected Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
@@ -420,22 +424,6 @@ public abstract class Encoder<T> {
      */
     public String getName() {
     	return name;
-    }
-
-    /**
-     * Sets the verbosity of debug output
-     * @param v
-     */
-    public void setVerbosity(int v) {
-    	this.verbosity = v;
-    }
-
-    /**
-     * Returns the verbosity setting for an encoder.
-     * @return
-     */
-    public int getVerbosity() {
-    	return verbosity;
     }
 
     /**
@@ -920,7 +908,7 @@ public abstract class Encoder<T> {
 	 * @param prefix
 	 */
 	public void pprintHeader(String prefix) {
-		System.out.println(prefix == null ? "" : prefix);
+		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
 		description.add(new Tuple(2, "end", getWidth()));
@@ -934,22 +922,22 @@ public abstract class Encoder<T> {
 			StringBuilder pname = new StringBuilder(name);
 			if(name.length() > width) pname.setLength(width);
 
-			System.out.println(String.format(formatStr, pname));
+            LOGGER.info(String.format(formatStr, pname));
 		}
 
 		len = getWidth() + (description.size() - 1)*3 - 1;
 		StringBuilder hyphens = new StringBuilder();
 		for(int i = 0;i < len;i++) hyphens.append("-");
-		System.out.println(new StringBuilder(prefix).append(hyphens));
-	}
+        LOGGER.info(new StringBuilder(prefix).append(hyphens).toString());
+    }
 
-	/**
+    /**
 	 * Pretty-print the encoded output using ascii art.
 	 * @param output
 	 * @param prefix
 	 */
 	public void pprint(int[] output, String prefix) {
-		System.out.println(prefix == null ? "" : prefix);
+		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
 		description.add(new Tuple(2, "end", getWidth()));
@@ -959,17 +947,17 @@ public abstract class Encoder<T> {
 			int offset = (int)description.get(i).get(1);
 			int nextOffset = (int)description.get(i + 1).get(1);
 
-			System.out.println(
-				String.format("%s |",
-					ArrayUtils.bitsToString(
-						ArrayUtils.sub(output, ArrayUtils.range(offset, nextOffset))
-					)
-				)
-			);
-		}
-	}
+            LOGGER.info(
+                    String.format("%s |",
+                            ArrayUtils.bitsToString(
+                                    ArrayUtils.sub(output, ArrayUtils.range(offset, nextOffset))
+                            )
+                    )
+            );
+        }
+    }
 
-	/**
+    /**
 	 * Takes an encoded output and does its best to work backwards and generate
      * the input that would have generated it.
 	 *
@@ -1265,7 +1253,6 @@ public abstract class Encoder<T> {
 	public static abstract class Builder<K, E> {
 		protected int n;
 		protected int w;
-		protected int encVerbosity;
 		protected double minVal;
 		protected double maxVal;
 		protected double radius;
@@ -1284,7 +1271,6 @@ public abstract class Encoder<T> {
 			}
 			encoder.setN(n);
 			encoder.setW(w);
-			encoder.setVerbosity(encVerbosity);
 			encoder.setMinVal(minVal);
 			encoder.setMaxVal(maxVal);
 			encoder.setRadius(radius);
@@ -1303,10 +1289,6 @@ public abstract class Encoder<T> {
 		}
 		public K w(int w) {
 			this.w = w;
-			return (K)this;
-		}
-		public K verbosity(int verbosity) {
-			this.encVerbosity = verbosity;
 			return (K)this;
 		}
 		public K minVal(double minVal) {
