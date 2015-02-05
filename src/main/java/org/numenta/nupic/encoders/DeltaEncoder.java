@@ -38,7 +38,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	public DeltaEncoder() {
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#init()
 	 */
 	@Override
@@ -46,7 +47,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		super.init();
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#initEncoder(int, double, double, int, double, double)
 	 */
 	@Override
@@ -77,7 +79,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		}
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#encodeIntoArray(java.lang.Double, int[])
 	 */
 	@Override
@@ -86,11 +89,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 			throw new IllegalArgumentException(
 					String.format("Expected a Double input but got input of type %s", input.toString()));
 		}
-		boolean learn = false;
 		double delta = 0;
-		if (this.encLearningEnabled == false) {
-			learn = this.learningEnabled;
-		}
 		if (input == DeltaEncoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
 			output = new int[this.n];
 			Arrays.fill(output, 0);
@@ -130,7 +129,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#getBucketInfo(int[])
 	 */
 	@Override
@@ -138,7 +138,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		return super.getBucketInfo(buckets);
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#topDownCompute(int[])
 	 */
 	@Override

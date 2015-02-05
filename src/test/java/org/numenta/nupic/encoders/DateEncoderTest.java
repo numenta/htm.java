@@ -6,7 +6,6 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.numenta.nupic.encoders.*;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
