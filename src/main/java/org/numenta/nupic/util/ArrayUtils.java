@@ -53,6 +53,11 @@ public class ArrayUtils {
             return i > 0;
         }
     };
+    public static Condition<Integer> INT_GREATER_THAN_0 = new Condition.Adapter<Integer>() {
+        public boolean eval(int i) {
+            return i > 0;
+        }
+    };
     
     /**
      * Return a new double[] containing the difference of each element and its

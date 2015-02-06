@@ -425,10 +425,8 @@ public class SpatialPooler {
      *              			survived inhibition.
      */
     public void adaptSynapses(Connections c, int[] inputVector, int[] activeColumns) {
-    	int[] inputIndices = ArrayUtils.where(inputVector, new Condition.Adapter<Object>() {
-            @Override
-    		public boolean eval(int i) { return i > 0; }
-    	});
+    	int[] inputIndices = ArrayUtils.where(inputVector, ArrayUtils.INT_GREATER_THAN_0);
+    	
     	double[] permChanges = new double[c.getNumInputs()];
     	Arrays.fill(permChanges, -1 * c.getSynPermInactiveDec());
     	ArrayUtils.setIndexesTo(permChanges, inputIndices, c.getSynPermActiveInc());
@@ -689,7 +687,7 @@ public class SpatialPooler {
      * Maps a column to its input bits. This method encapsulates the topology of
      * the region. It takes the index of the column as an argument and determines
      * what are the indices of the input vector that are located within the
-     * column's potential pooc. The return value is a list containing the indices
+     * column's potential pool. The return value is a list containing the indices
      * of the input bits. The current implementation of the base class only
      * supports a 1 dimensional topology of columns with a 1 dimensional topology
      * of inputs. To extend this class to support 2-D topology you will need to
@@ -927,11 +925,7 @@ public class SpatialPooler {
     			overlaps[i] += addToWinners;
     		}
     	}
-    	return ArrayUtils.where(activeColumns, new Condition.Adapter<Integer>() {
-    		@Override public boolean eval(int n) {
-				return n > 0;
-			}
-    	});
+    	return ArrayUtils.where(activeColumns, ArrayUtils.INT_GREATER_THAN_0);
     }
     
     /**
@@ -960,9 +954,7 @@ public class SpatialPooler {
      */
     public void updateBoostFactors(Connections c) {
     	//Indexes of values > 0
-    	int[] mask = ArrayUtils.where(c.getMinActiveDutyCycles(), new Condition.Adapter<Object>() {
-    		@Override public boolean eval(double d) { return d > 0; }
-    	});
+    	int[] mask = ArrayUtils.where(c.getMinActiveDutyCycles(), ArrayUtils.GREATER_THAN_0);
  
     	final double[] activeDutyCycles = c.getActiveDutyCycles();
     	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
