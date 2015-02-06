@@ -68,9 +68,14 @@ jmh {
     //jmhVersion = '1.5.1'
 }
 
-tasks.jmhClasses.execute()
-tasks.jmhJar.execute()
-tasks.jmh.execute()
+task runBench(dependsOn: check) << {
+    tasks.jmhClasses.execute()
+    tasks.jmhJar.execute()
+    tasks.jmh.execute()
+}
+
+tasks.runBench.execute()
+
 /////////////////////////////////////////////////////////////////////////
 
 // create Gradle wrapper with command line `gradle wrapper` in terminal

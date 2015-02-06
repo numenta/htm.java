@@ -574,7 +574,7 @@ public class SpatialPooler {
     }
     
     /**
-     * Returns a randomly generated permanence value for a synapses that is
+     * Returns a randomly generated permanence value for a synapse that is
      * initialized in a connected state. The basic idea here is to initialize
      * permanence values very close to synPermConnected so that a small number of
      * learning steps could make it disconnected or connected.
