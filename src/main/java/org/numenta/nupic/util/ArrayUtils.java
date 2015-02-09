@@ -58,6 +58,9 @@ public class ArrayUtils {
             return i > 0;
         }
     };
+    public static Condition<Integer> GREATER_OR_EQUAL_0 = new Condition.Adapter<Integer>() {
+        @Override public boolean eval(int n) { return n >= 0; }
+    };
     
     /**
      * Return a new double[] containing the difference of each element and its
@@ -458,8 +461,8 @@ public class ArrayUtils {
      * @return
      * @throws IllegalArgumentException if the two argument arrays are not the same length
      */
-    public static double[] multiply(double[] multiplicand, double[] factor,
-                                    double multiplicandAdjustment, double factorAdjustment) {
+    public static double[] multiply(
+    	double[] multiplicand, double[] factor, double multiplicandAdjustment, double factorAdjustment) {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(

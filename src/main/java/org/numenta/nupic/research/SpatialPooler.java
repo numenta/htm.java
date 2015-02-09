@@ -280,7 +280,7 @@ public class SpatialPooler {
     
     /**
      * Updates the duty cycles for each column. The OVERLAP duty cycle is a moving
-     * average of the number of inputs which overlapped with the each column. The
+     * average of the number of inputs which overlapped with each column. The
      * ACTIVITY duty cycles is a moving average of the frequency of activation for
      * each column.
      * 
@@ -752,6 +752,7 @@ public class SpatialPooler {
         final int[] dimensions = topology.getDimensions();
         int[] columnCoords = topology.computeCoordinates(columnIndex);
         List<int[]> dimensionCoords = new ArrayList<>();
+        
         for(int i = 0;i < dimensions.length;i++) {
             int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
             int[] curRange = new int[range.length];
@@ -763,10 +764,7 @@ public class SpatialPooler {
             }else{
                 final int idx = i;
                 curRange = ArrayUtils.retainLogicalAnd(range, 
-                    new Condition[] {
-                        new Condition.Adapter<Integer>() {
-                            @Override public boolean eval(int n) { return n >= 0; }
-                        },
+                    new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
                         new Condition.Adapter<Integer>() {
                             @Override public boolean eval(int n) { return n < dimensions[idx]; }
                         }
@@ -871,7 +869,8 @@ public class SpatialPooler {
     	ArrayUtils.d_add(overlaps, c.getTieBreaker());
     	
     	if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
-    		return inhibitColumnsGlobal(c, overlaps, density);
+    		int[] nhibit = inhibitColumnsGlobal(c, overlaps, density);
+    		return nhibit;
     	}
     	return inhibitColumnsLocal(c, overlaps, density);
     }
@@ -953,12 +952,12 @@ public class SpatialPooler {
      *         minActiveDutyCycle
      */
     public void updateBoostFactors(Connections c) {
-    	//Indexes of values > 0
-    	int[] mask = ArrayUtils.where(c.getMinActiveDutyCycles(), ArrayUtils.GREATER_THAN_0);
- 
-    	final double[] activeDutyCycles = c.getActiveDutyCycles();
-    	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
+    	double[] activeDutyCycles = c.getActiveDutyCycles();
+    	double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
     	
+    	//Indexes of values > 0
+    	int[] mask = ArrayUtils.where(minActiveDutyCycles, ArrayUtils.GREATER_THAN_0);
+ 
     	double[] boostInterim;
     	if(mask.length < 1) {
     		boostInterim = c.getBoostFactors();
@@ -968,7 +967,7 @@ public class SpatialPooler {
 	    	boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
 	    	boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
 	    	boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
-    	}
+	    }
     	
     	ArrayUtils.setIndexesTo(boostInterim, ArrayUtils.where(activeDutyCycles, new Condition.Adapter<Object>() {
     		int i = 0;
