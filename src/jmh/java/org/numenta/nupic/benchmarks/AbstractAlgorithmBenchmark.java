@@ -24,16 +24,15 @@ public abstract class AbstractAlgorithmBenchmark {
         SDR = new int[2048];
 
         //Layer components
-        ScalarEncoder.Builder dayBuilder =
-                        ScalarEncoder.builder()
-                        .n(8)
-                        .w(3)
-                        .radius(1.0)
-                        .minVal(1.0)
-                        .maxVal(8)
-                        .periodic(true)
-                        .forced(true)
-                        .resolution(1);
+        ScalarEncoder.Builder dayBuilder = ScalarEncoder.builder()
+            .n(8)
+            .w(3)
+            .radius(1.0)
+            .minVal(1.0)
+            .maxVal(8)
+            .periodic(true)
+            .forced(true)
+            .resolution(1);
         encoder = dayBuilder.build();
         pooler = new SpatialPooler();
 
