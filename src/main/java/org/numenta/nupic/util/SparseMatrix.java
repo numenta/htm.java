@@ -401,9 +401,7 @@ public abstract class SparseMatrix<T> {
         }
         for(int i = 0;i < index.length - 1;i++) {
         	if(index[i] >= dimensions[i]) {
-        		System.out.println("index = " + index[i] + ",  dimensions = " + dimensions[i] + ",  i = " + i );
-                
-                throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
+        		throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
                     print1DArray(index) + " > " + print1DArray(dimensions));
             }
         }

@@ -131,7 +131,6 @@ public class Connections {
     private double[] minActiveDutyCycles;
     private double[] boostFactors;
     
-    
 	/////////////////////////////////////// Temporal Memory Vars ///////////////////////////////////////////
     
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
@@ -1038,7 +1037,7 @@ public class Connections {
      * High verbose output useful for debugging
      */
     public void printParameters() {
-        System.out.println("------------J  SpatialPooler Parameters ------------------");
+        System.out.println("------------ SpatialPooler Parameters ------------------");
         System.out.println("numInputs                  = " + getNumInputs());
         System.out.println("numColumns                 = " + getNumColumns());
         System.out.println("columnDimensions           = " + getColumnDimensions());
