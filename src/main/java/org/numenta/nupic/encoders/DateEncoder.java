@@ -455,7 +455,6 @@ public class DateEncoder extends Encoder<Date> {
      * @param inputData	the input value, in this case a date object
      * @return	a list of one input double
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public TDoubleList getScalars(Date inputData) {
         if(inputData == null) {
             throw new IllegalArgumentException("DateEncoder requires a valid Date object but got null");
