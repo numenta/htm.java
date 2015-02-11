@@ -9,9 +9,9 @@ Community-supported Java port of the [Numenta Platform for Intelligent Computing
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the [Cortical Learning Algorithm (CLA)](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
 
-### In The News - Update! (02/2015)
-* latest [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html)
-* archive [Functional Completion](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html) (12/2014)
+### In The News - New Update!
+* [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
+* [Functional Completion](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html) (12/2014)
 
 For a more detailed discussion of <b>htm.java</b> see: <BR>
 * [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
