@@ -392,7 +392,16 @@ public class AnomalyLikelihoodTest {
      */
     @Test
     public void testFlatMetricScores() {
+        // Generate samples with very flat metric values
+        List<Sample> data1 = generateSampleData(0.2, 0.2, 42, 1e-10).subList(0, 1000);
         
+        // Check that we do indeed get reasonable likelihood values
+        AnomalyLikelihoodMetrics metrics1 = an.estimateAnomalyLikelihoods(data1, 10, 0);
+        assertEquals(metrics1.getLikelihoods().length, data1.size());
+        double[] likelihoods = metrics1.getLikelihoods();
+        assertTrue(ArrayUtils.sum(likelihoods) >= 0.4 * likelihoods.length);
+        metrics1.getParams().distribution().equals(an.nullDistribution());
+        assertTrue(metrics1.getParams().distribution().equals(an.nullDistribution()));
     }
     
     
