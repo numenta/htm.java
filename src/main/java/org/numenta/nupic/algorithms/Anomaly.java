@@ -94,7 +94,7 @@ public abstract class Anomaly {
                int claLearningPeriod = (int)params.getOrDefault(KEY_LEARNING_PERIOD, VALUE_NONE);
                int estimationSamples = (int)params.getOrDefault(KEY_ESTIMATION_SAMPLES, VALUE_NONE);
                
-               return new AnomalyLikelihood(useMovingAvg, windowSize, isWeighted, claLearningPeriod, estimationSamples);
+               return new AnomalyLikelihood(useMovingAvg, windowSize, claLearningPeriod, estimationSamples);
            }
            default: return null;
        }

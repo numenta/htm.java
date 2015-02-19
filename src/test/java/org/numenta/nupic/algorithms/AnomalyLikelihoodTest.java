@@ -3,6 +3,7 @@ package org.numenta.nupic.algorithms;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_DIST;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_HIST_LIKE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MEAN;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -404,6 +406,114 @@ public class AnomalyLikelihoodTest {
         assertTrue(metrics1.getParams().distribution().equals(an.nullDistribution()));
     }
     
+    /**
+     * This calls estimateAnomalyLikelihoods and updateAnomalyLikelihoods
+     * with one or no scores.
+     */
+    @Test
+    public void testVeryFewScores() {
+        // Generate an estimate using two data points
+        List<Sample> data1 = generateSampleData(42, 1e-10, 0.2, 0.2).subList(0, 2);
+        AnomalyLikelihoodMetrics metrics1 = an.estimateAnomalyLikelihoods(data1, 10, 0);
+        assertTrue(an.isValidEstimatorParams(metrics1.getParams()));
+        
+        // Check that the estimated mean is that value
+        assertWithinEpsilon(metrics1.getParams().distribution().mean, data1.get(0).score);
+        
+        // Can't generate an estimate using no data points
+        List<Sample> test = new ArrayList<>();
+        try {
+            an.estimateAnomalyLikelihoods(test, 10, 0);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getMessage().equals("Must have at least one anomaly score."));
+        }
+        
+        // Can't update without scores
+        try {
+            an.updateAnomalyLikelihoods(test, metrics1.getParams());
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getMessage().equals("Must have at least one anomaly score."));
+        }
+    }
+    
+    /**
+     * NOTE: Not a valid test in java. Remnant of Python ability to substitute types, so we 
+     * just do a simple test
+     */
+    @Test
+    public void testFilterLikelihoodsInputType() {
+        double[] l2 = an.filterLikelihoods(new double[] { 0.0, 0.0, 0.3, 0.3, 0.5 });
+        double[] filtered = new double[] { 0.0, 0.001, 0.3, 0.3, 0.5 };
+        int i = 0;
+        for(double d : l2) {
+            assertEquals(d, filtered[i++], 0.01);
+        }
+    }
+    
+    /**
+     * <pre>
+     * Tests _filterLikelihoods function for several cases:
+     * i.   Likelihood goes straight to redzone, skipping over yellowzone, repeats
+     * ii.  Case (i) with different values, and numpy array instead of float list
+     * iii. A scenario where changing the redzone from four to five 9s should
+     *      filter differently
+     * </pre>
+     */
+    @Test
+    public void testFilterLikelihoods() {
+        double redThreshold = 0.9999;
+        double yellowThreshold = 0.999;
+        
+        // Case (i): values at indices 1 and 7 should be filtered to yellow zone
+        double[] l = { 1.0, 1.0, 0.9, 0.8, 0.5, 0.4, 1.0, 1.0, 0.6, 0.0 };
+        l = Arrays.stream(l).map(d -> 1.0d - d).toArray();
+        double[] l2a = Arrays.copyOf(l, l.length);
+        l2a[1] = 1 - yellowThreshold;
+        l2a[7] = 1 - yellowThreshold;
+        double[] l3a = an.filterLikelihoods(l, redThreshold, yellowThreshold);
+        
+        int successIndexes = 
+            IntStream.range(0, l.length).map(i -> { assertEquals(l2a[i], l3a[i], 0.01); return 1; }).sum();
+        assertEquals(successIndexes, l.length);
+        
+        // Case (ii): values at indices 1-10 should be filtered to yellow zone
+        l = new double[] { 
+            0.999978229, 0.999978229, 0.999999897, 1, 1, 1, 1,
+            0.999999994, 0.999999966, 0.999999966, 0.999994331,
+            0.999516576, 0.99744487 };
+        l = Arrays.stream(l).map(d -> 1.0d - d).toArray();
+        double[] l2b = Arrays.copyOf(l, l.length);
+        ArrayUtils.setIndexesTo(l2b, ArrayUtils.range(1, 11), 1 - yellowThreshold);
+        double[] l3b = an.filterLikelihoods(l);
+        
+        successIndexes = 
+            IntStream.range(0, l.length).map(i -> { assertEquals(l2b[i], l3b[i], 0.01); return 1; }).sum();
+        assertEquals(successIndexes, l.length);
+        
+        // Case (iii): redThreshold difference should be at index 2
+        l = new double[] {
+            0.999968329, 0.999999897, 1, 1, 1,
+            1, 0.999999994, 0.999999966, 0.999999966,
+            0.999994331, 0.999516576, 0.99744487 
+        };
+        l = Arrays.stream(l).map(d -> 1.0d - d).toArray();
+        double[] l2a2 = Arrays.copyOf(l, l.length);
+        double[] l2b2 = Arrays.copyOf(l, l.length);
+        ArrayUtils.setIndexesTo(l2a2, ArrayUtils.range(1, 10), 1 - yellowThreshold);
+        ArrayUtils.setIndexesTo(l2b2, ArrayUtils.range(2, 10), 1 - yellowThreshold);
+        double[] l3a2 = an.filterLikelihoods(l);
+        double[] l3b2 = an.filterLikelihoods(l, 0.99999, yellowThreshold);
+        
+        successIndexes = 
+            IntStream.range(0, l2a2.length).map(i -> { assertEquals(l2a2[i], l3a2[i], 0.01); return 1; }).sum();
+        assertEquals(successIndexes, l2a2.length);
+        
+        successIndexes = 
+            IntStream.range(0, l2b2.length).map(i -> { assertEquals(l2b2[i], l3b2[i], 0.01); return 1; }).sum();
+        assertEquals(successIndexes, l2b2.length);
+    }
     
     /**
      * Tests the AnomalyParams return value and its json creation

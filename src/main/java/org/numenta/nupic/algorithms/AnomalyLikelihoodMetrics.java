@@ -1,116 +1,64 @@
 package org.numenta.nupic.algorithms;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TDoubleArrayList;
-
-import java.io.IOException;
-import java.io.StringWriter;
-
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
-import org.numenta.nupic.util.Tuple;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-
+/**
+ * Container class to hold the results of {@link AnomalyLikelihood} estimations
+ * and updates.
+ * 
+ * @author David Ray
+ * @see AnomalyLikelihood
+ * @see AnomalyLikelihoodTest
+ */
 public class AnomalyLikelihoodMetrics {
-    private static final Logger LOG = LoggerFactory.getLogger(AnomalyLikelihoodMetrics.class);
-    
-    private State state;
-    
     private AnomalyParams params;
     private AveragedAnomalyRecordList aggRecordList;
     private double[] likelihoods;
     
+    /**
+     * Constructs a new {@code AnomalyLikelihoodMetrics}
+     * 
+     * @param likelihoods       array of pre-computed estimations
+     * @param aggRecordList     List of {@link Sample}s which are basically a set of date, value, average score,
+     *                          a list of historical values, and a running total.
+     * @param params            {@link AnomalyParams} which are a {@link Statistic}, array of likelihoods,
+     *                          and a {@link MovingAverage} 
+     */
     public AnomalyLikelihoodMetrics( double[] likelihoods, AveragedAnomalyRecordList aggRecordList, AnomalyParams params) {
-        state = new State();
-        
         this.params = params;
         this.aggRecordList = aggRecordList;
         this.likelihoods = likelihoods;
     }
     
+    /**
+     * Returns the array of computed likelihoods
+     * @return
+     */
     public double[] getLikelihoods() {
         return likelihoods;
     }
     
+    /**
+     * <pre>
+     * Returns the record list which are:
+     *     List of {@link Sample}s which are basically a set of date, value, average score,
+     *     a list of historical values, and a running total.
+     * </pre>
+     * @return
+     */
     public AveragedAnomalyRecordList getAvgRecordList() {
         return aggRecordList;
     }
     
+    /**
+     * <pre>
+     * Returns the {@link AnomalyParams} which is:
+     *     a {@link Statistic}, array of likelihoods,
+     *     and a {@link MovingAverage}
+     * </pre> 
+     * @return
+     */
     public AnomalyParams getParams() {
         return params;
-    }
-    
-    public void updateState(Statistic s, Tuple movingAverage, TDoubleList historicalLikelihoods) {
-        this.state = new State(s, movingAverage, historicalLikelihoods);
-    }
-    
-    public String printState() {
-        return state.toJson();
-    }
-    
-    class State {
-        private Statistic distribution;
-        /** To contain TDoubleList:historicalValues, double:total, int:windowSize */
-        private Tuple movingAverage;
-        /** List of computed likelihoods of an occurring anomaly */
-        private TDoubleList historicalLikelihoods;
-        
-        public State() {
-            this(null, new Tuple(null, null, null), new TDoubleArrayList());
-        }
-        
-        /**
-         * Represents the current state a given {@link AnomalyLikelihood}
-         * 
-         * @param s                         {@link Statistic}, containing original value, mean, standard deviation
-         * @param movingAverage             {@link Tuple} of historicalValues, total, windowSize
-         * @param historicalLikelihoods     computed list of anomaly likelihoods
-         */
-        public State(Statistic s, Tuple movingAverage, TDoubleList historicalLikelihoods) {
-            this.distribution = s;
-            this.movingAverage = movingAverage;
-            this.historicalLikelihoods = historicalLikelihoods;
-        }
-        
-        public String toJson() {
-            // Create the node factory that gives us nodes.
-            JsonNodeFactory factory = new JsonNodeFactory(false);
-     
-            // create a json factory to write the tree node as json. for the example
-            // we just write to console
-            JsonFactory jsonFactory = new JsonFactory();
-            JsonGenerator generator = null;
-            StringWriter out = new StringWriter();
-            try {
-                 generator = jsonFactory.createGenerator(out);
-            }catch(IOException e) {
-                LOG.error("Error while creating JsonGenerator", e);
-            }
-            ObjectMapper mapper = new ObjectMapper();
-     
-            // the root node - state
-            ObjectNode state = factory.objectNode();
-            state.set("distribution", distribution.toJson(factory));
-            
-            
-            
-            try {
-                mapper.writeTree(generator, state);
-            } catch(JsonProcessingException e) {
-                LOG.error("Error while writing json", e);
-            } catch(IOException e) {
-                LOG.error("Error while writing json", e);
-            }
-            
-            return out.getBuffer().toString();
-        }
     }
 }

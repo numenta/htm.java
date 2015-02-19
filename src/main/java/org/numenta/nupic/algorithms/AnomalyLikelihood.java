@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.numenta.nupic.algorithms.MovingAverage.Calculation;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
@@ -30,26 +31,77 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class AnomalyLikelihood extends Anomaly {
     private static final Logger LOG = LoggerFactory.getLogger(AnomalyLikelihood.class);
     
-    private boolean isWeighted;
     private int claLearningPeriod = 300;
     private int estimationSamples = 300;
     private int probationaryPeriod;
+    private int iteration;
+    private int reestimationPeriod;
     
-    public AnomalyLikelihood(boolean useMovingAvg, int windowSize, boolean isWeighted) {
+    private List<Sample> historicalScores = new ArrayList<>();
+    private AnomalyParams distribution;
+    
+    public AnomalyLikelihood(boolean useMovingAvg, int windowSize, int claLearningPeriod, int estimationSamples) {
         super(useMovingAvg, windowSize);
         
-        this.isWeighted = isWeighted;
-        this.probationaryPeriod = claLearningPeriod + estimationSamples;
-    }
-    
-    public AnomalyLikelihood(boolean useMovingAvg, int windowSize, boolean isWeighted, 
-        int claLearningPeriod, int estimationSamples) {
-        super(useMovingAvg, windowSize);
-        
-        this.isWeighted = isWeighted;
         this.claLearningPeriod = claLearningPeriod == VALUE_NONE ? this.claLearningPeriod : claLearningPeriod;
         this.estimationSamples = estimationSamples == VALUE_NONE ? this.estimationSamples : estimationSamples;
         this.probationaryPeriod = claLearningPeriod + estimationSamples;
+        // How often we re-estimate the Gaussian distribution. The ideal is to
+        // re-estimate every iteration but this is a performance hit. In general the
+        // system is not very sensitive to this number as long as it is small
+        // relative to the total number of records processed.
+        this.reestimationPeriod = 100;
+    }
+    
+    /**
+     * Compute a log scale representation of the likelihood value. Since the
+     * likelihood computations return low probabilities that often go into four 9's
+     * or five 9's, a log value is more useful for visualization, thresholding,
+     * etc.
+     * 
+     * @param likelihood
+     * @return
+     */
+    public static double computeLogLikelihood(double likelihood) {
+        return Math.log(1.0000000001 - likelihood) / -23.02585084720009;
+    }
+    
+    /**
+     * Return the probability that the current value plus anomaly score represents
+     * an anomaly given the historical distribution of anomaly scores. The closer
+     * the number is to 1, the higher the chance it is an anomaly.
+     *
+     * Given the current metric value, plus the current anomaly score, output the
+     * anomalyLikelihood for this record.
+     * 
+     * @param value             input value
+     * @param anomalyScore      current anomaly score
+     * @param timestamp         (optional) timestamp
+     * @return  Given the current metric value, plus the current anomaly score, output the
+     * anomalyLikelihood for this record.
+     */
+    public double anomalyProbability(double value, double anomalyScore, DateTime timestamp) {
+        if(timestamp == null) {
+            timestamp = new DateTime();
+        }
+        
+        Sample dataPoint = new Sample(timestamp, value, anomalyScore);
+        double likelihoodRetval;
+        if(historicalScores.size() < probationaryPeriod) {
+            likelihoodRetval = 0.5;
+        }else{
+            if(distribution == null || iteration % reestimationPeriod == 0) {
+                this.distribution = estimateAnomalyLikelihoods(
+                    historicalScores, 10, claLearningPeriod).getParams();
+            }
+            AnomalyLikelihoodMetrics metrics = updateAnomalyLikelihoods(Arrays.asList(dataPoint), this.distribution);
+            this.distribution = metrics.getParams();
+            likelihoodRetval = 1.0 - metrics.getLikelihoods()[0];
+        }
+        historicalScores.add(dataPoint);
+        this.iteration += 1;
+        
+        return likelihoodRetval;
     }
     
     /**
@@ -112,9 +164,8 @@ public class AnomalyLikelihood extends Anomaly {
                 distribution, 
                 new MovingAverage(records.historicalValues, records.total, averagingWindow), 
                 len > 0 ? 
-                    Arrays.copyOfRange(likelihoods, len - Math.min(averagingWindow, len), len) :
-                        new double[0]
-        ); 
+                    Arrays.copyOfRange(likelihoods, len - Math.min(averagingWindow, len), len) : 
+                        new double[0]); 
         
         if(LOG.isDebugEnabled()) {
             LOG.debug(
@@ -136,7 +187,7 @@ public class AnomalyLikelihood extends Anomaly {
         }
         
         if(anomalyScores.size() == 0) {
-            throw new IllegalArgumentException("Must have at least one anomaly score");
+            throw new IllegalArgumentException("Must have at least one anomaly score.");
         }
         
         if(!isValidEstimatorParams(params)) {
@@ -233,13 +284,13 @@ public class AnomalyLikelihood extends Anomaly {
                 // If value is in redzone
                 if(likelihoods[i] > redThreshold) {
                     // Previous value is not in redzone, so leave as-is
-                    filteredLikelihoods[i] = v;
+                    filteredLikelihoods[i + 1] = v;
                 }else{
-                    filteredLikelihoods[i] = yellowThreshold;
+                    filteredLikelihoods[i + 1] = yellowThreshold;
                 }
             }else{
                 // Value is below the redzone, so leave as-is
-                filteredLikelihoods[i] = v;
+                filteredLikelihoods[i + 1] = v;
             }
         }
         
@@ -437,6 +488,7 @@ public class AnomalyLikelihood extends Anomaly {
         
         private final Statistic distribution;
         private final MovingAverage movingAverage;
+        private final double[] historicalLikelihoods;
         private final int windowSize;
         
         
@@ -448,12 +500,13 @@ public class AnomalyLikelihood extends Anomaly {
         public AnomalyParams(String[] keys, Object... values) {
             super(keys, values);
             if(keys.length != 3 || values.length != 3) {
-                throw new IllegalArgumentException("AnomalyParams must have \"distribution\", \"movingAverage\", and \"windowSize\"" +
+                throw new IllegalArgumentException("AnomalyParams must have \"distribution\", \"movingAverage\", and \"historicalLikelihoods\"" +
                     " parameters. keys.length != 3 or values.length != 3");
             }
             
             this.distribution = (Statistic)get(KEY_DIST);
             this.movingAverage = (MovingAverage)get(KEY_MVG_AVG);
+            this.historicalLikelihoods = (double[])get(KEY_HIST_LIKE);
             this.windowSize = movingAverage.getWindowSize();
         }
         
@@ -471,6 +524,14 @@ public class AnomalyLikelihood extends Anomaly {
          */
         public MovingAverage movingAverage() {
             return movingAverage;
+        }
+        
+        /**
+         * Returns the array of computed likelihoods
+         * @return
+         */
+        public double[] historicalLikelihoods() {
+            return historicalLikelihoods;
         }
         
         /**
