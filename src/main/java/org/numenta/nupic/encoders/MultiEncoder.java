@@ -133,7 +133,7 @@ public class MultiEncoder extends Encoder<Object> {
 
 		for (Object d : child.getDescription()) {
 			Tuple dT = (Tuple) d;
-			description.add(new Tuple(2, dT.get(0), (int)dT.get(1) + getWidth()));
+			description.add(new Tuple(dT.get(0), (int)dT.get(1) + getWidth()));
 		}
 		width += child.getWidth();
 	}

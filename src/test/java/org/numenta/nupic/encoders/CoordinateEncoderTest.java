@@ -339,7 +339,7 @@ public class CoordinateEncoderTest {
 	
 	public int[] encode(CoordinateEncoder encoder, int[] coordinate, double radius) {
 		int[] output = new int[encoder.getWidth()];
-		encoder.encodeIntoArray(new Tuple(2, coordinate, radius), output);
+		encoder.encodeIntoArray(new Tuple(coordinate, radius), output);
 		return output;
 	}
 	

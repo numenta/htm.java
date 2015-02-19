@@ -147,7 +147,7 @@ public class CategoryEncoder extends Encoder<String> {
 				"Width != w (num bits to represent output item) * #categories");
 		}
 
-		description.add(new Tuple(2, name, 0));
+		description.add(new Tuple(name, 0));
 	}
 
 	/**

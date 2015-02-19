@@ -42,10 +42,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 
 	/**
 	 * {@inheritDoc}
-<<<<<<< HEAD
-=======
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#init()
->>>>>>> master
 	 */
 	@Override
 	public void init() {
@@ -54,10 +51,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 
 	/**
 	 * {@inheritDoc}
-<<<<<<< HEAD
-=======
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#initEncoder(int, double, double, int, double, double)
->>>>>>> master
 	 */
 	@Override
 	public void initEncoder(int w, double minVal, double maxVal, int n,
@@ -150,10 +144,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 
 	/**
 	 * {@inheritDoc}
-<<<<<<< HEAD
-=======
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#getBucketInfo(int[])
->>>>>>> master
 	 */
 	@Override
 	public List<EncoderResult> getBucketInfo(int[] buckets) {
@@ -162,10 +153,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 
 	/**
 	 * {@inheritDoc}
-<<<<<<< HEAD
-=======
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#topDownCompute(int[])
->>>>>>> master
 	 */
 	@Override
 	public List<EncoderResult> topDownCompute(int[] encoded) {

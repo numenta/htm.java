@@ -243,7 +243,7 @@ public class ScalarEncoder extends Encoder<Double> {
 		if(!isForced()) {
 			checkReasonableSettings();
 		}
-        description.add(new Tuple(2, (name = getName()).equals("None") ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
+        description.add(new Tuple((name = getName()).equals("None") ? "[" + (int)getMinVal() + ":" + (int)getMaxVal() + "]" : name, 0));
 	}
 
 	/**
@@ -521,21 +521,20 @@ public class ScalarEncoder extends Encoder<Double> {
 			if(nz[i] == run[0] + run[1]) {
 				run[1] += 1;
 			}else{
-				runs.add(new Tuple(2, run[0], run[1]));
+				runs.add(new Tuple(run[0], run[1]));
 				run = new int[] { nz[i], 1 };
 			}
 			i += 1;
 		}
-		runs.add(new Tuple(2, run[0], run[1]));
+		runs.add(new Tuple(run[0], run[1]));
 
 		// If we have a periodic encoder, merge the first and last run if they
 	    // both go all the way to the edges
 		if(isPeriodic() && runs.size() > 1) {
 			int l = runs.size() - 1;
 			if(((Integer)runs.get(0).get(0)) == 0 && ((Integer)runs.get(l).get(0)) + ((Integer)runs.get(l).get(1)) == getN()) {
-				runs.set(l, new Tuple(2,
-					(Integer)runs.get(l).get(0),
-						((Integer)runs.get(l).get(1)) + ((Integer)runs.get(0).get(1)) ));
+				runs.set(l, new Tuple((Integer)runs.get(l).get(0),
+					((Integer)runs.get(l).get(1)) + ((Integer)runs.get(0).get(1)) ));
 				runs = runs.subList(1, runs.size());
 			}
 		}
@@ -771,23 +770,23 @@ public class ScalarEncoder extends Encoder<Double> {
 	 */
 	public List<Tuple> dict() {
 		List<Tuple> l = new ArrayList<Tuple>();
-		l.add(new Tuple(2, "maxval", getMaxVal()));
-		l.add(new Tuple(2, "bucketValues", getBucketValues(Double.class)));
-		l.add(new Tuple(2, "nInternal", getNInternal()));
-		l.add(new Tuple(2, "name", getName()));
-		l.add(new Tuple(2, "minval", getMinVal()));
-		l.add(new Tuple(2, "topDownValues", Arrays.toString(getTopDownValues())));
-		l.add(new Tuple(2, "clipInput", clipInput()));
-		l.add(new Tuple(2, "n", getN()));
-		l.add(new Tuple(2, "padding", getPadding()));
-		l.add(new Tuple(2, "range", getRange()));
-		l.add(new Tuple(2, "periodic", isPeriodic()));
-		l.add(new Tuple(2, "radius", getRadius()));
-		l.add(new Tuple(2, "w", getW()));
-		l.add(new Tuple(2, "topDownMappingM", getTopDownMapping()));
-		l.add(new Tuple(2, "halfwidth", getHalfWidth()));
-		l.add(new Tuple(2, "resolution", getResolution()));
-		l.add(new Tuple(2, "rangeInternal", getRangeInternal()));
+		l.add(new Tuple("maxval", getMaxVal()));
+		l.add(new Tuple("bucketValues", getBucketValues(Double.class)));
+		l.add(new Tuple("nInternal", getNInternal()));
+		l.add(new Tuple("name", getName()));
+		l.add(new Tuple("minval", getMinVal()));
+		l.add(new Tuple("topDownValues", Arrays.toString(getTopDownValues())));
+		l.add(new Tuple("clipInput", clipInput()));
+		l.add(new Tuple("n", getN()));
+		l.add(new Tuple("padding", getPadding()));
+		l.add(new Tuple("range", getRange()));
+		l.add(new Tuple("periodic", isPeriodic()));
+		l.add(new Tuple("radius", getRadius()));
+		l.add(new Tuple("w", getW()));
+		l.add(new Tuple("topDownMappingM", getTopDownMapping()));
+		l.add(new Tuple("halfwidth", getHalfWidth()));
+		l.add(new Tuple("resolution", getResolution()));
+		l.add(new Tuple("rangeInternal", getRangeInternal()));
 
 		return l;
 	}

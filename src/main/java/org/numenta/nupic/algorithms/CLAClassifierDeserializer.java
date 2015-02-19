@@ -77,7 +77,7 @@ public class CLAClassifierDeserializer extends JsonDeserializer<CLAClassifier> {
         	for(int i = 0;i < indices.length;i++) {
         		indices[i] = Integer.parseInt(indexes[i].trim());
         	}
-        	Tuple tup = new Tuple(2, iteration, indices);
+        	Tuple tup = new Tuple(iteration, indices);
         	patterns.append(tup);
         }
         retVal.patternNZHistory = patterns;
@@ -88,7 +88,7 @@ public class CLAClassifierDeserializer extends JsonDeserializer<CLAClassifier> {
         	String[] parts = bh.split("-");
         	
         	String[] left = parts[0].split(",");
-        	Tuple iteration = new Tuple(2, Integer.parseInt(left[0].trim()), Integer.parseInt(left[1].trim()));
+        	Tuple iteration = new Tuple(Integer.parseInt(left[0].trim()), Integer.parseInt(left[1].trim()));
         	
         	BitHistory bitHistory = new BitHistory();
         	String[] right = parts[1].split("=");

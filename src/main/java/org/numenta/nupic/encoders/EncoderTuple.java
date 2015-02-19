@@ -43,7 +43,7 @@ public class EncoderTuple extends Tuple {
 	 * 						org.numenta.nupic.research.Connections, double)})
 	 */
 	public EncoderTuple(String name, Encoder<?> e, int offset) {
-		super(3, name, e, offset);
+		super(name, e, offset);
 		if(name == null) throw new IllegalArgumentException("Can't instantiate an EncoderTuple " +
 			" with a null Name");
 		if(e == null) throw new IllegalArgumentException("Can't instantiate an EncoderTuple " +

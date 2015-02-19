@@ -899,7 +899,7 @@ public abstract class Encoder<T> {
 			throw new IllegalStateException("Bit is outside of allowable range: " +
 				String.format("[0 - %d]", width));
 		}
-		return new Tuple(2, prevFieldName, bitOffset - prevFieldOffset);
+		return new Tuple(prevFieldName, bitOffset - prevFieldOffset);
 	}
 
 	/**
@@ -911,7 +911,7 @@ public abstract class Encoder<T> {
 		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
-		description.add(new Tuple(2, "end", getWidth()));
+		description.add(new Tuple("end", getWidth()));
 
 		int len = description.size() - 1;
 		for(int i = 0;i < len;i++) {
@@ -940,7 +940,7 @@ public abstract class Encoder<T> {
 		LOGGER.info(prefix == null ? "" : prefix);
 
 		List<Tuple> description = getDescription();
-		description.add(new Tuple(2, "end", getWidth()));
+		description.add(new Tuple("end", getWidth()));
 
 		int len = description.size() - 1;
 		for(int i = 0;i < len;i++) {
@@ -1044,7 +1044,7 @@ public abstract class Encoder<T> {
 			fieldsOrder.addAll((List<String>)result.get(1));
 		}
 
-		return new Tuple(2, fieldsMap, fieldsOrder);
+		return new Tuple(fieldsMap, fieldsOrder);
 	}
 
 	/**

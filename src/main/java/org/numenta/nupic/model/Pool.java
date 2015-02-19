@@ -22,6 +22,8 @@
 
 package org.numenta.nupic.model;
 
+import java.util.Arrays;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -118,12 +120,12 @@ public class Pool {
 	 * @return
 	 */
 	public double[] getSparsePermanences() {
-		int i = 0;
 		double[] retVal = new double[size];
-		int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
-		for(int idx : keys) {
-			retVal[i++] = synapsesBySourceIndex.get(idx).getPermanence();
+		int[] keys = synapsesBySourceIndex.keys();
+		for(int x = 0, j = size - 1;x < size;x++, j--) {
+		    retVal[j] = synapsesBySourceIndex.get(keys[x]).getPermanence();
 		}
+		
 		return retVal;
 	}
 	
@@ -136,7 +138,7 @@ public class Pool {
 	 */
 	public double[] getDensePermanences(Connections c) {
 		double[] retVal = new double[c.getNumInputs()];
-		int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
+		int[] keys = synapsesBySourceIndex.keys();
 		for(int inputIndex : keys) {
 			retVal[inputIndex] = synapsesBySourceIndex.get(inputIndex).getPermanence();
 		}

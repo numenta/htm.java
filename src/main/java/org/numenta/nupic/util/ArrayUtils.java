@@ -27,6 +27,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TDoubleIntHashMap;
+import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.lang.reflect.Array;
@@ -43,6 +44,9 @@ import java.util.Random;
  * @author David Ray
  */
 public class ArrayUtils {
+    /** Empty array constant */
+    private static int[] EMPTY_ARRAY = new int[0];
+    
     public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
         public boolean eval(int i) {
             return i == 1;
@@ -61,6 +65,31 @@ public class ArrayUtils {
     public static Condition<Integer> GREATER_OR_EQUAL_0 = new Condition.Adapter<Integer>() {
         @Override public boolean eval(int n) { return n >= 0; }
     };
+    
+    /**
+     * Returns an array containing the successive elements of each
+     * argument array as in [ first[0], second[0], first[1], second[1], ... ].
+     * 
+     * Arrays may be of zero length, and may be of different sizes, but may not be null.
+     * 
+     * @param first     the first array
+     * @param second    the second array
+     * @return
+     */
+    public static <F, S> Object[] interleave(F first, S second) {
+        int flen, slen;
+        Object[] retVal = new Object[(flen = Array.getLength(first)) + (slen = Array.getLength(second))];
+        for(int i = 0, j = 0, k = 0;i < flen || j < slen;) {
+            if(i < flen) {
+                retVal[k++] = Array.get(first, i++);
+            }
+            if(j < slen) {
+                retVal[k++] = Array.get(second, j++);
+            }
+        }
+        
+        return retVal;
+    }
     
     /**
      * Return a new double[] containing the difference of each element and its
@@ -99,6 +128,28 @@ public class ArrayUtils {
         }
         return false;
     }
+    
+    /**
+     * Returns a new array of size first.length + second.length, with the
+     * contents of the first array loaded into the returned array starting
+     * at the zero'th index, and the contents of the second array appended
+     * to the returned array beginning with index first.length.
+     * 
+     * This method is fail fast, meaning that it depends on the two arrays
+     * being non-null, and if not, an exception is thrown.
+     *  
+     * @param first     the data to load starting at index 0
+     * @param second    the data to load starting at index first.length;
+     * @return  a concatenated array
+     * @throws NullPointerException if either first or second is null
+     */
+    public static double[] concat(double[] first, double[] second) {
+        double[] retVal = Arrays.copyOf(first, first.length + second.length);
+        for(int i = first.length, j = 0;i < retVal.length;i++, j++) {
+            retVal[i] = second[j];
+        }
+        return retVal;
+    }
 
     /**
      * Utility to compute a flat index from coordinates.
@@ -113,7 +164,6 @@ public class ArrayUtils {
             base += (localMults[i] * coordinates[i]);
         }
         return base;
-//		return Arrays.hashCode(coordinates);
     }
 
     /**
@@ -129,7 +179,6 @@ public class ArrayUtils {
             base += (localMults[i] * coordinates[i]);
         }
         return base;
-//		return Arrays.hashCode(coordinates);
     }
 
     /**
@@ -181,7 +230,7 @@ public class ArrayUtils {
         List<Tuple> tuples = new ArrayList<Tuple>();
         int len = Math.min(arg1.size(), arg2.size());
         for (int i = 0; i < len; i++) {
-            tuples.add(new Tuple(2, arg1.get(i), arg2.get(i)));
+            tuples.add(new Tuple(arg1.get(i), arg2.get(i)));
         }
 
         return tuples;
@@ -588,6 +637,49 @@ public class ArrayUtils {
         }
         return sum / (double)arr.length;
     }
+    
+    /**
+     * Computes and returns the variance.
+     * @param arr
+     * @param mean
+     * @return
+     */
+    public static double variance(double[] arr, double mean) {
+        double accum = 0.0;
+        double dev = 0.0;
+        double accum2 = 0.0;
+        for (int i = 0; i < arr.length; i++) {
+            dev = arr[i] - mean;
+            accum += dev * dev;
+            accum2 += dev;
+        }
+        
+        double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
+        
+        return var;
+    }
+    
+    /**
+     * Computes and returns the variance.
+     * @param arr
+     * @return
+     */
+    public static double variance(double[] arr) {
+        double mean = average(arr);
+        
+        double accum = 0.0;
+        double dev = 0.0;
+        double accum2 = 0.0;
+        for (int i = 0; i < arr.length; i++) {
+            dev = arr[i] - mean;
+            accum += dev * dev;
+            accum2 += dev;
+        }
+        
+        double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
+        
+        return var;
+    }
 
     /**
      * Returns the passed in array with every value being altered
@@ -663,7 +755,27 @@ public class ArrayUtils {
         }
         return sum;
     }
-
+    
+    /**
+     * Test whether each element of a 1-D array is also present in a second 
+     * array.
+     *
+     * Returns a int array whose length is the number of intersections.
+     * 
+     * @param ar1   the array of values to find in the second array 
+     * @param ar2   the array to test for the presence of elements in the first array.
+     * @return  an array containing the intersections or an empty array if none are found.
+     */
+    public static int[] in1d(int[] ar1, int[] ar2) {
+        if(ar1 == null || ar2 == null) {
+            return EMPTY_ARRAY;
+        }
+        
+        TIntSet retVal = new TIntHashSet(ar2);
+        retVal.retainAll(ar1);
+        return retVal.toArray();
+    }
+    
     /**
      * Returns the sum of all contents in the specified array.
      * @param array
@@ -1337,7 +1449,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-
+    
     /**
      * Returns the minimum value in the specified array
      * @param array

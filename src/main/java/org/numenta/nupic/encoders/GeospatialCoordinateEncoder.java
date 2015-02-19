@@ -30,9 +30,9 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 	
 	
 	public GeospatialCoordinateEncoder() {
-        Tuple desc = new Tuple(2, "longitude", 0);
-        Tuple desc2 = new Tuple(2, "lattitude", 1);
-        Tuple desc3 = new Tuple(2, "speed", 2);
+        Tuple desc = new Tuple("longitude", 0);
+        Tuple desc2 = new Tuple("lattitude", 1);
+        Tuple desc3 = new Tuple("speed", 2);
         description.add(desc);
         description.add(desc2);
         description.add(desc3);
@@ -60,7 +60,7 @@ public class GeospatialCoordinateEncoder extends CoordinateEncoder {
 		int[] coordinate = coordinateForPosition(longitude, lattitude);
 		double radius = radiusForSpeed(speed);
 		
-		super.encodeIntoArray(new Tuple(2, coordinate, radius), output);
+		super.encodeIntoArray(new Tuple(coordinate, radius), output);
 	}
 	
 	public int[] coordinateForPosition(double longitude, double lattitude) {

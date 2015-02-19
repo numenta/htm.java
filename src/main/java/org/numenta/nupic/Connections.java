@@ -1498,7 +1498,7 @@ public class Connections {
      * @param cells
      * @return
      */
-    public List<Integer> asCellIndexes(Collection<Cell> cells) {
+    public static List<Integer> asCellIndexes(Collection<Cell> cells) {
         List<Integer> ints = new ArrayList<Integer>();
         for(Cell cell : cells) {
             ints.add(cell.getIndex());
@@ -1514,7 +1514,7 @@ public class Connections {
      * @param columns
      * @return
      */
-    public List<Integer> asColumnIndexes(Collection<Column> columns) {
+    public static List<Integer> asColumnIndexes(Collection<Column> columns) {
         List<Integer> ints = new ArrayList<Integer>();
         for(Column col : columns) {
             ints.add(col.getIndex());
