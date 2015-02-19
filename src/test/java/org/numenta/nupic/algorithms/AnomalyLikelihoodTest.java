@@ -16,6 +16,7 @@ import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,7 +212,7 @@ public class AnomalyLikelihoodTest {
         }
         
         // Check that the estimated mean is correct
-        Statistic statistic = (Statistic)metrics.getParams().get("distribution");
+        Statistic statistic = (Statistic)metrics.getParams().distribution();
         assertTrue(
             assertWithinEpsilon(
                 statistic.mean, (total / (double)metrics.getAvgRecordList().averagedRecords.size())
@@ -247,7 +248,7 @@ public class AnomalyLikelihoodTest {
         
         // skipRecords = 200
         AnomalyLikelihoodMetrics metrics = an.estimateAnomalyLikelihoods(data, 10, 200);
-        Statistic stats = (Statistic)metrics.getParams().get("distribution");
+        Statistic stats = (Statistic)metrics.getParams().distribution();
         // Check results are correct, i.e. we are actually skipping the first 50
         assertWithinEpsilon(stats.mean, 0.9, 0.1);
         
@@ -331,9 +332,9 @@ public class AnomalyLikelihoodTest {
             historicalValuesAll[i++] = it.next();
         }
         assertEquals(ArrayUtils.sum(historicalValuesAll), ArrayUtils.sum(
-            ((MovingAverage)metrics3.getParams().get("movingAverage")).getSlidingWindow().toArray()), 0);
+            metrics3.getParams().movingAverage().getSlidingWindow().toArray()), 0);
         
-        assertEquals(recordList.total, ((MovingAverage)metrics3.getParams().get("movingAverage")).getTotal(), 0);
+        assertEquals(recordList.total, metrics3.getParams().movingAverage().getTotal(), 0);
     }
     
     /**
@@ -351,8 +352,49 @@ public class AnomalyLikelihoodTest {
         assertTrue(an.isValidEstimatorParams(metrics1.getParams()));
         
         // Check that the estimated mean is correct
-        metrics1.getParams().get("distribution");
+        Statistic stats = metrics1.getParams().distribution();
+        assertWithinEpsilon(stats.mean, data1.get(0).score);
+        
+        // If you deviate from the mean, you should get probability 0
+        // Test this by sending in just slightly different values.
+        List<Sample> data2 = generateSampleData(42.5, 1e-10, 0.2, 0.2);
+        AnomalyLikelihoodMetrics metrics2 = an.updateAnomalyLikelihoods(data2.subList(0, 10), metrics1.getParams());
+        // The likelihoods should go to zero very quickly
+        assertTrue(ArrayUtils.sum(metrics2.getLikelihoods()) <= 0.01);
+        
+        // Test edge case where anomaly scores are very close to 0
+        // In this case we don't let likelihood to get too low. An average
+        // anomaly score of 0.1 should be essentially zero, but an average
+        // of 0.04 should be higher
+        List<Sample> data3 = generateSampleData(0.01, 1e-6, 0.2, 0.2);
+        AnomalyLikelihoodMetrics metrics3 = an.estimateAnomalyLikelihoods(data3.subList(0, 100), 10, 0);
+        
+        List<Sample> data4 = generateSampleData(0.1, 1e-6, 0.2, 0.2);
+        AnomalyLikelihoodMetrics metrics4 = an.updateAnomalyLikelihoods(data4.subList(0, 20), metrics3.getParams());
+        
+        // Average of 0.1 should go to zero
+        double[] likelihoods4 = Arrays.copyOfRange(metrics4.getLikelihoods(), 10, metrics4.getLikelihoods().length);
+        assertTrue(ArrayUtils.average(likelihoods4) <= 0.002);
+        
+        List<Sample> data5 = generateSampleData(0.05, 1e-6, 0.2, 0.2);
+        AnomalyLikelihoodMetrics metrics5 = an.updateAnomalyLikelihoods(data5.subList(0, 20), metrics4.getParams());
+        
+        // The likelihoods should be low but not near zero
+        double[] likelihoods5 = Arrays.copyOfRange(metrics5.getLikelihoods(), 10, metrics4.getLikelihoods().length);
+        assertTrue(ArrayUtils.average(likelihoods5) <= 0.28);
+        assertTrue(ArrayUtils.average(likelihoods5) > 0.015);
     }
+    
+    /**
+     * This calls estimateAnomalyLikelihoods with flat metric values. In this case
+     * we should use the null distribution, which gets reasonably high likelihood
+     * for everything.
+     */
+    @Test
+    public void testFlatMetricScores() {
+        
+    }
+    
     
     /**
      * Tests the AnomalyParams return value and its json creation
