@@ -10,18 +10,23 @@ public abstract class Anomaly {
     public enum Mode { PURE, LIKELIHOOD, WEIGHTED };
     
     // Instantiation keys
-    public final static int VALUE_NONE = -1;
-    public final static String KEY_MODE = "mode";
-    public final static String KEY_LEARNING_PERIOD = "claLearningPeriod";
-    public final static String KEY_ESTIMATION_SAMPLES = "estimationSamples";
-    public final static String KEY_MOVING_AVG = "useMovingAverage";
-    public final static String KEY_WINDOW_SIZE = "windowSize";
-    public final static String KEY_IS_WEIGHTED = "isWeighted";
+    public static final int VALUE_NONE = -1;
+    public static final String KEY_MODE = "mode".intern();
+    public static final String KEY_LEARNING_PERIOD = "claLearningPeriod";
+    public static final String KEY_ESTIMATION_SAMPLES = "estimationSamples";
+    public static final String KEY_USE_MOVING_AVG = "useMovingAverage";
+    public static final String KEY_WINDOW_SIZE = "windowSize".intern();
+    public static final String KEY_IS_WEIGHTED = "isWeighted";
+    public static final String KEY_DIST = "distribution".intern();
+    public static final String KEY_MVG_AVG = "movingAverage".intern();
+    public static final String KEY_HIST_LIKE = "historicalLikelihoods".intern();
+    public static final String KEY_HIST_VALUES = "historicalValues".intern();
+    public static final String KEY_TOTAL = "total".intern();
     
     // Computational argument keys
-    public final static String KEY_MEAN = "mean";
-    public final static String KEY_STDEV = "stdev";
-    public final static String KEY_VARIANCE = "variance";
+    public final static String KEY_MEAN = "mean".intern();
+    public final static String KEY_STDEV = "stdev".intern();
+    public final static String KEY_VARIANCE = "variance".intern();
     
     protected MovingAverage movingAverage;
     
@@ -62,7 +67,7 @@ public abstract class Anomaly {
      * @return
      */
     public static Anomaly create(Map<String, Object> params) {
-        boolean useMovingAvg = (boolean)params.getOrDefault(KEY_MOVING_AVG, false);
+        boolean useMovingAvg = (boolean)params.getOrDefault(KEY_USE_MOVING_AVG, false);
         int windowSize = (int)params.getOrDefault(KEY_WINDOW_SIZE, -1);
         if(useMovingAvg && windowSize < 1) {
             throw new IllegalArgumentException("windowSize must be > 0, when using moving average.");

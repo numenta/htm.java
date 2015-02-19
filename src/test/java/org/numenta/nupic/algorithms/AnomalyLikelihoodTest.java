@@ -3,11 +3,15 @@ package org.numenta.nupic.algorithms;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_DIST;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_HIST_LIKE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MEAN;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MVG_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_STDEV;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_VARIANCE;
 import gnu.trove.iterator.TDoubleIterator;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.TObjectDoubleMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
@@ -18,19 +22,20 @@ import java.util.Map;
 import java.util.Random;
 
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
+import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
-import org.openjdk.jmh.annotations.Setup;
 
 
 public class AnomalyLikelihoodTest {
     private AnomalyLikelihood an;
     
-    @Setup
-    private void setup() {
+    @Before
+    public void setup() {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.LIKELIHOOD);
         an = (AnomalyLikelihood)Anomaly.create(params);
@@ -347,6 +352,32 @@ public class AnomalyLikelihoodTest {
         
         // Check that the estimated mean is correct
         metrics1.getParams().get("distribution");
+    }
+    
+    /**
+     * Tests the AnomalyParams return value and its json creation
+     */
+    @Test
+    public void testAnomalyParamsToJson() {
+        AnomalyParams params = new AnomalyParams(
+            new String[] { KEY_DIST, KEY_HIST_LIKE, KEY_MVG_AVG},
+                new Statistic(0.38423985556178486, 0.009520602474199693, 0.09757357467162762),
+                new double[] { 0.460172163,0.344578258,0.344578258,0.382088578,0.460172163 },
+                new MovingAverage(
+                    new TDoubleArrayList(
+                        new double[] { 0.09528343752779542,0.5432072190186226,0.9062454498382395,0.44264021533137254,-0.009955323005220784 }),
+                    1.9774209987108093, // total 
+                    5                   // window size
+            )
+        );
+        
+        String expected = "{\"distribution\":{\"mean\":0.38423985556178486,\"variance\":0.009520602474199693,\"stdev\":0.09757357467162762},"+
+        "\"historicalLikelihoods\":[0.460172163,0.344578258,0.344578258,0.382088578,0.460172163],"+
+        "\"movingAverage\":{\"windowSize\":5,"+
+        "\"historicalValues\":[0.09528343752779542,0.5432072190186226,0.9062454498382395,0.44264021533137254,-0.009955323005220784],"+
+        "\"total\":1.9774209987108093}}";
+        
+        assertEquals(expected, params.toJson(true));
     }
     
 }

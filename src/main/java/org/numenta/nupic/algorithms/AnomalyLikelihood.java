@@ -1,9 +1,12 @@
 package org.numenta.nupic.algorithms;
 
+import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.TObjectDoubleMap;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +16,15 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 public class AnomalyLikelihood extends Anomaly {
@@ -95,7 +107,7 @@ public class AnomalyLikelihood extends Anomaly {
         double[] filteredLikelihoods = filterLikelihoods(likelihoods);
         
         int len = likelihoods.length;
-        NamedTuple params = new NamedTuple(
+        AnomalyParams params = new AnomalyParams(
             new String[] { "distribution", "movingAverage", "historicalLikelihoods" },
                 distribution, 
                 new MovingAverage(records.historicalValues, records.total, averagingWindow), 
@@ -173,7 +185,7 @@ public class AnomalyLikelihood extends Anomaly {
         double[] historicalLikelihoods = Arrays.copyOf(likelihoods2, likelihoods2.length - Math.min(windowSize, likelihoods2.length));
         
         // Update the estimator
-        NamedTuple newParams = new NamedTuple(
+        AnomalyParams newParams = new AnomalyParams(
             new String[] { "distribution", "movingAverage", "historicalLikelihoods" },
                 params.get("distribution"),
                 new MovingAverage(historicalValues, total, windowSize),
@@ -374,12 +386,184 @@ public class AnomalyLikelihood extends Anomaly {
         }
         
         Statistic stat = (Statistic)params.get("distribution");
-        if(stat.mean == Double.NEGATIVE_INFINITY || 
-            stat.variance == Double.NEGATIVE_INFINITY || 
-                stat.stdev == Double.NEGATIVE_INFINITY) {
+        if(stat.mean == 0 || 
+            stat.variance == 0 || 
+                stat.stdev == 0) {
             return false;
         }
         return true;
+    }
+    
+    
+    
+    /////////////////////////////////////////////////////////////////////////////
+    //                     AnomalyParams Class Definition                      //
+    /////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Extends the dictionary key lookup functionality of the parent class to add
+     * definite typing for parameter retrieval. Also handles output formatting of
+     * the contents to a serializable JSON format.
+     * 
+     * {
+	 *    "distribution":               # describes the distribution
+	 *      {
+	 *        "name": STRING,           # name of the distribution, such as 'normal'
+	 *        "mean": SCALAR,           # mean of the distribution
+	 *        "variance": SCALAR,       # variance of the distribution
+	 *
+	 *        # There may also be some keys that are specific to the distribution
+	 *      },
+	 *
+	 *    "historicalLikelihoods": []   # Contains the last windowSize likelihood
+	 *                                  # values returned
+	 *
+	 *    "movingAverage":              # stuff needed to compute a rolling average
+	 *                                  # of the anomaly scores
+	 *      {
+	 *        "windowSize": SCALAR,     # the size of the averaging window
+	 *        "historicalValues": [],   # list with the last windowSize anomaly
+	 *                                  # scores
+	 *        "total": SCALAR,          # the total of the values in historicalValues
+	 *      },
+	 *
+	 *  }
+	 *  
+     * @author David Ray
+     */
+    public static class AnomalyParams extends NamedTuple {
+        /** Cached Json formatting. Possible because Objects of this class is immutable */
+        private ObjectNode cachedNode;
+        
+        private final Statistic distribution;
+        private final MovingAverage movingAverage;
+        private final int windowSize;
+        
+        
+        /**
+         * Constructs a new {@code AnomalyParams}
+         * @param keys
+         * @param values
+         */
+        public AnomalyParams(String[] keys, Object... values) {
+            super(keys, values);
+            if(keys.length != 3 || values.length != 3) {
+                throw new IllegalArgumentException("AnomalyParams must have \"distribution\", \"movingAverage\", and \"windowSize\"" +
+                    " parameters. keys.length != 3 or values.length != 3");
+            }
+            
+            this.distribution = (Statistic)get(KEY_DIST);
+            this.movingAverage = (MovingAverage)get(KEY_MVG_AVG);
+            this.windowSize = movingAverage.getWindowSize();
+        }
+        
+        /**
+         * Returns the {@link Statistic} containing point calculations.
+         * @return
+         */
+        public Statistic distribution() {
+            return distribution;
+        }
+        
+        /**
+         * Returns the {@link MovingAverage} object
+         * @return
+         */
+        public MovingAverage movingAverage() {
+            return movingAverage;
+        }
+        
+        /**
+         * Returns the window size of the moving average.
+         * @return
+         */
+        public int windowSize() {
+            return windowSize;
+        }
+        
+        /**
+         * Lazily creates and returns a JSON ObjectNode containing this {@code AnomalyParams}' data.
+         * 
+         * @param factory
+         * @return
+         */
+        public ObjectNode toJsonNode(JsonNodeFactory factory) {
+            if(cachedNode == null) {
+                ObjectNode distribution = factory.objectNode();
+                distribution.put(KEY_MEAN, this.distribution.mean);
+                distribution.put(KEY_VARIANCE, this.distribution.variance);
+                distribution.put(KEY_STDEV, this.distribution.stdev);
+                
+                double[] historicalLikelihoods = (double[])get(KEY_HIST_LIKE);
+                ArrayNode historics = factory.arrayNode();
+                for(double d : historicalLikelihoods) {
+                    historics.add(d);
+                }
+                
+                ObjectNode mvgAvg = factory.objectNode();
+                mvgAvg.put(KEY_WINDOW_SIZE, windowSize);
+                
+                ArrayNode histVals = factory.arrayNode();
+                TDoubleList hVals = this.movingAverage.getSlidingWindow();
+                for(TDoubleIterator it = hVals.iterator();it.hasNext();) {
+                    histVals.add(it.next());
+                }
+                mvgAvg.set(KEY_HIST_VALUES, histVals);
+                mvgAvg.put(KEY_TOTAL, this.movingAverage.getTotal());
+                
+                cachedNode = factory.objectNode();
+                cachedNode.set(KEY_DIST, distribution);
+                cachedNode.set(KEY_HIST_LIKE, historics);
+                cachedNode.set(KEY_MVG_AVG, mvgAvg);
+            }
+            
+            return cachedNode;
+        }
+        
+        /**
+         * Returns the processed Json Node with possible pretty print indentation
+         * formatting if the flag specified is true.
+         * 
+         * @param doPrettyPrint
+         * @return
+         */
+        public String toJson(boolean doPrettyPrint) {
+            // Create the node factory that gives us nodes.
+            JsonNodeFactory factory = new JsonNodeFactory(false);
+     
+            // create a json factory to write the tree node as json. for the example
+            // we just write to console
+            JsonFactory jsonFactory = new JsonFactory();
+            JsonGenerator generator = null;
+            StringWriter out = new StringWriter();
+            try {
+                 generator = jsonFactory.createGenerator(out);
+            }catch(IOException e) {
+                LOG.error("Error while creating JsonGenerator", e);
+            }
+            
+            ObjectMapper mapper = new ObjectMapper();
+            if(doPrettyPrint) {
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            }
+            try {
+                mapper.writeTree(generator, toJsonNode(factory));
+            } catch(JsonProcessingException e) {
+                LOG.error("Error while writing json", e);
+            } catch(IOException e) {
+                LOG.error("Error while writing json", e);
+            }
+            
+            return out.getBuffer().toString();
+        }
+        
+        /**
+         * Returns the processed Json Node as a String
+         * @return
+         */
+        public String toJson() {
+            return toJson(false);
+        }
     }
     
     // Table lookup for Q function, from wikipedia

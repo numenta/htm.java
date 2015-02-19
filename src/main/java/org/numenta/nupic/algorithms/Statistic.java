@@ -6,8 +6,20 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * Container to hold a specific statistical data point.
+ * Container to hold a specific calculation for a statistical data point.
  * 
+ * Follows the form:
+ * <pre>
+ * {
+ *    "distribution":               # describes the distribution
+ *     {
+ *        "name": STRING,           # name of the distribution, such as 'normal'
+ *        "mean": SCALAR,           # mean of the distribution
+ *        "variance": SCALAR,       # variance of the distribution
+ *
+ *        # There may also be some keys that are specific to the distribution
+ *     }
+ * </pre>
  * @author David Ray
  */
 public class Statistic {
@@ -30,7 +42,7 @@ public class Statistic {
      * @param factory
      * @return
      */
-    public ObjectNode insertJson(JsonNodeFactory factory) {
+    public ObjectNode toJson(JsonNodeFactory factory) {
         ObjectNode distribution = factory.objectNode();
         distribution.put("mean", mean);
         distribution.put("variance", variance);

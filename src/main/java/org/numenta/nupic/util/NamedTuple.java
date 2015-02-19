@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
- * Adds lookup by a String key to the {@link Tuple} functionality
+ * Immutable tuple which adds associative lookup functionality.
  * 
  * @author David Ray
  */

@@ -6,7 +6,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,11 @@ public class AnomalyLikelihoodMetrics {
     
     private State state;
     
-    private NamedTuple params;
+    private AnomalyParams params;
     private AveragedAnomalyRecordList aggRecordList;
     private double[] likelihoods;
     
-    public AnomalyLikelihoodMetrics( double[] likelihoods, AveragedAnomalyRecordList aggRecordList, NamedTuple params) {
+    public AnomalyLikelihoodMetrics( double[] likelihoods, AveragedAnomalyRecordList aggRecordList, AnomalyParams params) {
         state = new State();
         
         this.params = params;
@@ -44,7 +44,7 @@ public class AnomalyLikelihoodMetrics {
         return aggRecordList;
     }
     
-    public NamedTuple getParams() {
+    public AnomalyParams getParams() {
         return params;
     }
     
@@ -98,7 +98,7 @@ public class AnomalyLikelihoodMetrics {
      
             // the root node - state
             ObjectNode state = factory.objectNode();
-            state.set("distribution", distribution.insertJson(factory));
+            state.set("distribution", distribution.toJson(factory));
             
             
             
