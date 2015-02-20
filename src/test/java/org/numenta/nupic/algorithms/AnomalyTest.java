@@ -17,12 +17,7 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
  * @author David Ray
  */
 public class AnomalyTest {
-    private Anomaly anomaly;
     
-    public void setup() {
-        
-    }
-
     @Test
     public void testComputeRawAnomalyScoreNoActiveOrPredicted() {
         double score = Anomaly.computeRawAnomalyScore(new int[0], new int[0]);
