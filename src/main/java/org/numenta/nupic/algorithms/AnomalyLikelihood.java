@@ -27,7 +27,24 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
+/**
+ * The anomaly likelihood computer.
+ * 
+ * From {@link Anomaly}:
+ * 
+ * This module analyzes and estimates the distribution of averaged anomaly scores
+ * from a CLA model. Given a new anomaly score `s`, estimates `P(score >= s)`.
+ * 
+ * The number `P(score >= s)` represents the likelihood of the current state of
+ * predictability. For example, a likelihood of 0.01 or 1% means we see this much
+ * predictability about one out of every 100 records. The number is not as unusual
+ * as it seems. For records that arrive every minute, this means once every hour
+ * and 40 minutes. A likelihood of 0.0001 or 0.01% means we see it once out of
+ * 10,000 records, or about once every 7 days.
+ * 
+ * @author Numenta
+ * @author David Ray
+ */
 public class AnomalyLikelihood extends Anomaly {
     private static final Logger LOG = LoggerFactory.getLogger(AnomalyLikelihood.class);
     

@@ -9,6 +9,58 @@ import java.util.Map;
 import org.numenta.nupic.util.ArrayUtils;
 
 
+/**
+ * This module analyzes and estimates the distribution of averaged anomaly scores
+ * from a CLA model. Given a new anomaly score `s`, estimates `P(score >= s)`.
+ *
+ * The number `P(score >= s)` represents the likelihood of the current state of
+ * predictability. For example, a likelihood of 0.01 or 1% means we see this much
+ * predictability about one out of every 100 records. The number is not as unusual
+ * as it seems. For records that arrive every minute, this means once every hour
+ * and 40 minutes. A likelihood of 0.0001 or 0.01% means we see it once out of
+ * 10,000 records, or about once every 7 days.
+ *
+ * USAGE
+ * -----
+ *
+ * The {@code Anomaly} base class follows the factory pattern and can construct an
+ * appropriately configured anomaly calculator by invoking the following:
+ * 
+ * <pre>
+ * Map<String, Object> params = new HashMap<>();
+ * params.put(KEY_MODE, Mode.LIKELIHOOD);            // May be Mode.PURE or Mode.WEIGHTED
+ * params.put(KEY_USE_MOVING_AVG, true);             // Instructs the Anomaly class to compute moving average
+ * params.put(KEY_WINDOW_SIZE, 10);                  // #of inputs over which to compute the moving average
+ * params.put(KEY_IS_WEIGHTED, true);                // Use a weighted moving average or not
+ * 
+ * // Instantiate the Anomaly computer
+ * Anomaly anomalyComputer = Anomaly.create(params); // Returns the appropriate Anomaly
+ *                                                   // implementation.
+ * int[] actual = array of input columns at time t
+ * int[] predicted = array of predicted columns for t+1
+ * double anomaly = an.compute(
+ *     actual, 
+ *     predicted, 
+ *     0 (inputValue = OPTIONAL, needed for likelihood calcs), 
+ *     timestamp);
+ *     
+ * double anomalyProbability = anomalyComputer.anomalyProbability(
+ *     inputValue, anomaly, timestamp);
+ * </pre>
+ *
+ * Raw functions
+ * -------------
+ * 
+ * There are two lower level functions, estimateAnomalyLikelihoods and
+ * updateAnomalyLikelihoods. The details of these are described by the method docs.
+ * 
+ * For more information please see: {@link AnomalyTest} and {@link AnomalyLikelihoodTest}
+ * 
+ * @author Numenta
+ * @author David Ray
+ * @see AnomalyTest
+ * @see AnomalyLikelihoodTest
+ */
 public abstract class Anomaly {
     /** Modes to use for factory creation method */
     public enum Mode { PURE, LIKELIHOOD, WEIGHTED };
@@ -21,6 +73,7 @@ public abstract class Anomaly {
     public static final String KEY_USE_MOVING_AVG = "useMovingAverage";
     public static final String KEY_WINDOW_SIZE = "windowSize".intern();
     public static final String KEY_IS_WEIGHTED = "isWeighted";
+    // Configs
     public static final String KEY_DIST = "distribution".intern();
     public static final String KEY_MVG_AVG = "movingAverage".intern();
     public static final String KEY_HIST_LIKE = "historicalLikelihoods".intern();
