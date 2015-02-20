@@ -1,5 +1,9 @@
 package org.numenta.nupic.algorithms;
 
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.array.TDoubleArrayList;
+
+import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.util.ArrayUtils;
@@ -81,7 +85,7 @@ public abstract class Anomaly {
         switch(mode) {
            case PURE: return new Anomaly(useMovingAvg, windowSize) {
             @Override
-            public double compute(int[] activeColumns, int[] predictedColumns, Object inputValue, long timestamp) {
+            public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
                double retVal = computeRawAnomalyScore(activeColumns, predictedColumns);
                if(this.useMovingAverage) {
                    retVal = movingAverage.next(retVal);
@@ -94,7 +98,7 @@ public abstract class Anomaly {
                int claLearningPeriod = (int)params.getOrDefault(KEY_LEARNING_PERIOD, VALUE_NONE);
                int estimationSamples = (int)params.getOrDefault(KEY_ESTIMATION_SAMPLES, VALUE_NONE);
                
-               return new AnomalyLikelihood(useMovingAvg, windowSize, claLearningPeriod, estimationSamples);
+               return new AnomalyLikelihood(useMovingAvg, windowSize, isWeighted, claLearningPeriod, estimationSamples);
            }
            default: return null;
        }
@@ -140,6 +144,70 @@ public abstract class Anomaly {
      *                              (used in anomaly-likelihood)
      * @return
      */
-    public abstract double compute(int[] activeColumns, int[] predictedColumns, Object inputValue, long timestamp);
+    public abstract double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp);
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////
+    //                            Inner Class Definitions                               //
+    //////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Container to hold interim {@link AnomalyLikelihood} calculations.
+     * 
+     * @author David Ray
+     * @see AnomalyLikelihood
+     * @see MovingAverage
+     */
+    public class AveragedAnomalyRecordList {
+        List<Sample> averagedRecords;
+        TDoubleList historicalValues;
+        double total;
+        
+        /**
+         * Constructs a new {@code AveragedAnomalyRecordList}
+         * 
+         * @param averagedRecords       List of samples which are { timestamp, average, value } at a data point
+         * @param historicalValues      List of values of a given window size (moving average grouping)
+         * @param total                 Sum of all values in the series
+         */
+        public AveragedAnomalyRecordList(List<Sample> averagedRecords, TDoubleList historicalValues, double total) {
+            this.averagedRecords = averagedRecords;
+            this.historicalValues = historicalValues;
+            this.total = total;
+        }
+        
+        /**
+         * Returns a list of the averages in the contained averaged record list.
+         * @return
+         */
+        public TDoubleList getMetrics() {
+            TDoubleList retVal = new TDoubleArrayList();
+            for(Sample s : averagedRecords) {
+                retVal.add(s.score);
+            }
+            
+            return retVal;
+        }
+        
+        /**
+         * Returns a list of the sample values in the contained averaged record list.
+         * @return
+         */
+        public TDoubleList getSamples() {
+            TDoubleList retVal = new TDoubleArrayList();
+            for(Sample s : averagedRecords) {
+                retVal.add(s.value);
+            }
+            
+            return retVal;
+        }
+        
+        /**
+         * Returns the size of the count of averaged records (i.e. {@link Sample}s)
+         * @return
+         */
+        public int size() {
+            return averagedRecords.size(); //let fail if null
+        }
+    }
     
 }

@@ -37,12 +37,15 @@ public class AnomalyLikelihood extends Anomaly {
     private int iteration;
     private int reestimationPeriod;
     
+    private boolean isWeighted;
+    
     private List<Sample> historicalScores = new ArrayList<>();
     private AnomalyParams distribution;
     
-    public AnomalyLikelihood(boolean useMovingAvg, int windowSize, int claLearningPeriod, int estimationSamples) {
+    public AnomalyLikelihood(boolean useMovingAvg, int windowSize, boolean isWeighted, int claLearningPeriod, int estimationSamples) {
         super(useMovingAvg, windowSize);
         
+        this.isWeighted = isWeighted;
         this.claLearningPeriod = claLearningPeriod == VALUE_NONE ? this.claLearningPeriod : claLearningPeriod;
         this.estimationSamples = estimationSamples == VALUE_NONE ? this.estimationSamples : estimationSamples;
         this.probationaryPeriod = claLearningPeriod + estimationSamples;
@@ -418,10 +421,32 @@ public class AnomalyLikelihood extends Anomaly {
         return Q[(int)xs];
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public double compute(int[] activeColumns, int[] predictedColumns, Object inputValue, long timestamp) {
-        // TODO Auto-generated method stub
-        return 0;
+    public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
+        if(inputValue == 0) {
+            throw new IllegalArgumentException("Selected anomlay mode Mode.LIKELIHOOD requires an \"inputValue\" to " +
+                "the compute() method.");
+        }
+        
+        DateTime time = timestamp > 0 ? new DateTime(timestamp) : new DateTime();
+        // First compute raw anomaly score
+        double retVal = computeRawAnomalyScore(activeColumns, predictedColumns);
+        
+        // low likelihood -> high anomaly
+        double probability = anomalyProbability(inputValue, retVal, time);
+        
+        // Apply weighting if configured
+        retVal = isWeighted ? retVal * (1 - probability) : 1 - probability;
+        
+        // Last, do moving-average if windowSize was specified
+        if(useMovingAverage) {
+            retVal = movingAverage.next(retVal);
+        }
+        
+        return retVal;
     }
     
     /**

@@ -55,9 +55,7 @@ public class Statistic {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((entries == null) ? 0 : entries.hashCode());
-        long temp;
-        temp = Double.doubleToLongBits(mean);
+        long temp = Double.doubleToLongBits(mean);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(stdev);
         result = prime * result + (int)(temp ^ (temp >>> 32));
@@ -75,11 +73,6 @@ public class Statistic {
         if(getClass() != obj.getClass())
             return false;
         Statistic other = (Statistic)obj;
-        if(entries == null) {
-            if(other.entries != null)
-                return false;
-        } else if(!entries.equals(other.entries))
-            return false;
         if(Double.doubleToLongBits(mean) != Double.doubleToLongBits(other.mean))
             return false;
         if(Double.doubleToLongBits(stdev) != Double.doubleToLongBits(other.stdev))

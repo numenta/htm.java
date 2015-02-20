@@ -1,5 +1,6 @@
 package org.numenta.nupic.algorithms;
 
+import org.numenta.nupic.algorithms.Anomaly.AveragedAnomalyRecordList;
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 
 /**

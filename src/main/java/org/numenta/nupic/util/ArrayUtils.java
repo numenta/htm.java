@@ -235,6 +235,25 @@ public class ArrayUtils {
 
         return tuples;
     }
+    
+    /**
+     * Return a list of tuples, where each tuple contains the i-th element
+     * from each of the argument sequences.  The returned list is
+     * truncated in length to the length of the shortest argument sequence.
+     *
+     * @param arg1 the first list to be the zero'th entry in the returned tuple
+     * @param arg2 the first list to be the one'th entry in the returned tuple
+     * @return a list of tuples
+     */
+    public static List<Tuple> zip(Object[]... args) {
+        List<Tuple> tuples = new ArrayList<Tuple>();
+        int len = args.length;
+        for (int i = 0; i < len; i++) {
+            tuples.add(new Tuple(args[i]));
+        }
+
+        return tuples;
+    }
 
     /**
      * Returns an array with the same shape and the contents

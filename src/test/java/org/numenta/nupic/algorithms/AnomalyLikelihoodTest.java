@@ -27,6 +27,7 @@ import java.util.stream.IntStream;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.numenta.nupic.algorithms.Anomaly.AveragedAnomalyRecordList;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 import org.numenta.nupic.util.ArrayUtils;
@@ -210,7 +211,7 @@ public class AnomalyLikelihoodTest {
         // Get the total
         double total = 0;
         for(Sample sample : metrics.getAvgRecordList().averagedRecords) {
-            total = total + sample.value;
+            total = total + sample.score;
         }
         
         // Check that the estimated mean is correct

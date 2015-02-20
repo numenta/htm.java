@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 
 /**
  * A sample data point or record consisting of a timestamp, value, and score.
+ * This class is used as an input value to methods in the {@link AnomalyLikelihood}
+ * class.
  */
 class Sample {
     public final DateTime date;
@@ -27,20 +29,6 @@ class Sample {
      */
     public DateTime timeStamp() {
         return date;
-    }
-    
-    /**
-     * Returns a size count indicating the presence of valid data 
-     * in all 3 fields or less.
-     * 
-     * @return
-     */
-    public int size() {
-        int size = 0;
-        if(date != null) ++size;
-        if(score != 0) ++size;
-        if(value != 0) ++size;
-        return size;
     }
     
     /**
