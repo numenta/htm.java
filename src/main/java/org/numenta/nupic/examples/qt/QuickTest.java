@@ -170,23 +170,23 @@ public class QuickTest {
     	
     	@Override
     	public void input(Double value, int recordNum, int sequenceNum) {
-    		String recordOut = "";
-    		switch(recordNum) {
-    			case 1: recordOut = "Monday (1)";break; 
-    			case 2: recordOut = "Tuesday (2)";break;
-    			case 3: recordOut = "Wednesday (3)";break;
-    			case 4: recordOut = "Thursday (4)";break;
-    			case 5: recordOut = "Friday (5)";break;
-    			case 6: recordOut = "Saturday (6)";break;
-    			case 7: recordOut = "Sunday (7)";break;
-    		}
+//    		String recordOut = "";
+//    		switch(recordNum) {
+//    			case 1: recordOut = "Monday (1)";break; 
+//    			case 2: recordOut = "Tuesday (2)";break;
+//    			case 3: recordOut = "Wednesday (3)";break;
+//    			case 4: recordOut = "Thursday (4)";break;
+//    			case 5: recordOut = "Friday (5)";break;
+//    			case 6: recordOut = "Saturday (6)";break;
+//    			case 7: recordOut = "Sunday (7)";break;
+//    		}
     		
     		if(recordNum == 1) {
 //    			theNum++;
 //    			System.out.println("--------------------------------------------------------");
 //    			System.out.println("Iteration: " + theNum);
     		}
-    		System.out.println("===== " + recordOut + "  - Sequence Num: " + sequenceNum + " =====");
+//    		System.out.println("===== " + recordOut + "  - Sequence Num: " + sequenceNum + " =====");
     		
     		int[] output = new int[columnCount];
     		
