@@ -33,6 +33,17 @@ An Eclipse IDE .project and .classpath file are provided so that the cloned proj
 
 In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
 
+## After download by clone or fork:    
+
+Execute a quick sanity check by running all the tests from within the \<path to git repo\>/htm.java
+```
+gradle check  # Executes the tests and runs the benchmarks
+
+--or--
+
+gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
+```
+
 ## For Updates Follow
 
 * [#HtmJavaDevUpdates](https://twitter.com/hashtag/HtmJavaDevUpdates?src=hash)
