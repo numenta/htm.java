@@ -28,9 +28,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * The anomaly likelihood computer.
+ * <p>The anomaly likelihood computer.</p>
  * 
- * From {@link Anomaly}:
+ * <p>From {@link Anomaly}:</p>
  * 
  * This module analyzes and estimates the distribution of averaged anomaly scores
  * from a CLA model. Given a new anomaly score `s`, estimates `P(score >= s)`.
@@ -42,8 +42,49 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * and 40 minutes. A likelihood of 0.0001 or 0.01% means we see it once out of
  * 10,000 records, or about once every 7 days.
  * 
+ * <p>
+ * <em>
+ * USAGE FOR LOW-LEVEL FUNCTIONS
+ * -----------------------------
+ * </em>
+ * <pre>
+ * There are two primary interface routines:
+ *
+ * estimateAnomalyLikelihoods: batch routine, called initially and once in a
+ *                                while
+ * updateAnomalyLikelihoods: online routine, called for every new data point
+ *
+ * 1. Initially::
+ *
+ *    {@link AnomalyLikelihoodMetrics} { likelihoods, avgRecordList, estimatorParams } = 
+ *        {@link #estimateAnomalyLikelihoods(List, int, int)}
+ *
+ * 2. Whenever you get new data::
+ *
+ *    {@link AnomalyLikelihoodMetrics} { likelihoods, avgRecordList, estimatorParams } = 
+ *       {@link #updateAnomalyLikelihoods(List, NamedTuple)}
+ *
+ * 3. And again (make sure you use the new estimatorParams (a.k.a {@link NamedTuple}) returned 
+ *    in the above {@link AnomalyLikelihoodMetrics} call to updateAnomalyLikelihoods!)
+ *
+ *    {@link AnomalyLikelihoodMetrics} { likelihoods, avgRecordList, estimatorParams } = 
+ *       {@link #updateAnomalyLikelihoods(List, NamedTuple)}
+ *
+ * 4. Every once in a while update estimator with a lot of recent data
+ *
+ *    {@link AnomalyLikelihoodMetrics} { likelihoods, avgRecordList, estimatorParams } = 
+ *        {@link #estimateAnomalyLikelihoods(List, int, int)}
+ * </pre>
+ * </p>
+ * 
  * @author Numenta
  * @author David Ray
+ * @see Anomaly
+ * @see AnomalyLikelihoodMetrics
+ * @see Sample
+ * @see AnomalyParams
+ * @see Statistic
+ * @see MovingAverage
  */
 public class AnomalyLikelihood extends Anomaly {
     private static final Logger LOG = LoggerFactory.getLogger(AnomalyLikelihood.class);
@@ -196,6 +237,15 @@ public class AnomalyLikelihood extends Anomaly {
         return new AnomalyLikelihoodMetrics(filteredLikelihoods, records, params); 
     }
     
+    /**
+     * Compute updated probabilities for anomalyScores using the given params.
+     * 
+     * @param anomalyScores     a list of records. Each record is a list with a {@link Sample} containing the
+                                following three elements: [timestamp, value, score]
+     * @param params            Associative {@link NamedTuple} returned by the {@link AnomalyLikelihoodMetrics} from
+     *                          {@link #estimateAnomalyLikelihoods(List, int, int)}
+     * @return
+     */
     public AnomalyLikelihoodMetrics updateAnomalyLikelihoods(List<Sample> anomalyScores, NamedTuple params) {
         int anomalySize = anomalyScores.size();
         
@@ -494,12 +544,15 @@ public class AnomalyLikelihood extends Anomaly {
     /////////////////////////////////////////////////////////////////////////////
     
     /**
+     * <p>
      * Extends the dictionary key lookup functionality of the parent class to add
      * definite typing for parameter retrieval. Also handles output formatting of
      * the contents to a serializable JSON format.
-     * 
+     * </p>
+     * <p>
+     * <pre>
      * {
-	 *    "distribution":               # describes the distribution
+	 *    "distribution":               # describes the distribution is-a {@link Statistic}
 	 *      {
 	 *        "name": STRING,           # name of the distribution, such as 'normal'
 	 *        "mean": SCALAR,           # mean of the distribution
@@ -511,7 +564,7 @@ public class AnomalyLikelihood extends Anomaly {
 	 *    "historicalLikelihoods": []   # Contains the last windowSize likelihood
 	 *                                  # values returned
 	 *
-	 *    "movingAverage":              # stuff needed to compute a rolling average
+	 *    "movingAverage":              # stuff needed to compute a rolling average is-a {@link MovingAverage}
 	 *                                  # of the anomaly scores
 	 *      {
 	 *        "windowSize": SCALAR,     # the size of the averaging window
@@ -521,6 +574,8 @@ public class AnomalyLikelihood extends Anomaly {
 	 *      },
 	 *
 	 *  }
+	 *  </pre>
+	 *  </p>
 	 *  
      * @author David Ray
      */
