@@ -222,8 +222,8 @@ public class RandomDistributedScalarEncoderTest {
 				rdse.getWidth());
 		assertEquals(
 				"getDescription doesn't return the correct result",
-				new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2,
-						"theName", 0) })), rdse.getDescription());
+				new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple("theName",
+						0) })), rdse.getDescription());
 
 		assertThat(
 				"getDecoderOutputFieldTypes doesn't return the correct result",

@@ -43,7 +43,7 @@ public class DecodeTuple<M extends Map<String, RangeList>, L extends List<String
 	protected L fieldDescriptions;
 	
 	public DecodeTuple(M m, L l) {
-		super(2, m, l);
+		super(m, l);
 		this.fields = m;
 		this.fieldDescriptions = l;
 	}

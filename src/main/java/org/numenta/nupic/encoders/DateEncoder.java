@@ -108,7 +108,7 @@ public class DateEncoder extends Encoder<Date> {
     // Currently the only holiday we know about is December 25
     // holidays is a list of holidays that occur on a fixed date every year
     protected List<Tuple> holidaysList = Arrays.asList(
-            new Tuple(2, 12, 25)
+            new Tuple(12, 25)
     );
 
     /**
@@ -260,7 +260,7 @@ public class DateEncoder extends Encoder<Date> {
 
         for (Object d : child.getDescription()) {
             Tuple dT = (Tuple) d;
-            description.add(new Tuple(2, dT.get(0), (int)dT.get(1) + getWidth()));
+            description.add(new Tuple(dT.get(0), (int)dT.get(1) + getWidth()));
         }
         width += child.getWidth();
     }
@@ -604,31 +604,31 @@ public class DateEncoder extends Encoder<Date> {
      */
     public static class Builder extends Encoder.Builder<DateEncoder.Builder, DateEncoder> {
 
-        //    Ignore leapyear differences -- assume 366 days in a year
+        //    Ignore leap year differences -- assume 366 days in a year
         //    Radius = 91.5 days = length of season
         //    Value is number of days since beginning of year (0 - 355)
-        protected Tuple season = new Tuple(2, 0, 91.5);
+        protected Tuple season = new Tuple(0, 91.5);
 
         // Value is day of week (floating point)
         // Radius is 1 day
-        protected Tuple dayOfWeek = new Tuple(2, 0, 1.0);
+        protected Tuple dayOfWeek = new Tuple(0, 1.0);
 
         // Binary value.
-        protected Tuple weekend = new Tuple(2, 0, 1.0);
+        protected Tuple weekend = new Tuple(0, 1.0);
 
         // Custom days encoder, first argument in tuple is width
         // second is either a single day of the week or a list of the days
         // you want encoded as ones.
-        protected Tuple customDays = new Tuple(2, 0, new ArrayList<String>());
+        protected Tuple customDays = new Tuple(0, new ArrayList<String>());
 
         // A "continuous" binary value. = 1 on the holiday itself and smooth ramp
         //  0->1 on the day before the holiday and 1->0 on the day after the holiday.
-        protected Tuple holiday = new Tuple(2, 0, 1.0);
+        protected Tuple holiday = new Tuple(0, 1.0);
 
         // Value is time of day in hours
         // Radius = 4 hours, e.g. morning, afternoon, evening, early night,
         //  late night, etc.
-        protected Tuple timeOfDay = new Tuple(2, 0, 4.0);
+        protected Tuple timeOfDay = new Tuple(0, 4.0);
 
         private Builder() {}
 
@@ -663,7 +663,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode season
          */
         public DateEncoder.Builder season(int season, double radius) {
-            this.season = new Tuple(2, season, radius);
+            this.season = new Tuple(season, radius);
             return this;
         }
 
@@ -678,7 +678,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode dayOfWeek
          */
         public DateEncoder.Builder dayOfWeek(int dayOfWeek, double radius) {
-            this.dayOfWeek = new Tuple(2, dayOfWeek, radius);
+            this.dayOfWeek = new Tuple(dayOfWeek, radius);
             return this;
         }
 
@@ -693,7 +693,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode weekend
          */
         public DateEncoder.Builder weekend(int weekend, double radius) {
-            this.weekend = new Tuple(2, weekend, radius);
+            this.weekend = new Tuple(weekend, radius);
             return this;
         }
 
@@ -708,7 +708,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode customDays
          */
         public DateEncoder.Builder customDays(int customDays, List<String> customDaysList) {
-            this.customDays = new Tuple(2, customDays, customDaysList);
+            this.customDays = new Tuple(customDays, customDaysList);
             return this;
         }
 
@@ -724,7 +724,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode holiday
          */
         public DateEncoder.Builder holiday(int holiday, double radius) {
-            this.holiday = new Tuple(2, holiday, radius);
+            this.holiday = new Tuple(holiday, radius);
             return this;
         }
 
@@ -739,7 +739,7 @@ public class DateEncoder extends Encoder<Date> {
          * Set how many bits are used to encode timeOfDay
          */
         public DateEncoder.Builder timeOfDay(int timeOfDay, double radius) {
-            this.timeOfDay = new Tuple(2, timeOfDay, radius);
+            this.timeOfDay = new Tuple(timeOfDay, radius);
             return this;
         }
 

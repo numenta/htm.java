@@ -133,7 +133,7 @@ public class GeospatialCoordinateEncoderTest {
 	
 	public int[] encode(CoordinateEncoder encoder, double[] coordinate, double radius) {
 		int[] output = new int[encoder.getWidth()];
-		encoder.encodeIntoArray(new Tuple(3, coordinate[0], coordinate[1], radius), output);
+		encoder.encodeIntoArray(new Tuple(coordinate[0], coordinate[1], radius), output);
 		return output;
 	}
 	

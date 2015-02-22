@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.numenta.nupic.Connections;
+
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	
 	public double prevAbsolute = 0;
@@ -33,7 +35,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	public boolean stateLock = false;
 
 	/**
-	 * 
+	 * Constructs a new {@code DeltaEncoder}
 	 */
 	public DeltaEncoder() {
 	}
@@ -67,6 +69,10 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		return new DeltaEncoder.Builder();
 	}
 
+	/**
+	 * Builder pattern for constructing a {@code DeltaEncoder}
+	 * 
+	 */
 	public static class Builder extends Encoder.Builder<DeltaEncoder.Builder, DeltaEncoder> {
 		private Builder() {}
 
@@ -80,9 +86,13 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#encodeIntoArray(java.lang.Double, int[])
-	 */
+	 * Encodes inputData and puts the encoded value into the output array,
+     * which is a 1-D array of length returned by {@link Connections#getW()}.
+	 *
+     * Note: The output array is reused, so clear it before updating it.
+	 * @param inputData Data to encode. This should be validated by the encoder.
+	 * @param output 1-D array of same length returned by {@link Connections#getW()}
+     */
 	@Override
 	public void encodeIntoArray(Double input, int[] output) {
 		if (!(input instanceof Double)) {
@@ -124,6 +134,9 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		// TODO Auto-generated method stub
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean isDelta() {
 		return true;

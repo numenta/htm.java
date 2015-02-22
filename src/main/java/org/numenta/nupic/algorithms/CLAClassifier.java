@@ -199,7 +199,7 @@ public class CLAClassifier {
 			System.out.println(" classificationIn: " + classification);
 		}
 		
-		patternNZHistory.append(new Tuple(2, learnIteration, patternNZ));
+		patternNZHistory.append(new Tuple(learnIteration, patternNZ));
 		
 		//------------------------------------------------------------------------
 	    // Inference:
@@ -233,7 +233,7 @@ public class CLAClassifier {
 				double[] bitVotes = new double[maxBucketIdx + 1];
 				
 				for(int bit : patternNZ) {
-					Tuple key = new Tuple(2, bit, nSteps);
+					Tuple key = new Tuple(bit, nSteps);
 					BitHistory history = activeBitHistory.get(key);
 					if(history == null) continue;
 					
@@ -316,7 +316,7 @@ public class CLAClassifier {
 		        // that we got nSteps time steps ago.
 				for(int bit : learnPatternNZ) {
 					// Get the history structure for this bit and step
-					Tuple key = new Tuple(2, bit, nSteps);
+					Tuple key = new Tuple(bit, nSteps);
 					BitHistory history = activeBitHistory.get(key);
 					if(history == null) {
 						activeBitHistory.put(key, history = new BitHistory(this, bit, nSteps));

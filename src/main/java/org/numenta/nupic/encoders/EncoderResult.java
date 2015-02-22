@@ -45,7 +45,7 @@ public class EncoderResult extends Tuple {
      * @param encoding The bit-string representation of the value
      */
     public EncoderResult(Object value, Number scalar, int[] encoding) {
-        super(4, "EncoderResult", value, scalar, encoding);
+        super("EncoderResult", value, scalar, encoding);
     }
 
     @Override
