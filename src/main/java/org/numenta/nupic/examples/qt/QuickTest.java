@@ -61,7 +61,7 @@ public class QuickTest {
     	
     	Layer<Double> layer = getLayer(params, encoder, sp, tm, classifier);
     	
-    	for(double i = 1, x = 0;true;i = (i == 7 ? 1 : i + 1), x++) {
+    	for(double i = 1, x = 0;x < 10000;i = (i == 7 ? 1 : i + 1), x++) {  // USE "X" here to control run length
     		if (i == 1) tm.reset(layer.getMemory());
     		runThroughLayer(layer, i, (int)i, (int)x);
     	}
@@ -117,8 +117,9 @@ public class QuickTest {
     
     interface Layer<T> {
     	public void input(T value, int recordNum, int iteration);
-    	public T getPrediction(T input);
+    	public int[] getPredicted();
     	public Connections getMemory();
+    	public int[] getActual();
     }
     
     /**
@@ -142,6 +143,10 @@ public class QuickTest {
     	private int columnCount;
     	private int cellsPerColumn;
     	private int theNum;
+    	
+    	private int[] predictedColumns;
+    	private int[] actual;
+    	private int[] lastPredicted;
     	
     	public LayerImpl(Parameters p, ScalarEncoder e, SpatialPooler s, TemporalMemory t, CLAClassifier c) {
     		this.params = p;
@@ -191,9 +196,10 @@ public class QuickTest {
     		System.out.println("SpatialPooler Output = " + Arrays.toString(output));
     		
     		//Input through temporal memory
-    		int[] input = ArrayUtils.where(output, ArrayUtils.WHERE_1);
+    		int[] input = actual = ArrayUtils.where(output, ArrayUtils.WHERE_1);
     		ComputeCycle cc = temporalMemory.compute(memory, input, true);
-    		int[] predictedColumns = getSDR(cc.predictiveCells()); //Get the active column indexes
+    		lastPredicted = predictedColumns;
+    		predictedColumns = getSDR(cc.predictiveCells()); //Get the active column indexes
     		System.out.println("TemporalMemory Input = " + Arrays.toString(input));
     		System.out.print("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
     		
@@ -230,12 +236,22 @@ public class QuickTest {
     	/**
          * Returns the next predicted value.
          * 
-         * @param <T>	the type of the input and output
-         * 
+         * @return the SDR representing the prediction
+         */
+    	@Override
+        public int[] getPredicted() {
+        	return lastPredicted;
+        }
+        
+        /**
+         * Returns the actual columns in time t + 1 to compare
+         * with {@link #getPrediction()} which returns the prediction
+         * at time t for time t + 1.
          * @return
          */
-        public Double getPrediction(Double input) {
-        	return null;
+    	@Override
+        public int[] getActual() {
+            return actual;
         }
         
         /**
