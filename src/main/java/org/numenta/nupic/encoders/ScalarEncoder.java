@@ -259,7 +259,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	 */
 	public void initEncoder(int w, double minVal, double maxVal, int n, double radius, double resolution) {
 		if(n != 0) {
-			if(minVal != 0 && maxVal != 0) {
+			if(!Double.isNaN(minVal) && !Double.isNaN(maxVal)) {
 			    if(!isPeriodic()) {
 					setResolution(getRangeInternal() / (getN() - getW()));
 				}else{
