@@ -17,7 +17,7 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+//import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.research.ComputeCycle;
@@ -29,8 +29,13 @@ import org.numenta.nupic.util.ArrayUtils;
  * This should hold off peeps until the Network API is complete.
  * (see: https://github.com/numenta/htm.java/wiki/Roadmap)
  * 
- * Warning: Sloppy sketchpad code, but it works!
- *
+ * <p>Warning: Sloppy sketchpad code, but it works!</p>
+ * 
+ * <p><em><b>
+ * To see the pretty printed test output and Classification results, uncomment all
+ * the print out lines below
+ * </b></em></p>
+ * 
  * @author PDove
  * @author cogmission
  */
@@ -137,12 +142,12 @@ public class QuickTest {
     	private ScalarEncoder encoder;
     	private SpatialPooler spatialPooler;
     	private TemporalMemory temporalMemory;
-    	private CLAClassifier classifier;
+//    	private CLAClassifier classifier;
     	private Map<String, Object> classification = new LinkedHashMap<String, Object>();
     	
     	private int columnCount;
     	private int cellsPerColumn;
-    	private int theNum;
+//    	private int theNum;
     	
     	private int[] predictedColumns;
     	private int[] actual;
@@ -153,7 +158,7 @@ public class QuickTest {
     		this.encoder = e;
     		this.spatialPooler = s;
     		this.temporalMemory = t;
-    		this.classifier = c;
+//    		this.classifier = c;
     		
     		params.apply(memory);
     		spatialPooler.init(memory);
@@ -177,39 +182,39 @@ public class QuickTest {
     		}
     		
     		if(recordNum == 1) {
-    			theNum++;
-    			System.out.println("--------------------------------------------------------");
-    			System.out.println("Iteration: " + theNum);
+//    			theNum++;
+//    			System.out.println("--------------------------------------------------------");
+//    			System.out.println("Iteration: " + theNum);
     		}
     		System.out.println("===== " + recordOut + "  - Sequence Num: " + sequenceNum + " =====");
     		
     		int[] output = new int[columnCount];
     		
     		//Input through encoder
-    		System.out.println("ScalarEncoder Input = " + value);
+//    		System.out.println("ScalarEncoder Input = " + value);
     		int[] encoding = encoder.encode(value);
-    		System.out.println("ScalarEncoder Output = " + Arrays.toString(encoding));
+//    		System.out.println("ScalarEncoder Output = " + Arrays.toString(encoding));
     		int bucketIdx = encoder.getBucketIndices(value)[0];
     		
     		//Input through spatial pooler
     		spatialPooler.compute(memory, encoding, output, true, true);
-    		System.out.println("SpatialPooler Output = " + Arrays.toString(output));
+//    		System.out.println("SpatialPooler Output = " + Arrays.toString(output));
     		
     		//Input through temporal memory
     		int[] input = actual = ArrayUtils.where(output, ArrayUtils.WHERE_1);
     		ComputeCycle cc = temporalMemory.compute(memory, input, true);
     		lastPredicted = predictedColumns;
     		predictedColumns = getSDR(cc.predictiveCells()); //Get the active column indexes
-    		System.out.println("TemporalMemory Input = " + Arrays.toString(input));
-    		System.out.print("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
+//    		System.out.println("TemporalMemory Input = " + Arrays.toString(input));
+//    		System.out.print("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
     		
     		classification.put("bucketIdx", bucketIdx);
     		classification.put("actValue", value);
-    		ClassifierResult<Double> result = classifier.compute(recordNum, classification, predictedColumns, true, true);
+//    		ClassifierResult<Double> result = classifier.compute(recordNum, classification, predictedColumns, true, true);
     		
-    		System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
+//    		System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
     		
-    		System.out.println("");
+//    		System.out.println("");
     	}
     	
     	public int[] inflateSDR(int[] SDR, int len) {
