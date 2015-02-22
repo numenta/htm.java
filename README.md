@@ -43,7 +43,7 @@ gradle check  # Executes the tests and runs the benchmarks
 
 gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 ```
-Note: Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+**Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
 ## For Updates Follow
 
