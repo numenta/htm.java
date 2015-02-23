@@ -1,3 +1,25 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
+
 package org.numenta.nupic.algorithms;
 
 import static org.junit.Assert.*;
@@ -90,6 +112,48 @@ public class MovingAverageTest {
         
         ma = new MovingAverage(null, 3);
         assertEquals(new TDoubleArrayList(), ma.getSlidingWindow());
+        
+        try {
+            MovingAverage.compute(null, 0, 0, 0);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().isAssignableFrom(IllegalArgumentException.class));
+            assertEquals("slidingWindow cannot be null.", e.getMessage());
+        }
+    }
+    
+    /**
+     * Test that we get the expected exception and that window size specified
+     * must be > 0.
+     */
+    @Test
+    public void testProperConstruction() {
+        try {
+            new MovingAverage(new TDoubleArrayList(new double[] { 3., 4., 5., }), 0);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().isAssignableFrom(IllegalArgumentException.class));
+            assertEquals("Window size must be > 0", e.getMessage());
+        }
+    }
+    
+    /**
+     * Tests the equality of two separate instances with identical settings and state.
+     */
+    @Test
+    public void testHashCodeAndEquals() {
+        MovingAverage ma = new MovingAverage(new TDoubleArrayList(new double[] { 3., 4., 5., }), 3);
+        MovingAverage ma2 = new MovingAverage(new TDoubleArrayList(new double[] { 3., 4., 5., }), 3);
+        
+        assertTrue(ma.equals(ma2));
+        assertEquals(ma.hashCode(), ma2.hashCode());
+        
+        // Check that internal state is changed and that the equals
+        // methods reflect the change.
+        ma.next(120.0);
+        
+        assertFalse(ma.equals(ma2));
+        assertNotEquals(ma.hashCode(), ma2.hashCode());
     }
 
 }
