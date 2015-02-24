@@ -5,9 +5,7 @@ htm.java
 * Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
 * Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.png?branch=master)](https://coveralls.io/r/numenta/htm.java?branch=master)
 
-Community-supported Java port of the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic).
-
-Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the [Cortical Learning Algorithm (CLA)](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
+Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic) python project.
 
 ### In The News - _Another Update This Month!_   
 * [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
