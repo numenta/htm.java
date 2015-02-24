@@ -528,8 +528,8 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			setName("[" + getResolution() + "]");
 		name = getName();
 
-		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(2,
-				name, 0) }));
+		return new ArrayList<Tuple>(Arrays.asList(new Tuple[] { new Tuple(name,
+				0) }));
 	}
 
 	/**

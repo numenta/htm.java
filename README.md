@@ -9,7 +9,10 @@ Community-supported Java port of the [Numenta Platform for Intelligent Computing
 
 Holding area for the development of the Java port of Numenta's online prediction and anomaly detection systems, and implementation of the [Cortical Learning Algorithm (CLA)](https://github.com/numenta/nupic/wiki/Cortical-Learning-Algorithm)
 
-## In The News - see the latest [blog!](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html)
+### In The News - _Another Update This Month!_   
+* [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
+* [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
+* [HTM.java Reaches Functional Completion](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html) (12/2014)
 
 For a more detailed discussion of <b>htm.java</b> see: <BR>
 * [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
@@ -30,6 +33,18 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
 In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
+
+## After download by clone or fork:    
+
+Execute a quick sanity check by running all the tests from within the \<path to git repo\>/htm.java
+```
+gradle check  # Executes the tests and runs the benchmarks
+
+--or--
+
+gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
+```
+**Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
 ## For Updates Follow
 

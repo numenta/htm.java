@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.numenta.nupic.Connections;
+
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	
 	public double prevAbsolute = 0;
@@ -33,12 +35,13 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	public boolean stateLock = false;
 
 	/**
-	 * 
+	 * Constructs a new {@code DeltaEncoder}
 	 */
 	public DeltaEncoder() {
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#init()
 	 */
 	@Override
@@ -46,7 +49,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		super.init();
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#initEncoder(int, double, double, int, double, double)
 	 */
 	@Override
@@ -65,6 +69,10 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		return new DeltaEncoder.Builder();
 	}
 
+	/**
+	 * Builder pattern for constructing a {@code DeltaEncoder}
+	 * 
+	 */
 	public static class Builder extends Encoder.Builder<DeltaEncoder.Builder, DeltaEncoder> {
 		private Builder() {}
 
@@ -77,20 +85,21 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#encodeIntoArray(java.lang.Double, int[])
-	 */
+	/**
+	 * Encodes inputData and puts the encoded value into the output array,
+     * which is a 1-D array of length returned by {@link Connections#getW()}.
+	 *
+     * Note: The output array is reused, so clear it before updating it.
+	 * @param inputData Data to encode. This should be validated by the encoder.
+	 * @param output 1-D array of same length returned by {@link Connections#getW()}
+     */
 	@Override
 	public void encodeIntoArray(Double input, int[] output) {
 		if (!(input instanceof Double)) {
 			throw new IllegalArgumentException(
 					String.format("Expected a Double input but got input of type %s", input.toString()));
 		}
-		boolean learn = false;
 		double delta = 0;
-		if (this.encLearningEnabled == false) {
-			learn = this.learningEnabled;
-		}
 		if (input == DeltaEncoder.SENTINEL_VALUE_FOR_MISSING_DATA) {
 			output = new int[this.n];
 			Arrays.fill(output, 0);
@@ -125,12 +134,16 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		// TODO Auto-generated method stub
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean isDelta() {
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#getBucketInfo(int[])
 	 */
 	@Override
@@ -138,7 +151,8 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 		return super.getBucketInfo(buckets);
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#topDownCompute(int[])
 	 */
 	@Override

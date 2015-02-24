@@ -6,7 +6,6 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.numenta.nupic.encoders.*;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.Tuple;
@@ -76,10 +75,10 @@ public class DateEncoderTest {
         // should be [("season", 0), ("day of week", 12), ("weekend", 19), ("time of day", 25)]
 
         List<Tuple> expectedDescs = new ArrayList<>(Arrays.asList(
-                new Tuple(2, "season", 0),
-                new Tuple(2, "day of week", 12),
-                new Tuple(2, "weekend", 19),
-                new Tuple(2, "time of day", 25)
+                new Tuple("season", 0),
+                new Tuple("day of week", 12),
+                new Tuple("weekend", 19),
+                new Tuple("time of day", 25)
         ));
 
         assertEquals(expectedDescs.size(), descs.size());

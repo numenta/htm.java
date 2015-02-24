@@ -131,7 +131,6 @@ public class Connections {
     private double[] minActiveDutyCycles;
     private double[] boostFactors;
     
-    
 	/////////////////////////////////////// Temporal Memory Vars ///////////////////////////////////////////
     
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
@@ -1038,7 +1037,7 @@ public class Connections {
      * High verbose output useful for debugging
      */
     public void printParameters() {
-        System.out.println("------------J  SpatialPooler Parameters ------------------");
+        System.out.println("------------ SpatialPooler Parameters ------------------");
         System.out.println("numInputs                  = " + getNumInputs());
         System.out.println("numColumns                 = " + getNumColumns());
         System.out.println("columnDimensions           = " + getColumnDimensions());
@@ -1499,7 +1498,7 @@ public class Connections {
      * @param cells
      * @return
      */
-    public List<Integer> asCellIndexes(Collection<Cell> cells) {
+    public static List<Integer> asCellIndexes(Collection<Cell> cells) {
         List<Integer> ints = new ArrayList<Integer>();
         for(Cell cell : cells) {
             ints.add(cell.getIndex());
@@ -1515,7 +1514,7 @@ public class Connections {
      * @param columns
      * @return
      */
-    public List<Integer> asColumnIndexes(Collection<Column> columns) {
+    public static List<Integer> asColumnIndexes(Collection<Column> columns) {
         List<Integer> ints = new ArrayList<Integer>();
         for(Column col : columns) {
             ints.add(col.getIndex());

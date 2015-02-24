@@ -74,7 +74,7 @@ public class TemporalMemoryTestMachine {
             interimResults.add(result.predictiveCells());
         }
         for(Set<Cell> set : interimResults) {
-            List<Integer> l = connections.asCellIndexes(set);
+            List<Integer> l = Connections.asCellIndexes(set);
             results.add(new LinkedHashSet<Integer>(l));
         }
         return results;

@@ -46,7 +46,7 @@ public class RangeTuple<L extends List<MinMax>, S> extends Tuple {
 	 * @param s
 	 */
 	public RangeTuple(L l, String s) {
-		super(2, l, s);
+		super(l, s);
 		this.l = l;
 		this.desc = s;
 	}

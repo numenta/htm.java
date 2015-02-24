@@ -25,23 +25,39 @@ package org.numenta.nupic.util;
 import java.util.Arrays;
 
 /**
- * Testing to see if this is more meaningful than a generic 
- * native java data structure for encoder work.
- * @author metaware
- *
+ * An immutable fixed data structure whose values are retrieved
+ * via a given index. This data structure emulates multiple method
+ * return values possible in Python.
+ * 
+ * @author David Ray
  */
 public class Tuple {
+    /** The internal container array */
 	private Object[] container;
 	
-	public Tuple(int size, Object... objects) {
-		container = new Object[size];
-		for(int i = 0;i < size;i++) container[i] = objects[i];
+	/**
+	 * Instantiates a new {@code Tuple}
+	 * @param objects
+	 */
+	public Tuple(Object... objects) {
+		container = new Object[objects.length];
+		for(int i = 0;i < objects.length;i++) container[i] = objects[i];
 	}
 	
+	/**
+	 * Returns the object previously inserted into the
+	 * specified index.
+	 * 
+	 * @param index    the index representing the insertion order.
+	 * @return
+	 */
 	public Object get(int index) {
 		return container[index];
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -57,6 +73,9 @@ public class Tuple {
 		return sb.toString();
 	}
 	
+	/**
+     * {@inheritDoc}
+     */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -65,6 +84,9 @@ public class Tuple {
 		return result;
 	}
 
+	/**
+     * {@inheritDoc}
+     */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

@@ -7,29 +7,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This is an implementation of the scalar encoder that adapts the min and
+ * max of the scalar encoder dynamically. This is essential to the streaming
+ * model of the online prediction framework.
+ * 
+ * Initialization of an adaptive encoder using resolution or radius is not
+ * supported; it must be initialized with n. This n is kept constant while
+ * the min and max of the encoder changes.
+ * 
+ * The adaptive encoder must be have periodic set to false.
+ * 
+ * The adaptive encoder may be initialized with a minval and maxval or with
+ * `None` for each of these. In the latter case, the min and max are set as
+ * the 1st and 99th percentile over a window of the past 100 records.
+ * 
+ * *Note:** the sliding window may record duplicates of the values in the
+ * data set, and therefore does not reflect the statistical distribution of
+ * the input data and may not be used to calculate the median, mean etc.
+ */
 public class AdaptiveScalarEncoder extends ScalarEncoder {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveScalarEncoder.class);
-
-	/*
-	 * This is an implementation of the scalar encoder that adapts the min and
-	 * max of the scalar encoder dynamically. This is essential to the streaming
-	 * model of the online prediction framework.
-	 *
-	 * Initialization of an adapive encoder using resolution or radius is not
-	 * supported; it must be intitialized with n. This n is kept constant while
-	 * the min and max of the encoder changes.
-	 *
-	 * The adaptive encoder must be have periodic set to false.
-	 *
-	 * The adaptive encoder may be initialized with a minval and maxval or with
-	 * `None` for each of these. In the latter case, the min and max are set as
-	 * the 1st and 99th percentile over a window of the past 100 records.
-	 *
-	 * *Note:** the sliding window may record duplicates of the values in the
-	 * dataset, and therefore does not reflect the statistical distribution of
-	 * the input data and may not be used to calculate the median, mean etc.
-	 */
 
 	public int recordNum = 0;
 	public boolean learningEnabled = true;
@@ -37,8 +36,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	public int windowSize = 300;
 	public Double bucketValues;
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * {@inheritDoc}
 	 *
 	 * @see org.numenta.nupic.encoders.ScalarEncoder#init()
 	 */
@@ -47,9 +46,9 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		this.setPeriodic(false);
 		super.init();
 	}
-
-	/*
-	 * (non-Javadoc)
+	
+	/**
+	 * {@inheritDoc}
 	 *
 	 * @see org.numenta.nupic.encoders.ScalarEncoder#initEncoder(int, double,
 	 * double, int, double, double)
@@ -68,7 +67,7 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	}
 
 	/**
-	 *
+	 * Constructs a new {@code AdaptiveScalarEncoder}
 	 */
 	public AdaptiveScalarEncoder() {
 	}
@@ -83,6 +82,10 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return new AdaptiveScalarEncoder.Builder();
 	}
 
+	/**
+	 * Constructs a new {@link Builder} suitable for constructing
+	 * {@code AdaptiveScalarEncoder}s.
+	 */
 	public static class Builder extends Encoder.Builder<AdaptiveScalarEncoder.Builder, AdaptiveScalarEncoder> {
 		private Builder() {}
 
@@ -95,8 +98,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.ScalarEncoder#topDownCompute(int[])
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public List<EncoderResult> topDownCompute(int[] encoded) {
@@ -111,8 +114,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return super.topDownCompute(encoded);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.ScalarEncoder#encodeIntoArray(java.lang.Double, int[])
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public void encodeIntoArray(Double input, int[] output) {
@@ -179,8 +182,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return a;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketIndices(java.lang.String)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int[] getBucketIndices(String inputString) {
@@ -188,8 +191,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return calculateBucketIndices(input);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketIndices(double)
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public int[] getBucketIndices(double input) {
@@ -213,8 +216,8 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 		return super.getBucketIndices(input);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.encoders.ScalarEncoder#getBucketInfo(int[])
+	/**
+	 * {@inheritDoc}
 	 */
 	@Override
 	public List<EncoderResult> getBucketInfo(int[] buckets) {

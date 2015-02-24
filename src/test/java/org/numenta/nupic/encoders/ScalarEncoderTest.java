@@ -449,4 +449,20 @@ public class ScalarEncoderTest {
 			v += (se.getResolution() / 4);
 		}
 	}
+	
+	/**
+	 * This should not cause an OutOfMemoryError due to no resolution being set.
+	 * Fix for #142  (see: https://github.com/numenta/htm.java/issues/142)
+	 */
+	@Test
+    public void endlessLoopInTopDownCompute() {
+	    ScalarEncoder encoder = ScalarEncoder.builder()
+            .w( 5 )
+            .n( 10 )
+            .forced( true )
+            .minVal( 0 )
+            .maxVal( 100 )
+            .build();
+        encoder.topDownCompute( new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } );
+    }
 }

@@ -681,7 +681,7 @@ public class SpatialPoolerTest {
     	}
     	
     	////////////////
-		minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
+    	minActiveDutyCycles = new double[] { 0.1, 0.2, 0.02, 0.03, 0.7, 0.12 };
 		mem.setMinActiveDutyCycles(minActiveDutyCycles);
 		Arrays.fill(activeDutyCycles, 0);
 		mem.setActiveDutyCycles(activeDutyCycles);

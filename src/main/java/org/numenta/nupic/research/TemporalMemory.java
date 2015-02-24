@@ -153,7 +153,7 @@ public class TemporalMemory {
      * 
      * Pseudocode:
      *
-     * - for each prev predictive cell
+     * - for each previous predictive cell
      *   - if in active column
      *     - mark it as active
      *     - mark it as winner cell

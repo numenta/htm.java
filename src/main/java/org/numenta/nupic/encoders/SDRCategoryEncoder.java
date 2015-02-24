@@ -172,7 +172,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
         if (this.thresholdOverlap < this.w - 3) {
             this.thresholdOverlap = this.w - 3;
         }
-        this.description.add(new Tuple(2, name, 0));
+        this.description.add(new Tuple(name, 0));
         this.name = name;
         /*
         # Always include an 'unknown' category for

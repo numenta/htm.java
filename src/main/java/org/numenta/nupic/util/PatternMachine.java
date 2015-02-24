@@ -89,9 +89,6 @@ public class PatternMachine {
     public void generate() {
         LinkedHashSet<Integer> pattern;
         for(int i = 0;i < numPatterns;i++) {
-            if(i == 80) {
-                System.out.println("at index 80");
-            }
             pattern = sample(new ArrayList<Integer>(xrange(0, n)), w);
             patterns.put(i, pattern);
         }
