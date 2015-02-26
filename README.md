@@ -20,6 +20,8 @@ For answers to more detailed questions, email the [nupic-discuss](http://lists.n
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
 
+***
+
 ### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html)
 
 ## Goals
