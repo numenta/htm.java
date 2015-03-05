@@ -953,7 +953,7 @@ public class SpatialPooler {
      */
     public void updateBoostFactors(Connections c) {
     	double[] activeDutyCycles = c.getActiveDutyCycles();
-    	double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
+    	final double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
     	
     	//Indexes of values > 0
     	int[] mask = ArrayUtils.where(minActiveDutyCycles, ArrayUtils.GREATER_THAN_0);
