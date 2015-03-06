@@ -7,6 +7,8 @@ htm.java
 
 Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic) python project.
 
+**NOTE: Minimum JavaSE version is 1.8**  - (You may target lesser JDK versions using [Retrolambda](https://github.com/orfjackal/retrolambda))     
+
 ### In The News - _Another Update This Month!_   
 * [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
 * [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
