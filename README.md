@@ -18,7 +18,7 @@ For a more detailed discussion of <b>htm.java</b> see: <BR>
 * [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
 * [Java Docs](http://numenta.org/docs/htm.java/)
 
-See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more information on where you can contribute! Extends the tests and get your name in bright lights!
+See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more information on where you can contribute! Extend the tests and get your name in bright lights!
 
 For answers to more detailed questions, email the [nupic-discuss](http://lists.numenta.org/mailman/listinfo/nupic_lists.numenta.org) mailing list, or chat with us on Gitter.
 
