@@ -216,7 +216,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	    // bits to the right of the center bit of maxval
 		setPadding(isPeriodic() ? 0 : getHalfWidth());
 
-		if(!Double.isNaN(getMinVal()) && !Double.isNaN(getMinVal())) {
+		if(!Double.isNaN(getMinVal()) && !Double.isNaN(getMaxVal())) {
 			if(getMinVal() >= getMaxVal()) {
 				throw new IllegalStateException("maxVal must be > minVal");
 			}
