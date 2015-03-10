@@ -105,8 +105,8 @@ public class MultiEncoderTest {
 		
 		Map<String, Map<String, Object>> fieldEncodings = new HashMap<String, Map<String, Object>>();
 		fieldEncodings.put("dow", new HashMap<String, Object>());
-		fieldEncodings.get("dow").put("type", "ScalarEncoder");
-		fieldEncodings.get("dow").put("fieldname", "dow");
+		fieldEncodings.get("dow").put("encoderType", "ScalarEncoder");
+		fieldEncodings.get("dow").put("fieldName", "dow");
 		fieldEncodings.get("dow").put("w", 3);
 		fieldEncodings.get("dow").put("resolution", 1.);
 		fieldEncodings.get("dow").put("minVal", 1.);
@@ -116,8 +116,8 @@ public class MultiEncoderTest {
 		fieldEncodings.get("dow").put("forced", true);
 		
 		fieldEncodings.put("myval", new HashMap<String, Object>());
-		fieldEncodings.get("myval").put("type", "ScalarEncoder");
-		fieldEncodings.get("myval").put("fieldname", "myval");
+		fieldEncodings.get("myval").put("encoderType", "ScalarEncoder");
+		fieldEncodings.get("myval").put("fieldName", "myval");
 		fieldEncodings.get("myval").put("w", 5);
 		fieldEncodings.get("myval").put("resolution", 1.);
 		fieldEncodings.get("myval").put("minVal", 1.);
@@ -139,8 +139,8 @@ public class MultiEncoderTest {
 		categoryList.add("kick");
 		
 		fieldEncodings.put("myCat", new HashMap<String, Object>());
-		fieldEncodings.get("myCat").put("type", "CategoryEncoder");
-		fieldEncodings.get("myCat").put("fieldname", "myCat");
+		fieldEncodings.get("myCat").put("encoderType", "CategoryEncoder");
+		fieldEncodings.get("myCat").put("fieldName", "myCat");
 		fieldEncodings.get("myCat").put("w", 3);
 		fieldEncodings.get("myCat").put("radius", 2.);
 		fieldEncodings.get("myCat").put("categoryList", categoryList);
