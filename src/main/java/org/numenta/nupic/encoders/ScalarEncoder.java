@@ -72,7 +72,7 @@ import java.util.Map;
  *             otherwise maxval is a true upper bound.
  *
  * There are three mutually exclusive parameters that determine the overall size of
- * of the output. Only one of these should be specifed to the constructor:
+ * of the output. Only one of these should be specified to the constructor:
  *
  * n      --      The number of bits in the output. Must be greater than or equal to w
  * radius --      Two inputs separated by more than the radius have non-overlapping

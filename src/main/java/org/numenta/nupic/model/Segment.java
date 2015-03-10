@@ -35,7 +35,7 @@ import org.numenta.nupic.Connections;
  * @see ProximalDendrite
  */
 public abstract class Segment {
-	/**
+    /**
      * Creates and returns a newly created {@link Synapse} with the specified
      * source cell, permanence, and index.
      * 

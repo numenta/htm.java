@@ -48,9 +48,9 @@ public class Column {
     private final int numCells;
     /** Connects {@link SpatialPooler} input pools */
     private ProximalDendrite proximalDendrite;
-    
+
     private Cell[] cells;
-    
+
     /**
      * Constructs a new {@code Column}
      * 
@@ -66,7 +66,7 @@ public class Column {
         }
         proximalDendrite = new ProximalDendrite(index);
     }
-    
+
     /**
      * Returns the {@link Cell} residing at the specified index.
      * 
@@ -76,7 +76,7 @@ public class Column {
     public Cell getCell(int index) {
         return cells[index];
     }
-    
+
     /**
      * Returns a {@link List} view of this {@code Column}'s {@link Cell}s.
      * @return
@@ -84,7 +84,7 @@ public class Column {
     public List<Cell> getCells() {
         return Arrays.asList(cells);
     }
-    
+
     /**
      * Returns the index of this {@code Column}
      * @return  the index of this {@code Column}
@@ -92,7 +92,7 @@ public class Column {
     public int getIndex() {
         return index;
     }
-    
+
     /**
      * Returns the configured number of cells per column for
      * all {@code Column} objects within the current {@link TemporalMemory}
@@ -101,7 +101,7 @@ public class Column {
     public int getNumCellsPerColumn() {
         return numCells;
     }
-    
+
     /**
      * Returns the {@link Cell} with the least number of {@link DistalDendrite}s.
      * 
@@ -113,15 +113,15 @@ public class Column {
         List<Cell> cells = getCells();
         List<Cell> leastUsedCells = new ArrayList<Cell>();
         int minNumSegments = Integer.MAX_VALUE;
-        
+
         for(Cell cell : cells) {
             int numSegments = cell.getSegments(c).size();
-            
+
             if(numSegments < minNumSegments) {
                 minNumSegments = numSegments;
                 leastUsedCells.clear();
             }
-            
+
             if(numSegments == minNumSegments) {
                 leastUsedCells.add(cell);
             }
@@ -130,15 +130,15 @@ public class Column {
         Collections.sort(leastUsedCells);
         return leastUsedCells.get(index); 
     }
-    
+
     /**
      * Returns this {@code Column}'s single {@link ProximalDendrite}
      * @return
      */
     public ProximalDendrite getProximalDendrite() {
-    	return proximalDendrite;
+        return proximalDendrite;
     }
-    
+
     /**
      * Delegates the potential synapse creation to the one {@link ProximalDendrite}.
      * 
@@ -146,9 +146,9 @@ public class Column {
      * @param inputVectorIndexes	indexes specifying the input vector bit
      */
     public Pool createPotentialPool(Connections c, int[] inputVectorIndexes) {
-    	return proximalDendrite.createPool(c, inputVectorIndexes);
+        return proximalDendrite.createPool(c, inputVectorIndexes);
     }
-    
+
     /**
      * Sets the permanences on the {@link ProximalDendrite} {@link Synapse}s
      * 
@@ -156,9 +156,9 @@ public class Column {
      * @param permanences	floating point degree of connectedness
      */
     public void setProximalPermanences(Connections c, double[] permanences) {
-    	proximalDendrite.setPermanences(c, permanences);
+        proximalDendrite.setPermanences(c, permanences);
     }
-    
+
     /**
      * Sets the permanences on the {@link ProximalDendrite} {@link Synapse}s
      * 
@@ -166,9 +166,9 @@ public class Column {
      * @param permanences	floating point degree of connectedness
      */
     public void setProximalPermanencesSparse(Connections c, double[] permanences, int[] indexes) {
-    	proximalDendrite.setPermanences(c, permanences, indexes);
+        proximalDendrite.setPermanences(c, permanences, indexes);
     }
-    
+
     /**
      * Delegates the call to set synapse connected indexes to this 
      * {@code Column}'s {@link ProximalDendrite}
@@ -176,9 +176,9 @@ public class Column {
      * @param connections
      */
     public void setProximalConnectedSynapsesForTest(Connections c, int[] connections) {
-    	proximalDendrite.setConnectedSynapsesForTest(c, connections);
+        proximalDendrite.setConnectedSynapsesForTest(c, connections);
     }
-    
+
     /**
      * {@inheritDoc}
      */

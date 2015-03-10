@@ -926,7 +926,7 @@ public class Connections {
     }
     
     /**
-     * 
+     * Returns the minimum {@link Synapse} permanence.
      * @return
      */
     public double getSynPermMin() {
@@ -934,7 +934,7 @@ public class Connections {
     }
     
     /**
-     * 
+     * Returns the maximum {@link Synapse} permanence.
      * @return
      */
     public double getSynPermMax() {

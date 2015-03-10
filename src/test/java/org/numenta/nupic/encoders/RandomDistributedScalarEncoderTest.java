@@ -31,6 +31,12 @@ public class RandomDistributedScalarEncoderTest {
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 
+	/**
+	 * Test basic encoding functionality. Create encodings without crashing and
+     * check they contain the correct number of on and off bits. Check some
+     * encodings for expected overlap. Test that encodings for old values don't
+     * change once we generate new buckets.
+	 */
 	@Test
 	public void testEncoding() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -41,6 +47,7 @@ public class RandomDistributedScalarEncoderTest {
 				.setOffset(0);
 		rdse = builder.build();
 
+		
 		int e0[] = rdse.encode(-0.1);
 		assertEquals("Number of on bits is incorrect", getOnBits(e0), 23);
 		assertEquals("Width of the vector is incorrect", e0.length, 500);
@@ -48,19 +55,25 @@ public class RandomDistributedScalarEncoderTest {
 				rdse.getBucketIndices(0)[0], rdse.getMaxBuckets() / 2);
 		assertEquals("Number of buckets is not 1", 1, rdse.bucketMap.size());
 
+		// Encode with a number that is resolution away from offset. Now we should
+        // have two buckets and this encoding should be one bit away from e0
 		int e1[] = rdse.encode(1.0);
 		assertEquals("Number of buckets is not 2", 2, rdse.bucketMap.size());
 		assertEquals("Number of on bits is incorrect", getOnBits(e1), 23);
 		assertEquals("Width of the vector is incorrect", e0.length, 500);
 		assertEquals("Overlap is not equal to w-1", computeOverlap(e0, e1), 22);
 
+		// Encode with a number that is resolution*w away from offset. Now we should
+        // have many buckets and this encoding should have very little overlap with
+        // e0
 		int e25[] = rdse.encode(25.0);
-		assertTrue("Buckets created are not more than 23",
-				rdse.bucketMap.size() > 23);
+		assertTrue("Buckets created are not more than 23", rdse.bucketMap.size() > 23);
 		assertEquals("Number of on bits is incorrect", getOnBits(e1), 23);
 		assertEquals("Width of the vector is incorrect", e0.length, 500);
 		assertTrue("Overlap is too high", computeOverlap(e0, e25) < 4);
 
+		// Test encoding consistency. The encodings for previous numbers
+	    // shouldn't change even though we have added additional buckets
 		assertThat(
 				"Encodings are not consistent - they have changed after new buckets have been created",
 				rdse.encode(-0.1), is(equalTo(e0)));
@@ -69,6 +82,9 @@ public class RandomDistributedScalarEncoderTest {
 				rdse.encode(1.0), is(equalTo(e1)));
 	}
 
+	/**
+	 * Test that missing values and NaN return all zero's.
+	 */
 	@Test
 	public void testMissingValues() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -83,6 +99,10 @@ public class RandomDistributedScalarEncoderTest {
 		assertEquals(0, getOnBits(e1));
 	}
 
+	/**
+	 * Test that numbers within the same resolution return the same encoding.
+     * Numbers outside the resolution should return different encodings.
+	 */
 	@Test
 	public void testResolution() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -90,6 +110,9 @@ public class RandomDistributedScalarEncoderTest {
 				.resolution(1);
 		rdse = builder.build();
 
+		// Since 23.0 is the first encoded number, it will be the offset.
+	    // Since resolution is 1, 22.9 and 23.4 should have the same bucket index and
+	    // encoding.
 		int[] e23 = rdse.encode(23.0);
 		int[] e23_1 = rdse.encode(23.1);
 		int[] e22_9 = rdse.encode(22.9);
@@ -108,6 +131,10 @@ public class RandomDistributedScalarEncoderTest {
 				is(not(equalTo(e22_5))));
 	}
 
+	/**
+	 * Test that mapBucketIndexToNonZeroBits works and that max buckets and
+     * clipping are handled properly.
+	 */
 	@Test
 	public void testMapBucketIndexToNonZeroBits() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -116,6 +143,7 @@ public class RandomDistributedScalarEncoderTest {
 				.n(150);
 		rdse = builder.build();
 
+		// Set a low number of max buckets
 		rdse.initializeBucketMap(10, null);
 
 		rdse.encode(0.0);
@@ -193,6 +221,12 @@ public class RandomDistributedScalarEncoderTest {
 			.build();
 	}
 
+	/**
+	 * Check that the overlaps for the encodings are within the expected range.
+     * Here we ask the encoder to create a bunch of representations under somewhat
+     * stressfull conditions, and then verify they are correct. We rely on the fact
+     * that the _overlapOK and _countOverlapIndices methods are working correctly.
+	 */
 	@Test
 	public void testOverlapStatistics() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -210,6 +244,10 @@ public class RandomDistributedScalarEncoderTest {
 				validateEncoder(rdse, 3));
 	}
 
+	/**
+	 * Test that the getWidth, getDescription, and getDecoderOutputFieldTypes
+     * methods work.
+	 */
 	@Test
 	public void testGetMethods() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -231,6 +269,9 @@ public class RandomDistributedScalarEncoderTest {
 				is(equalTo(Arrays.asList(FieldMetaType.FLOAT))));
 	}
 
+	/**
+	 * Test that offset is working properly
+	 */
 	@Test
 	public void testOffset() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -282,6 +323,9 @@ public class RandomDistributedScalarEncoderTest {
 		//		is(not(equalTo(e3))));
 	}
 
+	/**
+	 * Test that the internal method _countOverlapIndices works as expected.
+	 */
 	@Test
 	public void testCountOverlapIndices() {
 		builder = RandomDistributedScalarEncoder.builder()
@@ -291,6 +335,7 @@ public class RandomDistributedScalarEncoderTest {
 				.n(5 * 20);
 		rdse = builder.build();
 
+		// Create a fake set of encodings.
 		int midIdx = rdse.getMaxBuckets() / 2;
 
 		rdse.bucketMap.put(midIdx - 2, getRangeAsList(3, 8));
@@ -363,6 +408,10 @@ public class RandomDistributedScalarEncoderTest {
 		rdse.countOverlapIndices(midIdx - 3, midIdx - 2);
 	}
 
+	/**
+	 * Test that the internal method {@link RandomDistributedScalarEncoder#overlapOK(int, int)}
+	 *  works as expected.
+	 */
 	@Test
 	public void testOverlapOK() {
 		builder = RandomDistributedScalarEncoder.builder()

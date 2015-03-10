@@ -23,6 +23,8 @@
 package org.numenta.nupic.util;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * An immutable fixed data structure whose values are retrieved
@@ -53,6 +55,23 @@ public class Tuple {
 	 */
 	public Object get(int index) {
 		return container[index];
+	}
+	
+	/**
+	 * Returns the number of items in this {@code Tuple}
+	 * 
+	 * @return
+	 */
+	public int size() {
+	    return container.length;
+	}
+	
+	/**
+	 * Returns an <em>unmodifiable</em> view of the underlying data.
+	 * @return
+	 */
+	public  List<Object> all() {
+	    return Collections.unmodifiableList(Arrays.asList(container));
 	}
 	
 	/**

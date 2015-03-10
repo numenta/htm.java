@@ -22,6 +22,11 @@
 
 package org.numenta.nupic;
 
+import org.numenta.nupic.encoders.CategoryEncoder;
+import org.numenta.nupic.encoders.DateEncoder;
+import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
+
 /**
  * Public values for the field data types
  * 
@@ -47,10 +52,70 @@ public enum FieldMetaType {
 	}
 	
 	/**
+	 * Returns the {@link Encoder} matching this field type.
+	 * @return
+	 */
+	public Encoder<?> newEncoder() {
+	    switch(this) {
+	        case STRING : return CategoryEncoder.builder().build();
+	        case DATETIME : return DateEncoder.builder().build();
+	        case INTEGER : 
+	        case FLOAT : return RandomDistributedScalarEncoder.builder().build();
+	        default : return null;
+	    }
+	}
+	
+	/**
 	 * Returns the display string
 	 * @return the display string
 	 */
 	public String display() {
 		return displayString;
+	}
+	
+	/**
+	 * Parses the specified String and returns a {@link FieldMetaType}
+	 * representing the passed in value.
+	 * 
+	 * @param s  the type in string form
+	 * @return the FieldMetaType indicated or the default: {@link FieldMetaType#FLOAT}.
+	 */
+	public static FieldMetaType fromString(Object s) {
+	    String val = s.toString().toLowerCase();
+	    switch(val) {
+	        case "char" : 
+	        case "string" :
+	        case "category" : {
+	            return STRING;
+	        }
+	        case "date" :
+	        case "date time" :
+	        case "datetime" :
+	        case "time" : {
+	            return DATETIME;
+	        }
+	        case "int" :
+	        case "integer" :
+	        case "long" : {
+	            return INTEGER;
+	        }
+	        case "double" :
+	        case "float" :
+	        case "number" :
+	        case "numeral" :
+	        case "num" :
+	        case "scalar" :
+	        case "floating point" : {
+	            return FLOAT;
+	        }
+	        case "bool" :
+	        case "boolean" : {
+	            return BOOLEAN;
+	        }
+	        case "list" : {
+	            return LIST;
+	        }
+	        default : return FLOAT;
+	    }
 	}
 }

@@ -156,7 +156,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 		// TODO reduce logging level?
-		LOG.info(this.toString());
+		LOG.debug(this.toString());
 	}
 
 	/**

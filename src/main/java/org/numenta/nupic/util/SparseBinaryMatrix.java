@@ -76,8 +76,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      public Object getSlice(int... coordinates) {
 		Object slice = backingArray;
 		for(int i = 0;i < coordinates.length;i++) {
-			Object s = Array.get(slice, coordinates[i]);
-			slice = s.getClass().isArray() ? s : s;
+			slice = Array.get(slice, coordinates[i]);;
 		}
 		//Ensure return value is of type Array
 		if(!slice.getClass().isArray()) {
@@ -158,6 +157,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
+     * Call This for TEST METHODS ONLY
      * Sets the specified values at the specified indexes.
      * 
      * @param indexes   indexes of the values to be set
