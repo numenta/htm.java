@@ -83,12 +83,16 @@ public class SensorTest {
         }
     }
     
+    /**
+     * Tests the formation of meta constructs (i.e. may be header or other) which
+     * describe the format of columnated data and processing hints (how and when to reset).
+     */
     @Test
     public void testMetaFormation() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create, 
             SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
-        // Encoder Parameters per/field
+        
         // Cast the ValueList to the more complex type (SensorInputMeta)
         SensorInputMeta meta = (SensorInputMeta)sensor.getMeta();
         assertTrue(meta.getFieldTypes().stream().allMatch(
@@ -99,6 +103,9 @@ public class SensorTest {
             l -> l.equals(SensorFlags.T) || l.equals(SensorFlags.B)));
     }
     
+    /**
+     * Tests the auto-creation of Encoders from Sensor meta data.
+     */
     @Test
     public void testInternalEncoderCreation() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
