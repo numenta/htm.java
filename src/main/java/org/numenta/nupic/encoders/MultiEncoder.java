@@ -27,7 +27,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +67,6 @@ public class MultiEncoder extends Encoder<Object> {
 	}
 
 	public void init() {
-		encoders = new LinkedHashMap<EncoderTuple, List<EncoderTuple>>();
-		encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -147,20 +144,22 @@ public class MultiEncoder extends Encoder<Object> {
 		for (String field : sortedFields) {
 			Map<String, Object> params = fieldEncodings.get(field);
 
-			if (!params.containsKey("fieldname")) {
+			if (!params.containsKey("fieldName")) {
 				throw new IllegalArgumentException("Missing fieldname for encoder " + field);
 			}
-			String fieldName = (String) params.get("fieldname");
+			String fieldName = (String) params.get("fieldName");
 
-			if (!params.containsKey("type")) {
+			if (!params.containsKey("encoderType")) {
 				throw new IllegalArgumentException("Missing type for encoder " + field);
 			}
-			String encoderName = (String) params.get("type");
-
-			Encoder.Builder builder = getBuilder(encoderName);
+			
+			String encoderType = (String) params.get("encoderType");
+			Encoder.Builder builder = getBuilder(encoderType);
 
 			for (String param : params.keySet()) {
-				if (!param.equals("fieldname") && !param.equals("type")) {
+				if (!param.equals("fieldName") && !param.equals("encoderType") &&
+				    !param.equals("fieldType") && !param.equals("fieldEncodings")) {
+				    
 					setValue(builder, param, params.get(param));
 				}
 			}
@@ -188,6 +187,12 @@ public class MultiEncoder extends Encoder<Object> {
 				return SparsePassThroughEncoder.sparseBuilder();
             case "SDRCategoryEncoder":
                 return SDRCategoryEncoder.builder();
+            case "RandomDistributedScalarEncoder":
+                return RandomDistributedScalarEncoder.builder();
+            case "DateEncoder":
+                return DateEncoder.builder();
+            case "DeltaEncoder":
+                return DeltaEncoder.deltaBuilder();
 			default:
 				throw new IllegalArgumentException("Invalid encoder: " + encoderName);
 		}

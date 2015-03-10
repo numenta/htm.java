@@ -144,15 +144,6 @@ public class DateEncoder extends Encoder<Date> {
         // TODO figure out how to remove this
         setForced(true);
 
-        // Adapted from MultiEncoder
-        encoders = new LinkedHashMap<>();
-
-        // Encoder.getEncoderTuple() can return null, but logic in Encoder.addEncoder()
-        // expects at least one empty ArrayList<EncoderTuple>, so we need to prepare such
-        // an initial EncoderTuple.
-        // TODO figure out whether the solution can be moved to Encoder
-        encoders.put(new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
-
         // Note: The order of adding encoders matters, must be in the following
         // season, dayOfWeek, weekend, customDays, holiday, timeOfDay
 
