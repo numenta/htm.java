@@ -33,7 +33,7 @@ public class DateEncoderTest {
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
         
-        bits = de.encode(dt.toDate());
+        bits = de.encode(dt);
 
         //
         //dt.getMillis();
@@ -170,7 +170,7 @@ public class DateEncoderTest {
         setUp();
         initDE();
 
-        int[] bucketIndices = de.getBucketIndices(dt.toDate());
+        int[] bucketIndices = de.getBucketIndices(dt);
         System.out.println(String.format("bucket indices: %s", Arrays.toString(bucketIndices)));
         List<EncoderResult> bucketInfo = de.getBucketInfo(bucketIndices);
 
@@ -201,19 +201,19 @@ public class DateEncoderTest {
         int [] notholiday = new int[]{1,1,1,1,1,0,0,0,0,0};
         int [] holiday2 = new int[]{0,0,0,1,1,1,1,1,0,0};
 
-        Date d = new DateTime(2010, 12, 25, 4, 55).toDate();
+        DateTime d = new DateTime(2010, 12, 25, 4, 55);
         //System.out.println(String.format("1:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(holiday, e.encode(d));
 
-        d = new DateTime(2008, 12, 27, 4, 55).toDate();
+        d = new DateTime(2008, 12, 27, 4, 55);
         //System.out.println(String.format("2:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(notholiday, e.encode(d));
 
-        d = new DateTime(1999, 12, 26, 8, 0).toDate();
+        d = new DateTime(1999, 12, 26, 8, 0);
         //System.out.println(String.format("3:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(holiday2, e.encode(d));
 
-        d = new DateTime(2011, 12, 24, 16, 0).toDate();
+        d = new DateTime(2011, 12, 24, 16, 0);
         //System.out.println(String.format("4:%s", Arrays.toString(e.encode(d))));
         assertArrayEquals(holiday2, e.encode(d));
     }
@@ -233,14 +233,14 @@ public class DateEncoderTest {
         DateEncoder e2 = DateEncoder.builder().weekend(21, 1).forced(true).build();
         DateTime d = new DateTime(1988,5,29,20,0);
 
-        assertArrayEquals(e.encode(d.toDate()), e2.encode(d.toDate()));
+        assertArrayEquals(e.encode(d), e2.encode(d));
 
         for (int i = 0; i < 300; i++) {
             DateTime curDate = d.plusDays(i + 1);
-            assertArrayEquals(e.encode(curDate.toDate()), e2.encode(curDate.toDate()));
+            assertArrayEquals(e.encode(curDate), e2.encode(curDate));
 
             //Make sure
-            Tuple decoded = mon.decode(mon.encode(curDate.toDate()), null);
+            Tuple decoded = mon.decode(mon.encode(curDate), null);
 
             Map<String, RangeList> fieldsMap = (Map<String, RangeList>)decoded.get(0);
             List<String> fieldsOrder = (List<String>)decoded.get(1);

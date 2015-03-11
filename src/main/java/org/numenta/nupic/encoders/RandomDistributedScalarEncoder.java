@@ -120,18 +120,18 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public void init() throws IllegalStateException {
 		if (getW() <= 0 || getW() % 2 == 0)
 			throw new IllegalStateException(
-					"W must be an odd possitive integer (to eliminate centering difficulty)");
+			    "W must be an odd positive integer (to eliminate centering difficulty)");
 
 		setHalfWidth((getW() - 1) / 2);
 
 		if (getResolution() <= 0)
 			throw new IllegalStateException(
-					"Resolution must be a possitive number");
+                "Resolution must be a positive number");
 
 		if (n <= 6 * getW())
 			throw new IllegalStateException(
-					"n must be strictly greater than 6*w. For good results we "
-							+ "recommend n be strictly greater than 11*w.");
+			    "n must be strictly greater than 6*w. For good results we "
+                    + "recommend n be strictly greater than 11*w.");
 
 		initEncoder(getResolution(), getW(), getN(), getOffset(), getSeed());
 	}
@@ -689,10 +689,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			// Call super class here
 			RandomDistributedScalarEncoder partialBuild = super.build();
 
-			// //////////////////////////////////////////////////////
-			// Implementing classes would do setting of specific //
-			// vars here together with any sanity checking //
-			// //////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
 			partialBuild.setSeed(seed);
 			partialBuild.setMaxOverlap(maxOverlap);
 			partialBuild.setMaxBuckets(maxBuckets);

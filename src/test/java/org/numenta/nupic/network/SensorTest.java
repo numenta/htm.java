@@ -46,12 +46,20 @@ public class SensorTest {
             }
         }
         
-        if(n != 0) inner.put("n", n);
-        if(w != 0) inner.put("w", w);
-        if(min != 0) inner.put("minVal", min);
-        if(max != 0) inner.put("maxVal", max);
-        if(radius != 0) inner.put("w", radius);
-        if(resolution != 0) inner.put("resolution", resolution);
+//        if(n != 0) inner.put("n", n);
+//        if(w != 0) inner.put("w", w);
+//        if(min != 0) inner.put("minVal", min);
+//        if(max != 0) inner.put("maxVal", max);
+//        if(radius != 0) inner.put("w", radius);
+//        if(resolution != 0) inner.put("resolution", resolution);
+        
+        inner.put("n", n);
+        inner.put("w", w);
+        inner.put("minVal", min);
+        inner.put("maxVal", max);
+        inner.put("radius", radius);
+        inner.put("resolution", resolution);
+        
         if(periodic != null) inner.put("periodic", periodic);
         if(clip != null) inner.put("clip", clip);
         if(forced != null) inner.put("forced", forced);
@@ -118,7 +126,7 @@ public class SensorTest {
             fieldEncodings, 
             250, 
             11, 
-            0, 0, 0, 0, null, null, null, 
+            0, 0, 0, 0.1, null, null, null, 
             "consumption", "float", "RandomDistributedScalarEncoder");
         
         Parameters p = Parameters.getEncoderDefaultParameters();
@@ -126,7 +134,8 @@ public class SensorTest {
         
         Sensor<File> sensor = Sensor.create(
             FileSensor::create, 
-            SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
+            SensorParams.create(
+                Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
         
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
         
@@ -143,7 +152,7 @@ public class SensorTest {
         assertNotNull(enc);
         assertTrue(enc instanceof MultiEncoder);
         // Set the global parameters on the Sensor
-        htmSensor.setGlobalParameters(p);
+        htmSensor.setLocalParameters(p);
         List<Encoder<Object>> encoders = ((MultiEncoder)enc).getEncoderList();
         assertEquals(2, encoders.size());
     }

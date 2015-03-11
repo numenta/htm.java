@@ -22,6 +22,14 @@
 
 package org.numenta.nupic;
 
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -31,13 +39,6 @@ import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
-
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -252,7 +253,8 @@ public class Parameters {
         /** Encoder name */
         ENCODER("encoderType", String.class),
         /** Designates holder for the Multi Encoding Map */
-        FIELD_ENCODING_MAP("fieldEncodings", Map.class);
+        FIELD_ENCODING_MAP("fieldEncodings", Map.class),
+        CATEGORY_LIST("categoryList", List.class);
         
 
         private static final Map<String, KEY> fieldMap = new HashMap<>();

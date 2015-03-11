@@ -198,7 +198,7 @@ public class RandomDistributedScalarEncoderTest {
 	public void testParameterCheckWithInvalidW() {
 		// w can 't be negative
 		exception.expect(IllegalStateException.class);
-		exception.expectMessage("W must be an odd possitive integer (to eliminate centering difficulty)");
+		exception.expectMessage("W must be an odd positive integer (to eliminate centering difficulty)");
 		RandomDistributedScalarEncoder.builder()
 			.n(500)
 			.w(6)
@@ -213,7 +213,7 @@ public class RandomDistributedScalarEncoderTest {
 	public void testParameterCheckWithInvalidResolution() {
 		// resolution can 't be negative
 		exception.expect(IllegalStateException.class);
-		exception.expectMessage("Resolution must be a possitive number");
+		exception.expectMessage("Resolution must be a positive number");
 		RandomDistributedScalarEncoder.builder()
 			.n(500)
 			.w(5)
