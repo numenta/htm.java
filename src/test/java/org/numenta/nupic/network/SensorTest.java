@@ -15,9 +15,12 @@ import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.SensorParams.Keys;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Higher level test than the individual sensor tests. These
@@ -118,17 +121,24 @@ public class SensorTest {
     public void testInternalEncoderCreation() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
             null,
-            250,
-            11,
+            0, // n
+            0, // w
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         fieldEncodings = setupMap(
             fieldEncodings, 
-            250, 
-            11, 
+            25, 
+            3, 
             0, 0, 0, 0.1, null, null, null, 
             "consumption", "float", "RandomDistributedScalarEncoder");
         
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(1, 1.0));
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(5, 4.0));
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        // This will work also
+        //fieldEncodings.get("timestamp").put(KEY.DATEFIELD_FORMATTER.getFieldName(), DateEncoder.FULL_DATE);
+                
         Parameters p = Parameters.getEncoderDefaultParameters();
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         
@@ -148,12 +158,15 @@ public class SensorTest {
         assertTrue(meta.getFlags().stream().allMatch(
             l -> l.equals(SensorFlags.T) || l.equals(SensorFlags.B)));
         
-        Encoder<?> enc = htmSensor.getEncoder();
+        Encoder<Object> enc = htmSensor.getEncoder();
         assertNotNull(enc);
         assertTrue(enc instanceof MultiEncoder);
-        // Set the global parameters on the Sensor
+        // Set the Local parameters on the Sensor
         htmSensor.setLocalParameters(p);
-        List<Encoder<Object>> encoders = ((MultiEncoder)enc).getEncoderList();
+        List<EncoderTuple> encoders = enc.getEncoders(enc);
         assertEquals(2, encoders.size());
+        
+        
+        
     }
 }

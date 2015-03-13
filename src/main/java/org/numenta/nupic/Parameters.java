@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -39,6 +40,7 @@ import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -254,7 +256,18 @@ public class Parameters {
         ENCODER("encoderType", String.class),
         /** Designates holder for the Multi Encoding Map */
         FIELD_ENCODING_MAP("fieldEncodings", Map.class),
-        CATEGORY_LIST("categoryList", List.class);
+        CATEGORY_LIST("categoryList", List.class),
+        
+        // How many bits to use if encoding the respective date fields.
+        // e.g. Tuple(bits to use:int, radius:double)
+        DATEFIELD_SEASON("season", Tuple.class), 
+        DATEFIELD_DOFW("dayOfWeek", Tuple.class),
+        DATEFIELD_WKEND("weekend", Tuple.class),
+        DATEFIELD_HOLIDAY("holiday", Tuple.class),
+        DATEFIELD_TOFD("timeOfDay", Tuple.class),
+        DATEFIELD_CUSTOM("customDays", Tuple.class), // e.g. Tuple(bits:int, List<String>:"mon,tue,fri")
+        DATEFIELD_PATTERN("formatPattern", String.class),
+        DATEFIELD_FORMATTER("dateFormatter", DateTimeFormatter.class);
         
 
         private static final Map<String, KEY> fieldMap = new HashMap<>();

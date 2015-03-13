@@ -703,21 +703,21 @@ public abstract class Encoder<T> {
      *
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List<Encoder<T>> getEncoderList() {
-		List<Encoder<T>> encoders = new ArrayList<Encoder<T>>();
-
-		List<EncoderTuple> registeredList = getEncoders(this);
-		if(registeredList != null && !registeredList.isEmpty()) {
-			for(Tuple t : registeredList) {
-				List<Encoder<T>> subEncoders = ((Encoder<T>)t.get(1)).getEncoderList();
-				encoders.addAll(subEncoders);
-			}
-		}else{
-			encoders.add(this);
-		}
-		return encoders;
-	}
+//	@SuppressWarnings("unchecked")
+//	public List<Encoder<T>> getEncoderList() {
+//		List<Encoder<T>> encoders = new ArrayList<Encoder<T>>();
+//
+//		List<EncoderTuple> registeredList = getEncoders(this);
+//		if(registeredList != null && !registeredList.isEmpty()) {
+//			for(Tuple t : registeredList) {
+//				List<Encoder<T>> subEncoders = ((Encoder<T>)t.get(1)).getEncoderList();
+//				encoders.addAll(subEncoders);
+//			}
+//		}else{
+//			encoders.add(this);
+//		}
+//		return encoders;
+//	}
 
 	/**
 	 * Returns an {@link TDoubleList} containing the sub-field scalar value(s) for

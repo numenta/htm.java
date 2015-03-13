@@ -169,7 +169,13 @@ public class MultiEncoder extends Encoder<Object> {
 		}
 	}
 
-	private Encoder.Builder<?,?> getBuilder(String encoderName) {
+	/**
+	 * Open up for internal Network API use.
+	 * Returns an {@link Encoder.Builder} which corresponds to the specified name.
+	 * @param encoderName
+	 * @return
+	 */
+	public Encoder.Builder<?,?> getBuilder(String encoderName) {
 		switch(encoderName) {
 			case "CategoryEncoder":
 				return CategoryEncoder.builder();
@@ -199,7 +205,7 @@ public class MultiEncoder extends Encoder<Object> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void setValue(Encoder.Builder builder, String param, Object value)  {
+	public void setValue(Encoder.Builder builder, String param, Object value)  {
 		switch(param) {
 		case "n":
 			builder.n((int) value);

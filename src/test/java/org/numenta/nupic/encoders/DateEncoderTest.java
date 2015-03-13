@@ -29,11 +29,16 @@ public class DateEncoderTest {
                 .dayOfWeek(1)
                 .weekend(3)
                 .timeOfDay(5).build();
-
+        
         //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
         dt = new DateTime(2010, 11, 4, 14, 55);
+        DateTime comparison = new DateTime(2010, 11, 4, 13, 55);
         
         bits = de.encode(dt);
+        int[] comparisonBits = de.encode(comparison);
+        
+        System.out.println(Arrays.toString(bits));
+        System.out.println(Arrays.toString(comparisonBits));
 
         //
         //dt.getMillis();
@@ -43,7 +48,7 @@ public class DateEncoderTest {
         int[] seasonExpected = {0,0,0,0,0,0,0,0,0,1,1,1};
 
         // week is MTWTFSS
-        // contrary to localtime documentation, Monday = 0 (for python
+        // contrary to local time documentation, Monday = 0 (for python
         //  datetime.datetime.timetuple()
         int[] dayOfWeekExpected = {0,0,0,1,0,0,0};
 

@@ -22,15 +22,21 @@
 
 package org.numenta.nupic.encoders;
 
-import java.util.*;
-
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -74,11 +80,9 @@ import org.numenta.nupic.util.Tuple;
  *
  * - improve wording on unspecified attributes: "Each parameter describes one extra attribute(other than the datetime
  *   object itself) to encode. By default, the unspecified attributes are not encoded."
- * - change datetime.datetime object to joda-time object
  * - refer to DateEncoder::Builder, which where these parameters are defined.
  * - explain customDays here and at Python version
  */
-
 public class DateEncoder extends Encoder<DateTime> {
 
     protected int width;
@@ -107,9 +111,20 @@ public class DateEncoder extends Encoder<DateTime> {
 
     // Currently the only holiday we know about is December 25
     // holidays is a list of holidays that occur on a fixed date every year
-    protected List<Tuple> holidaysList = Arrays.asList(
-            new Tuple(12, 25)
-    );
+    protected List<Tuple> holidaysList = Arrays.asList(new Tuple(12, 25));
+    
+    //////////////// Convenience DateTime Formats ////////////////////
+    public static DateTimeFormatter FULL_DATE_TIME_ZONE = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSSz");
+    public static DateTimeFormatter FULL_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
+    public static DateTimeFormatter RELAXED_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss");
+    public static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
+    public static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
+    public static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
+    public static DateTimeFormatter FULL_TIME = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+    public static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
+    public static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
+    
+    protected DateTimeFormatter customFormatter;
 
     /**
      * Constructs a new {@code DateEncoder}
@@ -380,6 +395,28 @@ public class DateEncoder extends Encoder<DateTime> {
     public boolean isDelta() {
         return false;
     }
+    
+    /**
+     * Sets the custom formatter for the format field.
+     * @param formatter
+     */
+    public void setCustomFormat(DateTimeFormatter formatter) {
+        this.customFormatter = formatter;
+    }
+    
+    /**
+     * Convenience method to parse a date string into a date 
+     * before delegating to {@link #encodeIntoArray(DateTime, int[])}
+     * 
+     * This method assumes that a custom formatter has been configured
+     * and set on this object.
+     * 
+     * @param dateStr   
+     * @param output
+     */
+    public void encodeIntoArray(String dateStr, int[] output) {
+        this.encodeIntoArray(customFormatter.parseDateTime(dateStr), output);
+    }
 
     /**
      * {@inheritDoc}
@@ -618,6 +655,8 @@ public class DateEncoder extends Encoder<DateTime> {
         // Radius = 4 hours, e.g. morning, afternoon, evening, early night,
         //  late night, etc.
         protected Tuple timeOfDay = new Tuple(0, 4.0);
+        
+        protected DateTimeFormatter customFormatter;
 
         private Builder() {}
 
@@ -642,6 +681,7 @@ public class DateEncoder extends Encoder<DateTime> {
             e.setHoliday(this.holiday);
             e.setTimeOfDay(this.timeOfDay);
             e.setCustomDays(this.customDays);
+            e.setCustomFormat(this.customFormatter);
 
             ((DateEncoder)encoder).init();
 
@@ -747,6 +787,24 @@ public class DateEncoder extends Encoder<DateTime> {
             return this;
         }
 
-
+        /**
+         * Creates the pattern used to parse the date field.
+         * @param pattern
+         * @return
+         */
+        public DateEncoder.Builder formatPattern(String pattern) {
+            this.customFormatter = DateTimeFormat.forPattern(pattern);
+            return this;
+        }
+        
+        /**
+         * Sets the {@link DateTimeFormatte} on this builder.
+         * @param formatter
+         * @return
+         */
+        public DateEncoder.Builder formatter(DateTimeFormatter formatter) {
+            this.customFormatter = formatter;
+            return this;
+        }
     }
 }

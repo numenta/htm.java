@@ -51,7 +51,7 @@ import java.util.Map;
  * The encoding is linear. If you want a nonlinear encoding, just transform
  * the scalar (e.g. by applying a logarithm function) before encoding.
  * It is not recommended to bin the data as a pre-processing step, e.g.
- * "1" = $0 - $.20, "2" = $.21-$0.80, "3" = $.81-$1.20, et as this
+ * "1" = $0 - $.20, "2" = $.21-$0.80, "3" = $.81-$1.20, etc as this
  * removes a lot of information and prevents nearby values from overlapping
  * in the output. Instead, use a continuous transformation that scales
  * the data (a piecewise transformation is fine).
@@ -105,7 +105,7 @@ import java.util.Map;
  * monday noon  -> 11100000000000
  * monday midnight-> 01110000000000
  * tuesday noon -> 00111000000000
- * et
+ * etc
  *
  *
  * It may not be natural to specify "n", especially with non-periodic
