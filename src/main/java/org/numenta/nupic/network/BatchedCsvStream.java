@@ -220,6 +220,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         final class SequencingConsumer implements Consumer<String[]> {
             String[] value;
             @Override public void accept(String[] value) { 
+                csv.isTerminal = true;
                 this.value = new String[value.length + 1];
                 System.arraycopy(value, 0, this.value, 1, value.length);
                 this.value[0] = "" + sequenceNum;
@@ -301,6 +302,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private Iterator<String[]> it;
     private int fence;
     private boolean isBatchOp;
+    private boolean isTerminal;
     private BatchedCsvHeader header;
     private Stream<T> delegate;
     
@@ -327,6 +329,23 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         int i = 0;
         while(i++ < fence) contents.add(it.next());
         this.header = new BatchedCsvHeader(contents, fence);
+    }
+    
+    /**
+     * <p>
+     * Returns a flag indicating whether the underlying stream has had
+     * a terminal operation called on it, indicating that it can no longer
+     * have operations built up on it.
+     * </p><p>
+     * The "terminal" flag if true does not indicate that the stream has reached
+     * the end of its data, it just means that a terminating operation has been
+     * invoked and that it can no longer support intermediate operation creation.
+     * 
+     * @return  true if terminal, false if not.
+     */
+    @Override
+    public boolean isTerminal() {
+        return this.isTerminal;
     }
     
     /**
@@ -375,10 +394,10 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         
         return StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(
-            parallel ? it : getSequenceIterator(it), // Return a sequencing iterator if parallel
-                                                     // otherwise the SplitIterator handles the sequencing.
-            Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), 
-            parallel);
+                parallel ? it : getSequenceIterator(it), // Return a sequencing iterator if parallel
+                                                         // otherwise the SplitIterator handles the sequencing.
+                Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), 
+                parallel);
     }
     
     /**
@@ -401,6 +420,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
 
             @Override
             public String[] next() {
+                isTerminal = true;
                 String[] value = delegate.next();
                 String[] retVal = new String[value.length + 1];
                 System.arraycopy(value, 0, retVal, 1, value.length);

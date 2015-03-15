@@ -24,6 +24,15 @@ package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
@@ -33,12 +42,6 @@ import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -361,8 +364,8 @@ public class ScalarEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<FieldMetaType> getDecoderOutputFieldTypes() {
-		return Arrays.asList(FieldMetaType.FLOAT);
+	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+		return new HashSet<>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER));
 	}
 
 	/**

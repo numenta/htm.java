@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.URI;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.Parameters;
 import org.numenta.nupic.ValueList;
 
 import rx.Observable;
@@ -35,7 +34,7 @@ public interface Sensor<T> {
      * </pre>
      * <p>
      * 
-     * @param sf    the {@link SensorFactory} or method reference.
+     * @param sf    the {@link SensorFactory} or method reference. SensorFactory is a {@link FunctionalInterface}
      * @param t     the {@link SensorParams} which hold the configuration and data source details.
      * @return
      */
@@ -62,7 +61,7 @@ public interface Sensor<T> {
      * 
      * @return the constructed Stream
      */
-    public <K> MetaStream<K> getStream();
+    public <K> MetaStream<K> getInputStream();
     
     /**
      * Returns the inner Stream's meta information.

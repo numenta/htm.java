@@ -22,10 +22,13 @@
 
 package org.numenta.nupic;
 
-import org.numenta.nupic.encoders.CategoryEncoder;
+import org.numenta.nupic.encoders.CoordinateEncoder;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.GeospatialCoordinateEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
+import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.encoders.ScalarEncoder;
 
 /**
  * Public values for the field data types
@@ -38,7 +41,9 @@ public enum FieldMetaType {
 	INTEGER("int"),
 	FLOAT("float"),
 	BOOLEAN("bool"),
-	LIST("list");
+	LIST("list"),
+	COORD("coord"),
+	GEO("geo");
 	
 	/**
 	 * String representation to be used when a display
@@ -57,12 +62,37 @@ public enum FieldMetaType {
 	 */
 	public Encoder<?> newEncoder() {
 	    switch(this) {
-	        case STRING : return CategoryEncoder.builder().build();
+	        case LIST :
+	        case STRING : return SDRCategoryEncoder.builder().build();
 	        case DATETIME : return DateEncoder.builder().build();
+	        case BOOLEAN : return ScalarEncoder.builder().build();
+	        case COORD : return CoordinateEncoder.builder().build();
+	        case GEO : return GeospatialCoordinateEncoder.geobuilder().build();
 	        case INTEGER : 
 	        case FLOAT : return RandomDistributedScalarEncoder.builder().build();
 	        default : return null;
 	    }
+	}
+	
+	/**
+	 * Returns the input type for the {@code FieldMetaType} that this is...
+	 * @param input
+	 * @param enc
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+    public <T> T decodeType(String input, Encoder<?> enc) {
+	    switch(this) {
+            case LIST : 
+            case STRING : return (T)input;
+            case DATETIME : return (T)((DateEncoder)enc).parse(input);
+            case BOOLEAN : return (T)(Boolean.valueOf(input) == true ? new Integer(1) : new Integer(0));
+            case COORD : 
+            case GEO : return (T)new double[] { Double.parseDouble(input.split("\\;")[0]), Double.parseDouble(input.split("\\;")[1]) }; 
+            case INTEGER : 
+            case FLOAT : return (T)new Double(input);
+            default : return null;
+        }
 	}
 	
 	/**
@@ -115,6 +145,12 @@ public enum FieldMetaType {
 	        case "list" : {
 	            return LIST;
 	        }
+	        case "geo" : {
+                return GEO;
+            }
+	        case "coord" : {
+                return COORD;
+            }
 	        default : return FLOAT;
 	    }
 	}

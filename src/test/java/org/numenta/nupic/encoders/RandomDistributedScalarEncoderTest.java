@@ -1,13 +1,19 @@
 package org.numenta.nupic.encoders;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -266,7 +272,7 @@ public class RandomDistributedScalarEncoderTest {
 		assertThat(
 				"getDecoderOutputFieldTypes doesn't return the correct result",
 				rdse.getDecoderOutputFieldTypes(),
-				is(equalTo(Arrays.asList(FieldMetaType.FLOAT))));
+				is(equalTo(new LinkedHashSet<>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER)))));
 	}
 
 	/**

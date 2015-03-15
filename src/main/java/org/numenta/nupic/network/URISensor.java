@@ -12,7 +12,7 @@ import org.numenta.nupic.ValueList;
 public class URISensor implements Sensor<URI>  {
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
-    private static final boolean DEFAULT_PARALLEL_MODE = true;
+    private static final boolean DEFAULT_PARALLEL_MODE = false;
     
     private BatchedCsvStream<String[]> stream;
     private SensorParams params;
@@ -53,7 +53,7 @@ public class URISensor implements Sensor<URI>  {
      * @return  the MetaStream
      */
     @SuppressWarnings("unchecked")
-    public <K> MetaStream<K> getStream() {
+    public <K> MetaStream<K> getInputStream() {
         return (MetaStream<K>)stream;
     }
     

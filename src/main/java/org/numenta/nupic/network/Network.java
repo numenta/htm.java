@@ -3,6 +3,9 @@ package org.numenta.nupic.network;
 import java.util.Iterator;
 import java.util.List;
 
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.network.Network.Node;
+
 
 public interface Network {
     public enum Mode { MANUAL, AUTO, REACTIVE };
@@ -68,6 +71,30 @@ public interface Network {
      */
     public List<Region> getRegions();
     
+    /**
+     * Creates and returns an implementation of {@link Network}
+     * 
+     * @param parameters
+     * @return
+     */
+    public static Network create(Parameters parameters) {
+        return new NetworkImpl(parameters);
+    }
+    
+    /**
+     * Creates and returns a child {@link Region} of this {@code Network}
+     * 
+     * @param parameters
+     * @return
+     */
+    public Region createRegion(Parameters parameters);
+    
+    /**
+     * Returns the network-level {@link Parameters}.
+     * @return
+     */
+    public Parameters getParameters();
+    
     
     /////////////////////////////////////////////////////////////////////////
     //                   Internal Interface Definitions                    //
@@ -106,6 +133,61 @@ public interface Network {
         public default <T> T get(Class<T> c) {
             return c.cast(getElement());
         }
+    }
+    
+    public static class NetworkImpl implements Network {
+        private Parameters parameters;
+        
+        /**
+         * Creates a new {@link NetworkImpl}
+         * @param parameters
+         */
+        public NetworkImpl(Parameters parameters) {
+            this.parameters = parameters;
+        }
+        
+
+        @Override
+        public void run(int count) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void halt() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void pause() {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public Mode getMode() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public List<Region> getRegions() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Region createRegion(Parameters parameters) {
+            Region r = new Region(this, parameters);
+            return r;
+        }
+
+        @Override
+        public Parameters getParameters() {
+            return parameters;
+        }
+        
     }
      
 }

@@ -24,7 +24,7 @@ import org.numenta.nupic.network.Network.Node;
 public class FileSensor implements Sensor<File> {
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
-    private static final boolean DEFAULT_PARALLEL_MODE = true;
+    private static final boolean DEFAULT_PARALLEL_MODE = false;
     
     private BatchedCsvStream<String[]> stream;
     private SensorParams params;
@@ -41,7 +41,8 @@ public class FileSensor implements Sensor<File> {
             throw new IllegalArgumentException("Passed improperly formed Tuple: invalid PATH: " + params.get("PATH"));
         }
         
-        try (Stream<String> stream = Files.lines(f.toPath(), Charset.forName("UTF-8"))) {
+        try {
+            Stream<String> stream = Files.lines(f.toPath(), Charset.forName("UTF-8"));
             this.stream = BatchedCsvStream.batch(
                 stream, BATCH_SIZE, DEFAULT_PARALLEL_MODE, HEADER_SIZE);
         } catch(IOException e) {
@@ -67,7 +68,7 @@ public class FileSensor implements Sensor<File> {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <K> MetaStream<K> getStream() {
+    public <K> MetaStream<K> getInputStream() {
         return (MetaStream<K>)stream;
     }
     

@@ -3,6 +3,8 @@ package org.numenta.nupic.network;
 import java.util.Iterator;
 import java.util.List;
 
+import org.numenta.nupic.Connections;
+import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.Encoder;
@@ -14,8 +16,13 @@ import org.numenta.nupic.research.TemporalMemory;
 
 public class Region implements Node {
     private List<Node> nodeList;
+    private Parameters parameters;
     
-    public <T> Region add(SensorFactory<T> inputSensor) {
+    public Region(Network parent, Parameters parameters) {
+        this.parameters = parent.getParameters().copy().union(parameters);
+    }
+    
+    public <T> Region add(Sensor<T> inputSensor) {
         return this;
     }
     public Region add(SpatialPooler sp) {
@@ -39,10 +46,11 @@ public class Region implements Node {
     public Region connect(Region inputRegion) {
         return this;
     }
+    public Region using(Connections connections) {
+        return this;
+    }
     
-    
-    
-    
+        
     /**
      * Returns this Node's {@link Node.Type}
      * @return

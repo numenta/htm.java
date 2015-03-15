@@ -91,7 +91,14 @@ public class MultiEncoder extends Encoder<Object> {
 			int offset = t.getOffset();
 
 			int[] tempArray = new int[encoder.getWidth()];
-			encoder.encodeIntoArray(getInputValue(input, name), tempArray);
+			
+			try {
+			    encoder.encodeIntoArray(getInputValue(input, name), tempArray);
+			}catch(Exception e) {
+			    System.out.println("input = " + input + ", name = " + name + ",  inputValue = " + getInputValue(input, name));
+			    e.printStackTrace();
+			    System.exit(1);
+			}
 
 			System.arraycopy(tempArray, 0, output, offset, tempArray.length);
 		}
@@ -155,7 +162,7 @@ public class MultiEncoder extends Encoder<Object> {
 			
 			String encoderType = (String) params.get("encoderType");
 			Encoder.Builder builder = getBuilder(encoderType);
-
+			
 			for (String param : params.keySet()) {
 				if (!param.equals("fieldName") && !param.equals("encoderType") &&
 				    !param.equals("fieldType") && !param.equals("fieldEncodings")) {

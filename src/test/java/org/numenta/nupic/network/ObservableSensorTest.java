@@ -5,11 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 import org.numenta.nupic.datagen.ResourceLocator;
@@ -36,11 +31,11 @@ public class ObservableSensorTest {
 
 
     @Test
-    public void test() {
+    public void testCanRetrieveStream() {
         Object[] n = { "some name", makeObservable() };
         SensorParams parms = SensorParams.create(Keys::path, n);
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
-        long count = sensor.getStream().count();
+        long count = sensor.getInputStream().count();
         assertEquals(4391, count);
     }
     

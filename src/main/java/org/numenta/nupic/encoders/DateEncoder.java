@@ -120,7 +120,7 @@ public class DateEncoder extends Encoder<DateTime> {
     public static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
     public static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
     public static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
-    public static DateTimeFormatter FULL_TIME = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+    public static DateTimeFormatter FULL_TIME_MILLIS = DateTimeFormat.forPattern("HH:mm:ss.SSS");
     public static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
     public static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
     
@@ -405,17 +405,32 @@ public class DateEncoder extends Encoder<DateTime> {
     }
     
     /**
+     * Convenience method to employ the configured {@link DateTimeFormatter} 
+     * to return a {@link DateTime}
+     * 
+     * @param dateTimeStr
+     * @return
+     */
+    public DateTime parse(String dateTimeStr) {
+        return customFormatter.parseDateTime(dateTimeStr);
+    }
+    
+    /**
      * Convenience method to parse a date string into a date 
      * before delegating to {@link #encodeIntoArray(DateTime, int[])}
      * 
      * This method assumes that a custom formatter has been configured
-     * and set on this object.
+     * and set on this object. see {@link #setCustomFormat(DateTimeFormatter)}
      * 
-     * @param dateStr   
-     * @param output
+     * @param dateStr       the date string to parse
+     * @return  the binary encoded date 
+     * @throws NullPointerException if the custom formatter is not previously 
+     * configured.
      */
-    public void encodeIntoArray(String dateStr, int[] output) {
+    public int[] parseEncode(String dateStr) {
+        int[] output = new int[getN()];
         this.encodeIntoArray(customFormatter.parseDateTime(dateStr), output);
+        return output;
     }
 
     /**
