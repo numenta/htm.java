@@ -48,8 +48,13 @@ import org.numenta.nupic.util.ArrayUtils;
  * <p>Warning: Sloppy sketchpad code, but it works!</p>
  * 
  * <p><em><b>
- * To see the pretty printed test output and Classification results, uncomment all
- * the print out lines below
+ * To see the pretty printed test output and Classification results, 
+ * 
+ * UNCOMMENT ALL FUNCTIONAL (NON-LABEL) LINES BELOW!
+ * 
+ * These are commented to avoid running during command line builds and
+ * the ugly yellow "unused" markers that Eclipse puts on unused lines.
+ * 
  * </b></em></p>
  * 
  * @author PDove

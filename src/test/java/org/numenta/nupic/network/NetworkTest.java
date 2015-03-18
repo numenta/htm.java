@@ -27,40 +27,53 @@ public class NetworkTest {
      */
     @Test
     public void testFluentBuildSemantics() {
-        Map<String, Object> params = new HashMap<>();
-        params.put(KEY_MODE, Mode.LIKELIHOOD);
-        
         Parameters p = Parameters.getAllDefaultParameters();
         
+        Map<String, Object> anomalyParams = new HashMap<>();
+        anomalyParams.put(KEY_MODE, Mode.LIKELIHOOD);
+        
         try {
-            Network n = Network.create(p);
-            Region r1 = n.createRegion(p)
-                .add(Sensor.create(FileSensor::create, SensorParams.create(
-                    Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))
-                .add(new SpatialPooler())
-                    .using(new Connections())
-                .add(new TemporalMemory())
-                .add(new CLAClassifier())
-                .add(Anomaly.create(params));
-            Region r2 = n.createRegion(p)
-                .add(new SpatialPooler())
-                    .using(new Connections())
-                .add(new TemporalMemory())
-                .add(new CLAClassifier())
-                .add(Anomaly.create(params));
-            Region r3 = n.createRegion(p)
-                .add(new SpatialPooler())
-                    .using(new Connections())
-                .add(new TemporalMemory())
-                .add(new CLAClassifier())
-                .add(Anomaly.create(params))
+            // Idea: Build up ResourceLocator paths in fluent style such as:
+            // Layer.using(
+            //     ResourceLocator.addPath("...") // Adds a search path for later mentioning terminal resources (i.e. files)
+            //         .addPath("...")
+            //         .addPath("..."))
+            //     .add(new SpatialPooler())
+            //     ...
+            Network n = Network.create(p); // Add Network.add() method for chaining region adds
+            Region r1 = n.createRegion()   // Add version of createRegion(String name) for later connecting by name
+                .add(n.createLayer(p)      // so that regions can be added and connecting in one long chain.
+                                
+                    .using(new Connections()) // Test adding connections before elements which use them
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))
+                    .add(new SpatialPooler())
+                    .add(new TemporalMemory())
+                    .add(new CLAClassifier())
+                    .add(Anomaly.create(anomalyParams))
+                );
+            
+            Region r2 = n.createRegion()
+                .add(n.createLayer(p)
+                    .add(new SpatialPooler())
+                    .using(new Connections()) // Test adding connections after one element and before another
+                    .add(new TemporalMemory())
+                    .add(new CLAClassifier())
+                    .add(Anomaly.create(anomalyParams))
+                );
+            
+            Region r3 = n.createRegion()
+                .add(n.createLayer(p)
+                    .add(new SpatialPooler())
+                    .add(new TemporalMemory())
+                    .add(new CLAClassifier())
+                    .add(Anomaly.create(anomalyParams))
+                        .using(new Connections()) // Test adding connections after elements which use them.
+                )
                 .connect(r1)
                 .connect(r2);
-                           
         }catch(Exception e) {
             e.printStackTrace();
-            assertTrue(IllegalArgumentException.class.isAssignableFrom(e.getClass()));
-            assertEquals("Mode cannot be null and must be one of: { MANUAL, AUTO, REACTIVE }", e.getMessage());
         }
    }
 

@@ -28,7 +28,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -365,7 +365,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	 */
 	@Override
 	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
-		return new HashSet<>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER));
+		return new LinkedHashSet<>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER));
 	}
 
 	/**

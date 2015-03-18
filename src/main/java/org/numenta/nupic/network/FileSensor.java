@@ -20,6 +20,8 @@ import org.numenta.nupic.network.Network.Node;
  * connect another {@link Node} to the input of a Node containing a Sensor is made.
  *  
  * @author David Ray
+ * @see SensorFactory
+ * @see Sensor#create(SensorFactory, SensorParams)
  */
 public class FileSensor implements Sensor<File> {
     private static final int HEADER_SIZE = 3;
@@ -29,7 +31,13 @@ public class FileSensor implements Sensor<File> {
     private BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
-    public FileSensor(SensorParams params) {
+    /**
+     * Private constructor. Instances of this class should be obtained 
+     * through the {@link #create(SensorParams)} factory method.
+     * 
+     * @param params
+     */
+    private FileSensor(SensorParams params) {
         this.params = params;
         
         if(!params.hasKey("PATH")) {
@@ -50,6 +58,17 @@ public class FileSensor implements Sensor<File> {
         }
     }
     
+    /**
+     * Factory method to allow creation through the {@link SensorFactory} in
+     * the {@link Sensor#create(SensorFactory, SensorParams)} method of the 
+     * parent {@link Sensor} class. This indirection allows the decoration of 
+     * the returned {@code Sensor} type by wrapping it in an {@link HTMSensor}
+     * (which is the current implementation but could be any wrapper).
+     * 
+     * @param p     the {@link SensorParams} which describe connection or source
+     *              data details.
+     * @return      the Sensor.
+     */
     public static Sensor<File> create(SensorParams p) {
         Sensor<File> fs = new FileSensor(p);
         return fs;

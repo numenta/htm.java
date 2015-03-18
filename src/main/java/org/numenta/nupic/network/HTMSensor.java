@@ -134,8 +134,8 @@ public class HTMSensor<T> implements Sensor<T> {
                 default:
                     break;
             }
-            
         }
+        
     }
 
     @Override
@@ -163,36 +163,73 @@ public class HTMSensor<T> implements Sensor<T> {
         
         if(outputStream == null) {
             inputMap = new HashMap<>();
-            final String[] fieldNames = (String[])meta.getFieldNames().toArray(new String[meta.getFieldNames().size()]);
-            final FieldMetaType[] fieldTypes = meta.getFieldTypes().toArray(new FieldMetaType[meta.getFieldTypes().size()]);
+            final String[] fieldNames = getFieldNames();
+            
+            final FieldMetaType[] fieldTypes = getFieldTypes();
+            
             final boolean isParallel = delegate.getInputStream().isParallel();
+            
             output = isParallel ? new LinkedList<>() : new ArrayList<>(); // if parallel we must sort and LinkedList has fastest insertion
             
             getInputStream().forEach(l -> {
                 
                 String[] arr = (String[])l;
-                for(int i = 0;i < fieldNames.length;i++) {
-                    inputMap.put(fieldNames[i], fieldTypes[i].decodeType(arr[i + 1], indexToEncoderMap.get(i)));
-                }
-                
-                int[] encoding = encoder.encode(inputMap);
-                
-                // If using parallel batch streaming, we must reassemble inputs
-                // in the correct order so use binary search for insertion.
-                if(isParallel) {
-                    int index = Collections.binarySearch( output, encoding, 
-                        (int[] i,int[] j) -> i[0] < j[0] ? -1 : i[0] == j[0] ? 0 : 1);
-                    
-                    if (index < 0) index = ~index;
-                    
-                    output.add(index, encoding);
-                }else{
-                    output.add(encoding);
-                }
+                input(arr, fieldNames, fieldTypes, output, isParallel);
             });
         }
         
         return outputStream = output.stream();
+    }
+    
+    public String[] getFieldNames() {
+        return (String[])meta.getFieldNames().toArray(new String[meta.getFieldNames().size()]);
+    }
+    
+    public FieldMetaType[] getFieldTypes() {
+        return meta.getFieldTypes().toArray(new FieldMetaType[meta.getFieldTypes().size()]);
+    }
+    
+    /**
+     * <p>
+     * Populates the specified outputStreamSource (List&lt;int[]&gt;) with an encoded
+     * array of integers - using the specified field names and field types indicated.
+     * </p><p>
+     * This method process one single record, and is called iteratively to process an
+     * input stream (internally by the {@link #getOutputStream()} method which will process
+     * </p><p>
+     * <b>WARNING:<b>  <em>When inserting data one by one, you must remember that the first index
+     * must be a sequence number, which means you may have to insert that by hand. Typically
+     * this method is called internally where the underlying sensor does the sequencing automatically.</em>
+     *  
+     * @param arr                       The string array of field values           
+     * @param fieldNames                The field names
+     * @param fieldTypes                The field types
+     * @param outputStreamSource        A list object to hold the encoded int[]
+     * @param isParallel                Whether the underlying stream is parallel, if so this method
+     *                                  executes a binary search for the proper insertion index. The {@link List}
+     *                                  handed in should thus be a {@link LinkedList} for faster insertion.
+     */
+    public void input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
+        if(inputMap == null) inputMap = new HashMap<>();
+        
+        for(int i = 0;i < fieldNames.length;i++) {
+            inputMap.put(fieldNames[i], fieldTypes[i].decodeType(arr[i + 1], indexToEncoderMap.get(i)));
+        }
+        
+        int[] encoding = encoder.encode(inputMap);
+        
+        // If using parallel batch streaming, we must reassemble inputs
+        // in the correct order so use binary search for insertion.
+        if(isParallel) {
+            int index = Collections.binarySearch( outputStreamSource, encoding, 
+                (int[] i,int[] j) -> i[0] < j[0] ? -1 : i[0] == j[0] ? 0 : 1);
+            
+            if (index < 0) index = ~index;
+            
+            outputStreamSource.add(index, encoding);
+        }else{
+            outputStreamSource.add(encoding);
+        }
     }
     
     private Optional<Encoder<?>> getCoordinateEncoder(MultiEncoder enc) {

@@ -168,9 +168,10 @@ public class SensorTest {
         
         // Test date specific encoder configuration
         //
-        // All encoders in the MultiEncoder have to be inserted in a particular
-        // order, so alphabetically DateEncoder proceeds the RandomDistributedScalarEncoder
-        // so we need to ensure that the proper order is preserved (i.e. exists at index 0)
+        // All encoders in the MultiEncoder are accessed in a particular
+        // order (the alphabetical order their corresponding fields are in),
+        // so alphabetically "consumption" proceeds "timestamp"
+        // so we need to ensure that the proper order is preserved (i.e. exists at index 1)
         DateEncoder dateEnc = (DateEncoder)encoders.get(1).getEncoder();
         try {
             dateEnc.parseEncode("7/12/10 13:10");

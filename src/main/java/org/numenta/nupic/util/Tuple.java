@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class Tuple {
     /** The internal container array */
-	private Object[] container;
+	protected Object[] container;
 	
 	/**
 	 * Instantiates a new {@code Tuple}
