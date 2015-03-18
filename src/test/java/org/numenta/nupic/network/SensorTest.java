@@ -226,7 +226,7 @@ public class SensorTest {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create, 
             SensorParams.create(
-                Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
+                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
         
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
         

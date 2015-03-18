@@ -90,6 +90,13 @@ public interface Network {
     }
     
     /**
+     * Adds a {@link Region} to this {@code Network}
+     * @param region
+     * @return
+     */
+    public Network add(Region region);
+    
+    /**
      * Creates and returns a child {@link Region} of this {@code Network}
      * 
      * @return
@@ -309,6 +316,8 @@ public interface Network {
         private HTMSensor<?> sensor;
         private CLAClassifier classifier;
         
+        private List<Region> regions = new ArrayList<>();
+        
         /**
          * Creates a new {@link NetworkImpl}
          * @param parameters
@@ -341,6 +350,17 @@ public interface Network {
             // TODO Auto-generated method stub
             return null;
         }
+        
+        /**
+         * Adds a {@link Region} to this {@code Network}
+         * @param region
+         * @return
+         */
+        @Override
+        public Network add(Region region) {
+            regions.add(region);
+            return this;
+        }
 
         @Override
         public List<Region> getRegions() {
@@ -356,12 +376,12 @@ public interface Network {
         
         @Override
         public Layer createLayer() {
-            return new Layer(this, this.parameters);
+            return new Layer(this, this.parameters).using(new Connections());
         }
         
         @Override
         public Layer createLayer(Parameters p) {
-            return new Layer(this, p);
+            return new Layer(this, p).using(new Connections());
         }
 
         @Override

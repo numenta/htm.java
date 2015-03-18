@@ -4,6 +4,7 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,7 +30,7 @@ import org.numenta.nupic.util.MethodSignature;
 
 public class Layer {
     
-    private static final int ENCODER_SLOT = 0;
+    private static final int SENSOR_SLOT = 0;
     private static final int SPATIAL_POOLER_SLOT = 1;
     private static final int TEMPORAL_MEMORY_SLOT = 2;
     private static final int CLASSIFIER_SLOT = 3;
@@ -79,6 +80,9 @@ public class Layer {
         this.network = network;
         this.parameters = network.getParameters().copy().union(parameters);
         this.nodeList = new ArrayList<>();
+        for(int i = 0;i <= ANOMALY_SLOT;i++) {
+            nodeList.add(null);
+        }
     }
     
     /**
@@ -107,8 +111,8 @@ public class Layer {
      * public abstract double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp);
      */
     int[] sdr = null;
-    int[] inputVector = new int[connections.getNumInputs()];
-    int[] ddr = new int[connections.getNumColumns()];
+    int[] inputVector = null;
+    int[] ddr = null;
     ComputeCycle cycle = null;
     MethodSignature tuple;
     boolean isLearning;
@@ -123,7 +127,7 @@ public class Layer {
         while((n = nodeList.get(++idx)) == null && idx < 4);
         
         switch(idx) {
-            case ENCODER_SLOT: // MultiEncoder
+            case SENSOR_SLOT: // MultiEncoder
                 inputVector = n.process(tuple.setParams(input));
                 n = nodeList.get(1);
             case SPATIAL_POOLER_SLOT: // Spatial Pooler
@@ -180,7 +184,7 @@ public class Layer {
     
     public <T> Layer add(Sensor<T> inputSensor) {
         this.network.setSensor((HTMSensor<T>)inputSensor);
-        preAdd(new NodeImpl<Sensor<T>>(inputSensor), ENCODER_SLOT);
+        preAdd(new NodeImpl<Sensor<T>>(inputSensor), SENSOR_SLOT);
         return this;
     }
     
@@ -209,6 +213,18 @@ public class Layer {
     }
     
     /**
+     * Called internally following the setting of the {@link Connections}
+     * object, to set local helper vars.
+     */
+    private void initLocalVars() {
+        if(connections == null) {
+            throw new IllegalStateException("Connections object unset.");
+        }
+        inputVector = new int[connections.getNumInputs()];
+        ddr = new int[connections.getNumColumns()];
+    }
+    
+    /**
      * Sets the {@link Connections} object to be used by this {@code Layer}
      * @param connections
      * @return
@@ -222,6 +238,9 @@ public class Layer {
         if(nodeList.get(TEMPORAL_MEMORY_SLOT) != null) {
             ((SpatialPooler)nodeList.get(TEMPORAL_MEMORY_SLOT)).init(this.connections);
         }
+        
+        initLocalVars();
+        
         return this;
     }
 }

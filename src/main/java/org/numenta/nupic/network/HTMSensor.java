@@ -64,6 +64,11 @@ public class HTMSensor<T> implements Sensor<T> {
     private TIntObjectMap<Encoder<?>> indexToEncoderMap;
     
     
+    /**
+     * Decorator pattern to construct a new HTMSensor wrapping the specified {@link Sensor}.
+     * 
+     * @param sensor
+     */
     public HTMSensor(Sensor<T> sensor) {
         this.delegate = sensor;
         meta = new SensorInputMeta(sensor.getInputStream().getMeta());
@@ -218,18 +223,34 @@ public class HTMSensor<T> implements Sensor<T> {
         
         int[] encoding = encoder.encode(inputMap);
         
+        // !!!!!!! THIS MIGHT NOT BE NECESSARY BECAUSE WE ALREADY HAVE THE SEQUENCE NUMBER (RE: INSERTION) !!!!!!!!!
         // If using parallel batch streaming, we must reassemble inputs
         // in the correct order so use binary search for insertion.
         if(isParallel) {
-            int index = Collections.binarySearch( outputStreamSource, encoding, 
-                (int[] i,int[] j) -> i[0] < j[0] ? -1 : i[0] == j[0] ? 0 : 1);
+//            int index = Collections.binarySearch( outputStreamSource, encoding, 
+//                (int[] i,int[] j) -> i[0] < j[0] ? -1 : i[0] == j[0] ? 0 : 1 );
+//            
+//            if (index < 0) index = ~index;
             
-            if (index < 0) index = ~index;
-            
-            outputStreamSource.add(index, encoding);
+            outputStreamSource.set(padTo(Integer.parseInt(arr[0]), outputStreamSource), encoding);
         }else{
             outputStreamSource.add(encoding);
         }
+    }
+    
+    /**
+     * Avoids the {@link IndexOutOfBoundsException} that can happen if inserting
+     * into indexes which have gaps between insertion points.
+     * 
+     * @param i     the index whose lesser values are to have null inserted
+     * @param l     the list to operate on.
+     * @return      the index passed in (for fluent convenience at call site).
+     */
+    static int padTo(int i, List<?> l) {
+        for(int x = l.size();x < i + 1;x++) {
+            l.add(null);
+        }
+        return i;
     }
     
     private Optional<Encoder<?>> getCoordinateEncoder(MultiEncoder enc) {
@@ -496,4 +517,12 @@ public class HTMSensor<T> implements Sensor<T> {
         return (Encoder<K>)encoder;
     }
     
+    public static void main(String[] args) {
+        ArrayList<String> ll = new ArrayList<>(5);
+        ll.set(padTo(0, ll), "My");
+        ll.set(padTo(2, ll), "array");
+        ll.set(padTo(1, ll), "ordered");
+        
+        System.out.println(ll + ", size = " + ll.size());
+    }
 }
