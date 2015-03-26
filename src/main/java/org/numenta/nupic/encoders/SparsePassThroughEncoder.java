@@ -74,7 +74,7 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 		}
 		super.encodeIntoArray(denseInput, output);
 
-		LOGGER.trace("Input: " + Arrays.toString(input) + "\n" +
+        LOGGER.trace("Input: " + Arrays.toString(input) + "\n" +
             "Output: " + Arrays.toString(output) + "\n");
 	}
 
