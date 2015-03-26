@@ -21,6 +21,10 @@
  */
 package org.numenta.nupic.encoders;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Arrays;
+
 /**
  * Sparse Pass Through Encoder
  * Convert a bitmap encoded as array indicies to an SDR
@@ -36,15 +40,20 @@ package org.numenta.nupic.encoders;
  */
 public class SparsePassThroughEncoder extends PassThroughEncoder {
 	private SparsePassThroughEncoder() { super(); }
-	
+    private static final Logger LOGGER = LoggerFactory.getLogger(SparsePassThroughEncoder.class);
+
 	public SparsePassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
 		super(outputWidth, outputBitsOnCount);
+        LOGGER.trace("Building new SparsePassThroughEncoder instance, outputWidth: " +
+                outputWidth +
+                " outputBitsOnCount: " +
+                outputBitsOnCount);
 	}
-	
+
 	/**
-	 * Returns a builder for building SparsePassThroughEncoders. 
+	 * Returns a builder for building SparsePassThroughEncoders.
 	 * This builder may be reused to produce multiple builders
-	 * 
+	 *
 	 * @return a {@code SparsePassThroughEncoder.Builder}
 	 */
 	public static Encoder.Builder<SparsePassThroughEncoder.Builder, SparsePassThroughEncoder> sparseBuilder() {
@@ -56,7 +65,7 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 	 * Convert the array of indices to a bit array and then pass to parent.
 	 */
 	public void encodeIntoArray(int[] input, int[] output){
-		
+
 		int[] denseInput = new int[output.length];
 		for (int i : input) {
 			if(i > denseInput.length)
@@ -64,35 +73,38 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 			denseInput[i] = 1;
 		}
 		super.encodeIntoArray(denseInput, output);
+
+		LOGGER.trace("Input: " + Arrays.toString(input) + "\n" +
+            "Output: " + Arrays.toString(output) + "\n");
 	}
-	
+
 	/**
-	 * Returns a {@link EncoderBuilder} for constructing {@link SparsePassThroughEncoder}s
-	 * 
+	 * Returns a {@link Encoder.Builder} for constructing {@link SparsePassThroughEncoder}s
+	 *
 	 * The base class architecture is put together in such a way where boilerplate
 	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
 	 * the mistake-proneness of extremely long argument lists.
-	 * 
+	 *
 	 */
 	public static class Builder extends Encoder.Builder<SparsePassThroughEncoder.Builder, SparsePassThroughEncoder> {
 		private Builder() {}
 
 		@Override
 		public SparsePassThroughEncoder build() {
-			//Must be instantiated so that super class can initialize 
+			//Must be instantiated so that super class can initialize
 			//boilerplate variables.
 			encoder = new SparsePassThroughEncoder();
-			
+
 			//Call super class here
 			super.build();
-			
+
 			////////////////////////////////////////////////////////
 			//  Implementing classes would do setting of specific //
 			//  vars here together with any sanity checking       //
 			////////////////////////////////////////////////////////
-			
+
 			((SparsePassThroughEncoder)encoder).init();
-			
+
 			return (SparsePassThroughEncoder)encoder;
 		}
 	}
