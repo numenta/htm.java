@@ -6,6 +6,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.ValueList;
+import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.AdaptiveScalarEncoder;
 import org.numenta.nupic.encoders.CategoryEncoder;
 import org.numenta.nupic.encoders.CoordinateEncoder;
@@ -174,10 +176,9 @@ public class HTMSensor<T> implements Sensor<T> {
             
             final boolean isParallel = delegate.getInputStream().isParallel();
             
-            output = isParallel ? new LinkedList<>() : new ArrayList<>(); // if parallel we must sort and LinkedList has fastest insertion
+            output = new ArrayList<>();
             
-            getInputStream().forEach(l -> {
-                
+            delegate.getInputStream().forEach(l -> {
                 String[] arr = (String[])l;
                 input(arr, fieldNames, fieldTypes, output, isParallel);
             });
@@ -202,9 +203,10 @@ public class HTMSensor<T> implements Sensor<T> {
      * This method process one single record, and is called iteratively to process an
      * input stream (internally by the {@link #getOutputStream()} method which will process
      * </p><p>
-     * <b>WARNING:<b>  <em>When inserting data one by one, you must remember that the first index
+     * <b>WARNING:</b>  <em>When inserting data one by one, you must remember that the first index
      * must be a sequence number, which means you may have to insert that by hand. Typically
      * this method is called internally where the underlying sensor does the sequencing automatically.</em>
+     * </p>
      *  
      * @param arr                       The string array of field values           
      * @param fieldNames                The field names
@@ -215,7 +217,7 @@ public class HTMSensor<T> implements Sensor<T> {
      *                                  handed in should thus be a {@link LinkedList} for faster insertion.
      */
     public void input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
-        if(inputMap == null) inputMap = new HashMap<>();
+        if(inputMap == null) inputMap = new LinkedHashMap<>();
         
         for(int i = 0;i < fieldNames.length;i++) {
             inputMap.put(fieldNames[i], fieldTypes[i].decodeType(arr[i + 1], indexToEncoderMap.get(i)));
@@ -223,19 +225,23 @@ public class HTMSensor<T> implements Sensor<T> {
         
         int[] encoding = encoder.encode(inputMap);
         
-        // !!!!!!! THIS MIGHT NOT BE NECESSARY BECAUSE WE ALREADY HAVE THE SEQUENCE NUMBER (RE: INSERTION) !!!!!!!!!
-        // If using parallel batch streaming, we must reassemble inputs
-        // in the correct order so use binary search for insertion.
         if(isParallel) {
-//            int index = Collections.binarySearch( outputStreamSource, encoding, 
-//                (int[] i,int[] j) -> i[0] < j[0] ? -1 : i[0] == j[0] ? 0 : 1 );
-//            
-//            if (index < 0) index = ~index;
-            
             outputStreamSource.set(padTo(Integer.parseInt(arr[0]), outputStreamSource), encoding);
         }else{
             outputStreamSource.add(encoding);
         }
+    }
+    
+    /**
+     * Return the input mapping of field names to the last input
+     * value for that field name. 
+     * 
+     * This method is typically used by client code which needs the 
+     * input value for use with the {@link CLAClassifier}.
+     * @return
+     */
+    public Map<String, Object> getInputMap() {
+        return inputMap;
     }
     
     /**
@@ -512,9 +518,8 @@ public class HTMSensor<T> implements Sensor<T> {
         }
     }
     
-    @SuppressWarnings("unchecked")
-    public <K> Encoder<K> getEncoder() {
-        return (Encoder<K>)encoder;
+    public <K> MultiEncoder getEncoder() {
+        return (MultiEncoder)encoder;
     }
     
     public static void main(String[] args) {

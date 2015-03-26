@@ -408,6 +408,9 @@ public class DateEncoder extends Encoder<DateTime> {
      * Convenience method to employ the configured {@link DateTimeFormatter} 
      * to return a {@link DateTime}
      * 
+     * This method assumes that a custom formatter has been configured
+     * and set on this object. see {@link #setCustomFormat(DateTimeFormatter)}
+     * 
      * @param dateTimeStr
      * @return
      */

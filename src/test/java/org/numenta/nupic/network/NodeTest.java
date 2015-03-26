@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
@@ -23,6 +24,10 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.encoders.DateEncoder;
+import org.numenta.nupic.encoders.EncoderTuple;
+import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.Network.NetworkImpl;
 import org.numenta.nupic.network.Network.Node;
 import org.numenta.nupic.network.Network.NodeImpl;
 import org.numenta.nupic.network.SensorParams.Keys;
@@ -185,8 +190,8 @@ public class NodeTest {
         Object[] n = { "some name", makeObservable() };
         SensorParams parms = SensorParams.create(Keys::path, n);
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
-        
-        ((HTMSensor<ObservableSensor<String[]>>)sensor).setLocalParameters(getTestEncoderParams());
+        HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+        htmSensor.setLocalParameters(getTestEncoderParams());
         
         Node<Sensor<ObservableSensor<String[]>>> node = 
             new NodeImpl<Sensor<ObservableSensor<String[]>>>(sensor);
@@ -202,6 +207,25 @@ public class NodeTest {
         }catch(UnsupportedOperationException u) {
             assertEquals("For now, Sensors create their own input", u.getMessage());
         }
+        
+        Map<String, Object> encoderInputMap = htmSensor.getInputMap();
+        MultiEncoder me = htmSensor.getEncoder();
+        for(EncoderTuple et : me.getEncoders(me)) {
+            Object in = encoderInputMap.get(et.getName());
+            String out = et.getName() + ", " + encoderInputMap.get(et.getName())
+               + ", ";
+            
+            if(in instanceof DateTime) {
+                out += "Date: " + Arrays.toString(((DateEncoder)et.getEncoder()).getBucketIndices((DateTime)in));
+            }else if(in instanceof Double) {
+                out += "Double: " + Arrays.toString(et.getEncoder().getBucketIndices((double)in));
+            }else{
+                out += "String: " + Arrays.toString(et.getEncoder().getBucketIndices(in.toString()));
+            }
+            
+            System.out.println("out = " + out);
+        }
+        
     }
     
     @Test
@@ -299,7 +323,38 @@ public class NodeTest {
     }
     
     // These are valid Node contents but they are test more thoroughly in their own unit test
-    @Test public void testProcessLayer() {}
-    @Test public void testProcessRegion() {}
+    @Test 
+    public void testProcessLayer() {
+        Parameters p = getSpatialPoolerTestParams();
+        Network n = new NetworkImpl(p);
+        Node<Layer> node = new NodeImpl<>(new Layer(n, p));
+        String[] input = new String[] { "07/03/10 12:00", "bananas" };
+        
+        String[] s = node.process(new Tuple((Object)input));
+        System.out.println(Arrays.toString(s));
+        
+        int[] input2 = new int[] { 1, 1, 0, 0, 1 };
+        
+        int[] output = node.process(new Tuple((Object)input2));
+        System.out.println(Arrays.toString(output));
+    }
+    
+    @Test 
+    public void testProcessRegion() {
+        // Test using hand assembly of components
+        Parameters p = getSpatialPoolerTestParams();
+        Network n = new NetworkImpl(p);
+        Region r = new Region(n);
+        Layer l = new Layer(n, p);
+        r.add(l);
+        Node<Region> node = new NodeImpl<>(r);
+        
+        String[] input = new String[] { "07/03/10 12:00", "bananas" };
+        
+        String[] s = node.process(new Tuple((Object)input));
+        System.out.println(Arrays.toString(s));
+        
+         
+    }
 
 }

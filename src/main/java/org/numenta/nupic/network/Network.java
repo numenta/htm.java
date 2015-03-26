@@ -9,10 +9,12 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.Network.Node;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.Tuple;
+
+import rx.subjects.ReplaySubject;
 
 
 public interface Network {
@@ -77,7 +79,7 @@ public interface Network {
      * Returns a {@link List} view of the contained {@link Region}s.
      * @return
      */
-    public List<Region> getRegions();
+    public <T> List<Region> getRegions();
     
     /**
      * Creates and returns an implementation of {@link Network}
@@ -94,7 +96,7 @@ public interface Network {
      * @param region
      * @return
      */
-    public Network add(Region region);
+    public <T> Network add(Region region);
     
     /**
      * Creates and returns a child {@link Region} of this {@code Network}
@@ -212,6 +214,7 @@ public interface Network {
          */
         public void connect(Node<T> node);
         
+        
         @SuppressWarnings("unchecked")
         public default <P> P process(Tuple argList) {
             switch(type()) {
@@ -246,11 +249,11 @@ public interface Network {
                     
                 case LAYER:
                     
-                    return (P)((Layer)getElement()).compute((int[])argList.get(0));
+                    return (P)((Layer)getElement()).compute(argList.get(0));
                     
                 case REGION:
                     
-                    return (P)((Region)getElement()).compute((int[])argList.get(0));
+                    return (P)((Region)getElement()).compute(argList.get(0));
                     
                 case SP:
                     
@@ -288,7 +291,7 @@ public interface Network {
         }
 
         @Override
-        public org.numenta.nupic.network.Network.Node.Type type() {
+        public Node.Type type() {
             return type;
         }
 
@@ -299,7 +302,6 @@ public interface Network {
 
         @Override
         public void connect(Node<T> node) {
-            // TODO Auto-generated method stub
             
         }
         
@@ -396,6 +398,7 @@ public interface Network {
         @Override
         public void setSensor(HTMSensor<?> sensor) {
             this.sensor = sensor;
+            this.sensor.setLocalParameters(this.parameters);
         }
         
         /**

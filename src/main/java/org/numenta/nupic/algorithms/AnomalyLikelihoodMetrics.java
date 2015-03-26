@@ -22,6 +22,10 @@
 
 package org.numenta.nupic.algorithms;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.numenta.nupic.algorithms.Anomaly.AveragedAnomalyRecordList;
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 
@@ -47,10 +51,26 @@ public class AnomalyLikelihoodMetrics {
      * @param params            {@link AnomalyParams} which are a {@link Statistic}, array of likelihoods,
      *                          and a {@link MovingAverage} 
      */
-    public AnomalyLikelihoodMetrics( double[] likelihoods, AveragedAnomalyRecordList aggRecordList, AnomalyParams params) {
+    public AnomalyLikelihoodMetrics(double[] likelihoods, AveragedAnomalyRecordList aggRecordList, AnomalyParams params) {
         this.params = params;
         this.aggRecordList = aggRecordList;
         this.likelihoods = likelihoods;
+    }
+    
+    /**
+     * Utility method to copy this {@link AnomalyLikelihoodMetrics} object.
+     * @return
+     */
+    public AnomalyLikelihoodMetrics copy() {
+        List<Object> vals = new ArrayList<Object>();
+        for(String key : params.keys()) {
+            vals.add(params.get(key));
+        }
+        
+        return new AnomalyLikelihoodMetrics(
+            Arrays.copyOf(likelihoods, likelihoods.length), 
+            aggRecordList, 
+            new AnomalyParams(params.keys(), vals.toArray()));
     }
     
     /**
@@ -83,5 +103,39 @@ public class AnomalyLikelihoodMetrics {
      */
     public AnomalyParams getParams() {
         return params;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((aggRecordList == null) ? 0 : aggRecordList.hashCode());
+        result = prime * result + Arrays.hashCode(likelihoods);
+        result = prime * result + ((params == null) ? 0 : params.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        AnomalyLikelihoodMetrics other = (AnomalyLikelihoodMetrics)obj;
+        if(aggRecordList == null) {
+            if(other.aggRecordList != null)
+                return false;
+        } else if(!aggRecordList.equals(other.aggRecordList))
+            return false;
+        if(!Arrays.equals(likelihoods, other.likelihoods))
+            return false;
+        if(params == null) {
+            if(other.params != null)
+                return false;
+        } else if(!params.equals(other.params))
+            return false;
+        return true;
     }
 }

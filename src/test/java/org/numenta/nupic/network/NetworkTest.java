@@ -51,6 +51,14 @@ public class NetworkTest {
                     .add(new TemporalMemory())
                     .add(new CLAClassifier())
                     .add(Anomaly.create(anomalyParams))
+                )
+                .add(n.createLayer(p)         // Add another Layer, and the Region internally connects it to the 
+                                              // previously added Layer
+                    .add(new SpatialPooler())
+                    .using(new Connections()) // Test adding connections after one element and before another
+                    .add(new TemporalMemory())
+                    .add(new CLAClassifier())
+                    .add(Anomaly.create(anomalyParams))
                 );
             
             Region r2 = n.createRegion()

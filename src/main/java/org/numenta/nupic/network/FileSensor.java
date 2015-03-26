@@ -26,6 +26,7 @@ import org.numenta.nupic.network.Network.Node;
 public class FileSensor implements Sensor<File> {
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
+    // This is OFF until Encoders are made concurrency safe
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
     private BatchedCsvStream<String[]> stream;

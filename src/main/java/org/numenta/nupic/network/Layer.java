@@ -1,21 +1,21 @@
 package org.numenta.nupic.network;
 
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.Network.Node;
@@ -41,30 +41,6 @@ public class Layer {
     private Connections connections;
     private Network network;
     private Region region;
-    
-    private Comparator<Node<?>> comparator = (Node<?> n1, Node<?> n2) -> { 
-        int i1 = SORTHELPER.get(n1.getElement().getClass());
-        int i2 = SORTHELPER.get(n2.getElement().getClass());
-        
-        return i1 < i2 ? -1 : i1 == i2 ? 0 : 1;
-    };
-    
-    private static final TObjectIntMap<Class<?>> SORTHELPER = new TObjectIntHashMap<Class<?>>() {
-        @Override
-        public int get(Object key) {
-            if(key.toString().indexOf("ncoder") != -1) {
-                return 0;
-            }
-            return super.get(key);
-        }
-    };
-    static {
-        SORTHELPER.put(SpatialPooler.class, 1);
-        SORTHELPER.put(TemporalMemory.class, 2);
-        SORTHELPER.put(CLAClassifier.class, 3);
-        SORTHELPER.put(Anomaly.class, 4);
-    }
-    
     
     /**
      * Constructs a new {@code Layer}
@@ -93,16 +69,6 @@ public class Layer {
         this.region = region;
     }
     
-    public int[] compute(String[] input) {
-        Node<?> n = null;
-        if((n = nodeList.get(0)) != null) {
-            return this.compute((int[])n.process(tuple.setParams((Object[])input)));
-        }
-        
-        throw new IllegalArgumentException(
-            "Node.compute(String[] input) called with null argument or Node doesn't contain a Sensor");
-    }
-    
     /**
      * * public int[] encode(T inputData)
      * public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned)
@@ -111,52 +77,63 @@ public class Layer {
      * public abstract double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp);
      */
     int[] sdr = null;
-    int[] inputVector = null;
+    
     int[] ddr = null;
     ComputeCycle cycle = null;
-    MethodSignature tuple;
-    boolean isLearning;
+    MethodSignature tuple = new MethodSignature(6);
+    boolean isLearning = true;
     int recordNum = 0;
     Map<String, Object> classification = new LinkedHashMap<String, Object>();
     
-    public int[] compute(int[] input) { // Will always be connections.getNumInputs() length (config'd SP input vector size)
-        int[] retVal = input;
-        
-        Node<?> n = null;
+    public <T, K> K compute(T input) {
+        int[] inputVector = null;
+        Node<?> n = nodeList.get(SENSOR_SLOT);
+        ((HTMSensor)n.getElement()).getOutputStream();
+        ddr = new int[this.connections.getNumColumns()];
         int idx = -1;
-        while((n = nodeList.get(++idx)) == null && idx < 4);
+        while(++idx < 5 && (n = nodeList.get(idx)) == null);
         
         switch(idx) {
             case SENSOR_SLOT: // MultiEncoder
                 inputVector = n.process(tuple.setParams(input));
-                n = nodeList.get(1);
+                n = nodeList.get(SPATIAL_POOLER_SLOT);
+                
             case SPATIAL_POOLER_SLOT: // Spatial Pooler
                 if(n != null) {
-                    inputVector = inputVector == null ? input : inputVector;
+                    inputVector = inputVector == null ? (int[])input : inputVector;
                     n.process(tuple.setParams(connections, inputVector, ddr, isLearning, true));
                 }
-                n = nodeList.get(2);
+                n = nodeList.get(TEMPORAL_MEMORY_SLOT);
+                
             case TEMPORAL_MEMORY_SLOT: // TemporalMemory
                 if(n != null) {
-                    ddr = ddr == null ? input : ddr;
+                    ddr = ddr == null ? (int[])input : ddr;
                     cycle = n.process(tuple.setParams(connections, sdr = ArrayUtils.where(ddr, ArrayUtils.WHERE_1), isLearning));
                 }
-                n = nodeList.get(3);
+                n = nodeList.get(CLASSIFIER_SLOT);
+                
             case CLASSIFIER_SLOT: // CLAClassifier
                 if(n != null) {
-                    String[] fieldNames = network.getSensor().getFieldNames();
-                    MultiEncoder me = (MultiEncoder)network.getSensor().getEncoder();
-                    List<ClassifierResult> results = new ArrayList<>();
-                    for (int i = 0; i < me.getEncoders(me).size(); i++) {
-                        EncoderTuple t = me.getEncoders(me).get(i);
-                        String name = t.getName();
-                        //classification.put("bucketIdx", t.getEncoder().getBucketIndices(t.getEncoder().getBucketInfo(buckets))
-                    }
+                    HTMSensor<?> sensor = (HTMSensor<?>)nodeList.get(SENSOR_SLOT).getElement();
+                    Map<String, Object> encoderInputMap = sensor.getInputMap();
+                    MultiEncoder me = sensor.getEncoder();
                     
-                    //ClassifierResult cr = n.compute(tuple.setParam(recordNum++, ))
+                    Map<String, Object> inputMap = me.getEncoders(me).stream()
+                        .collect(
+                            Collectors.toMap(EncoderTuple::getName, e -> {
+                                Object in = encoderInputMap.get(e.getName());
+                                if(in instanceof DateTime) {
+                                    return ((DateEncoder)e.getEncoder()).getBucketIndices((DateTime)in);
+                                }else if(in instanceof Double) {
+                                    return e.getEncoder().getBucketIndices((double)in);
+                                }else{
+                                    return e.getEncoder().getBucketIndices(in.toString());
+                                }
+                            }));
+                    n.process(tuple.setParams(recordNum++, inputMap, sdr, true, true));
                 }
         }
-        return null;
+        return inputVector == null ? (K)input : (K)inputVector;
     }
     
     /**
@@ -182,8 +159,16 @@ public class Layer {
         nodeList.add(slot, n);
     }
     
+    public Layer connect(Layer l) {
+        return this;
+    }
+    
     public <T> Layer add(Sensor<T> inputSensor) {
         this.network.setSensor((HTMSensor<T>)inputSensor);
+        this.parameters.setInputDimensions(
+            new int[] { ((HTMSensor<T>)inputSensor).getEncoder().getWidth() }
+        );
+        this.parameters.apply(this.connections);
         preAdd(new NodeImpl<Sensor<T>>(inputSensor), SENSOR_SLOT);
         return this;
     }
@@ -220,8 +205,8 @@ public class Layer {
         if(connections == null) {
             throw new IllegalStateException("Connections object unset.");
         }
-        inputVector = new int[connections.getNumInputs()];
-        ddr = new int[connections.getNumColumns()];
+//        inputVector = new int[connections.getNumInputs()];
+//        ddr = new int[connections.getNumColumns()];
     }
     
     /**

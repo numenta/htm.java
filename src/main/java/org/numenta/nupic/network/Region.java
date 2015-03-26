@@ -3,6 +3,8 @@ package org.numenta.nupic.network;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.numenta.nupic.network.Network.Node;
+
 
 
 public class Region {
@@ -14,17 +16,19 @@ public class Region {
         layers = new ArrayList<>();
     }
     
-    public int[] compute(int[] input) {
-        int[] topLayerOutput = input;
+    public <T, K> K compute(T input) {
+        K topLayerOutput = null;
         for(Layer l : layers) {
-            topLayerOutput = l.compute(topLayerOutput);
+            topLayerOutput = l.compute(input);
         }
-        return topLayerOutput;
+        return (K)topLayerOutput;
     }
     
     public Region add(Layer l) {
         layers.add(l);
         l.setRegion(this);
+        
+        
         return this;
     }
     
