@@ -27,9 +27,9 @@ import java.util.Arrays;
 
 /**
  * Sparse Pass Through Encoder
- * Convert a bitmap encoded as array indicies to an SDR
+ * Convert a bitmap encoded as array indices to an SDR
  * Each encoding is an SDR in which w out of n bits are turned on.
- * The input should be an array or string of indicies to turn on
+ * The input should be an array or string of indices to turn on
  * Note: the value for n must equal input length * w
  * i.e. for n=8 w=1 [0,2,5] => 101001000
  * or for n=8 w=1 "0,2,5" => 101001000
@@ -44,10 +44,7 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 
 	public SparsePassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
 		super(outputWidth, outputBitsOnCount);
-        LOGGER.trace("Building new SparsePassThroughEncoder instance, outputWidth: " +
-                outputWidth +
-                " outputBitsOnCount: " +
-                outputBitsOnCount);
+        LOGGER.info("Building new SparsePassThroughEncoder instance, outputWidth: {} outputBitsOnCount: {}", outputWidth);
 	}
 
 	/**
@@ -74,8 +71,7 @@ public class SparsePassThroughEncoder extends PassThroughEncoder {
 		}
 		super.encodeIntoArray(denseInput, output);
 
-        LOGGER.trace("Input: " + Arrays.toString(input) + "\n" +
-            "Output: " + Arrays.toString(output) + "\n");
+        LOGGER.trace("Input: {} \nOutput: {} \n", Arrays.toString(input), Arrays.toString(output));
 	}
 
 	/**
