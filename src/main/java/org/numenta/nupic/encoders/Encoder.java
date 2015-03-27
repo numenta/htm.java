@@ -119,7 +119,7 @@ public abstract class Encoder<T> {
     /** if true, skip some safety checks (for compatibility reasons), default false */
     protected boolean forced;
     /** Encoder name - an optional string which will become part of the description */
-    protected String name;
+    protected String name = "";
     protected int padding;
     protected int nInternal;
     protected double rangeInternal;
@@ -442,6 +442,11 @@ public abstract class Encoder<T> {
     	}
 
     	EncoderTuple key = getEncoderTuple(parent);
+    	// Insert a new Tuple for the parent if not yet added.
+    	if(key == null) {
+    	    encoders.put(key = new EncoderTuple("", this, 0), new ArrayList<EncoderTuple>());
+    	}
+    	
     	List<EncoderTuple> childEncoders = null;
     	if((childEncoders = encoders.get(key)) == null) {
     		encoders.put(key, childEncoders = new ArrayList<EncoderTuple>());
