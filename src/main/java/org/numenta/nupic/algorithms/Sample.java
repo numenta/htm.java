@@ -29,7 +29,7 @@ import org.joda.time.DateTime;
  * This class is used as an input value to methods in the {@link AnomalyLikelihood}
  * class.
  */
-class Sample {
+public class Sample {
     public final DateTime date;
     /** Same thing as average */
     public final double score;
