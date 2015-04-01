@@ -684,20 +684,7 @@ public class ArrayUtils {
      * @return
      */
     public static double variance(double[] arr) {
-        double mean = average(arr);
-        
-        double accum = 0.0;
-        double dev = 0.0;
-        double accum2 = 0.0;
-        for (int i = 0; i < arr.length; i++) {
-            dev = arr[i] - mean;
-            accum += dev * dev;
-            accum2 += dev;
-        }
-        
-        double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
-        
-        return var;
+        return variance(arr, average(arr));
     }
 
     /**
