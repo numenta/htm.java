@@ -122,6 +122,7 @@ public class Parameters {
         defaultEncoderParams.put(KEY.FIELD_TYPE, "int");
         defaultEncoderParams.put(KEY.ENCODER, "ScalarEncoder");
         defaultEncoderParams.put(KEY.FIELD_ENCODING_MAP, Collections.emptyMap());
+        defaultEncoderParams.put(KEY.AUTO_CLASSIFY, Boolean.FALSE);
         DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
         defaultParams.putAll(DEFAULTS_ENCODER);
 
@@ -213,6 +214,10 @@ public class Parameters {
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
         SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
         
+        ///////////// SpatialPooler / Network Parameter(s) /////////////
+        /** Number of cycles to send through the SP before forwarding data to the rest of the network. */
+        SP_PRIMER_DELAY("sp_primer_delay", Integer.class),
+        
         ///////////// Encoder Parameters //////////////
         /** number of bits in the representation (must be >= w) */
         N("n", Integer.class),
@@ -257,6 +262,10 @@ public class Parameters {
         /** Designates holder for the Multi Encoding Map */
         FIELD_ENCODING_MAP("fieldEncodings", Map.class),
         CATEGORY_LIST("categoryList", List.class),
+        
+        // Network Layer indicator for auto classifier generation
+        AUTO_CLASSIFY("hasClassifiers", Boolean.class),
+        
         
         // How many bits to use if encoding the respective date fields.
         // e.g. Tuple(bits to use:int, radius:double)

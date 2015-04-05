@@ -1,4 +1,4 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,7 +8,10 @@ import java.nio.file.Files;
 
 import org.junit.Test;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.SensorParams.Keys;
+import org.numenta.nupic.network.sensor.ObservableSensor;
+import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
 

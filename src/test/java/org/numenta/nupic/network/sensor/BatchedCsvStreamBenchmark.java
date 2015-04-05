@@ -1,4 +1,4 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.network.sensor.BatchedCsvStream;
 
 
 /**

@@ -1,4 +1,4 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,7 +13,8 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.BatchedCsvStream.BatchedCsvHeader;
+import org.numenta.nupic.network.sensor.BatchedCsvStream;
+import org.numenta.nupic.network.sensor.BatchedCsvStream.BatchedCsvHeader;
 import org.numenta.nupic.util.Tuple;
 
 

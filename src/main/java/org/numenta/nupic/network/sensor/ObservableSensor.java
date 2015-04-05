@@ -1,4 +1,4 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import java.util.Iterator;
 import java.util.Spliterator;

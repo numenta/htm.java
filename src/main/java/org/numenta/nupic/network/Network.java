@@ -9,7 +9,9 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.network.Network.Node;
+import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorFactory;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.Tuple;
@@ -157,157 +159,6 @@ public interface Network {
     /////////////////////////////////////////////////////////////////////////
     
     /**
-     * Internal type to handle connectivity and locality within a given
-     * graph or tree of {@link Network} components.
-     * 
-     * public int[] encode(T inputData)
-     * public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned)
-     * public ComputeCycle compute(Connections connections, int[] activeColumns, boolean learn)
-     * public <T> ClassifierResult<T> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer)
-     * public abstract double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp);
-     */
-    public interface Node<T> {
-        
-        /**
-         * Identifies the type contained within a given {@link Node}
-         */
-        public enum Type { SP, TM, SENSOR, CLASSIFIER, ANOMALY, LAYER, REGION;
-            /**
-             * Returns the {@link Node.Type} associated with the specified {@link Class}
-             * @param class1
-             * @return
-             */
-            public static Type forClass(Class<? extends Object> class1) {
-                if(SpatialPooler.class.isAssignableFrom(class1)) {
-                    return SP;
-                }else if(TemporalMemory.class.isAssignableFrom(class1)) {
-                    return TM;
-                }else if(Sensor.class.isAssignableFrom(class1)) {
-                    return SENSOR;
-                }else if(CLAClassifier.class.isAssignableFrom(class1)) {
-                    return CLASSIFIER;
-                }else if(Anomaly.class.isAssignableFrom(class1)) {
-                    return ANOMALY;
-                }else if(Layer.class.isAssignableFrom(class1)) {
-                    return LAYER;
-                }else if(Region.class.isAssignableFrom(class1)) {
-                    return REGION;
-                }
-                return null;
-            }
-        }
-        
-        /**
-         * Returns this Node's {@link Node.Type}
-         * @return
-         */
-        public Type type();
-        /**
-         * Returns the contained algorithmic object.
-         * @return
-         */
-        public T getElement();
-        /**
-         * Connects this {@code Node} to an incoming Node's
-         * output.
-         * @param node
-         */
-        public void connect(Node<T> node);
-        
-        
-        @SuppressWarnings("unchecked")
-        public default <P> P process(Tuple argList) {
-            switch(type()) {
-                case ANOMALY:
-                    
-                    return (P)new Double(((Anomaly)getElement()).compute(
-                        (int[])argList.get(0), 
-                        (int[])argList.get(1), 
-                        ((Number)argList.get(2)).doubleValue(), 
-                        ((Number)argList.get(3)).longValue()));
-                    
-                case CLASSIFIER:
-                    
-                    return (P)((CLAClassifier)getElement()).compute(
-                        (int)argList.get(0),
-                        (Map<String, Object>)argList.get(1),
-                        (int[])argList.get(2),
-                        (boolean)argList.get(3),
-                        (boolean)argList.get(4));
-                    
-                case SENSOR:
-                    
-                    HTMSensor<?> sensor = (HTMSensor<?>)getElement();
-                    List<int[]> output = new ArrayList<>();
-                    sensor.input(
-                        (String[])argList.get(0), 
-                        sensor.getFieldNames(), 
-                        sensor.getFieldTypes(),
-                        output, 
-                        sensor.getInputStream().isParallel());
-                    return (P)output.get(0);
-                    
-                case LAYER:
-                    
-                    return (P)((Layer)getElement()).compute(argList.get(0));
-                    
-                case REGION:
-                    
-                    return (P)((Region)getElement()).compute(argList.get(0));
-                    
-                case SP:
-                    
-                    SpatialPooler sp = (SpatialPooler)getElement();
-                    sp.compute(
-                        (Connections)argList.get(0),
-                        (int[])argList.get(1),
-                        (int[])argList.get(2),
-                        (boolean)argList.get(3),
-                        (boolean)argList.get(4));
-                    return (P)(int[])argList.get(2);
-                    
-                case TM:
-                    
-                    return (P)((TemporalMemory)getElement()).compute(
-                        (Connections)argList.get(0), (int[])argList.get(1), (boolean)argList.get(2));
-                    
-                default:
-                    break;
-            }
-            
-            throw new IllegalArgumentException(
-                "Argument Tuple did not contain the correct number of parameters: " + 
-                    (argList == null ? null : argList.size()));
-        }
-    }
-    
-    class NodeImpl<T> implements Node<T> {
-        private T element;
-        private Type type;
-        
-        public NodeImpl(T t) {
-            this.element = t;
-            this.type = Type.forClass(element.getClass());
-        }
-
-        @Override
-        public Node.Type type() {
-            return type;
-        }
-
-        @Override
-        public T getElement() {
-            return element;
-        }
-
-        @Override
-        public void connect(Node<T> node) {
-            
-        }
-        
-    }
-    
-    /**
      * Implementation of the {@link Network} interface.
      * 
      * @author David Ray
@@ -429,7 +280,6 @@ public interface Network {
         public CLAClassifier getClassifier() {
             return classifier;
         }
-        
     }
      
 }

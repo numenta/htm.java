@@ -1,8 +1,9 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import java.util.function.Supplier;
 
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.network.Network;
 import org.numenta.nupic.util.NamedTuple;
 
 /**

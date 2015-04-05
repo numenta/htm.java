@@ -1,9 +1,10 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -180,6 +181,7 @@ public class HTMSensor<T> implements Sensor<T> {
             
             delegate.getInputStream().forEach(l -> {
                 String[] arr = (String[])l;
+                System.out.println("seq: " + Arrays.toString(arr));
                 input(arr, fieldNames, fieldTypes, output, isParallel);
             });
         }

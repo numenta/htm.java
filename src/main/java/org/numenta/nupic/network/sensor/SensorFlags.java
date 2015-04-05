@@ -1,4 +1,4 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import org.numenta.nupic.FieldMetaType;
 

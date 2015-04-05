@@ -1,11 +1,14 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
 
 import org.junit.Ignore;
-import org.numenta.nupic.network.SensorParams.Keys;
+import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.URISensor;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 /**
  * This is a *MANUAL ONLY* test due to the dependency on network resources.

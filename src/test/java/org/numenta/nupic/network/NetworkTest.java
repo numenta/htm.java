@@ -15,7 +15,10 @@ import org.numenta.nupic.algorithms.AnomalyLikelihood;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.SensorParams.Keys;
+import org.numenta.nupic.network.sensor.FileSensor;
+import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 
@@ -43,13 +46,11 @@ public class NetworkTest {
             Network n = Network.create(p); // Add Network.add() method for chaining region adds
             Region r1 = n.createRegion()   // Add version of createRegion(String name) for later connecting by name
                 .add(n.createLayer(p)      // so that regions can be added and connecting in one long chain.
-                                
                     .using(new Connections()) // Test adding connections before elements which use them
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))
                     .add(new SpatialPooler())
                     .add(new TemporalMemory())
-                    .add(new CLAClassifier())
                     .add(Anomaly.create(anomalyParams))
                 )
                 .add(n.createLayer(p)         // Add another Layer, and the Region internally connects it to the 
@@ -57,7 +58,6 @@ public class NetworkTest {
                     .add(new SpatialPooler())
                     .using(new Connections()) // Test adding connections after one element and before another
                     .add(new TemporalMemory())
-                    .add(new CLAClassifier())
                     .add(Anomaly.create(anomalyParams))
                 );
             
@@ -66,7 +66,6 @@ public class NetworkTest {
                     .add(new SpatialPooler())
                     .using(new Connections()) // Test adding connections after one element and before another
                     .add(new TemporalMemory())
-                    .add(new CLAClassifier())
                     .add(Anomaly.create(anomalyParams))
                 );
             
@@ -74,7 +73,6 @@ public class NetworkTest {
                 .add(n.createLayer(p)
                     .add(new SpatialPooler())
                     .add(new TemporalMemory())
-                    .add(new CLAClassifier())
                     .add(Anomaly.create(anomalyParams))
                         .using(new Connections()) // Test adding connections after elements which use them.
                 )
