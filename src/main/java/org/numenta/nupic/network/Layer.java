@@ -23,7 +23,6 @@ import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.network.Network.Mode;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.research.ComputeCycle;
@@ -61,6 +60,7 @@ import rx.subjects.PublishSubject;
  * needed to describe the field and its data type as follows:
  * </p>
  * <pre>
+ *      Map<String, Map<String, Object>> fieldEncodings = new HashMap<>();
  *      Map<String, Object> inner = new HashMap<>();
  *      inner.put("n", n);
  *      inner.put("w", w);
@@ -75,6 +75,27 @@ import rx.subjects.PublishSubject;
  *      inner.put("fieldName", fieldName);
  *      inner.put("fieldType", fieldType); (see {@link FieldMetaType} for type examples)
  *      inner.put("encoderType", encoderType); (i.e. ScalarEncoder, SDRCategoryEncoder, DateEncoder...etc.)
+ *      
+ *      Map<String, Object> inner2 = new HashMap<>();
+ *      inner.put("n", n);
+ *      inner.put("w", w);
+ *      inner.put("minVal", min);
+ *      inner.put("maxVal", max);
+ *      inner.put("radius", radius);
+ *      inner.put("resolution", resolution);
+ *      inner.put("periodic", periodic);
+ *      inner.put("clip", clip);
+ *      inner.put("forced", forced);
+ *      // These are meta info to aid in Encoder construction
+ *      inner.put("fieldName", fieldName);
+ *      inner.put("fieldType", fieldType); (see {@link FieldMetaType} for type examples)
+ *      inner.put("encoderType", encoderType); (i.e. ScalarEncoder, SDRCategoryEncoder, DateEncoder...etc.)
+ *      
+ *      fieldEncodings.put("consumption", inner);  // Where "consumption" is an example field name (field name is "generic" in above code)
+ *      fieldEncodings.put("temperature", inner2);
+ *      
+ *      Parameters p = Parameters.getDefaultParameters();
+ *      p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
  * </pre>
  * 
  *  
@@ -86,8 +107,7 @@ public class Layer<T> {
 
     @SuppressWarnings("unused")
     private Network parent;
-    private Network.Mode mode = Mode.MANUAL;
-
+    
     private Parameters params;
     private Connections connections;
     private HTMSensor<?> sensor;
@@ -305,6 +325,8 @@ public class Layer<T> {
      */
     public Layer<T> add(SpatialPooler sp) {
         this.spatialPooler = sp;
+        spatialPooler.init(connections);
+        activeColumns = new int[connections.getNumColumns()];
         return this;
     }
 
@@ -315,6 +337,7 @@ public class Layer<T> {
      */
     public Layer<T> add(TemporalMemory tm) {
         this.temporalMemory = tm;
+        temporalMemory.init(connections);
         return this;
     }
 
@@ -325,18 +348,6 @@ public class Layer<T> {
      */
     public Layer<T> add(Anomaly anomalyComputer) {
         this.anomalyComputer = anomalyComputer;
-        return this;
-    }
-    
-    /**
-     * Sets the {@link Network.Mode} describing this {@code Layer}'s
-     * input method and degree of autonomy.
-     * 
-     * @param m
-     * @return
-     */
-    public Layer<T> mode(Mode m) {
-        this.mode = m;
         return this;
     }
     
@@ -369,18 +380,17 @@ public class Layer<T> {
         
         completeDispatch((T)new int[] {});
         
-        LOGGER.debug("Sensor Layer startOn called on thread " + LAYER_THREAD);
-        
         (LAYER_THREAD = new Thread("Sensor Layer Thread") {
             public void run() {
                 LOGGER.debug("Sensor Layer started input stream processing.");
                 
                 sensor.getOutputStream().forEach(intArray -> {
                     Layer.this.compute((T)intArray);
-                    System.out.println("Stream Seq#: " + intArray[0] + ", Layer Seq#: " + getRecordNum());
                 });
             }
-        }).start();        
+        }).start(); 
+        
+        LOGGER.debug("Sensor Layer startOn called on thread {}", LAYER_THREAD);
     }
     
     /**
@@ -868,7 +878,7 @@ public class Layer<T> {
                             sdr[i] = Integer.parseInt(t1[i]);
                         }
 
-                        return inference.sdr(sdr);
+                        return inference.sdr(sdr).layerInput(sdr);
                     }
                 });
             }
@@ -948,7 +958,7 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(int[] t1) {
                         // Indicates a value that skips the encoding step
-                        return inference.sdr(t1);
+                        return inference.sdr(t1).layerInput(t1);
                     }
                 });
             }
@@ -1005,9 +1015,7 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    t1.sdr(spatialInput(t1.getSDR()));
-
-                    return t1;
+                    return t1.sdr(spatialInput(t1.getSDR()));
                 }
             };
         }

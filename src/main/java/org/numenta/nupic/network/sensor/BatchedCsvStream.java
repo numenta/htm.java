@@ -62,7 +62,7 @@ import org.numenta.nupic.util.Tuple;
  * The batching implemented is pretty straight forward. The underlying iterator is
  * advanced to i + min(batchSize, remainingCount), where each line is fed into
  * a queue of Objects, the {@link BatchSpliterator#tryAdvance(Consumer)}
- * is called with a {@link CSVParallelBatchSpliterator.SequencingConsumer} which inserts
+ * is called with a {@link BatchSpliterator.SequencingConsumer} which inserts
  * the sequenceNumber into the head of the line array after calling 
  * {@link System#arraycopy(Object, int, Object, int, int)} to increase its size.
  * 
@@ -223,7 +223,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
                 csv.isTerminal = true;
                 this.value = new String[value.length + 1];
                 System.arraycopy(value, 0, this.value, 1, value.length);
-                this.value[0] = "" + sequenceNum;
+                this.value[0] = String.valueOf(sequenceNum);
             }
         }
     }
@@ -315,7 +315,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
      */
     public BatchedCsvStream(Stream<String> s, int headerLength) {
         this.it = s.map(line -> { 
-            return line.split(",", -1); 
+            return line.split("[\\s]*,[\\s]*", -1); 
         }).iterator();
         this.fence = headerLength;
         makeHeader();
@@ -394,8 +394,9 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         
         return StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(
-                parallel ? it : getSequenceIterator(it), // Return a sequencing iterator if parallel
-                                                         // otherwise the SplitIterator handles the sequencing.
+                parallel ? it : getSequenceIterator(it), // Return a sequencing iterator if not parallel
+                                                         // otherwise the Spliterator handles the sequencing
+                                                         // through the special SequencingConsumer
                 Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), 
                 parallel);
     }
@@ -425,6 +426,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
                 String[] retVal = new String[value.length + 1];
                 System.arraycopy(value, 0, retVal, 1, value.length);
                 retVal[0] = String.valueOf(seq++);
+                
                 return retVal;
             }
             

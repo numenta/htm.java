@@ -123,3 +123,5 @@ spoofing
 spoof
 observables
 sdr
+seq
+fanouts

@@ -245,11 +245,10 @@ public class HTMSensorTest {
     
     /**
      * Tests mechanism by which {@link Sensor}s will input information
-     * and output information.
+     * and output information ensuring that multiple streams can be created.
      */
     @Test
-    public void testSensorInputOutput() {
-        
+    public void testSensorMultipleStreamCreation() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create, 
             SensorParams.create(
@@ -259,16 +258,32 @@ public class HTMSensorTest {
         
         htmSensor.setLocalParameters(getTestEncoderParams());
         
+        // Ensure that the HTMSensor's output stream can be retrieved more than once.
         Stream<int[]> outputStream = htmSensor.getOutputStream();
-        //outputStream.forEach(l -> System.out.println(Arrays.toString((int[])l)));
+        Stream<int[]> outputStream2 = htmSensor.getOutputStream();
+        Stream<int[]> outputStream3 = htmSensor.getOutputStream();
+        
+        // Check to make sure above multiple retrieval doesn't flag the underlying stream as operated upon
+        assertFalse(htmSensor.isTerminal());
         assertEquals(17, outputStream.count());
         
-        // Ensure that the HTMSensor's output stream can be retrieved more than once.
-        Stream<int[]> outputStream2 = htmSensor.getOutputStream();
-        //outputStream2.forEach(l -> System.out.println(Arrays.toString((int[])l)));
-        assertEquals(17, outputStream2.count());
+        //After the above we cannot request a new stream, so this will fail
+        //however, the above streams that were already requested should be unaffected.
+        assertTrue(htmSensor.isTerminal());
+        try {
+            @SuppressWarnings("unused")
+            Stream<int[]> outputStream4 = htmSensor.getOutputStream();
+            fail();
+        }catch(Exception e) {
+            assertEquals("Stream is already \"terminal\" (operated upon or empty)", e.getMessage());
+        }
+        
+        //These Streams were created before operating on a stream
+        assertEquals(17, outputStream2.count()); 
+        assertEquals(17, outputStream3.count()); 
         
         // Verify that different streams are retrieved.
         assertFalse(outputStream.hashCode() == outputStream2.hashCode());
+        assertFalse(outputStream2.hashCode() == outputStream3.hashCode());
     }
 }

@@ -165,7 +165,9 @@ public class SpatialPooler {
      */
     public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
-            throw new IllegalArgumentException("Input array must be same size as the defined number of inputs");
+            throw new IllegalArgumentException(
+                "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
+                    ", From Input Vector: " + inputVector.length);
         }
         
         updateBookeepingVars(c, learn);

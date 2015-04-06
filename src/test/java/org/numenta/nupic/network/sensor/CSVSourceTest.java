@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class CSVFileTest {
+public class CSVSourceTest {
 
     // Quick test of essential functionality: 
     //      construction of header, body

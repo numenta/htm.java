@@ -171,7 +171,7 @@ public class ManualInput extends MutableTuple implements Inference {
      * @return
      */
     ManualInput sdr(int[] sdr) {
-        this.layerInput = this.sdr = sdr;
+        this.sdr = sdr;
         return this;
     }
     

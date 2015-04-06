@@ -4,15 +4,18 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.FieldMetaType;
@@ -50,10 +53,17 @@ import org.numenta.nupic.util.Tuple;
  * </p><p>
  * This class also has very specific date handling capability for
  * the "timestamp" data field type.
- * 
+ * </p><p>
+ * Output is attained by calling {@link #getOutputStream()}. This class
+ * extends the Stream API to be able to "fork" streams, so that
+ * a single stream can supply multiple fanouts.
+ * </p><p>
+ * <b>Warning:</b> if {@link #getOutputStream()} is called multiple times,
+ * all calls must precede any operations on any of the supplied streams. 
+ * </p><p>
  * @author metaware
  *
- * @param <T>
+ * @param <T>   the input type (i.e. File, URL, etc.)
  */
 public class HTMSensor<T> implements Sensor<T> {
     private Sensor<T> delegate;
@@ -65,6 +75,10 @@ public class HTMSensor<T> implements Sensor<T> {
     private Map<String, Object> inputMap;
     
     private TIntObjectMap<Encoder<?>> indexToEncoderMap;
+    
+    private Iterator<int[]> mainIterator;
+    private List<LinkedList<int[]>> fanOuts = new ArrayList<>();
+    
     
     
     /**
@@ -158,11 +172,32 @@ public class HTMSensor<T> implements Sensor<T> {
     }
     
     /**
+     * Customized Iterator which allows "forking" of a Stream
+     * into multiple fanouts.
+     */
+    private class Copy implements Iterator<int[]> {
+        private List<int[]> list;
+        Copy(List<int[]> l) { this.list = l; }
+        public boolean hasNext() { return !list.isEmpty() || mainIterator.hasNext(); }
+        public int[] next() {
+            if(list.isEmpty()) {
+                int[] next = mainIterator.next();
+                for(List<int[]> l : fanOuts) { l.add(next); }
+            }
+            return list.remove(0);
+        }
+    }
+    
+    /**
      * Returns the encoded output stream of the underlying {@link Stream}'s encoder.
      * 
      * @return      the encoded output stream.
      */
     public Stream<int[]> getOutputStream() {
+        if(isTerminal()) {
+            throw new IllegalStateException("Stream is already \"terminal\" (operated upon or empty)");
+        }
+        
         final MultiEncoder encoder = (MultiEncoder)getEncoder();
         if(encoder == null) {
             throw new IllegalStateException(
@@ -172,21 +207,25 @@ public class HTMSensor<T> implements Sensor<T> {
         if(outputStream == null) {
             inputMap = new HashMap<>();
             final String[] fieldNames = getFieldNames();
-            
             final FieldMetaType[] fieldTypes = getFieldTypes();
-            
             final boolean isParallel = delegate.getInputStream().isParallel();
             
             output = new ArrayList<>();
             
-            delegate.getInputStream().forEach(l -> {
+            outputStream = delegate.getInputStream().map(l -> {
                 String[] arr = (String[])l;
-                System.out.println("seq: " + Arrays.toString(arr));
-                input(arr, fieldNames, fieldTypes, output, isParallel);
+                return input(arr, fieldNames, fieldTypes, output, isParallel);
             });
+            
+            mainIterator = outputStream.iterator();
         }
         
-        return outputStream = output.stream();
+        LinkedList<int[]> l = new LinkedList<int[]>();
+        fanOuts.add(l);
+        Copy copy = new Copy(l);
+        
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(copy,
+            Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
     }
     
     public String[] getFieldNames() {
@@ -218,7 +257,7 @@ public class HTMSensor<T> implements Sensor<T> {
      *                                  executes a binary search for the proper insertion index. The {@link List}
      *                                  handed in should thus be a {@link LinkedList} for faster insertion.
      */
-    public void input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
+    public int[] input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
         if(inputMap == null) inputMap = new LinkedHashMap<>();
         
         for(int i = 0;i < fieldNames.length;i++) {
@@ -229,9 +268,9 @@ public class HTMSensor<T> implements Sensor<T> {
         
         if(isParallel) {
             outputStreamSource.set(padTo(Integer.parseInt(arr[0]), outputStreamSource), encoding);
-        }else{
-            outputStreamSource.add(encoding);
         }
+        
+        return encoding;
     }
     
     /**
