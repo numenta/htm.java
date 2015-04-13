@@ -6,7 +6,6 @@ import java.util.Map;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.util.MutableTuple;
 import org.numenta.nupic.util.NamedTuple;
 
 /**
@@ -33,14 +32,15 @@ import org.numenta.nupic.util.NamedTuple;
  * @author David Ray
  *
  */
-public class ManualInput extends MutableTuple implements Inference {
+public class ManualInput implements Inference {
     private int recordNum;
     /** Tuple = { Name, inputValue, bucketIndex, encoding } */
     private Map<String, NamedTuple> classifierInput;
     /** Holds one classifier for each field */
-    private NamedTuple classifiers;
+    NamedTuple classifiers;
     private Object layerInput;
     private int[] sdr;
+    private int[] encoding;
     private Map<String,ClassifierResult<Object>> classification;
     private double anomalyScore;
     
@@ -48,9 +48,7 @@ public class ManualInput extends MutableTuple implements Inference {
     /**
      * Constructs a new {@code ManualInput}
      */
-    public ManualInput() {
-        super(6);
-    }
+    public ManualInput() {}
     
     /**
      * Sets the current record num associated with this {@code ManualInput}
@@ -176,6 +174,27 @@ public class ManualInput extends MutableTuple implements Inference {
     }
     
     /**
+     * Returns the initial encoding produced by an {@link Encoder}
+     * or one of its subtypes.
+     * 
+     * @return
+     */
+    @Override
+    public int[] getEncoding() {
+        return encoding;
+    }
+    
+    /**
+     * Inputs the initial encoding and return this {@code ManualInput}
+     * @param sdr
+     * @return
+     */
+    ManualInput encoding(int[] sdr) {
+        this.encoding = sdr;
+        return this;
+    }
+    
+    /**
      * Convenience method to provide an isolated copy of 
      * this {@link Inference}
      * 
@@ -212,7 +231,7 @@ public class ManualInput extends MutableTuple implements Inference {
      * @param classification
      * @return
      */
-    ManualInput classify(String fieldName, ClassifierResult<Object> classification) {
+    ManualInput storeClassification(String fieldName, ClassifierResult<Object> classification) {
         if(this.classification == null) {
             this.classification = new HashMap<String, ClassifierResult<Object>>();
         }

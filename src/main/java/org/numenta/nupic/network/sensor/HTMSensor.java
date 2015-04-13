@@ -61,7 +61,7 @@ import org.numenta.nupic.util.Tuple;
  * <b>Warning:</b> if {@link #getOutputStream()} is called multiple times,
  * all calls must precede any operations on any of the supplied streams. 
  * </p><p>
- * @author metaware
+ * @author David Ray
  *
  * @param <T>   the input type (i.e. File, URL, etc.)
  */
@@ -383,7 +383,10 @@ public class HTMSensor<T> implements Sensor<T> {
         this.localParameters = p;
         
         Map<String, Map<String, Object>> encoderSettings;
-        if((encoderSettings = (Map<String, Map<String, Object>>)p.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null) {
+        if((encoderSettings = (Map<String, Map<String, Object>>)p.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null &&
+            encoder.getEncoders().isEmpty() && 
+                indexToEncoderMap == null) {
+            
             initEncoders(encoderSettings);
             makeIndexEncoderMap();
         }

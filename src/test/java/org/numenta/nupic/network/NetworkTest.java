@@ -43,9 +43,9 @@ public class NetworkTest {
             //         .addPath("..."))
             //     .add(new SpatialPooler())
             //     ...
-            Network n = Network.create(p); // Add Network.add() method for chaining region adds
-            Region r1 = n.createRegion()   // Add version of createRegion(String name) for later connecting by name
-                .add(n.createLayer(p)      // so that regions can be added and connecting in one long chain.
+            Network n = Network.create("test network", p); // Add Network.add() method for chaining region adds
+            Region r1 = n.createRegion("r1")   // Add version of createRegion(String name) for later connecting by name
+                .add(n.createLayer("2/3", p)      // so that regions can be added and connecting in one long chain.
                     .using(new Connections()) // Test adding connections before elements which use them
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))
@@ -53,7 +53,7 @@ public class NetworkTest {
                     .add(new TemporalMemory())
                     .add(Anomaly.create(anomalyParams))
                 )
-                .add(n.createLayer(p)         // Add another Layer, and the Region internally connects it to the 
+                .add(n.createLayer("1", p)         // Add another Layer, and the Region internally connects it to the 
                                               // previously added Layer
                     .add(new SpatialPooler())
                     .using(new Connections()) // Test adding connections after one element and before another
@@ -61,16 +61,16 @@ public class NetworkTest {
                     .add(Anomaly.create(anomalyParams))
                 );
             
-            Region r2 = n.createRegion()
-                .add(n.createLayer(p)
+            Region r2 = n.createRegion("r2")
+                .add(n.createLayer("2/3", p)
                     .add(new SpatialPooler())
                     .using(new Connections()) // Test adding connections after one element and before another
                     .add(new TemporalMemory())
                     .add(Anomaly.create(anomalyParams))
                 );
             
-            Region r3 = n.createRegion()
-                .add(n.createLayer(p)
+            Region r3 = n.createRegion("r3")
+                .add(n.createLayer("1", p)
                     .add(new SpatialPooler())
                     .add(new TemporalMemory())
                     .add(Anomaly.create(anomalyParams))

@@ -3,20 +3,12 @@ package org.numenta.nupic.network;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
-import org.numenta.nupic.algorithms.Anomaly;
-import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
-import org.numenta.nupic.util.Tuple;
-
-import rx.subjects.ReplaySubject;
 
 
 public interface Network {
@@ -70,7 +62,7 @@ public interface Network {
      * Returns a {@link Iterator} capable of walking the tree of regions
      * from the root {@link Region} down through all the child Regions. In turn,
      * a {@link Region} may be queried for a {@link Iterator} which will return
-     * an iterator capable of traversing the Region's contained {@link Node}s.
+     * an iterator capable of traversing the Region's contained {@link Layer}s.
      * 
      * @return
      */
@@ -89,8 +81,8 @@ public interface Network {
      * @param parameters
      * @return
      */
-    public static Network create(Parameters parameters) {
-        return new NetworkImpl(parameters);
+    public static Network create(String name, Parameters parameters) {
+        return new NetworkImpl(name, parameters);
     }
     
     /**
@@ -103,23 +95,27 @@ public interface Network {
     /**
      * Creates and returns a child {@link Region} of this {@code Network}
      * 
+     * @param   name    The String identifier for the specified {@link Region}
      * @return
      */
-    public Region createRegion();
+    public Region createRegion(String name);
     
     /**
      * Creates a {@link Layer} to hold algorithmic components
      * 
+     * @param name  the String identifier for the specified {@link Layer}
      * @param p
      * @return
      */
-    public Layer createLayer(Parameters p);
+    public Layer<?> createLayer(String name, Parameters p);
     
     /**
      * Creates a {@link Layer} using the default {@link Network} level parameters
+     * 
+     * @param name  the String identifier for the specified {@link Layer}
      * @return
      */
-    public Layer createLayer();
+    public Layer<?> createLayer(String name);
     
     /**
      * Returns the network-level {@link Parameters}.
@@ -142,16 +138,16 @@ public interface Network {
     public HTMSensor<?> getSensor();
     
     /**
-     * Sets the reference to this {@code Network}'s classifier.
-     * @param classifier
+     * Sets the {@link MultiEncoder} on this Network
+     * @param e
      */
-    public void setClassifier(CLAClassifier classifier);
+    public void setEncoder(MultiEncoder e);
     
     /**
-     * Returns the classifier used by this {@code Network}
+     * Returns the {@link MultiEncoder} with which this Network is configured.
      * @return
      */
-    public CLAClassifier getClassifier();
+    public MultiEncoder getEncoder();
     
     
     /////////////////////////////////////////////////////////////////////////
@@ -165,9 +161,10 @@ public interface Network {
      * @see Network
      */
     public static class NetworkImpl implements Network {
+        private String name;
         private Parameters parameters;
         private HTMSensor<?> sensor;
-        private CLAClassifier classifier;
+        private MultiEncoder encoder;
         
         private List<Region> regions = new ArrayList<>();
         
@@ -175,7 +172,8 @@ public interface Network {
          * Creates a new {@link NetworkImpl}
          * @param parameters
          */
-        public NetworkImpl(Parameters parameters) {
+        public NetworkImpl(String name, Parameters parameters) {
+            this.name = name;
             this.parameters = parameters;
         }
         
@@ -215,28 +213,49 @@ public interface Network {
             return this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public List<Region> getRegions() {
             // TODO Auto-generated method stub
             return null;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public Region createRegion() {
-            Region r = new Region(this);
+        public Region createRegion(String name) {
+            checkName(name);
+            
+            Region r = new Region(name, this);
             return r;
         }
         
+        /**
+         * {@inheritDoc}
+         */
+        @SuppressWarnings("rawtypes")
         @Override
-        public Layer createLayer() {
-            return new Layer(this, this.parameters).using(new Connections());
+        public Layer<?> createLayer(String name) {
+            checkName(name);
+            return new Layer(name, this, this.parameters);
         }
         
+        /**
+         * {@inheritDoc}
+         */
+        @SuppressWarnings("rawtypes")
         @Override
-        public Layer createLayer(Parameters p) {
-            return new Layer(this, p).using(new Connections());
+        public Layer<?> createLayer(String name, Parameters p) {
+            checkName(name);
+            return new Layer(name, this, p);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Parameters getParameters() {
             return parameters;
@@ -264,21 +283,33 @@ public interface Network {
         }
         
         /**
-         * Sets the reference to this {@code Network}'s classifier.
-         * @param classifier
+         * Sets the {@link MultiEncoder} on this Network
+         * @param e
          */
         @Override
-        public void setClassifier(CLAClassifier classifier) {
-            this.classifier = classifier;
+        public void setEncoder(MultiEncoder e) {
+            this.encoder = e;
         }
         
         /**
-         * Returns the classifier used by this {@code Network}
+         * Returns the {@link MultiEncoder} with which this Network is configured.
          * @return
          */
         @Override
-        public CLAClassifier getClassifier() {
-            return classifier;
+        public MultiEncoder getEncoder() {
+            return sensor.getEncoder();
+        }
+        
+        /**
+         * Checks the name for suitability within a given network, 
+         * checking for reserved characters and such.
+         * 
+         * @param name
+         */
+        private void checkName(String name) {
+            if(name.indexOf(":") != -1) {
+                throw new IllegalArgumentException("\":\" is a reserved character.");
+            }
         }
     }
      

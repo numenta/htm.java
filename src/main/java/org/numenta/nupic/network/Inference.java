@@ -53,6 +53,13 @@ public interface Inference {
      */
     public int[] getSDR();
     /**
+     * Returns the initial encoding produced by an {@link Encoder} or one
+     * of its subtypes.
+     * 
+     * @return
+     */
+    public int[] getEncoding();
+    /**
      * Returns the most recent {@link ClassifierResult}
      * 
      * @param fieldName

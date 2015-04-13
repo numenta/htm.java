@@ -31,7 +31,6 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.Tuple;
 
 import rx.Observable;
 import rx.Observer;
@@ -54,151 +53,6 @@ public class LayerTest {
     private void resetWarmUp() {
         this.timesWithinThreshold = 0;
         this.lastSeqNum = 0;
-    }
-    
-    /**
-     * Sets up an Encoder Mapping of typical values.
-     * 
-     * @param map
-     * @param n
-     * @param w
-     * @param min
-     * @param max
-     * @param radius
-     * @param resolution
-     * @param periodic
-     * @param clip
-     * @param forced
-     * @param fieldName
-     * @param fieldType
-     * @param encoderType
-     * @return
-     */
-    private Map<String, Map<String, Object>> setupMap(
-            Map<String, Map<String, Object>> map,
-            int n, int w, double min, double max, double radius, double resolution, Boolean periodic,
-            Boolean clip, Boolean forced, String fieldName, String fieldType, String encoderType) {
-
-        if(map == null) {
-            map = new HashMap<String, Map<String, Object>>();
-        }
-        Map<String, Object> inner = null;
-        if((inner = map.get(fieldName)) == null) {
-            map.put(fieldName, inner = new HashMap<String, Object>());
-        }
-
-        inner.put("n", n);
-        inner.put("w", w);
-        inner.put("minVal", min);
-        inner.put("maxVal", max);
-        inner.put("radius", radius);
-        inner.put("resolution", resolution);
-
-        if(periodic != null) inner.put("periodic", periodic);
-        if(clip != null) inner.put("clip", clip);
-        if(forced != null) inner.put("forced", forced);
-        if(fieldName != null) inner.put("fieldName", fieldName);
-        if(fieldType != null) inner.put("fieldType", fieldType);
-        if(encoderType != null) inner.put("encoderType", encoderType);
-
-        return map;
-    }
-
-    private Map<String, Map<String, Object>> getFieldEncodingMap() {
-        Map<String, Map<String, Object>> fieldEncodings = setupMap(
-                null,
-                0, // n
-                0, // w
-                0, 0, 0, 0, null, null, null,
-                "timestamp", "datetime", "DateEncoder");
-        fieldEncodings = setupMap(
-                fieldEncodings, 
-                25, 
-                3, 
-                0, 0, 0, 0.1, null, null, null, 
-                "consumption", "float", "RandomDistributedScalarEncoder");
-        
-        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(1, 1.0)); // Day of week
-        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(5, 4.0)); // Time of day
-        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
-        
-        return fieldEncodings;
-    }
-
-    /**
-     * Returns Encoder parameters and meta information for the "Hot Gym" encoder
-     * @return
-     */
-    private Parameters getTestEncoderParams() {
-        Map<String, Map<String, Object>> fieldEncodings = getFieldEncodingMap();
-
-        Parameters p = Parameters.getEncoderDefaultParameters();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
-
-        return p;
-    }
-    
-    /**
-     * Parameters and meta information for the "dayOfWeek" encoder
-     * @return
-     */
-    private Map<String, Map<String, Object>> getSimpleFieldEncodingMap() {
-        Map<String, Map<String, Object>> fieldEncodings = setupMap(
-                null,
-                8, // n
-                3, // w
-                0.0, 8.0, 0, 1, Boolean.TRUE, null, Boolean.TRUE,
-                "dayOfWeek", "number", "ScalarEncoder");
-        return fieldEncodings;
-    }
-
-    /**
-     * Returns Encoder parameters.
-     * @return
-     */
-    private Parameters getSimpleTestEncoderParams() {
-        Map<String, Map<String, Object>> fieldEncodings = getSimpleFieldEncodingMap();
-
-        Parameters p = Parameters.getEncoderDefaultParameters();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
-
-        return p;
-    }
-    
-    private Parameters getParameters() {
-        Parameters parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 8 });
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
-        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
-        
-        //SpatialPooler specific
-        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
-        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITIONS, false);
-        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
-        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
-        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        parameters.setParameterByKey(KEY.SEED, 42);
-        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
-        
-        //Temporal Memory specific
-        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.8);
-        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 5);
-        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
-        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.05);
-        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
-        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 4);
-        
-        return parameters;
     }
     
     /**
@@ -229,8 +83,8 @@ public class LayerTest {
     
     @Test
     public void testBasicSetupEncoder_UsingSubscribe() {
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -263,8 +117,8 @@ public class LayerTest {
     
     @Test
     public void testBasicSetupEncoder_UsingObserve() {
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -303,15 +157,14 @@ public class LayerTest {
             SensorParams.create(
                 Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
         
-        Parameters p = getParameters();
-        p = p.union(getTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
-        htmSensor.setLocalParameters(p);
         
-        Network n = Network.create(p);
+        Network n = Network.create("test network", p);
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
         
@@ -372,7 +225,7 @@ public class LayerTest {
      */
     @Test
     public void testBasicSetup_SpatialPooler_MANUAL_MODE() {
-        Parameters p = getParameters();
+        Parameters p = NetworkTestHarness.getParameters();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         int[][] inputs = new int[7][8];
@@ -421,15 +274,14 @@ public class LayerTest {
             SensorParams.create(
                 Keys::path, "", ResourceLocator.path("days-of-week.csv")));
         
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
-        htmSensor.setLocalParameters(p);
         
-        Network n = Network.create(p);
+        Network n = Network.create("test network", p);
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor).add(new SpatialPooler());
         
@@ -466,7 +318,7 @@ public class LayerTest {
      */
     @Test
     public void testBasicSetup_TemporalMemory_MANUAL_MODE() {
-        Parameters p = getParameters();
+        Parameters p = NetworkTestHarness.getParameters();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
@@ -526,7 +378,7 @@ public class LayerTest {
     
     @Test
     public void testBasicSetup_SPandTM() {
-        Parameters p = getParameters();
+        Parameters p = NetworkTestHarness.getParameters();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         int[][] inputs = new int[7][8];
@@ -557,7 +409,7 @@ public class LayerTest {
     
     @Test
     public void testSpatialPoolerPrimerDelay() {
-        Parameters p = getParameters();
+        Parameters p = NetworkTestHarness.getParameters();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         int[][] inputs = new int[7][8];
@@ -625,8 +477,8 @@ public class LayerTest {
      */
     @Test
     public void testBasicClassifierSetup() {
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -661,8 +513,8 @@ public class LayerTest {
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
         
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
@@ -706,8 +558,8 @@ public class LayerTest {
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
         
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
@@ -795,8 +647,8 @@ public class LayerTest {
         final int NUM_CYCLES = 10;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
@@ -875,8 +727,8 @@ public class LayerTest {
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
         
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
@@ -930,8 +782,8 @@ public class LayerTest {
     
     @Test
     public void testObservableRetrieval() {
-        Parameters p = getParameters();
-        p = p.union(getSimpleTestEncoderParams());
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();

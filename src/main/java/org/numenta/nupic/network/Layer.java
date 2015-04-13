@@ -106,7 +106,8 @@ public class Layer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScalarEncoder.class);
 
     @SuppressWarnings("unused")
-    private Network parent;
+    private Network parentNetwork;
+    private Region parentRegion;
     
     private Parameters params;
     private Connections connections;
@@ -122,7 +123,7 @@ public class Layer<T> {
     private Observable<Inference> userObservable;
     private Inference currentInference;
     
-    private FunctionFactory functions;
+    FunctionFactory functions;
 
     private int[] activeColumns;
     private int[] sparseActives;
@@ -130,6 +131,10 @@ public class Layer<T> {
     private int[] currentPrediction;
     private int cellsPerColumn;
     private int recordNum = -1;
+    
+    private String name;
+    
+    private Layer<Inference> next;
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
     private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
@@ -159,7 +164,19 @@ public class Layer<T> {
      * @param p     the {@link Parameters} to use with this {@code Layer}
      */
     public Layer(Network n, Parameters p) {
-        this.parent = n;
+        this("Layer " + System.currentTimeMillis(), n, p);
+    }
+    
+    /**
+     * Creates a new {@code Layer} using the specified {@link Parameters}
+     * 
+     * @param name  the name identifier of this {@code Layer}
+     * @param n     the parent {@link Network}
+     * @param p     the {@link Parameters} to use with this {@code Layer}
+     */
+    public Layer(String name, Network n, Parameters p) {
+        this.name = name;
+        this.parentNetwork = n;
         this.params = p;
 
         if(n == null || p == null) return;
@@ -215,13 +232,15 @@ public class Layer<T> {
 
         functions = new FunctionFactory();
 
-        // Create Encoder hierarchy from definitions
+        // Create Encoder hierarchy from definitions & auto create classifiers if specified
         if(encoder != null) {
             encoder.addMultipleEncoders(
                 (Map<String, Map<String, Object>>)params.getParameterByKey(
                     KEY.FIELD_ENCODING_MAP));
-
-            functions.inference.classifiers(makeClassifiers(encoder));
+            
+            if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
+                functions.inference.classifiers(makeClassifiers(encoder));
+            }
         }
 
         // Let the SpatialPooler initialize the matrix with its requirements
@@ -294,6 +313,9 @@ public class Layer<T> {
      */
     public Layer<T> using(Connections c) {
         this.connections = c;
+        if(params != null) {
+            params.apply(connections);
+        }
         return this;
     }
 
@@ -305,6 +327,7 @@ public class Layer<T> {
     @SuppressWarnings("rawtypes")
     public Layer<T> add(Sensor sensor) {
         this.sensor = (HTMSensor<?>)sensor;
+        this.sensor.setLocalParameters(params);
         return this;
     }
 
@@ -352,6 +375,38 @@ public class Layer<T> {
     }
     
     /**
+     * Adds the ability to alter a given parameter in place during
+     * a fluent creation statement. This {@code Layer}'s {@link Parameters}
+     * object is copied and then the specified key/value pair are set on 
+     * the internal copy. This call does not affect the original Parameters
+     * object so that local modifications may be made without having to reset
+     * them afterward for subsequent use with another network structure.
+     * 
+     * @param key
+     * @param value
+     * @return
+     */
+    public Layer<T> alterParameter(KEY key, Object value) {
+        this.params = this.params.copy();
+        this.params.setParameterByKey(key, value);
+        
+        if(key == KEY.AUTO_CLASSIFY) {
+            this.autoCreateClassifiers = value == null ? 
+                false : ((Boolean)value).booleanValue();
+        }
+        return this;
+    }
+    
+    /**
+     * Returns the configured {@link Sensor} if any exists in this
+     * {@code Layer}, or null if one does not.
+     * @return
+     */
+    public HTMSensor<?> getSensor() {
+        return sensor;
+    }
+    
+    /**
      * 
      * @param t
      */
@@ -385,12 +440,41 @@ public class Layer<T> {
                 LOGGER.debug("Sensor Layer started input stream processing.");
                 
                 sensor.getOutputStream().forEach(intArray -> {
+                    ((ManualInput)Layer.this.functions.inference).encoding(intArray);
                     Layer.this.compute((T)intArray);
                 });
             }
         }).start(); 
         
         LOGGER.debug("Sensor Layer startOn called on thread {}", LAYER_THREAD);
+    }
+    
+    /**
+     * Sets a pointer to the "next" Layer in this {@code Layer}'s 
+     * {@link Observable} sequence.
+     * @param l
+     */
+    public void next(Layer<Inference> l) {
+        this.next = l;
+    }
+    
+    /**
+     * Returns the next Layer following this Layer in order of 
+     * process flow.
+     * 
+     * @return
+     */
+    public Layer<Inference> getNext() {
+        return next;
+    }
+    
+    /**
+     * Returns a flag indicating whether this {@code Layer} is configured with
+     * a {@link Sensor} which requires starting up.
+     * @return
+     */
+    public boolean hasSensor() {
+        return sensor != null;
     }
     
     /**
@@ -406,6 +490,13 @@ public class Layer<T> {
         return Thread.currentThread();
     }
     
+    /**
+     * Returns the {@link Parameters} used to configure this layer.
+     * @return
+     */
+    public Parameters getParameters() {
+        return this.params;
+    }
     /**
      * Returns the current prediction.
      * 
@@ -503,6 +594,24 @@ public class Layer<T> {
         recordNum += count;
         return this;
     }
+    
+    /**
+     * Sets the name and returns this Layer.
+     * @param name
+     * @return
+     */
+    Layer<T> name(String name) {
+        this.name = name;
+        return this;
+    }
+    
+    /**
+     * Returns the String identifier of this {@code Layer}
+     * @return
+     */
+    public String getName() {
+        return name;
+    }
 
     /**
      * Returns the last computed {@link Inference} of this {@code Layer}
@@ -510,6 +619,63 @@ public class Layer<T> {
      */
     public Inference getInference() {
         return currentInference;
+    }
+    
+    /**
+     * Called by Network infrastructure during assembly, to pass inference
+     * settings up the chain. Here we are careful not to overwrite the higher
+     * level's stored classifiers with a possible null reference from a lower
+     * layer.
+     * 
+     * @param inference
+     * @return
+     */
+    Inference passInference(Inference inference) {
+        // Preserve the top-most Observable's classifiers making sure they 
+        // are not overwritten by null references in previous Observable's 
+        // because the classifiers are always on the top most layer.
+        NamedTuple temp = functions.inference.getClassifiers();
+        currentInference = functions.inference = (ManualInput)inference;
+        functions.inference.classifiers = temp;
+        
+        return inference;
+    }
+    
+    /**
+     * Returns the resident {@link MultiEncoder} or the encoder residing
+     * in this {@code Layer}'s {@link Sensor}, if any.
+     * 
+     * @return
+     */
+    public MultiEncoder getEncoder() {
+        if(encoder != null) {
+            return encoder;
+        }
+        if(hasSensor()) {
+            return sensor.getEncoder();
+        }
+        
+        MultiEncoder e = parentNetwork.getEncoder();
+        if(e != null) {
+            return e;
+        }
+        
+        LOGGER.debug("Could not retrieve encoder from Layer: {}, and finally from the network", getName());
+        return null;
+    }
+    
+    /**
+     * Internally called during assembly to pass the field defining encoders
+     * up the chain to where a Observable encapsulating a CLAClassifier can make
+     * use of the encoder to define its classifiers.
+     * 
+     * @param encoder
+     */
+    void passEncoder(MultiEncoder encoder) {
+        this.encoder = encoder;
+        if(((Boolean)getParameters().getParameterByKey(KEY.AUTO_CLASSIFY))) {
+            functions.inference.classifiers(makeClassifiers(encoder));
+        }
     }
 
     /**
@@ -598,12 +764,20 @@ public class Layer<T> {
      * @param t
      */
     private void completeDispatch(T t) {
+        // Get the Input Transformer for the specified input type
         Observable<ManualInput> sequence = resolveObservableSequence(t);
+        
+        // If this Layer has a Sensor, map its encoder buckets
+        sequence = mapEncoderBuckets(sequence);
+        
+        // Add the rest of the chain observables for the other added algorithms.
         sequence = fillInSequence(sequence);
+        
+        // All subscribers and observers are notified from a single delegate.
         subscribers.add(0,getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
         
-        //Clean up afterwards
+        // The map of input types to transformers is no longer needed.
         observableDispatch.clear();
         observableDispatch = null;
     }
@@ -635,6 +809,17 @@ public class Layer<T> {
         return observableDispatch;
     }
     
+    private Observable<ManualInput> mapEncoderBuckets(Observable<ManualInput> sequence) {
+        if(hasSensor()) {
+            sequence = sequence.map(m -> {
+                doEncoderBucketMapping(m, getSensor().getInputMap());
+                return m; 
+            });
+        }
+        
+        return sequence;
+    }
+    
     /**
      * This method is necessary to be able to retrieve the mapped {@link Observable}
      * types to input types or their subclasses if any.
@@ -660,7 +845,41 @@ public class Layer<T> {
                 }
             }
         }
+        
         return sequenceStart;
+    }
+    
+    List<EncoderTuple> encoderTuples;
+    private void doEncoderBucketMapping(Inference inference, Map<String, Object> encoderInputMap) {
+        if(encoderTuples == null) {
+            encoderTuples = encoder.getEncoders(encoder);
+        }
+        
+        // Store the encoding
+        int[] encoding = inference.getEncoding();
+
+        for(EncoderTuple t : encoderTuples) {
+            String name = t.getName();
+            Encoder<?> e = t.getEncoder();
+            
+            int bucketIdx = -1;
+            Object o = encoderInputMap.get(name);
+            if(DateTime.class.isAssignableFrom(o.getClass())) {
+                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
+            }else if(Number.class.isAssignableFrom(o.getClass())) {
+                bucketIdx = e.getBucketIndices((double)o)[0];
+            }else{
+                bucketIdx = e.getBucketIndices((String)o)[0];
+            }
+
+            int offset = t.getOffset();
+            int[] tempArray = new int[e.getWidth()];
+            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
+
+            inference.getClassifierInput().put(name, 
+                new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" }, 
+                    name, o, bucketIdx, tempArray));
+        }
     }
     
     /**
@@ -786,7 +1005,7 @@ public class Layer<T> {
      * @param encoder
      * @return
      */
-    private NamedTuple makeClassifiers(MultiEncoder encoder) {
+    NamedTuple makeClassifiers(MultiEncoder encoder) {
         String[] names = new String[encoder.getEncoders(encoder).size()];
         CLAClassifier[] ca = new CLAClassifier[names.length];
         int i = 0;
@@ -842,8 +1061,8 @@ public class Layer<T> {
     //////////////////////////////////////////////////////////////
     //        Inner Class Definition Transformer Example        //
     //////////////////////////////////////////////////////////////
-    private class FunctionFactory {
-        private ManualInput inference = new ManualInput();
+    class FunctionFactory {
+        ManualInput inference = new ManualInput();
         private boolean isDenseInput = true;
 
         //////////////////////////////////////////////////////////////////////////////
@@ -902,8 +1121,8 @@ public class Layer<T> {
             @Override
             public Observable<ManualInput> call(Observable<Map> t1) {
                 return t1.map(new Func1<Map, ManualInput>() {
-                    List<EncoderTuple> encoderTuples = null;
-
+                    
+                    @SuppressWarnings("unchecked")
                     @Override
                     public ManualInput call(Map t1) {
                         if(encoderTuples == null) {
@@ -912,29 +1131,9 @@ public class Layer<T> {
                         
                         // Store the encoding
                         int[] encoding = encoder.encode(t1);
-                        inference.sdr(encoding);
-
-                        for(EncoderTuple t : encoderTuples) {
-                            String name = t.getName();
-                            Encoder e = t.getEncoder();
-                            int bucketIdx = -1;
-                            Object o = t1.get(name);
-                            if(DateTime.class.isAssignableFrom(o.getClass())) {
-                                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
-                            }else if(Number.class.isAssignableFrom(o.getClass())) {
-                                bucketIdx = e.getBucketIndices((double)o)[0];
-                            }else{
-                                bucketIdx = e.getBucketIndices((String)o)[0];
-                            }
-
-                            int offset = t.getOffset();
-                            int[] tempArray = new int[encoder.getWidth()];
-                            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
-
-                            inference.getClassifierInput().put(name, 
-                                new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" }, 
-                                    name, o, bucketIdx, tempArray));
-                        }
+                        inference.sdr(encoding).encoding(encoding);
+                        
+                        doEncoderBucketMapping(inference, t1);
 
                         return inference.layerInput(t1);
                     }
@@ -980,7 +1179,7 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(ManualInput t1) {
                         // Indicates a value that skips the encoding step
-                        return inference = t1;
+                        return (inference = t1).layerInput(t1);
                     }
                 });
             }
@@ -1027,10 +1226,7 @@ public class Layer<T> {
                     if(isDenseInput) {
                         t1 = t1.sdr(sparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1)));
                     }
-                    int[] input = t1.getSDR();
-                    int[] predict = temporalInput(input);
-
-                    return t1.sdr(predict);
+                    return t1.sdr(temporalInput(t1.getSDR()));
                 }
             };
         }
@@ -1044,16 +1240,15 @@ public class Layer<T> {
                     Map<String, NamedTuple> ci = t1.getClassifierInput();
                     int recordNum = getRecordNum();
                     for(String key : ci.keySet()) {
-                        CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
-
                         NamedTuple inputs = ci.get(key);
                         inputMap.put("bucketIdx", inputs.get("bucketIdx"));
                         inputMap.put("actValue", inputs.get("inputValue"));
-
+                        
+                        CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
                         ClassifierResult<Object> result = c.compute(
                             recordNum, inputMap, t1.getSDR(), true, true);
 
-                        t1.recordNum(recordNum).classify((String)inputs.get("name"), result);
+                        t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
 
                     return t1;
@@ -1065,11 +1260,41 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    t1.anomalyScore(anomalyComputer.compute(getSparseActives(), previousPrediction, 0, 0));
-
-                    return t1;
+                    return t1.anomalyScore(anomalyComputer.compute(getSparseActives(), previousPrediction, 0, 0));
                 }
             };
         }
+        
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((parentRegion == null) ? 0 : parentRegion.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Layer<?> other = (Layer<?>)obj;
+        if(name == null) {
+            if(other.name != null)
+                return false;
+        } else if(!name.equals(other.name))
+            return false;
+        if(parentRegion == null) {
+            if(other.parentRegion != null)
+                return false;
+        } else if(!parentRegion.equals(other.parentRegion))
+            return false;
+        return true;
     }
 }
