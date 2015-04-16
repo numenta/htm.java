@@ -1,16 +1,18 @@
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'signing'
 
-group = 'htm.java'
-version = '0.40'
+group = 'org.numenta'
+version = '0.4.1-SNAPSHOT'
+archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': 0.40
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.4.1-SNAPSHOT'
     }
 }
 
@@ -83,6 +85,67 @@ check.doLast {
     tasks.runBench.execute()
 }
 /////////////////// END jmh /////////////////////
+
+/////////////////////////////////////////////////////////////////
+//                   SonaType Central Repo                     //
+/////////////////////////////////////////////////////////////////
+/*
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+*/
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        name 'Numenta htm.java'
+        packaging 'jar'
+        artifactId 'htm.java' 
+        description "The Java version of Numenta's HTM technology."
+        url 'https://github.com/numenta/htm.java'
+
+        scm {
+          connection 'scm:git:git://github.com/numenta/htm.java.git'
+          developerConnection 'scm:git:git://github.com/numenta/htm.java.git'
+          url 'https://github.com/numenta/htm.java'
+        }
+
+        licenses {
+          license {
+            name 'The GNU General Public License.'
+            url 'https://github.com/numenta/htm.java/blob/master/LICENSE.txt'
+          }
+        }
+      }
+    }
+  }
+}
+/////////////////// END Central Repo ////////////////
 
 // create Gradle wrapper with command line `gradle wrapper` in terminal
 task wrapper(type: Wrapper) {
