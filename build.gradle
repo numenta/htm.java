@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.4.1-SNAPSHOT'
+version = '0.4.3'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
@@ -12,7 +12,7 @@ targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.4.1-SNAPSHOT'
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.4.3'
     }
 }
 
@@ -110,6 +110,11 @@ signing {
 }
 
 uploadArchives {
+
+  if(!project.hasProperty('ossrhUsername')) {
+	return
+  }
+
   repositories {
     mavenDeployer {
       beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
