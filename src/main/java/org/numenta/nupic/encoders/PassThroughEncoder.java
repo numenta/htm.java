@@ -29,6 +29,8 @@ import org.numenta.nupic.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.lang.String.*;
+
 /**
  * Pass an encoded SDR straight to the model.
  * Each encoding is an SDR in which w out of n bits are turned on.
@@ -53,6 +55,7 @@ public class PassThroughEncoder extends Encoder<int[]> {
         super.setN(outputWidth);
         super.setForced(false);
         this.outputBitsOnCount = outputBitsOnCount;
+
         LOGGER.info("Building new PassThroughEncoder instance, outputWidth: {} outputBitsOnCount: {}", outputWidth, outputBitsOnCount);
     }
 
@@ -106,7 +109,9 @@ public class PassThroughEncoder extends Encoder<int[]> {
             r = overlapSum / expectedSum;
         r = r * ratio;
 
-        LOGGER.trace("closenessScores for expValues: {} and actValues: {} is: {}", Arrays.toString(expectedInts), Arrays.toString(actualInts), r);
+        if(LOGGER.isTraceEnabled()) {
+            LOGGER.trace("closenessScores for expValues: {} and actValues: {} is: {}", Arrays.toString(expectedInts), actualInts, r);
+        }
 
         result.add(r);
         return result;
@@ -132,12 +137,14 @@ public class PassThroughEncoder extends Encoder<int[]> {
     @Override
     public void encodeIntoArray(int[] input, int[] output) {
         if (input.length != output.length)
-            throw new IllegalArgumentException(String.format("Different input (%i) and output (%i) sizes", input.length, output.length));
+            throw new IllegalArgumentException(format("Different input (%d) and output (%d) sizes", input.length, output.length));
         if (this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
-            throw new IllegalArgumentException(String.format("Input has %i bits but w was set to %i.", ArrayUtils.sum(input), outputBitsOnCount));
+            throw new IllegalArgumentException(format("Input has %d bits but w was set to %d.", ArrayUtils.sum(input), outputBitsOnCount));
 
         System.arraycopy(input, 0, output, 0, input.length);
-        LOGGER.trace("encodeIntoArray: Input: {} \nOutput: {} ", Arrays.toString(input), Arrays.toString(output));
+        if(LOGGER.isTraceEnabled()) {
+            LOGGER.trace("encodeIntoArray: Input: {} \nOutput: {} ", Arrays.toString(input), Arrays.toString(output));
+        }
     }
 
     /**
@@ -147,7 +154,7 @@ public class PassThroughEncoder extends Encoder<int[]> {
     public Tuple decode(int[] encoded, String parentFieldName) {
         //TODO: these methods should be properly implemented (this comment in Python)
         String fieldName = this.name;
-        if (parentFieldName != null && parentFieldName.length() > 0)
+        if (parentFieldName != null && parentFieldName.length() > 0 && LOGGER.isTraceEnabled())
             LOGGER.trace("Decoding Field: {}.{}", parentFieldName, this.name);
 
         List<MinMax> ranges = new ArrayList<MinMax>();
