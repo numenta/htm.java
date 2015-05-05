@@ -29,175 +29,180 @@ import org.numenta.nupic.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.lang.String.*;
+
 /**
  * Pass an encoded SDR straight to the model.
  * Each encoding is an SDR in which w out of n bits are turned on.
- * @author wilsondy (from Python original)
  *
+ * @author wilsondy (from Python original)
  */
 public class PassThroughEncoder extends Encoder<int[]> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(PassThroughEncoder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PassThroughEncoder.class);
 
-	/**
-	 * This is used to check that there are exactly outputBitsOn in the outgoing bits
-	 * The Python claims to do more, but I don't think it actually does anything other than throw an error
-	 * as we do here also. (This is w in the Python code)
-	 */
-	private Integer outputBitsOnCount;
+    /**
+     * This is used to check that there are exactly outputBitsOn in the outgoing bits
+     * The Python claims to do more, but I don't think it actually does anything other than throw an error
+     * as we do here also. (This is w in the Python code)
+     */
+    private Integer outputBitsOnCount;
 
-	protected PassThroughEncoder() {}
+    protected PassThroughEncoder() { }
 
-	public PassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
-		super.setW(outputWidth);
-		super.setN(outputWidth);
-		super.setForced(false);
-		this.outputBitsOnCount = outputBitsOnCount;
-	}
+    public PassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
+        super.setW(outputWidth);
+        super.setN(outputWidth);
+        super.setForced(false);
+        this.outputBitsOnCount = outputBitsOnCount;
 
-	/**
-	 * Returns a builder for building PassThroughEncoders.
-	 * This builder may be reused to produce multiple builders
-	 *
-	 * @return a {@code PassThroughEncoder.Builder}
-	 */
-	public static Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> builder() {
-		return new PassThroughEncoder.Builder();
-	}
+        LOGGER.info("Building new PassThroughEncoder instance, outputWidth: {} outputBitsOnCount: {}", outputWidth, outputBitsOnCount);
+    }
 
-	public void init() {
-		setForced(false);
-		this.outputBitsOnCount = getW() > 0 ? getW() : null;
-	}
+    /**
+     * Returns a builder for building PassThroughEncoders.
+     * This builder may be reused to produce multiple builders
+     *
+     * @return a {@code PassThroughEncoder.Builder}
+     */
+    public static Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> builder() {
+        return new PassThroughEncoder.Builder();
+    }
 
-	@Override
-	/**
-	 * Does a bitwise compare of the two bitmaps and returns a fractional
-	 * value between 0 and 1 of how similar they are.
-	 * 1 => identical
-	 * 0 => no overlapping bits
-	 * IGNORES difference in length (only compares bits of shorter list)  e..g 11 and 1100101010 are "identical"
-	 * @see org.numenta.nupic.encoders.Encoder#closenessScores(gnu.trove.list.TDoubleList, gnu.trove.list.TDoubleList, boolean)
-	 */
-	public gnu.trove.list.TDoubleList closenessScores(gnu.trove.list.TDoubleList expValues, gnu.trove.list.TDoubleList actValues, boolean fractional) {
-		TDoubleArrayList result = new TDoubleArrayList();
+    public void init() {
+        setForced(false);
+        this.outputBitsOnCount = getW() > 0 ? getW() : null;
+    }
 
-		double ratio = 1.0d;
-		double expectedSum = expValues.sum();
-		double actualSum = actValues.sum();
+    @Override
+    /**
+     * Does a bitwise compare of the two bitmaps and returns a fractional
+     * value between 0 and 1 of how similar they are.
+     * 1 => identical
+     * 0 => no overlapping bits
+     * IGNORES difference in length (only compares bits of shorter list)  e..g 11 and 1100101010 are "identical"
+     * @see org.numenta.nupic.encoders.Encoder#closenessScores(gnu.trove.list.TDoubleList, gnu.trove.list.TDoubleList, boolean)
+     */
+    public gnu.trove.list.TDoubleList closenessScores(gnu.trove.list.TDoubleList expValues, gnu.trove.list.TDoubleList actValues, boolean fractional) {
+        TDoubleArrayList result = new TDoubleArrayList();
 
-		if (actualSum > expectedSum) {
-			double diff = actualSum - expectedSum;
-			if (diff < expectedSum)
-				ratio = 1 - diff / expectedSum;
-			else
-				ratio = 1 / diff;
-		}
+        double ratio = 1.0d;
+        double expectedSum = expValues.sum();
+        double actualSum = actValues.sum();
 
-		int[] expectedInts = ArrayUtils.toIntArray(expValues.toArray());
-		int[] actualInts = ArrayUtils.toIntArray(actValues.toArray());
+        if (actualSum > expectedSum) {
+            double diff = actualSum - expectedSum;
+            if (diff < expectedSum)
+                ratio = 1 - diff / expectedSum;
+            else
+                ratio = 1 / diff;
+        }
 
-		int[] overlap = ArrayUtils.and(expectedInts, actualInts);
+        int[] expectedInts = ArrayUtils.toIntArray(expValues.toArray());
+        int[] actualInts = ArrayUtils.toIntArray(actValues.toArray());
 
-		int overlapSum = ArrayUtils.sum(overlap);
-		double r = 0.0;
-		if (expectedSum == 0)
-			r = 0.0;
-		else
-			r = overlapSum / expectedSum;
-		r = r * ratio;
+        int[] overlap = ArrayUtils.and(expectedInts, actualInts);
 
-		result.add(r);
-		return result;
-	}
+        int overlapSum = ArrayUtils.sum(overlap);
+        double r = 0.0;
+        if (expectedSum != 0)
+            r = overlapSum / expectedSum;
+        r = r * ratio;
 
-	@Override
-	public int getWidth() {
-		return w;
-	}
+        if(LOGGER.isTraceEnabled()) {
+            LOGGER.trace("closenessScores for expValues: {} and actValues: {} is: {}", Arrays.toString(expectedInts), actualInts, r);
+        }
 
-	@Override
-	public boolean isDelta() {
-		return false;
-	}
+        result.add(r);
+        return result;
+    }
 
+    @Override
+    public int getWidth() {
+        return w;
+    }
 
+    @Override
+    public boolean isDelta() {
+        return false;
+    }
 
-	/**
-	 * Check for length the same and copy input into output
-	 * If outputBitsOnCount (w) set, throw error if not true
-	 * @param input
-	 * @param output
-	 */
-	@Override
-	public void encodeIntoArray(int[] input, int[] output){
-		if( input.length != output.length)
-			throw new IllegalArgumentException(String.format("Different input (%i) and output (%i) sizes", input.length, output.length));
-		if(this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
-			throw new IllegalArgumentException(String.format("Input has %i bits but w was set to %i.",  ArrayUtils.sum(input), outputBitsOnCount));
+    /**
+     * Check for length the same and copy input into output
+     * If outputBitsOnCount (w) set, throw error if not true
+     *
+     * @param input
+     * @param output
+     */
+    @Override
+    public void encodeIntoArray(int[] input, int[] output) {
+        if (input.length != output.length)
+            throw new IllegalArgumentException(format("Different input (%d) and output (%d) sizes", input.length, output.length));
+        if (this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
+            throw new IllegalArgumentException(format("Input has %d bits but w was set to %d.", ArrayUtils.sum(input), outputBitsOnCount));
 
-		System.arraycopy(input, 0, output, 0, input.length);
+        System.arraycopy(input, 0, output, 0, input.length);
+        if(LOGGER.isTraceEnabled()) {
+            LOGGER.trace("encodeIntoArray: Input: {} \nOutput: {} ", Arrays.toString(input), Arrays.toString(output));
+        }
+    }
 
-	}
+    /**
+     * Not much real work to do here as this concept doesn't really apply.
+     */
+    @Override
+    public Tuple decode(int[] encoded, String parentFieldName) {
+        //TODO: these methods should be properly implemented (this comment in Python)
+        String fieldName = this.name;
+        if (parentFieldName != null && parentFieldName.length() > 0 && LOGGER.isTraceEnabled())
+            LOGGER.trace("Decoding Field: {}.{}", parentFieldName, this.name);
 
-	/**
-	 * Not much real work to do here as this concept doesn't really apply.
-	 */
-	@Override
-	public Tuple decode(int[] encoded, String parentFieldName) {
-	    //TODO: these methods should be properly implemented (this comment in Python)
-		String fieldName = this.name;
-	    if (parentFieldName != null && parentFieldName.length() > 0)
-	    	LOG.trace(String.format("Decoding Field: %s.%s", parentFieldName, this.name));
+        List<MinMax> ranges = new ArrayList<MinMax>();
+        ranges.add(new MinMax(0, 0));
+        RangeList inner = new RangeList(ranges, "input");
+        Map<String, RangeList> fieldsDict = new HashMap<String, RangeList>();
+        fieldsDict.put(fieldName, inner);
 
-		List<MinMax> ranges = new ArrayList<MinMax>();
-		ranges.add(new MinMax(0,0));
-	    RangeList inner = new RangeList(ranges, "input");
-		Map<String, RangeList> fieldsDict = new HashMap<String, RangeList>();
-		fieldsDict.put(fieldName, inner);
+        return new DecodeResult(fieldsDict, Arrays.asList(fieldName));
+    }
 
-	    //return ({fieldName: ([[0, 0]], "input")}, [fieldName])
-		return new DecodeResult(fieldsDict, Arrays.asList(new String[] { fieldName }));
-	}
+    @Override
+    public void setLearning(boolean learningEnabled) {
+        //NOOP
+    }
 
-	@Override
-	public void setLearning(boolean learningEnabled) {
-		//NOOP
-	}
+    @Override
+    public <T> List<T> getBucketValues(Class<T> returnType) {
+        return null;
+    }
 
-	@Override
-	public <T> List<T> getBucketValues(Class<T> returnType) {
-		return null;
-	}
+    /**
+     * Returns a {@link Encoder.Builder} for constructing {@link PassThroughEncoder}s
+     * <p/>
+     * The base class architecture is put together in such a way where boilerplate
+     * initialization can be kept to a minimum for implementing subclasses, while avoiding
+     * the mistake-proneness of extremely long argument lists.
+     */
+    public static class Builder extends Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> {
+        private Builder() { }
 
-	/**
-	 * Returns a {@link EncoderBuilder} for constructing {@link PassThroughEncoder}s
-	 *
-	 * The base class architecture is put together in such a way where boilerplate
-	 * initialization can be kept to a minimum for implementing subclasses, while avoiding
-	 * the mistake-proneness of extremely long argument lists.
-	 *
-	 */
-	public static class Builder extends Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> {
-		private Builder() {}
+        @Override
+        public PassThroughEncoder build() {
+            //Must be instantiated so that super class can initialize
+            //boilerplate variables.
+            encoder = new PassThroughEncoder();
 
-		@Override
-		public PassThroughEncoder build() {
-			//Must be instantiated so that super class can initialize
-			//boilerplate variables.
-			encoder = new PassThroughEncoder();
+            //Call super class here
+            super.build();
 
-			//Call super class here
-			super.build();
+            ////////////////////////////////////////////////////////
+            //  Implementing classes would do setting of specific //
+            //  vars here together with any sanity checking       //
+            ////////////////////////////////////////////////////////
 
-			////////////////////////////////////////////////////////
-			//  Implementing classes would do setting of specific //
-			//  vars here together with any sanity checking       //
-			////////////////////////////////////////////////////////
+            ((PassThroughEncoder) encoder).init();
 
-			((PassThroughEncoder)encoder).init();
-
-			return (PassThroughEncoder)encoder;
-		}
-	}
+            return (PassThroughEncoder) encoder;
+        }
+    }
 }
