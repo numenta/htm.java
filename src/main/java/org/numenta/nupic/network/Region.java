@@ -135,6 +135,15 @@ public class Region {
         return this;
     }
     
+    /**
+     * Connects two layers to each other in a unidirectional fashion 
+     * with "toLayerName" representing the receiver or "sink" and "fromLayerName"
+     * representing the sender or "source".
+     * 
+     * @param toLayerName       the name of the sink layer
+     * @param fromLayerName     the name of the source layer
+     * @return
+     */
     public Region connect(String toLayerName, String fromLayerName) {
         if(sources == null) {
             sources = new HashSet<Layer<Inference>>();
@@ -151,16 +160,32 @@ public class Region {
         
         // Set source's pointer to its next Layer.
         out.next(in);
+        // Set the sink's pointer to its previous Layer
+        in.previous(out);
         // Connect out to in
         connect(in, out);
         
         return this;
     }
     
+    /**
+     * Does a straight associative lookup by first creating a composite
+     * key containing this {@code Region}'s name concatenated with the specified
+     * {@link Layer}'s name, and returning the result.
+     * 
+     * @param layerName
+     * @return
+     */
     public Layer<Inference> lookup(String layerName) {
         return layers.get(name.concat(":").concat(layerName));
     }
     
+    /**
+     * Called by {@link #start()}, {@link #observe()} and {@link #connect(Region)}
+     * to finalize the internal chain of {@link Layer}s contained by this {@code Region}.
+     * This method assigns the head and tail Layers and composes the {@link Observable}
+     * which offers this Region's emissions to any upstream {@link Region}s.
+     */
     private void completeAssembly() {
         if(!assemblyClosed) {
             if(tail == null) {
@@ -193,7 +218,7 @@ public class Region {
      * @param source
      * @param sink
      */
-    private <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
+    <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
         //Pass the Inference object from lowest to highest layer.
         // The passing of the Inference is done in an Observable so that
         // it happens on every pass through the chain, while the Encoder

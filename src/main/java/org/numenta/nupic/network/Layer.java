@@ -43,7 +43,7 @@ import rx.subjects.PublishSubject;
 
 /**
  * <p>
- * Implementation of the biological section of a region in the neocortex. Here,
+ * Implementation of the biological layer of a region in the neocortex. Here,
  * a {@code Layer} contains the physical structure (columns, cells, dendrites etc)
  * shared by a sequence of algorithms which serve to implement the predictive inferencing
  * present in this, the allegory to its biological equivalent.
@@ -105,7 +105,6 @@ import rx.subjects.PublishSubject;
 public class Layer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScalarEncoder.class);
 
-    @SuppressWarnings("unused")
     private Network parentNetwork;
     private Region parentRegion;
     
@@ -123,7 +122,7 @@ public class Layer<T> {
     private Observable<Inference> userObservable;
     private Inference currentInference;
     
-    FunctionFactory functions;
+    FunctionFactory factory;
 
     private int[] activeColumns;
     private int[] sparseActives;
@@ -134,7 +133,10 @@ public class Layer<T> {
     
     private String name;
     
+    private boolean isClosed;
+    
     private Layer<Inference> next;
+    private Layer<Inference> previous;
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
     private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
@@ -164,7 +166,7 @@ public class Layer<T> {
      * @param p     the {@link Parameters} to use with this {@code Layer}
      */
     public Layer(Network n, Parameters p) {
-        this("Layer " + System.currentTimeMillis(), n, p);
+        this("[Layer " + System.currentTimeMillis() + "]", n, p);
     }
     
     /**
@@ -179,13 +181,20 @@ public class Layer<T> {
         this.parentNetwork = n;
         this.params = p;
 
-        if(n == null || p == null) return;
+        if(n == null || p == null) {
+            if(n == null) {
+                LOGGER.warn("Attempt to instantiate Layer with null Network");
+            }else{
+                LOGGER.warn("Attempt to instantiate Layer with null Parameters");
+            }
+            return;
+        }
         connections = new Connections();
         this.params.apply(connections);
         
         this.autoCreateClassifiers = (Boolean)p.getParameterByKey(KEY.AUTO_CLASSIFY);
 
-        functions = new FunctionFactory();
+        factory = new FunctionFactory();
         
         observableDispatch = createDispatchMap();
     }
@@ -208,14 +217,7 @@ public class Layer<T> {
     @SuppressWarnings("unchecked")
     public Layer(Parameters params, MultiEncoder e, SpatialPooler sp, 
         TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
-
-        this.params = params;
-        this.encoder = e;
-        this.spatialPooler = sp;
-        this.temporalMemory = tm;
-        this.autoCreateClassifiers = autoCreateClassifiers;
-        this.anomalyComputer = a;
-
+        
         // Make sure we have a valid parameters object
         if(params == null) {
             throw new IllegalArgumentException("No parameters specified.");
@@ -227,10 +229,17 @@ public class Layer<T> {
                 "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
         }
 
+        this.params = params;
+        this.encoder = e;
+        this.spatialPooler = sp;
+        this.temporalMemory = tm;
+        this.autoCreateClassifiers = autoCreateClassifiers;
+        this.anomalyComputer = a;
+
         connections = new Connections();
         this.params.apply(connections);
 
-        functions = new FunctionFactory();
+        factory = new FunctionFactory();
 
         // Create Encoder hierarchy from definitions & auto create classifiers if specified
         if(encoder != null) {
@@ -239,7 +248,7 @@ public class Layer<T> {
                     KEY.FIELD_ENCODING_MAP));
             
             if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-                functions.inference.classifiers(makeClassifiers(encoder));
+                factory.inference.classifiers(makeClassifiers(encoder));
             }
         }
 
@@ -266,6 +275,10 @@ public class Layer<T> {
                 (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."),
                 (anomalyComputer == null ? "" : "Anomaly"));
         }
+    }
+    
+    public void init() {
+        
     }
 
     /**
@@ -336,8 +349,26 @@ public class Layer<T> {
      * @param encoder   the added MultiEncoder
      * @return          this Layer instance (in fluent-style)
      */
+    @SuppressWarnings("unchecked")
     public Layer<T> add(MultiEncoder encoder) {
         this.encoder = encoder;
+        
+        if(encoder.getEncoders(encoder) == null || encoder.getEncoders(encoder).size() < 1) {
+            if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null ||
+                ((Map<String, Map<String, Object>>)params.getParameterByKey(KEY.FIELD_ENCODING_MAP)).size() < 1) {
+                LOGGER.error("No field encoding map found for specified MultiEncoder");
+                throw new IllegalStateException("No field encoding map found for specified MultiEncoder");
+            }
+            
+            encoder.addMultipleEncoders(
+                (Map<String, Map<String, Object>>)params.getParameterByKey(
+                    KEY.FIELD_ENCODING_MAP));
+        }
+        
+        autoCreateClassifiers = (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY);
+        if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
+            factory.inference.classifiers(makeClassifiers(encoder));
+        }
         return this;
     }
 
@@ -347,6 +378,18 @@ public class Layer<T> {
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> add(SpatialPooler sp) {
+        if(sensor != null) {
+            connections.setNumInputs(sensor.getEncoder().getWidth());
+        }
+        // The exact dimensions don't have to be the same but the number of dimensions do!
+        int inputLength, columnLength = 0;
+        if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
+            (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+            LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
+                "(" + columnLength + ") in Parameters!");
+            
+            return this;
+        }
         this.spatialPooler = sp;
         spatialPooler.init(connections);
         activeColumns = new int[connections.getNumColumns()];
@@ -407,8 +450,17 @@ public class Layer<T> {
     }
     
     /**
+     * Processes a single element, sending the specified input up the configured 
+     * chain of algorithms or components within this {@code Layer}; resulting in
+     * any {@link Subscriber}s or {@link Observer}s being notified of results corresponding
+     * to the specified input (unless a {@link SpatialPooler} "primer delay" has 
+     * been configured).
      * 
-     * @param t
+     * The first input to the Layer invokes a method to resolve the transformer at the
+     * bottom of the input chain, therefore the "type" (&lt;T&gt;) of the input cannot
+     * be changed once this method is called for the first time.
+     * 
+     * @param t     the input object who's type is generic.
      */
     public void compute(T t) {
         increment();
@@ -430,7 +482,7 @@ public class Layer<T> {
         this.encoder = encoder == null ? sensor.getEncoder() : encoder;
         
         if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-            functions.inference.classifiers(makeClassifiers(encoder));
+            factory.inference.classifiers(makeClassifiers(encoder));
         }
         
         completeDispatch((T)new int[] {});
@@ -439,8 +491,9 @@ public class Layer<T> {
             public void run() {
                 LOGGER.debug("Sensor Layer started input stream processing.");
                 
+                // Applies "terminal" function, at this point the input stream is  "sealed".
                 sensor.getOutputStream().forEach(intArray -> {
-                    ((ManualInput)Layer.this.functions.inference).encoding(intArray);
+                    ((ManualInput)Layer.this.factory.inference).encoding(intArray);
                     Layer.this.compute((T)intArray);
                 });
             }
@@ -466,6 +519,25 @@ public class Layer<T> {
      */
     public Layer<Inference> getNext() {
         return next;
+    }
+    
+    /**
+     * Sets a pointer to the "previous" Layer in this {@code Layer}'s 
+     * {@link Observable} sequence.
+     * @param l
+     */
+    public void previous(Layer<Inference> l) {
+        this.previous = l;
+    }
+    
+    /**
+     * Returns the previous Layer preceding this Layer in order of 
+     * process flow.
+     * 
+     * @return
+     */
+    public Layer<Inference> getPrevious() {
+        return previous;
     }
     
     /**
@@ -634,9 +706,9 @@ public class Layer<T> {
         // Preserve the top-most Observable's classifiers making sure they 
         // are not overwritten by null references in previous Observable's 
         // because the classifiers are always on the top most layer.
-        NamedTuple temp = functions.inference.getClassifiers();
-        currentInference = functions.inference = (ManualInput)inference;
-        functions.inference.classifiers = temp;
+        NamedTuple temp = factory.inference.getClassifiers();
+        currentInference = factory.inference = (ManualInput)inference;
+        factory.inference.classifiers = temp;
         
         return inference;
     }
@@ -665,8 +737,8 @@ public class Layer<T> {
     }
     
     /**
-     * Internally called during assembly to pass the field defining encoders
-     * up the chain to where a Observable encapsulating a CLAClassifier can make
+     * Internally called during assembly (see {@link Region#connect(Layer, Layer)}) to pass the field defining encoders
+     * up the chain to where a Layer encapsulating CLAClassifiers can make
      * use of the encoder to define its classifiers.
      * 
      * @param encoder
@@ -674,7 +746,7 @@ public class Layer<T> {
     void passEncoder(MultiEncoder encoder) {
         this.encoder = encoder;
         if(((Boolean)getParameters().getParameterByKey(KEY.AUTO_CLASSIFY))) {
-            functions.inference.classifiers(makeClassifiers(encoder));
+            factory.inference.classifiers(makeClassifiers(encoder));
         }
     }
 
@@ -801,14 +873,20 @@ public class Layer<T> {
         
         publisher = PublishSubject.create();
         
-        observableDispatch.put((Class<T>)Map.class, functions.createMultiMapFunc(publisher));
-        observableDispatch.put((Class<T>)ManualInput.class, functions.createSensorInputFunc(publisher));
-        observableDispatch.put((Class<T>)String[].class, functions.createEncoderFunc(publisher));
-        observableDispatch.put((Class<T>)int[].class, functions.createVectorFunc(publisher));
+        observableDispatch.put((Class<T>)Map.class, factory.createMultiMapFunc(publisher));
+        observableDispatch.put((Class<T>)ManualInput.class, factory.createSensorInputFunc(publisher));
+        observableDispatch.put((Class<T>)String[].class, factory.createEncoderFunc(publisher));
+        observableDispatch.put((Class<T>)int[].class, factory.createVectorFunc(publisher));
         
         return observableDispatch;
     }
     
+    /**
+     * If this Layer has a Sensor, map its encoder's buckets
+     * 
+     * @param sequence
+     * @return
+     */
     private Observable<ManualInput> mapEncoderBuckets(Observable<ManualInput> sequence) {
         if(hasSensor()) {
             sequence = sequence.map(m -> {
@@ -893,25 +971,25 @@ public class Layer<T> {
         if(spatialPooler != null) {
             Integer skipCount = 0;
             if((skipCount = ((Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY))) != null) {
-                o = o.map(functions.createSpatialFunc(spatialPooler)).skip(skipCount.intValue());
+                o = o.map(factory.createSpatialFunc(spatialPooler)).skip(skipCount.intValue());
             }else{
-                o = o.map(functions.createSpatialFunc(spatialPooler));
+                o = o.map(factory.createSpatialFunc(spatialPooler));
             }
         }
 
         // Temporal Memory config
         if(temporalMemory != null) {
-            o = o.map(functions.createTemporalFunc(temporalMemory));
+            o = o.map(factory.createTemporalFunc(temporalMemory));
         }
 
         // Classifier config
         if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-            o = o.map(functions.createClassifierFunc());
+            o = o.map(factory.createClassifierFunc());
         }
 
         // Anomaly config
         if(anomalyComputer != null) {
-            o = o.map(functions.createAnomalyFunc(anomalyComputer));
+            o = o.map(factory.createAnomalyFunc(anomalyComputer));
         }
 
         return o;
@@ -1214,7 +1292,7 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    return t1.sdr(spatialInput(t1.getSDR()));
+                    return t1.sdr(spatialInput(t1.getSDR())).activeColumns(t1.getSDR());
                 }
             };
         }
@@ -1224,9 +1302,11 @@ public class Layer<T> {
                 @Override
                 public ManualInput call(ManualInput t1) {
                     if(isDenseInput) {
-                        t1 = t1.sdr(sparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1)));
+                        t1 = t1.sdr(
+                           sparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1)))
+                               .sparseActives(t1.getSDR());
                     }
-                    return t1.sdr(temporalInput(t1.getSDR()));
+                    return t1.sdr(temporalInput(t1.getSDR())).predictedColumns(t1.getSDR());
                 }
             };
         }
@@ -1260,7 +1340,7 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    return t1.anomalyScore(anomalyComputer.compute(getSparseActives(), previousPrediction, 0, 0));
+                    return t1.anomalyScore(anomalyComputer.compute(t1.getSparseActives(), t1.getPreviousPrediction(), 0, 0));
                 }
             };
         }

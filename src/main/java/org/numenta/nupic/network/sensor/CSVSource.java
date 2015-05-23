@@ -165,7 +165,7 @@ public class CSVSource  implements MetaSource {
                     if(fieldTypes[typeIndex] == FieldMetaType.DATETIME) { 
                         if(format == null) {
                             throw new IllegalStateException(
-                                    "DateField requires pattern configuration on construction.");
+                                "DateField requires pattern configuration on construction.");
                         }
 
                         return format.parseDateTime(body.get(idx)[typeIndex]);

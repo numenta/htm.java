@@ -1,4 +1,4 @@
-package org.numenta.nupic.network.sensor;
+ package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
 /**
@@ -41,6 +42,10 @@ public class ManualInput implements Inference {
     private Object layerInput;
     private int[] sdr;
     private int[] encoding;
+    private int[] activeColumns;
+    private int[] sparseActives;
+    private int[] previousPrediction;
+    private int[] currentPrediction;
     private Map<String,ClassifierResult<Object>> classification;
     private double anomalyScore;
     
@@ -259,5 +264,84 @@ public class ManualInput implements Inference {
         this.anomalyScore = d;
         return this;
     }
+    
+    /**
+     * Returns the column activation from a {@link SpatialPooler}
+     * @return
+     */
+    @Override
+    public int[] getActiveColumns() {
+        return activeColumns;
+    }
+    
+    /**
+     * Sets the column activation from a {@link SpatialPooler}
+     * @param cols
+     * @return
+     */
+    public ManualInput activeColumns(int[] cols) {
+        this.activeColumns = cols;
+        return this;
+    }
+    
+    /**
+     * Returns the column activations in sparse form
+     * @return
+     */
+    @Override
+    public int[] getSparseActives() {
+        if(sparseActives == null && activeColumns != null) {
+            sparseActives = ArrayUtils.where(activeColumns, ArrayUtils.WHERE_1);
+        }
+        return sparseActives;
+    }
 
+    /**
+     * Sets the column activations in sparse form.
+     * @param cols
+     * @return
+     */
+    public ManualInput sparseActives(int[] cols) {
+        this.sparseActives = cols;
+        return this;
+    }
+    
+    /**
+     * Returns the predicted output from the last inference cycle.
+     * @return
+     */
+    @Override
+    public int[] getPreviousPrediction() {
+        return previousPrediction;
+    }
+    
+    /**
+     * Sets the previous predicted columns.
+     * @param cols
+     * @return
+     */
+    public ManualInput previousPrediction(int[] cols) {
+        this.previousPrediction = cols;
+        return this;
+    }
+    
+    /**
+     * Returns the currently predicted columns.
+     * @return
+     */
+    @Override
+    public int[] getPredictedColumns() {
+        return currentPrediction;
+    }
+    
+    /**
+     * Sets the currently predicted columns
+     * @param cols
+     * @return
+     */
+    public ManualInput predictedColumns(int[] cols) {
+        previousPrediction = currentPrediction;
+        this.currentPrediction = cols;
+        return this;
+    }
 }

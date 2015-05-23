@@ -71,5 +71,24 @@ public interface Inference {
      * @return
      */
     public double getAnomalyScore();
-
+    /**
+     * Returns the column activation from a {@link SpatialPooler}
+     * @return
+     */
+    public int[] getActiveColumns();
+    /**
+     * Returns the column activations in sparse form
+     * @return
+     */
+    public int[] getSparseActives();
+    /**
+     * Returns the predicted output from the last inference cycle.
+     * @return
+     */
+    public int[] getPreviousPrediction();
+    /**
+     * Returns the currently predicted columns.
+     * @return
+     */
+    public int[] getPredictedColumns();
 }

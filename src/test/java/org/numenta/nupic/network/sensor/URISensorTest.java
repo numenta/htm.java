@@ -22,6 +22,7 @@ public class URISensorTest {
 
     /**
      * Ignored - but may be run manually for testing and regression
+     * To run this test change the "@Ignore" annotation to "@Test"
      */
     @Ignore
     public void test() {

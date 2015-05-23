@@ -12,7 +12,7 @@ import rx.Observable;
  * </p>
  * <p>
  * <pre>
- * Sensor.create(FileSensor::create, SensorParams); //Can be URISensor, or ObservableSensor
+ * Sensor.create(FileSensor::create, SensorParams); //Can be URISensor::create, or ObservableSensor::create
  * </pre>
  * <p>
  * 

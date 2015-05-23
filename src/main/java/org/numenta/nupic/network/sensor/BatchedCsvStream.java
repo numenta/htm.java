@@ -73,7 +73,7 @@ import org.numenta.nupic.util.Tuple;
  * @param <T> The Type of data on each line of this Stream (String[] for this implementation)
  */
 public class BatchedCsvStream<T> implements MetaStream<T> {
-    // TOP TWO CLASSES ARE THE BatchSpliterator AND THE CsvStreamHeader //
+    // TOP TWO CLASSES ARE THE BatchSpliterator AND THE BatchedCsvHeader //
     // See main() at bottom for localized mini-test
     
     //////////////////////////////////////////////////////////////

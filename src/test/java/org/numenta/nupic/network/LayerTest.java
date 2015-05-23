@@ -198,7 +198,7 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                //System.out.println("output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("output = " + Arrays.toString(output.getSDR()));
                 assertTrue(Arrays.equals(expected[seq++], output.getSDR()));
             }
         });
@@ -208,7 +208,7 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                //System.out.println("output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("output2 = " + Arrays.toString(output.getSDR()));
                 assertTrue(Arrays.equals(expected[seq++], output.getSDR()));
             }
         });
@@ -743,7 +743,7 @@ public class LayerTest {
             public void onNext(Inference i) {
                 assertNotNull(i);
                 TOTAL++;
-                // UNCOMMENT TO VIEW STABILIZATION
+                // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
                 // System.out.println("Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + Arrays.toString(ArrayUtils.where(l.getActiveColumns(), ArrayUtils.WHERE_1)) +
                 // "   -   " + Arrays.toString(l.getPreviousPredictedColumns()));
             }

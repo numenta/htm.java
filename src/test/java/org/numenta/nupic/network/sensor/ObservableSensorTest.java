@@ -16,7 +16,24 @@ import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import rx.Observable;
 
 
-
+/**
+ * <ul>
+ * <li>Test that the ObservableSensor can be created using the same
+ * idioms as other {@link Sensor} types.
+ * </li>
+ * <li>Test that the {@link SensorFactory}
+ * "functional" method of creation works generically.
+ * </li>
+ * <li>Test that a {@link Stream}
+ * can be retrieved from the Sensor, and that that Stream can be "operated"
+ * upon. 
+ * </li>
+ * <li>Test that the Stream operation results are consistent.
+ * </li>
+ * </ul>
+ * 
+ * @author David Ray
+ */
 public class ObservableSensorTest {
     
     @SuppressWarnings("unchecked")
@@ -33,6 +50,22 @@ public class ObservableSensorTest {
     }
 
 
+    /**
+     * <ul>
+     * <li>Test that the ObservableSensor can be created using the same
+     * idioms as other {@link Sensor} types.
+     * </li>
+     * <li>Test that the {@link SensorFactory}
+     * "functional" method of creation works generically.
+     * </li>
+     * <li>Test that a {@link Stream}
+     * can be retrieved from the Sensor, and that that Stream can be "operated"
+     * upon. 
+     * </li>
+     * <li>Test that the Stream operation results are consistent.
+     * </li>
+     * </ul>
+     */
     @Test
     public void testCanRetrieveStream() {
         Object[] n = { "some name", makeObservable() };
@@ -41,7 +74,5 @@ public class ObservableSensorTest {
         long count = sensor.getInputStream().count();
         assertEquals(4391, count);
     }
-    
-    
 
 }

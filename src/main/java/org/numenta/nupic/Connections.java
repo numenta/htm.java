@@ -364,6 +364,10 @@ public class Connections {
         return random;
     }
 
+    /**
+     * Sets the random number generator.
+     * @param random
+     */
     public void setRandom(Random random){
         this.random = random;
     }
@@ -423,6 +427,11 @@ public class Connections {
         return numInputs;
     }
     
+    /**
+     * Sets the product of the input dimensions to
+     * establish a flat count of bits in the input field.
+     * @param n
+     */
     public void setNumInputs(int n) {
     	this.numInputs = n;
     }
@@ -435,6 +444,11 @@ public class Connections {
         return numColumns;
     }
     
+    /**
+     * Sets the product of the column dimensions to be 
+     * the column count.
+     * @param n
+     */
     public void setNumColumns(int n) {
     	this.numColumns = n;
     }

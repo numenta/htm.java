@@ -81,6 +81,7 @@ public class Parameters {
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
         defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
+        defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
         defaultParams.putAll(DEFAULTS_TEMPORAL);
 
@@ -104,6 +105,7 @@ public class Parameters {
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
         defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
         defaultSpatialParams.put(KEY.SP_VERBOSITY, 0);
+        defaultSpatialParams.put(KEY.LEARN, true);
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
         
@@ -142,6 +144,10 @@ public class Parameters {
          * Total number of cells per column
          */
         CELLS_PER_COLUMN("cellsPerColumn", Integer.class, 1, null),
+        /**
+         * Learning variable
+         */
+        LEARN("learn", Boolean.class),
         /**
          * Random Number Generator
          */

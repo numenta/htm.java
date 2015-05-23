@@ -110,6 +110,14 @@ public class HTMSensor<T> implements Sensor<T> {
         }
     }
     
+    /**
+     * Sets up a mapping which describes the order of occurrence of comma
+     * separated fields - mapping their ordinal position to the {@link Encoder}
+     * which services the encoding of the field occurring in that position. This
+     * sequence of types is contained by an instance of {@link SensorInputMeta} which
+     * makes available an array of {@link FieldMetaType}s.
+     *    
+     */
     private void makeIndexEncoderMap() {
         indexToEncoderMap = new TIntObjectHashMap<Encoder<?>>();
         
@@ -160,11 +168,30 @@ public class HTMSensor<T> implements Sensor<T> {
         
     }
 
+    /**
+     * Returns an instance of {@link SensorParams} used 
+     * to initialize the different types of Sensors with
+     * their resource location or source object.
+     * 
+     * @return a {@link SensorParams} object.
+     */
     @Override
     public SensorParams getParams() {
         return delegate.getParams();
     }
 
+    /**
+     * <p>
+     * Main method by which this Sensor's information is retrieved.
+     * </p><p>
+     * This method returns a subclass of Stream ({@link MetaStream})
+     * capable of returning a flag indicating whether a terminal operation
+     * has been performed on the stream (i.e. see {@link MetaStream#isTerminal()});
+     * in addition the MetaStream returned can return meta information (see
+     * {@link MetaStream#getMeta()}.
+     * </p>
+     * @return  a {@link MetaStream} instance.
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <K> MetaStream<K> getInputStream() {
@@ -228,10 +255,19 @@ public class HTMSensor<T> implements Sensor<T> {
             Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
     }
     
+    /**
+     * Returns an array of field names in the order of column head occurrence.
+     * 
+     * @return
+     */
     public String[] getFieldNames() {
         return (String[])meta.getFieldNames().toArray(new String[meta.getFieldNames().size()]);
     }
     
+    /**
+     * Returns an array of {@link FieldMetaType}s in the order of field occurrence.
+     * @return
+     */
     public FieldMetaType[] getFieldTypes() {
         return meta.getFieldTypes().toArray(new FieldMetaType[meta.getFieldTypes().size()]);
     }
@@ -300,6 +336,14 @@ public class HTMSensor<T> implements Sensor<T> {
         return i;
     }
     
+    /**
+     * Searches through the specified {@link MultiEncoder}'s previously configured 
+     * encoders to find and return one that is of type {@link CoordinateEncoder} or
+     * {@link GeospatialCoordinateEncoder}
+     * 
+     * @param enc   the containing {@code MultiEncoder}
+     * @return
+     */
     private Optional<Encoder<?>> getCoordinateEncoder(MultiEncoder enc) {
         for(EncoderTuple t : enc.getEncoders(enc)) {
             if((t.getEncoder() instanceof CoordinateEncoder) ||
@@ -311,6 +355,14 @@ public class HTMSensor<T> implements Sensor<T> {
         return null;
     }
     
+    /**
+     * Searches through the specified {@link MultiEncoder}'s previously configured 
+     * encoders to find and return one that is of type {@link CategoryEncoder} or
+     * {@link SDRCategoryEncoder}
+     * 
+     * @param enc   the containing {@code MultiEncoder}
+     * @return
+     */
     private Optional<Encoder<?>> getCategoryEncoder(MultiEncoder enc) {
         for(EncoderTuple t : enc.getEncoders(enc)) {
             if((t.getEncoder() instanceof CategoryEncoder) ||
@@ -322,6 +374,13 @@ public class HTMSensor<T> implements Sensor<T> {
         return null;
     }
     
+    /**
+     * Searches through the specified {@link MultiEncoder}'s previously configured 
+     * encoders to find and return one that is of type {@link DateEncoder}
+     * 
+     * @param enc   the containing {@code MultiEncoder}
+     * @return
+     */
     private Optional<DateEncoder> getDateEncoder(MultiEncoder enc) {
        for(EncoderTuple t : enc.getEncoders(enc)) {
            if(t.getEncoder() instanceof DateEncoder) {
@@ -332,6 +391,15 @@ public class HTMSensor<T> implements Sensor<T> {
        return Optional.of(null);
     }
     
+    /**
+     * Searches through the specified {@link MultiEncoder}'s previously configured 
+     * encoders to find and return one that is of type {@link ScalarEncoder},
+     * {@link RandomDistributedScalarEncoder}, {@link AdaptiveScalarEncoder},
+     * {@link LogEncoder} or {@link DeltaEncoder}.
+     * 
+     * @param enc   the containing {@code MultiEncoder}
+     * @return
+     */
     private Optional<Encoder<?>> getNumberEncoder(MultiEncoder enc) {
         for(EncoderTuple t : enc.getEncoders(enc)) {
             if((t.getEncoder() instanceof RandomDistributedScalarEncoder) ||
@@ -562,6 +630,10 @@ public class HTMSensor<T> implements Sensor<T> {
         }
     }
     
+    /**
+     * Returns this {@code HTMSensor}'s {@link MultiEncoder}
+     * @return
+     */
     public <K> MultiEncoder getEncoder() {
         return (MultiEncoder)encoder;
     }

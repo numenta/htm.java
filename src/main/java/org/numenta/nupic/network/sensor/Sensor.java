@@ -51,8 +51,11 @@ public interface Sensor<T> {
     }
     
     /**
-     * Returns the {@link SensorParams} containing source input configuration details.
-     * @return
+     * Returns an instance of {@link SensorParams} used 
+     * to initialize the different types of Sensors with
+     * their resource location or source object.
+     * 
+     * @return a {@link SensorParams} object.
      */
     public SensorParams getParams();
     
