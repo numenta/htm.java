@@ -297,7 +297,7 @@ public interface Network {
          */
         @Override
         public MultiEncoder getEncoder() {
-            return sensor.getEncoder();
+            return this.encoder;
         }
         
         /**

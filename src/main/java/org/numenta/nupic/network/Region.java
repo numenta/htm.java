@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.network.sensor.Sensor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -38,6 +40,8 @@ import rx.Subscriber;
  *
  */
 public class Region {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
+    
     private Network network;
     private Map<String, Layer<Inference>> layers = new HashMap<>();
     private Observable<Inference> regionObservable;
@@ -51,12 +55,42 @@ public class Region {
     private HashSet<Layer<Inference>> sources;
     private HashSet<Layer<Inference>> sinks;
     
+    private Object input;
+    
     
     private String name;
     
     public Region(String name, Network container) {
         this.name = name;
         this.network = container;
+    }
+    
+    /**
+     * Closes the Region and completes the finalization of its assembly.
+     * After this call, any attempt to mutate the structure of a Region
+     * will result in an {@link IllegalStateException} being thrown.
+     * 
+     * @return
+     */
+    public Region close() {
+        completeAssembly();
+        
+        Layer<?> l = tail;
+        do {
+            l.close();
+        }while((l = l.getNext()) != null);
+        
+        return this;
+    }
+    
+    /**
+     * Returns a flag indicating whether this {@code Region} has had
+     * its {@link #close} method called, or not.
+     * 
+     * @return
+     */
+    public boolean assemblyClosed() {
+        return assemblyClosed;
     }
     
     /**
@@ -69,43 +103,52 @@ public class Region {
      */
     @SuppressWarnings("unchecked")
     public <T> void compute(T input) {
+        this.input = input;
         ((Layer<T>)tail).compute(input);
     }
     
     /**
-     * 1. From the second added layer on, we connect the previous last layer to the incoming
-     * layer via subscription to the incoming layer's observable.
+     * Returns the current input into the region. This value changes
+     * after every call to {@link Region#compute(Object)}.
      * 
-     * 2. We add a step in the incoming layer's Observable, creating another observable which passes
-     * the incoming layer's Inference object to the next higher up (the previous last layer). This
-     * has the effect of passing the bottom most Inference all the way up the chain of layers. In this
-     * way, the layer containing the Sensor can propagate the encoder inputs and bucket indexes up the chain
-     * to the top-most layer which contains the classifier which uses it. Note: this will also work for 
-     * "spoofed" out entries which don't come from an encoder but do come from manually composed ManualInputs.
-     * 
-     * 3. If the layer being added is the one with the Sensor, we get the Sensor from the layer and set it on the 
-     * Network object - so that it may be referenced from any Region.
-     * 
-     * 4. We then call passEncoder which passes the lower Layer's contained Sensor's Encoder if 
-     * it exists. 
-     * 
-     * 5. If the "receiving" layer is configured to autoCreateClassifiers, the passEncoder method 
-     * will then create classifiers for each field in the passed encoder.
-     * 
+     * @return
+     */
+    public Object getInput() {
+        return input;
+    }
+    
+    /**
+     * Adds the specified {@link Layer} to this {@code Region}. 
      * @param l
      * @return
+     * @throws IllegalStateException if Region is already closed
+     * @throws IllegalArgumentException if a Layer with the same name already exists.
      */
     @SuppressWarnings("unchecked")
     public Region add(Layer<?> l) {
+        if(assemblyClosed) {
+            throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
+        }
+        
+        if(sources == null) {
+            sources = new HashSet<Layer<Inference>>();
+            sinks = new HashSet<Layer<Inference>>();
+        }
+        
         // Set the sensor reference for global access.
         if(l.hasSensor()) {
             network.setSensor(l.getSensor());
             network.setEncoder(l.getSensor().getEncoder());
-            tail = l;
         }
         
-        l.name(name.concat(":").concat(l.getName()));
+        String layerName = name.concat(":").concat(l.getName());
+        if(layers.containsKey(layerName)) {
+            throw new IllegalArgumentException("A Layer with the name: " + l.getName() + " has already been added.");
+        }
+        
+        l.name(layerName);
         layers.put(l.getName(), (Layer<Inference>)l);
+        l.setRegion(this);
         
         return this;
     }
@@ -118,20 +161,46 @@ public class Region {
         return name;
     }
     
+    /**
+     * Returns an {@link Observable} which can be used to receive
+     * {@link Inference} emissions from this {@code Region}
+     * @return
+     */
     public Observable<Inference> observe() {
-        completeAssembly();
         return regionObservable;
     }
     
+    /**
+     * Calls {@link Layer#start()} on this Region's input {@link Layer} if 
+     * that layer contains a {@link Sensor}. If not, this method has no 
+     * effect.
+     */
     public void start() {
-        completeAssembly();
         if(tail.hasSensor()) {
+            LOGGER.info("Starting Region [" + getName() + "] input Layer thread.");
             tail.start();
+        }else{
+            LOGGER.warn("Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
         }
     }
     
+    public void stop() {
+        LOGGER.debug("Stop called on Region [" + getName() + "]");
+        if(tail != null) {
+            tail.halt();
+        }
+        LOGGER.debug("Region [" + getName() + "] stopped.");
+    }
+    
+    /**
+     * Connects the output of the specified {@code Region} to the 
+     * input of this Region
+     * 
+     * @param inputRegion   the Region who's emissions will be observed by 
+     *                      this Region.
+     * @return
+     */
     public Region connect(Region inputRegion) {
-        completeAssembly();
         return this;
     }
     
@@ -143,11 +212,11 @@ public class Region {
      * @param toLayerName       the name of the sink layer
      * @param fromLayerName     the name of the source layer
      * @return
+     * @throws IllegalStateException if Region is already closed
      */
     public Region connect(String toLayerName, String fromLayerName) {
-        if(sources == null) {
-            sources = new HashSet<Layer<Inference>>();
-            sinks = new HashSet<Layer<Inference>>();
+        if(assemblyClosed) {
+            throw new IllegalStateException("Cannot connect Layers when Region has already been closed.");
         }
         
         Layer<Inference> in = lookup(toLayerName);
@@ -158,9 +227,9 @@ public class Region {
             throw new IllegalArgumentException("Could not lookup (from) Layer with name: " + fromLayerName);
         }
         
-        // Set source's pointer to its next Layer.
+        // Set source's pointer to its next Layer --> (sink : going upward).
         out.next(in);
-        // Set the sink's pointer to its previous Layer
+        // Set the sink's pointer to its previous Layer --> (source : going downward)
         in.previous(out);
         // Connect out to in
         connect(in, out);
@@ -189,20 +258,28 @@ public class Region {
     private void completeAssembly() {
         if(!assemblyClosed) {
             if(tail == null) {
-                Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sources);
-                temp.removeAll(sinks);
-                if(temp.size() != 1) {
-                    throw new IllegalArgumentException("Detected misconfigured Region too many or too few sinks.");
+                if(layers.size() > 1) {
+                    Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sources);
+                    temp.removeAll(sinks);
+                    if(temp.size() != 1) {
+                        throw new IllegalArgumentException("Detected misconfigured Region too many or too few sinks.");
+                    }
+                    tail = temp.iterator().next();
+                }else{
+                    tail = layers.values().iterator().next();
                 }
-                tail = temp.iterator().next();
             }
             if(head == null) {
-                Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sinks);
-                temp.removeAll(sources);
-                if(temp.size() != 1) {
-                    throw new IllegalArgumentException("Detected misconfigured Region too many or too few sources.");
+                if(layers.size() > 1) {
+                    Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sinks);
+                    temp.removeAll(sources);
+                    if(temp.size() != 1) {
+                        throw new IllegalArgumentException("Detected misconfigured Region too many or too few sources.");
+                    }
+                    head = temp.iterator().next();
+                }else{
+                    head = layers.values().iterator().next();
                 }
-                head = temp.iterator().next();
                 
                 regionObservable = head.observe();
             }
@@ -215,10 +292,15 @@ public class Region {
      * taking care of other connection details such as passing the inference
      * up the chain and any possible encoder.
      * 
-     * @param source
-     * @param sink
+     * @param in         the sink end of the connection between two layers
+     * @param out        the source end of the connection between two layers
+     * @throws IllegalStateException if Region is already closed
      */
     <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
+        if(assemblyClosed) {
+            throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
+        }
+        
         //Pass the Inference object from lowest to highest layer.
         // The passing of the Inference is done in an Observable so that
         // it happens on every pass through the chain, while the Encoder
@@ -229,7 +311,9 @@ public class Region {
             in.passInference(i);
             return i;
         });
-        in.passEncoder(out.getEncoder());
+        if(out.getEncoder() != null) {
+            in.passEncoder(out.getEncoder());
+        }
         
         sources.add(out);
         sinks.add(in);

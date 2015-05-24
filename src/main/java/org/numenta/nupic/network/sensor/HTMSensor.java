@@ -443,7 +443,7 @@ public class HTMSensor<T> implements Sensor<T> {
     }
 
     /**
-     * Sets the global parameters used to configure the major
+     * Sets the local parameters used to configure the major
      * algorithmic components.
      */
     @SuppressWarnings("unchecked")

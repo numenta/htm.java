@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
@@ -21,7 +22,6 @@ import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -103,7 +103,7 @@ import rx.subjects.PublishSubject;
  * @see LayerTest
  */
 public class Layer<T> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScalarEncoder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
 
     private Network parentNetwork;
     private Region parentRegion;
@@ -134,6 +134,7 @@ public class Layer<T> {
     private String name;
     
     private boolean isClosed;
+    private boolean isHalted;
     
     private Layer<Inference> next;
     private Layer<Inference> previous;
@@ -190,7 +191,6 @@ public class Layer<T> {
             return;
         }
         connections = new Connections();
-        this.params.apply(connections);
         
         this.autoCreateClassifiers = (Boolean)p.getParameterByKey(KEY.AUTO_CLASSIFY);
 
@@ -214,7 +214,6 @@ public class Layer<T> {
      *                                  necessary to create the required encoders.
      * @param a                         (optional) An {@link Anomaly} computer.
      */
-    @SuppressWarnings("unchecked")
     public Layer(Parameters params, MultiEncoder e, SpatialPooler sp, 
         TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
         
@@ -237,33 +236,7 @@ public class Layer<T> {
         this.anomalyComputer = a;
 
         connections = new Connections();
-        this.params.apply(connections);
-
         factory = new FunctionFactory();
-
-        // Create Encoder hierarchy from definitions & auto create classifiers if specified
-        if(encoder != null) {
-            encoder.addMultipleEncoders(
-                (Map<String, Map<String, Object>>)params.getParameterByKey(
-                    KEY.FIELD_ENCODING_MAP));
-            
-            if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-                factory.inference.classifiers(makeClassifiers(encoder));
-            }
-        }
-
-        // Let the SpatialPooler initialize the matrix with its requirements
-        if(spatialPooler != null) {
-            spatialPooler.init(connections);
-        }
-
-        // Let the TemporalMemory initialize the matrix with its requirements
-        if(temporalMemory != null) {
-            temporalMemory.init(connections);
-        }
-
-        this.activeColumns = new int[connections.getNumColumns()];
-        this.cellsPerColumn = connections.getCellsPerColumn();
         
         observableDispatch = createDispatchMap();
 
@@ -277,10 +250,127 @@ public class Layer<T> {
         }
     }
     
-    public void init() {
-        
+    /**
+     * Sets the parent region which contains this {@code Layer}
+     * @param r
+     */
+    public void setRegion(Region r) {
+        this.parentRegion = r;
     }
+    
+    /**
+     * Finalizes the initialization in one method call so that side effect operations
+     * to share objects and other special initialization tasks can happen all at once
+     * in a central place for maintenance ease.
+     */
+    @SuppressWarnings("unchecked")
+    public void close() {
+        params.apply(connections);
+        
+        if(sensor != null) {
+            encoder = encoder == null ? sensor.getEncoder() : encoder;
+            sensor.setLocalParameters(params);
+            connections.setNumInputs(encoder.getWidth());
+        }
 
+        // Create Encoder hierarchy from definitions & auto create classifiers if specified
+        if(encoder != null) {
+            if(encoder.getEncoders(encoder) == null || encoder.getEncoders(encoder).size() < 1) {
+                if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null ||
+                    ((Map<String, Map<String, Object>>)params.getParameterByKey(KEY.FIELD_ENCODING_MAP)).size() < 1) {
+                    LOGGER.error("No field encoding map found for specified MultiEncoder");
+                    throw new IllegalStateException("No field encoding map found for specified MultiEncoder");
+                }
+                
+                encoder.addMultipleEncoders(
+                    (Map<String, Map<String, Object>>)params.getParameterByKey(
+                        KEY.FIELD_ENCODING_MAP));
+            }
+            
+            int inputLength, columnLength = 0;
+            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
+                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+                
+                int[] calculatedInputDims = getCompatibleInputDimsForColumnDims(
+                    encoder.getWidth(), ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length);
+                
+                LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
+                    "(" + columnLength + ") in Parameters - now attempting to fix it.");
+                            
+                LOGGER.warn("Using calculated input dimensions: " + Arrays.toString(calculatedInputDims));             
+                
+                params.setInputDimensions(calculatedInputDims);
+                connections.setInputDimensions(calculatedInputDims);
+            }
+            
+            autoCreateClassifiers = autoCreateClassifiers != null && 
+                (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
+            
+            if(autoCreateClassifiers != null && 
+                autoCreateClassifiers.booleanValue() &&
+                    (factory.inference.getClassifiers() == null || factory.inference.getClassifiers().size() < 1)) {
+                factory.inference.classifiers(makeClassifiers(encoder));
+            }
+        }
+
+        // Let the SpatialPooler initialize the matrix with its requirements
+        if(spatialPooler != null) {
+            // The exact dimensions don't have to be the same but the number of dimensions do!
+            int inputLength, columnLength = 0;
+            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
+                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+                LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
+                    "(" + columnLength + ") in Parameters!");
+                
+                return;
+            }
+            spatialPooler.init(connections);
+        }
+
+        // Let the TemporalMemory initialize the matrix with its requirements
+        if(temporalMemory != null) {
+            temporalMemory.init(connections);
+        }
+
+        this.activeColumns = new int[connections.getNumColumns()];
+        this.cellsPerColumn = connections.getCellsPerColumn();
+        
+        this.isClosed = true;
+    }
+    
+    /**
+     * Given an input field width and Spatial Pooler dimensionality; this
+     * method will return an array of dimension sizes whose number is equal
+     * to the number of column dimensions. The sum of the returned dimensions
+     * will be equal to the flat input field width specified. 
+     * 
+     * This method should be called when a disparity in dimensionality between
+     * the input field and the number of column dimensions is detected. Otherwise
+     * if the input field dimensionality is correctly specified, this method 
+     * should <b>not</b> be used.
+     * 
+     * @param flatSize          the flat input width of an {@link Encoder}'s output or the
+     *                          vector used as input to the {@link SpatialPooler}
+     * @param numColumnDims     a number specifying the number of column dimensions that 
+     *                          should be returned.
+     * @return
+     */
+    public int[] getCompatibleInputDimsForColumnDims(int inputWidth, int numColumnDims) {
+        double flatSize = inputWidth;
+        double numColDims = numColumnDims;
+        double sliceArrangement = Math.pow(flatSize, 1/numColDims);
+        double remainder = sliceArrangement % (int)sliceArrangement;
+        int[] retVal = new int[(int)numColDims];
+        if(remainder > 0) {
+            for(int i = 0;i < numColDims - 1;i++) retVal[i] = 1;
+            retVal[(int)numColDims - 1] = (int)flatSize;
+        }else{
+            for(int i = 0;i < numColDims;i++) retVal[i] = (int)sliceArrangement; 
+        }
+        
+        return retVal;
+    }
+    
     /**
      * Returns an {@link Observable} that can be subscribed to, or
      * otherwise operated upon by a 
@@ -320,15 +410,38 @@ public class Layer<T> {
     
     /**
      * Allows the user to define the {@link Connections} object data structure to use.
+     * Or possibly to share connections between two {@code Layer}s
      * 
      * @param c     the {@code Connections} object to use.
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> using(Connections c) {
-        this.connections = c;
-        if(params != null) {
-            params.apply(connections);
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
         }
+        this.connections = c;
+        return this;
+    }
+    
+    /**
+     * Allows the user to specify the {@link Parameters} object used by
+     * this {@code Layer}. If the intent is to share Parameters across 
+     * multiple Layers, it must be kept in mind that two Layers containing
+     * the same algorithm may require specification of locally different
+     * parameter settings. In this case, one could use {@link #alterParameter(KEY, Object)}
+     * method to change a local setting without impacting the same setting
+     * in the source parameters object. This is made possible because the 
+     * {@link #alterParameter(KEY, Object)] method first makes a local copy
+     * of the {@link Parameters} object, then modifies the specified parameter.
+     * 
+     * @param p
+     * @return
+     */
+    public Layer<T> using(Parameters p) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
+        this.params = p;
         return this;
     }
 
@@ -339,8 +452,10 @@ public class Layer<T> {
      */
     @SuppressWarnings("rawtypes")
     public Layer<T> add(Sensor sensor) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
         this.sensor = (HTMSensor<?>)sensor;
-        this.sensor.setLocalParameters(params);
         return this;
     }
 
@@ -349,26 +464,11 @@ public class Layer<T> {
      * @param encoder   the added MultiEncoder
      * @return          this Layer instance (in fluent-style)
      */
-    @SuppressWarnings("unchecked")
     public Layer<T> add(MultiEncoder encoder) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
         this.encoder = encoder;
-        
-        if(encoder.getEncoders(encoder) == null || encoder.getEncoders(encoder).size() < 1) {
-            if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null ||
-                ((Map<String, Map<String, Object>>)params.getParameterByKey(KEY.FIELD_ENCODING_MAP)).size() < 1) {
-                LOGGER.error("No field encoding map found for specified MultiEncoder");
-                throw new IllegalStateException("No field encoding map found for specified MultiEncoder");
-            }
-            
-            encoder.addMultipleEncoders(
-                (Map<String, Map<String, Object>>)params.getParameterByKey(
-                    KEY.FIELD_ENCODING_MAP));
-        }
-        
-        autoCreateClassifiers = (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY);
-        if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-            factory.inference.classifiers(makeClassifiers(encoder));
-        }
         return this;
     }
 
@@ -378,21 +478,7 @@ public class Layer<T> {
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> add(SpatialPooler sp) {
-        if(sensor != null) {
-            connections.setNumInputs(sensor.getEncoder().getWidth());
-        }
-        // The exact dimensions don't have to be the same but the number of dimensions do!
-        int inputLength, columnLength = 0;
-        if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
-            (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
-            LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
-                "(" + columnLength + ") in Parameters!");
-            
-            return this;
-        }
         this.spatialPooler = sp;
-        spatialPooler.init(connections);
-        activeColumns = new int[connections.getNumColumns()];
         return this;
     }
 
@@ -413,6 +499,9 @@ public class Layer<T> {
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> add(Anomaly anomalyComputer) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
         this.anomalyComputer = anomalyComputer;
         return this;
     }
@@ -430,6 +519,10 @@ public class Layer<T> {
      * @return
      */
     public Layer<T> alterParameter(KEY key, Object value) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
+        
         this.params = this.params.copy();
         this.params.setParameterByKey(key, value);
         
@@ -447,6 +540,15 @@ public class Layer<T> {
      */
     public HTMSensor<?> getSensor() {
         return sensor;
+    }
+    
+    /**
+     * Returns the {@link Connections} object being used by this {@link Layer}
+     * 
+     * @return
+     */
+    public Connections getConnections() {
+        return this.connections;
     }
     
     /**
@@ -472,7 +574,41 @@ public class Layer<T> {
         publisher.onNext(t);
     }
     
+    /**
+     * Stops the processing of this {@code Layer}'s processing
+     * thread.
+     */
+    public void halt() {
+        // Signal the Observer chain to complete
+        if(LAYER_THREAD == null) {
+            publisher.onCompleted();
+            if(next != null) {
+                next.halt();
+            }
+        }
+        this.isHalted = true; 
+    }
     
+    /**
+     * Returns a flag indicating whether this layer's processing
+     * thread has been halted or not.
+     * @return
+     */
+    public boolean isHalted() {
+        return isHalted;
+    }
+    
+    /**
+     * Completes the dispatch chain of algorithm {@link Observable}s with
+     * specialized {@link Transformer}s for each algorithm contained within
+     * this Layer. This method then starts the output stream processing of
+     * its {@link Sensor} in a separate {@link Thread} (if it exists) - logging
+     * this event.
+     * 
+     * Calling this method sets a flag on the underlying Sensor marking it as
+     * "Terminal" meaning that it cannot be restarted and its output stream
+     * cannot be accessed again. 
+     */
     @SuppressWarnings("unchecked")
     public void start() {
         if(sensor == null) {
@@ -481,25 +617,30 @@ public class Layer<T> {
         
         this.encoder = encoder == null ? sensor.getEncoder() : encoder;
         
-        if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
-            factory.inference.classifiers(makeClassifiers(encoder));
-        }
-        
         completeDispatch((T)new int[] {});
         
-        (LAYER_THREAD = new Thread("Sensor Layer Thread") {
+        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
             public void run() {
-                LOGGER.debug("Sensor Layer started input stream processing.");
+                LOGGER.debug("Layer [" + getName() + "] started Sensor output stream processing.");
                 
                 // Applies "terminal" function, at this point the input stream is  "sealed".
-                sensor.getOutputStream().forEach(intArray -> {
+                sensor.getOutputStream().filter(i ->  {
+                    if(isHalted) {
+                        publisher.onCompleted();
+                        if(next != null) {
+                            next.halt();
+                        }
+                        return false;
+                    }
+                    return true;
+                }).forEach(intArray -> {
                     ((ManualInput)Layer.this.factory.inference).encoding(intArray);
                     Layer.this.compute((T)intArray);
                 });
             }
         }).start(); 
         
-        LOGGER.debug("Sensor Layer startOn called on thread {}", LAYER_THREAD);
+        LOGGER.debug("Start called on Layer thread {}", LAYER_THREAD);
     }
     
     /**
@@ -732,7 +873,7 @@ public class Layer<T> {
             return e;
         }
         
-        LOGGER.debug("Could not retrieve encoder from Layer: {}, and finally from the network", getName());
+        LOGGER.warn("Could not retrieve encoder from Layer: {}, and finally from the network", getName());
         return null;
     }
     
@@ -745,8 +886,8 @@ public class Layer<T> {
      */
     void passEncoder(MultiEncoder encoder) {
         this.encoder = encoder;
-        if(((Boolean)getParameters().getParameterByKey(KEY.AUTO_CLASSIFY))) {
-            factory.inference.classifiers(makeClassifiers(encoder));
+        if(next != null) {
+            next.passEncoder(this.encoder);
         }
     }
 
