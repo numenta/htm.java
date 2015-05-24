@@ -184,6 +184,9 @@ public class Region {
         }
     }
     
+    /**
+     * Stops each {@link Layer} contained within this {@code Region}
+     */
     public void stop() {
         LOGGER.debug("Stop called on Region [" + getName() + "]");
         if(tail != null) {
