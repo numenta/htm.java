@@ -86,7 +86,7 @@ public class URISensor implements Sensor<URI>  {
      * Returns the values specifying meta information about the 
      * underlying stream.
      */
-    public ValueList getMeta() {
+    public ValueList getHeader() {
         return stream.getMeta();
     }
 

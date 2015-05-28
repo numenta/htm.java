@@ -18,4 +18,5 @@ public interface ValueList {
      * @return the number of rows
      */
     public int size();
+    
 }

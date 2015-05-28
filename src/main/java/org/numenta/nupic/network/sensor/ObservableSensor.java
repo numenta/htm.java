@@ -1,6 +1,7 @@
 package org.numenta.nupic.network.sensor;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
@@ -19,6 +20,7 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
     private SensorParams params;
     
     
+    @SuppressWarnings("unchecked")
     public ObservableSensor(SensorParams params) {
         if(!params.hasKey("ONSUB")) {
             throw new IllegalArgumentException("Passed improperly formed Tuple: no key for \"ONSUB\"");
@@ -26,7 +28,6 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         
         this.params = params;
         
-        @SuppressWarnings("unchecked")
         Observable<String> obs = (Observable<String>)params.get("ONSUB");
         Iterator<String> observerator = obs.toBlocking().getIterator();
         
@@ -40,8 +41,14 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         int characteristics = Spliterator.SORTED | Spliterator.ORDERED;
         Spliterator<String> spliterator = Spliterators.spliteratorUnknownSize(iterator, characteristics);
       
-        this.stream = BatchedCsvStream.batch(
-            StreamSupport.stream(spliterator, false), BATCH_SIZE, DEFAULT_PARALLEL_MODE, HEADER_SIZE);
+        if(params.get("HEADER") != null) {
+            this.stream = BatchedCsvStream.batch(
+                StreamSupport.stream(spliterator, false), BATCH_SIZE, DEFAULT_PARALLEL_MODE, characteristics, 
+                    HEADER_SIZE, (List<String[]>)params.get("HEADER"));
+        }else{
+            this.stream = BatchedCsvStream.batch(
+                StreamSupport.stream(spliterator, false), BATCH_SIZE, DEFAULT_PARALLEL_MODE, HEADER_SIZE);
+        }
     }
     
     @SuppressWarnings("unchecked")
@@ -49,8 +56,6 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         ObservableSensor<String[]> sensor = 
             (ObservableSensor<String[]>)new ObservableSensor<String[]>(p);
         
-        
-            
         return (Sensor<T>)sensor;
     }
     
@@ -73,7 +78,7 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
      * Returns the values specifying meta information about the 
      * underlying stream.
      */
-    public ValueList getMeta() {
+    public ValueList getHeader() {
         return stream.getMeta();
     }
 

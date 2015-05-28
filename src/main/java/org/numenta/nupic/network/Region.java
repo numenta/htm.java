@@ -60,9 +60,19 @@ public class Region {
     
     private String name;
     
-    public Region(String name, Network container) {
+    /**
+     * Constructs a new {@code Region}
+     * 
+     * @param name          A unique identifier for this Region (uniqueness is enforced)
+     * @param network       The containing {@link Network} 
+     */
+    public Region(String name, Network network) {
+        if(name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("name may not be null or empty");
+        }
+        
         this.name = name;
-        this.network = container;
+        this.network = network;
     }
     
     /**
@@ -73,6 +83,11 @@ public class Region {
      * @return
      */
     public Region close() {
+        if(layers.size() < 1) {
+            LOGGER.warn("Closing region: " + name + " before adding contents.");
+            return this;
+        }
+        
         completeAssembly();
         
         Layer<?> l = tail;
@@ -89,7 +104,7 @@ public class Region {
      * 
      * @return
      */
-    public boolean assemblyClosed() {
+    public boolean isClosed() {
         return assemblyClosed;
     }
     
@@ -108,7 +123,7 @@ public class Region {
     }
     
     /**
-     * Returns the current input into the region. This value changes
+     * Returns the current input into the region. This value may change
      * after every call to {@link Region#compute(Object)}.
      * 
      * @return
@@ -143,7 +158,7 @@ public class Region {
         
         String layerName = name.concat(":").concat(l.getName());
         if(layers.containsKey(layerName)) {
-            throw new IllegalArgumentException("A Layer with the name: " + l.getName() + " has already been added.");
+            throw new IllegalArgumentException("A Layer with the name: " + l.getName() + " has already been added to this Region.");
         }
         
         l.name(layerName);
@@ -212,6 +227,10 @@ public class Region {
      * with "toLayerName" representing the receiver or "sink" and "fromLayerName"
      * representing the sender or "source".
      * 
+     * This method also forwards shared constructs up the connection chain
+     * such as any {@link Encoder} which may exist, and the {@link Inference} result
+     * container which is shared among layers.
+     * 
      * @param toLayerName       the name of the sink layer
      * @param fromLayerName     the name of the source layer
      * @return
@@ -249,6 +268,9 @@ public class Region {
      * @return
      */
     public Layer<Inference> lookup(String layerName) {
+        if(layerName.indexOf(":") != -1) {
+            return layers.get(layerName);
+        }
         return layers.get(name.concat(":").concat(layerName));
     }
     
@@ -260,32 +282,32 @@ public class Region {
      */
     private void completeAssembly() {
         if(!assemblyClosed) {
-            if(tail == null) {
-                if(layers.size() > 1) {
-                    Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sources);
-                    temp.removeAll(sinks);
-                    if(temp.size() != 1) {
-                        throw new IllegalArgumentException("Detected misconfigured Region too many or too few sinks.");
-                    }
-                    tail = temp.iterator().next();
-                }else{
-                    tail = layers.values().iterator().next();
-                }
+            if(layers.size() == 0) return;
+            
+            if(layers.size() == 1) {
+                head = tail = layers.values().iterator().next();
             }
-            if(head == null) {
-                if(layers.size() > 1) {
-                    Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sinks);
-                    temp.removeAll(sources);
-                    if(temp.size() != 1) {
-                        throw new IllegalArgumentException("Detected misconfigured Region too many or too few sources.");
-                    }
-                    head = temp.iterator().next();
-                }else{
-                    head = layers.values().iterator().next();
+            
+            if(tail == null) {
+                Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sources);
+                temp.removeAll(sinks);
+                if(temp.size() != 1) {
+                    throw new IllegalArgumentException("Detected misconfigured Region too many or too few sinks.");
                 }
+                tail = temp.iterator().next();
+            }
+            
+            if(head == null) {
+                Set<Layer<Inference>> temp = new HashSet<Layer<Inference>>(sinks);
+                temp.removeAll(sources);
+                if(temp.size() != 1) {
+                    throw new IllegalArgumentException("Detected misconfigured Region too many or too few sources.");
+                }
+                head = temp.iterator().next();
                 
                 regionObservable = head.observe();
             }
+            
             assemblyClosed = true;
         }
     }

@@ -96,7 +96,7 @@ public class FileSensor implements Sensor<File> {
      * Returns the values specifying meta information about the 
      * underlying stream.
      */
-    public ValueList getMeta() {
+    public ValueList getHeader() {
         return stream.getMeta();
     }
 

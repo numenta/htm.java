@@ -21,10 +21,12 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.datagen.NetworkInputKit;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
@@ -119,6 +121,137 @@ public class LayerTest {
             l.halt();
             l.getLayerThread().join();
             assertTrue(isHalted);
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+    
+    int trueCount = 0;
+    @Test
+    public void testReset() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-4reset.csv")));
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        
+        Network n = Network.create("test network", p);
+        final Layer<int[]> l = new Layer<>(n);
+        l.add(htmSensor);
+        l.close();
+        
+        l.start();
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                if(l.getSensor().getHeader().isReset()) {
+                    trueCount++;
+                }
+            }
+        });
+        
+        try {
+            l.getLayerThread().join();
+            assertEquals(3, trueCount);
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+    
+    int seqResetCount = 0;
+    @Test
+    public void testSequenceChangeReset() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-4seqReset.csv")));
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        
+        Network n = Network.create("test network", p);
+        final Layer<int[]> l = new Layer<>(n);
+        l.add(htmSensor);
+        l.close();
+        
+        l.start();
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                if(l.getSensor().getHeader().isReset()) {
+                    seqResetCount++;
+                }
+            }
+        });
+        
+        try {
+            l.getLayerThread().join();
+            assertEquals(3, seqResetCount);
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+    
+    @Test
+    public void testObservableInputLayer() {
+        NetworkInputKit kit = new NetworkInputKit();
+        
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, 
+                SensorParams.create(
+                    Keys::obs, new Object[] {"name", kit.observe()}));
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        
+        HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+        
+        Network n = Network.create("test network", p);
+        final Layer<int[]> l = new Layer<>(n);
+        l.add(htmSensor);
+        l.close();
+        
+        l.start();
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                System.out.println("layer out: " + output.getSDR());
+            }
+        });
+        
+        try {
+            l.getLayerThread().join();
+            
+            String[] entries = { 
+                            "timestamp", "consumption",
+                            "datetime", "float",
+                            "B",
+                            "7/2/10 0:00,21.2",
+                            "7/2/10 1:00,34.0",
+                            "7/2/10 2:00,40.4",
+                        };
+            
         }catch(Exception e) {
             e.printStackTrace();
             fail();
@@ -836,6 +969,10 @@ public class LayerTest {
         assertTrue(Arrays.equals(ArrayUtils.where(l.getActiveColumns(), ArrayUtils.WHERE_1), l.getPreviousPredictedColumns()));
     }
     
+    /**
+     * Test that a given layer can return an {@link Observable} capable of 
+     * service multiple subscribers.
+     */
     @Test
     public void testObservableRetrieval() {
         Parameters p = NetworkTestHarness.getParameters();
@@ -878,6 +1015,68 @@ public class LayerTest {
         int[] e1 = emissions.get(0);
         for(int[] ia : emissions) {
             assertTrue(ia == e1);//test same object propagated
+        }
+    }
+    
+    /**
+     * Simple test to verify data gets passed through the {@link CLAClassifier}
+     * configured within the chain of components.
+     */
+    boolean flowReceived = false;
+    @Test
+    public void testFullLayerFluentAssembly() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
+        p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        
+        System.out.println(p);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        params.put(KEY_WINDOW_SIZE, 3);
+        params.put(KEY_USE_MOVING_AVG, true);
+        Anomaly anomalyComputer = Anomaly.create(params);
+        
+        Layer<?> l = Network.create("Fluent Network Layer", p)
+            .createLayer("TestLayer", p)
+                .alterParameter(KEY.AUTO_CLASSIFY, true)
+                .add(anomalyComputer)
+                .add(new TemporalMemory())
+                .add(new SpatialPooler())
+                .add(Sensor.create(
+                    FileSensor::create, 
+                        SensorParams.create(
+                            Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))))
+                .close();
+        
+        l.getConnections().printParameters();
+        System.out.println("inhibit radius = " + l.getConnections().getInhibitionRadius());
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                if(flowReceived) return; // No need to set this value multiple times
+                
+                System.out.println("classifier size = " + i.getClassifiers().size());
+                flowReceived = i.getClassifiers().size() == 4 &&
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
+            }
+        });
+        
+        l.start();
+        
+        try {
+            l.getLayerThread().join();
+            assertTrue(flowReceived);
+        }catch(Exception e) {
+            e.printStackTrace();
         }
     }
 }

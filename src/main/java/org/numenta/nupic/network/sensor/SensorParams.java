@@ -61,6 +61,19 @@ public class SensorParams extends NamedTuple {
     }
     
     /**
+     * Takes a String array of keys (via {@link Supplier#get()} and a varargs 
+     * array of their values, creating key/value pairs. In this case, the keys are 
+     * all predetermined to be one of the {@link Keys.Args} types which specify the 
+     * keys which are to be used.
+     * 
+     * @param keys         a String array of keys
+     * @param values       the values correlated with the specified keys.
+     */
+    private SensorParams(String[] keys, Object... values) {
+        super(keys, values);
+    }
+    
+    /**
      * Factory method to create a {@code SensorParams} object which indicates
      * information used to connect a {@link Sensor} to its source.
      * 
@@ -71,6 +84,19 @@ public class SensorParams extends NamedTuple {
      */
     public static SensorParams create(Supplier<Keys.Args> keySet, Object... values) {
         return new SensorParams(keySet, values);
+    }
+    
+    /**
+     * Factory method to create a {@code SensorParams} object which indicates
+     * information used to connect a {@link Sensor} to its source.
+     * 
+     * @param keys         a String array of keys
+     * @param values       the values correlated with the specified keys.
+     * 
+     * @return  a SensorParams configuration
+     */
+    public static SensorParams create(String[] keys, Object... values) {
+        return new SensorParams(keys, values);
     }
     
     public static void main(String[] args) {

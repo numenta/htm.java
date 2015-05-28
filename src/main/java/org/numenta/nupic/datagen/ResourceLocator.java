@@ -29,7 +29,6 @@ public interface ResourceLocator {
     }
     
     public static String locate(String s) {
-        
         return ResourceLocator.class.getPackage().getName().replace('.', '/') + File.separator + s;
     }
 }

@@ -28,7 +28,7 @@ import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFlags;
-import org.numenta.nupic.network.sensor.SensorInputMeta;
+import org.numenta.nupic.network.sensor.Header;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.Tuple;
@@ -147,16 +147,37 @@ public class HTMSensorTest {
     public void testMetaFormation() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create, 
-            SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
+                SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
         
-        // Cast the ValueList to the more complex type (SensorInputMeta)
-        SensorInputMeta meta = (SensorInputMeta)sensor.getMeta();
+        // Cast the ValueList to the more complex type (Header)
+        Header meta = (Header)sensor.getHeader();
         assertTrue(meta.getFieldTypes().stream().allMatch(
             l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
         assertTrue(meta.getFieldNames().stream().allMatch(
             l -> l.equals("timestamp") || l.equals("consumption")));
         assertTrue(meta.getFlags().stream().allMatch(
             l -> l.equals(SensorFlags.T) || l.equals(SensorFlags.B)));
+    }
+    
+    /**
+     * Tests the formation of meta constructs using test data with no flags (empty line).
+     * This tests that the parsing can proceed and the there is a registered flag
+     * of {@link SensorFlags#B} inserted for an empty 3rd line of a row header.
+     */
+    @Test
+    public void testMetaFormation_NO_HEADER_FLAGS() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+                SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly-small-noheaderflags.csv")));
+        
+        // Cast the ValueList to the more complex type (Header)
+        Header meta = (Header)sensor.getHeader();
+        assertTrue(meta.getFieldTypes().stream().allMatch(
+            l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
+        assertTrue(meta.getFieldNames().stream().allMatch(
+            l -> l.equals("timestamp") || l.equals("consumption")));
+        assertTrue(meta.getFlags().stream().allMatch(
+            l -> l.equals(SensorFlags.B)));
     }
     
     /**
@@ -171,9 +192,9 @@ public class HTMSensorTest {
                 Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
         
         
-        // Cast the ValueList to the more complex type (SensorInputMeta)
+        // Cast the ValueList to the more complex type (Header)
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
-        SensorInputMeta meta = (SensorInputMeta)htmSensor.getMeta();
+        Header meta = (Header)htmSensor.getHeader();
         assertTrue(meta.getFieldTypes().stream().allMatch(
             l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
         assertTrue(meta.getFieldNames().stream().allMatch(

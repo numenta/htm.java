@@ -44,6 +44,8 @@ public class RegionTest {
                 .add(MultiEncoder.builder().name("").build()))
             .close();
         
+        assertTrue(r1.isClosed());
+        
         try {
             r1.add(n.createLayer("5", p));
             fail();
@@ -73,7 +75,7 @@ public class RegionTest {
             fail();
         }catch(Exception e) {
             assertTrue(e.getClass().isAssignableFrom(IllegalArgumentException.class));
-            assertEquals("A Layer with the name: 4 has already been added.", e.getMessage());
+            assertEquals("A Layer with the name: 4 has already been added to this Region.", e.getMessage());
         }
     }
     
@@ -186,9 +188,7 @@ public class RegionTest {
         
         assertNull(r1.lookup("1").getEncoder());
             
-        r1.connect("1", "2")
-            .connect("2", "3")
-            .connect("3", "4");
+        r1.connect("1", "2").connect("2", "3").connect("3", "4");
         
         assertNotNull(r1.lookup("1").getEncoder());
     }

@@ -71,7 +71,7 @@ public interface Sensor<T> {
      * Returns the inner Stream's meta information.
      * @return
      */
-    public ValueList getMeta();
+    public ValueList getHeader();
     
     
 }

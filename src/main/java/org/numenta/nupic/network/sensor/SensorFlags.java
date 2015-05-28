@@ -12,7 +12,8 @@ import org.numenta.nupic.FieldMetaType;
  * <ul>
  *      <li><b>R</b> - <em>"reset"</em> -       Specify that a reset should be inserted into the 
  *                                              model when this field evaluates to true. This is 
- *                                              used to manually insert resets.
+ *                                              used to manually insert resets. "1" equals reset,
+ *                                              "0" equals no reset.
  *                              
  *      <li><b>S</b> - <em>"sequence"</em> -    Specify that a reset should be inserted into the 
  *                                              model when this field changes. This is used when 
@@ -24,13 +25,17 @@ import org.numenta.nupic.FieldMetaType;
  *                                              time-related functions.
  *                              
  *      <li><b>C</b> - <em>"category"</em> -    This indicates that the category encoder should be used.
+ *      
+ *      <li><b>L</b> - <em>"learn"</em> -       If "1" then learn, if "0" then stop learning.   
+ *      
+ *      <li><b>B</b> - <em>"blank"</em> -       Blank meaning do nothing (space filler)
  * </ul>
  * </p>
  * 
  * @author David Ray
  */
 public enum SensorFlags {
-    R("reset"), S("sequence"), T("timestamp"), C("category"), B("blank");
+    R("reset"), S("sequence"), T("timestamp"), C("category"), L("learn"), B("blank");
     
     /** Flag description */
     private String description;

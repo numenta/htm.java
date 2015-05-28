@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
@@ -264,7 +263,7 @@ public class Layer<T> {
      * in a central place for maintenance ease.
      */
     @SuppressWarnings("unchecked")
-    public void close() {
+    public Layer<T> close() {
         params.apply(connections);
         
         if(sensor != null) {
@@ -288,19 +287,19 @@ public class Layer<T> {
             }
             
             int inputLength, columnLength = 0;
-            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
-                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+            if(((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
+                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) ||
+                    encoder.getWidth() != ArrayUtils.product((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS))) {
                 
-                int[] calculatedInputDims = getCompatibleInputDimsForColumnDims(
-                    encoder.getWidth(), ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length);
+                int[] inferredDims = inferInputDimensions(encoder.getWidth(), columnLength);
                 
                 LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
                     "(" + columnLength + ") in Parameters - now attempting to fix it.");
                             
-                LOGGER.warn("Using calculated input dimensions: " + Arrays.toString(calculatedInputDims));             
+                LOGGER.warn("Using calculated input dimensions: " + Arrays.toString(inferredDims));             
                 
-                params.setInputDimensions(calculatedInputDims);
-                connections.setInputDimensions(calculatedInputDims);
+                params.setInputDimensions(inferredDims);
+                connections.setInputDimensions(inferredDims);
             }
             
             autoCreateClassifiers = autoCreateClassifiers != null && 
@@ -322,7 +321,7 @@ public class Layer<T> {
                 LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
                     "(" + columnLength + ") in Parameters!");
                 
-                return;
+                return this;
             }
             spatialPooler.init(connections);
         }
@@ -336,6 +335,8 @@ public class Layer<T> {
         this.cellsPerColumn = connections.getCellsPerColumn();
         
         this.isClosed = true;
+        
+        return this;
     }
     
     /**
@@ -355,7 +356,7 @@ public class Layer<T> {
      *                          should be returned.
      * @return
      */
-    public int[] getCompatibleInputDimsForColumnDims(int inputWidth, int numColumnDims) {
+    public int[] inferInputDimensions(int inputWidth, int numColumnDims) {
         double flatSize = inputWidth;
         double numColDims = numColumnDims;
         double sliceArrangement = Math.pow(flatSize, 1/numColDims);
@@ -890,9 +891,41 @@ public class Layer<T> {
             next.passEncoder(this.encoder);
         }
     }
+    
+    /**
+     * Returns the values submitted to this {@code Layer} in an array 
+     * whose indexes correspond to the indexes of probabilities returned
+     * when calling {@link #getAllPredictions(String, int)}.
+     * 
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <V> V[] getAllValues(String field, int step) {
+        if(currentInference == null || currentInference.getClassifiers() == null) {
+            throw new IllegalStateException("Predictions not available. " +
+                "Either classifiers unspecified or inferencing has not yet begun.");
+        }
+
+        ClassifierResult<?> c = currentInference.getClassification(field);
+        if(c == null) {
+            LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
+        }
+
+        return (V[])c.getActualValues();
+    }
 
     /**
-     * {@inheritDoc}
+     * Returns a double[] containing a prediction confidence measure for 
+     * each bucket (unique entry as determined by an encoder). In order 
+     * to relate the probability to an actual value, call {@link #getAllValues(String, int)}
+     * which returns an array containing the actual values submitted to this {@code Layer} -
+     * the indexes of each probability will match the index of each actual value entered.
+     *  
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
+     * @return
      */
     public double[] getAllPredictions(String field, int step) {
         if(currentInference == null || currentInference.getClassifiers() == null) {
@@ -909,7 +942,12 @@ public class Layer<T> {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the value whose probability is calculated to be the highest for
+     * the specified field and step.
+     * 
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
+     * @return
      */
     @SuppressWarnings("unchecked")
     public <K> K getMostProbableValue(String field, int step) {
@@ -927,7 +965,12 @@ public class Layer<T> {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the bucket index of the value with the highest calculated probability
+     * for the specified field and step.
+     * 
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
+     * @return
      */
     public int getMostProbableBucketIndex(String field, int step) {
         if(currentInference == null || currentInference.getClassifiers() == null) {
@@ -943,16 +986,6 @@ public class Layer<T> {
         return c.getMostProbableBucketIndex(step);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    //    public List<String[]> getMetaInfo() {
-    //        if(metaInfo == null) {
-    //            throw new IllegalStateException("No meta information available. " + 
-    //                "This is usually associated with a csv input type which has header info.");
-    //        }
-    //        return metaInfo.getHeader();
-    //    }
 
     //////////////////////////////////////////////////////////////
     //          PRIVATE METHODS AND CLASSES BELOW HERE          //
@@ -993,6 +1026,13 @@ public class Layer<T> {
         // The map of input types to transformers is no longer needed.
         observableDispatch.clear();
         observableDispatch = null;
+        
+        // Handle global network sensor access.
+        if(sensor == null) {
+            sensor = parentNetwork == null ? null : parentNetwork.getSensor();
+        }else if(parentNetwork != null) {
+            parentNetwork.setSensor(sensor);
+        }
     }
     
     /**
@@ -1242,7 +1282,9 @@ public class Layer<T> {
      * @return
      */
     private int[] spatialInput(int[] input) {
-        spatialPooler.compute(connections, input, activeColumns, true, true);
+        spatialPooler.compute(
+            connections, input, activeColumns, 
+                sensor == null || sensor.getHeader().isLearn(), true);
         return activeColumns;
     }
 
@@ -1253,7 +1295,17 @@ public class Layer<T> {
      * @return
      */
     private int[] temporalInput(int[] input) {
-        ComputeCycle cc = temporalMemory.compute(connections, input, true);
+        ComputeCycle cc = null;
+        if(sensor != null) {
+            if(sensor.getHeader().isReset()) {
+                temporalMemory.reset(connections);
+            }
+            
+            cc = temporalMemory.compute(connections, input, sensor.getHeader().isLearn());
+        } else {
+            cc = temporalMemory.compute(connections, input, true);
+        }
+        
         previousPrediction = currentPrediction;
         return currentPrediction = getSDR(cc.predictiveCells());
     }
@@ -1443,6 +1495,7 @@ public class Layer<T> {
                 @Override
                 public ManualInput call(ManualInput t1) {
                     if(isDenseInput) {
+                        // Set on Layer, then set sparse actives as the sdr, then set on Manual Input (t1) 
                         t1 = t1.sdr(
                            sparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1)))
                                .sparseActives(t1.getSDR());
@@ -1454,7 +1507,15 @@ public class Layer<T> {
 
         public Func1<ManualInput, ManualInput> createClassifierFunc() {
             return new Func1<ManualInput, ManualInput>() {
-                Map<String, Object> inputMap = new HashMap<String, Object>();
+                private Object bucketIdx;
+                private Object actValue;
+                Map<String, Object> inputMap = new HashMap<String, Object>() {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public Object get(Object o) {
+                        return o.equals("bucketIdx") ? bucketIdx : actValue;
+                    }
+                };
 
                 @Override
                 public ManualInput call(ManualInput t1) {
@@ -1462,8 +1523,8 @@ public class Layer<T> {
                     int recordNum = getRecordNum();
                     for(String key : ci.keySet()) {
                         NamedTuple inputs = ci.get(key);
-                        inputMap.put("bucketIdx", inputs.get("bucketIdx"));
-                        inputMap.put("actValue", inputs.get("inputValue"));
+                        bucketIdx = inputs.get("bucketIdx");
+                        actValue = inputs.get("inputValue");
                         
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
                         ClassifierResult<Object> result = c.compute(

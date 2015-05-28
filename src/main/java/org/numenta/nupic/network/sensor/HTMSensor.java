@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -21,7 +23,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.AdaptiveScalarEncoder;
 import org.numenta.nupic.encoders.CategoryEncoder;
@@ -67,7 +68,7 @@ import org.numenta.nupic.util.Tuple;
  */
 public class HTMSensor<T> implements Sensor<T> {
     private Sensor<T> delegate;
-    private SensorInputMeta meta;
+    private Header header;
     private Parameters localParameters;
     private MultiEncoder encoder;
     private Stream<int[]> outputStream;
@@ -79,6 +80,9 @@ public class HTMSensor<T> implements Sensor<T> {
     private Iterator<int[]> mainIterator;
     private List<LinkedList<int[]>> fanOuts = new ArrayList<>();
     
+    /** Protects {@ #mainIterator} formation and the next() call */
+    private Lock criticalAccessLock = new ReentrantLock();
+    
     
     
     /**
@@ -88,7 +92,10 @@ public class HTMSensor<T> implements Sensor<T> {
      */
     public HTMSensor(Sensor<T> sensor) {
         this.delegate = sensor;
-        meta = new SensorInputMeta(sensor.getInputStream().getMeta());
+        header = new Header(sensor.getInputStream().getMeta());
+        if(header == null || header.size() < 3) {
+            throw new IllegalStateException("Header must always be present; and have 3 lines.");
+        }
         createEncoder();
     }
     
@@ -114,14 +121,14 @@ public class HTMSensor<T> implements Sensor<T> {
      * Sets up a mapping which describes the order of occurrence of comma
      * separated fields - mapping their ordinal position to the {@link Encoder}
      * which services the encoding of the field occurring in that position. This
-     * sequence of types is contained by an instance of {@link SensorInputMeta} which
+     * sequence of types is contained by an instance of {@link Header} which
      * makes available an array of {@link FieldMetaType}s.
      *    
      */
     private void makeIndexEncoderMap() {
         indexToEncoderMap = new TIntObjectHashMap<Encoder<?>>();
         
-        final FieldMetaType[] fieldTypes = meta.getFieldTypes().toArray(new FieldMetaType[meta.getFieldTypes().size()]);
+        final FieldMetaType[] fieldTypes = header.getFieldTypes().toArray(new FieldMetaType[header.getFieldTypes().size()]);
         
         for(int i = 0;i < fieldTypes.length;i++) {
             switch(fieldTypes[i]) {
@@ -203,13 +210,16 @@ public class HTMSensor<T> implements Sensor<T> {
      * into multiple fanouts.
      */
     private class Copy implements Iterator<int[]> {
-        private List<int[]> list;
-        Copy(List<int[]> l) { this.list = l; }
+        private LinkedList<int[]> list;
+        Copy(LinkedList<int[]> l) { this.list = l; }
         public boolean hasNext() { return !list.isEmpty() || mainIterator.hasNext(); }
         public int[] next() {
             if(list.isEmpty()) {
+                // We want to make sure only one thread calls next at a time
+                criticalAccessLock.lock();
                 int[] next = mainIterator.next();
                 for(List<int[]> l : fanOuts) { l.add(next); }
+                criticalAccessLock.unlock();
             }
             return list.remove(0);
         }
@@ -231,28 +241,41 @@ public class HTMSensor<T> implements Sensor<T> {
                 "setLocalParameters(Parameters) must be called before calling this method.");
         }
         
-        if(outputStream == null) {
-            inputMap = new HashMap<>();
-            final String[] fieldNames = getFieldNames();
-            final FieldMetaType[] fieldTypes = getFieldTypes();
-            final boolean isParallel = delegate.getInputStream().isParallel();
+        // Protect outputStream formation and creation of "fan out" also make sure
+        // that no other thread is trying to update the fan out lists
+        Stream<int[]> retVal = null;
+        try {
+            criticalAccessLock.lock();
+            if(outputStream == null) {
+                inputMap = new HashMap<>();
+                final String[] fieldNames = getFieldNames();
+                final FieldMetaType[] fieldTypes = getFieldTypes();
+                final boolean isParallel = delegate.getInputStream().isParallel();
+                
+                output = new ArrayList<>();
+                
+                outputStream = delegate.getInputStream().map(l -> {
+                    String[] arr = (String[])l;
+                    return input(arr, fieldNames, fieldTypes, output, isParallel);
+                });
+                
+                mainIterator = outputStream.iterator();
+            }
             
-            output = new ArrayList<>();
+            LinkedList<int[]> l = new LinkedList<int[]>();
+            fanOuts.add(l);
+            Copy copy = new Copy(l);
             
-            outputStream = delegate.getInputStream().map(l -> {
-                String[] arr = (String[])l;
-                return input(arr, fieldNames, fieldTypes, output, isParallel);
-            });
+            retVal = StreamSupport.stream(Spliterators.spliteratorUnknownSize(copy,
+                Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
             
-            mainIterator = outputStream.iterator();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }finally {
+            criticalAccessLock.unlock();
         }
         
-        LinkedList<int[]> l = new LinkedList<int[]>();
-        fanOuts.add(l);
-        Copy copy = new Copy(l);
-        
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(copy,
-            Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
+        return retVal;
     }
     
     /**
@@ -261,7 +284,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * @return
      */
     public String[] getFieldNames() {
-        return (String[])meta.getFieldNames().toArray(new String[meta.getFieldNames().size()]);
+        return (String[])header.getFieldNames().toArray(new String[header.getFieldNames().size()]);
     }
     
     /**
@@ -269,7 +292,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * @return
      */
     public FieldMetaType[] getFieldTypes() {
-        return meta.getFieldTypes().toArray(new FieldMetaType[meta.getFieldTypes().size()]);
+        return header.getFieldTypes().toArray(new FieldMetaType[header.getFieldTypes().size()]);
     }
     
     /**
@@ -280,7 +303,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * This method process one single record, and is called iteratively to process an
      * input stream (internally by the {@link #getOutputStream()} method which will process
      * </p><p>
-     * <b>WARNING:</b>  <em>When inserting data one by one, you must remember that the first index
+     * <b>WARNING:</b>  <em>When inserting data <b><em>MANUALLY</em></b>, you must remember that the first index
      * must be a sequence number, which means you may have to insert that by hand. Typically
      * this method is called internally where the underlying sensor does the sequencing automatically.</em>
      * </p>
@@ -299,6 +322,8 @@ public class HTMSensor<T> implements Sensor<T> {
         for(int i = 0;i < fieldNames.length;i++) {
             inputMap.put(fieldNames[i], fieldTypes[i].decodeType(arr[i + 1], indexToEncoderMap.get(i)));
         }
+        
+        processHeader(arr);
         
         int[] encoding = encoder.encode(inputMap);
         
@@ -432,14 +457,14 @@ public class HTMSensor<T> implements Sensor<T> {
     }
     
     /**
-     * Returns the {@link SensorInputMeta} container for Sensor meta
+     * Returns the {@link Header} container for Sensor meta
      * information associated with the input characteristics and configured
      * behavior.
      * @return
      */
     @Override
-    public ValueList getMeta() {
-        return meta;
+    public Header getHeader() {
+        return header;
     }
 
     /**
@@ -465,6 +490,16 @@ public class HTMSensor<T> implements Sensor<T> {
      */
     public Parameters getLocalParameters() {
         return localParameters;
+    }
+    
+    /**
+     * For each entry, the header runs its processing to calculate
+     * meta state of the current input (i.e. is learning, should reset etc.)
+     * 
+     * @param entry     an array containing the current input entry.
+     */
+    private void processHeader(String[] entry) {
+        header.process(entry);
     }
     
     /**
