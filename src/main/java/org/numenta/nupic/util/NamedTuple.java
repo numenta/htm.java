@@ -294,7 +294,7 @@ public class NamedTuple extends Tuple {
                     return found;
                 }
             }
-            return found;
+            return found.key.equals(key) ? found : null;
         }
         
         /**

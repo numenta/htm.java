@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
@@ -183,7 +184,7 @@ public class LogEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<FieldMetaType> getDecoderOutputFieldTypes() {
+	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
 		return encoder.getDecoderOutputFieldTypes();
 	}
 

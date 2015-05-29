@@ -354,7 +354,7 @@ public class AnomalyLikelihood extends Anomaly {
     
     /**
      * Filter the list of raw (pre-filtered) likelihoods so that we only preserve
-     * sharp increases in likelihood. 'likelihoods' can be a numpy array of floats or
+     * sharp increases in likelihood. 'likelihoods' can be an array of floats or
      * a list of floats.
      * 
      * @param likelihoods
@@ -516,7 +516,7 @@ public class AnomalyLikelihood extends Anomaly {
     @Override
     public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
         if(inputValue == 0) {
-            throw new IllegalArgumentException("Selected anomlay mode Mode.LIKELIHOOD requires an \"inputValue\" to " +
+            throw new IllegalArgumentException("Selected anomaly mode Mode.LIKELIHOOD requires an \"inputValue\" to " +
                 "the compute() method.");
         }
         

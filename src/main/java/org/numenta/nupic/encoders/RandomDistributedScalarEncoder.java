@@ -25,8 +25,10 @@ package org.numenta.nupic.encoders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.MersenneTwister;
@@ -100,7 +102,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	int maxIndex;
 	int numRetry;
 
-	HashMap<Integer, List<Integer>> bucketMap;
+	ConcurrentHashMap<Integer, List<Integer>> bucketMap;
 
 	RandomDistributedScalarEncoder() {
 	}
@@ -120,18 +122,18 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public void init() throws IllegalStateException {
 		if (getW() <= 0 || getW() % 2 == 0)
 			throw new IllegalStateException(
-					"W must be an odd possitive integer (to eliminate centering difficulty)");
+			    "W must be an odd positive integer (to eliminate centering difficulty)");
 
 		setHalfWidth((getW() - 1) / 2);
 
 		if (getResolution() <= 0)
 			throw new IllegalStateException(
-					"Resolution must be a possitive number");
+                "Resolution must be a positive number");
 
 		if (n <= 6 * getW())
 			throw new IllegalStateException(
-					"n must be strictly greater than 6*w. For good results we "
-							+ "recommend n be strictly greater than 11*w.");
+			    "n must be strictly greater than 6*w. For good results we "
+                    + "recommend n be strictly greater than 11*w.");
 
 		initEncoder(getResolution(), getW(), getN(), getOffset(), getSeed());
 	}
@@ -156,7 +158,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		}
 
 		// TODO reduce logging level?
-		LOG.info(this.toString());
+		LOG.debug(this.toString());
 	}
 
 	/**
@@ -192,7 +194,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 * This HashMap maps a bucket index into its bit representation We
 		 * initialize the HashMap with a single bucket with index 0
 		 */
-		bucketMap = new HashMap<Integer, List<Integer>>();
+		bucketMap = new ConcurrentHashMap<Integer, List<Integer>>();
 		// generate the random permutation
 		ArrayList<Integer> temp = new ArrayList<Integer>(getN());
 		for (int i = 0; i < getN(); i++)
@@ -289,9 +291,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public boolean newRepresentationOK(List<Integer> newRep, int newIndex) {
 		if (newRep.size() != getW())
 			return false;
-		if (newIndex < getMinIndex() - 1 || newIndex > getMaxIndex() + 1)
+		if (newIndex < getMinIndex() - 1 || newIndex > getMaxIndex() + 1) {
 			throw new IllegalStateException(
 					"newIndex must be within one of existing indices");
+		}
 
 		// A binary representation of newRep. We will use this to test
 		// containment
@@ -449,7 +452,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			index = getMaxBuckets() - 1;
 
 		if (!bucketMap.containsKey(index)) {
-			LOG.trace("Adding additional buckets to handle index={}", index);
+			LOG.trace("Adding additional buckets to handle index={} ", index);
 			createBucket(index);
 		}
 		return bucketMap.get(index);
@@ -689,10 +692,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			// Call super class here
 			RandomDistributedScalarEncoder partialBuild = super.build();
 
-			// //////////////////////////////////////////////////////
-			// Implementing classes would do setting of specific //
-			// vars here together with any sanity checking //
-			// //////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////
+			//  Implementing classes would do setting of specific //
+			//  vars here together with any sanity checking       //
+			////////////////////////////////////////////////////////
 			partialBuild.setSeed(seed);
 			partialBuild.setMaxOverlap(maxOverlap);
 			partialBuild.setMaxBuckets(maxBuckets);
@@ -763,7 +766,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<FieldMetaType> getDecoderOutputFieldTypes() {
-		return Arrays.asList(FieldMetaType.FLOAT);
+	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+		return new LinkedHashSet<FieldMetaType>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER));
 	}
 }

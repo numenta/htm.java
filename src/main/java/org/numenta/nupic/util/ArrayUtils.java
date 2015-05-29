@@ -66,6 +66,22 @@ public class ArrayUtils {
         @Override public boolean eval(int n) { return n >= 0; }
     };
     
+    
+    /**
+     * Returns the product of each integer in the specified array.
+     * 
+     * @param dims
+     * @return
+     */
+    public static int product(int[] dims) {
+        int retVal = 1;
+        for(int i = 0;i < dims.length;i++) {
+            retVal *= dims[i];
+        }
+        
+        return retVal;
+    }
+    
     /**
      * Returns an array containing the successive elements of each
      * argument array as in [ first[0], second[0], first[1], second[1], ... ].
@@ -684,20 +700,7 @@ public class ArrayUtils {
      * @return
      */
     public static double variance(double[] arr) {
-        double mean = average(arr);
-        
-        double accum = 0.0;
-        double dev = 0.0;
-        double accum2 = 0.0;
-        for (int i = 0; i < arr.length; i++) {
-            dev = arr[i] - mean;
-            accum += dev * dev;
-            accum2 += dev;
-        }
-        
-        double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
-        
-        return var;
+        return variance(arr, average(arr));
     }
 
     /**

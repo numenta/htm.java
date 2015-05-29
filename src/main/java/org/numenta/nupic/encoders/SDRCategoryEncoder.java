@@ -26,6 +26,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
+import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MinMax;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -221,6 +223,14 @@ public class SDRCategoryEncoder extends Encoder<String> {
         }
         LOG.trace("input:" + input + ", index:" + index + ", output:" + ArrayUtils.intArrayToString(output));
         LOG.trace("decoded:" + decodedToStr(decode(output, "")));
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+        return new HashSet<>(Arrays.asList(FieldMetaType.LIST, FieldMetaType.STRING));
     }
 
     /**
