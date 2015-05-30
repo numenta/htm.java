@@ -80,8 +80,9 @@ public class ObservableSensorTest {
     
     @Test
     public void testProgrammaticStream() {
-        NetworkInputKit kit = new NetworkInputKit();
-        Object[] n = { "some name", kit.observe() };
+//        NetworkInputKit kit = new NetworkInputKit();
+        PublishSubject<String> manual = PublishSubject.create();
+        Object[] n = { "some name", manual };
         SensorParams parms = SensorParams.create(Keys::obs, n);
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
         long count = sensor.getInputStream().count();
