@@ -1,16 +1,13 @@
 package org.numenta.nupic.datagen;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-import org.numenta.nupic.network.Inference;
+import org.junit.Ignore;
 
 import rx.Observer;
 
 
 public class NetworkInputKitTest {
 
-    @Test
+    @Ignore
     public void test() {
         String[] entries = { 
             "timestamp", "consumption",

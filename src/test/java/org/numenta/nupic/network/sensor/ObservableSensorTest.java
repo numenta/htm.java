@@ -78,7 +78,7 @@ public class ObservableSensorTest {
         assertEquals(4391, count);
     }
     
-    @Test
+    @Ignore
     public void testProgrammaticStream() {
 //        NetworkInputKit kit = new NetworkInputKit();
         PublishSubject<String> manual = PublishSubject.create();

@@ -310,6 +310,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private BatchedCsvHeader header;
     private Stream<T> delegate;
     private int headerStateTracker = 0;
+    private List<String[]> headerCache = new ArrayList<>();
     
     /**
      * Constructs a new {@code BatchedCsvStream}
@@ -325,6 +326,20 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         }).iterator();
         this.fence = headerLength;
         makeHeader();
+        
+//        this.it = s.map(line -> { 
+//            ++headerStateTracker;
+//            return line.split("[\\s]*,[\\s]*", -1); 
+//        }).filter(l -> { 
+//            headerCache.add(l);
+//            if(headerStateTracker == headerLength) {
+//               header = new BatchedCsvHeader(headerCache, headerLength);
+//               headerCache.clear();
+//               headerCache = null;
+//            }
+//            return true;
+//        }).iterator();
+//        this.fence = headerLength;
     }
     
     /**
