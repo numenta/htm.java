@@ -15,14 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.datagen.NetworkInputKit;
+import org.numenta.nupic.datagen.NetworkKit;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -39,6 +38,7 @@ import org.numenta.nupic.util.MersenneTwister;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
+import rx.subjects.ReplaySubject;
 
 
 public class LayerTest {
@@ -210,14 +210,18 @@ public class LayerTest {
         }
     }
     
-    @Ignore
+    @Test
     public void testObservableInputLayer() {
-        NetworkInputKit kit = new NetworkInputKit();
+        ReplaySubject<String> manual = NetworkKit.builder()
+            .addHeader("timestamp,consumption")
+            .addHeader("datetime,float")
+            .addHeader("B")
+            .buildPublisher();
         
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, 
                 SensorParams.create(
-                    Keys::obs, new Object[] {"name", kit.observe()}));
+                    Keys::obs, new Object[] {"name", manual}));
         
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getTestEncoderParams());
@@ -234,25 +238,35 @@ public class LayerTest {
         l.start();
         
         l.subscribe(new Observer<Inference>() {
+            int idx = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                System.out.println("layer out: " + output.getSDR());
+                System.out.println("layer out: " + Arrays.toString(output.getSDR()));
+                switch(idx) {
+                    case 0: assertEquals("[0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]", Arrays.toString(output.getSDR()));
+                        break;
+                    case 1: assertEquals("[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]", Arrays.toString(output.getSDR()));
+                        break;
+                    case 2: assertEquals("[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]", Arrays.toString(output.getSDR()));
+                        break;
+                }
+                ++idx;
             }
         });
         
         try {
-            l.getLayerThread().join();
-            
             String[] entries = { 
-                            "timestamp", "consumption",
-                            "datetime", "float",
-                            "B",
-                            "7/2/10 0:00,21.2",
-                            "7/2/10 1:00,34.0",
-                            "7/2/10 2:00,40.4",
-                        };
+                "7/2/10 0:00,21.2",
+                "7/2/10 1:00,34.0",
+                "7/2/10 2:00,40.4",
+            };
+
+            for(String s : entries) {
+                manual.onNext(s);
+            }
             
+            Thread.sleep(100);
         }catch(Exception e) {
             e.printStackTrace();
             fail();

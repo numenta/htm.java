@@ -1,48 +1,49 @@
 package org.numenta.nupic.datagen;
 
-import org.junit.Ignore;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
 
 import rx.Observer;
+import rx.subjects.ReplaySubject;
 
 
 public class NetworkInputKitTest {
 
-    @Ignore
-    public void test() {
+    @Test
+    public void testHeaderAndDelayedEntry() {
+        ReplaySubject<String> manual = NetworkKit.builder()
+            .addHeader("timestamp,consumption")
+            .addHeader("datetime,float")
+            .addHeader("B")
+            .buildPublisher();
+        
+        final List<String> collected = new ArrayList<>();
+        manual.subscribe(new Observer<String>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(String output) {
+                collected.add(output);
+            }
+        });
+        
+        assertEquals(3, collected.size());
+        
         String[] entries = { 
-            "timestamp", "consumption",
-            "datetime", "float",
-            "B",
             "7/2/10 0:00,21.2",
             "7/2/10 1:00,34.0",
             "7/2/10 2:00,40.4",
+            "7/2/10 3:00,123.4",
         };
         
-        final NetworkInputKit kit = new NetworkInputKit();
-        
-        Thread test = null;
-        (test = new Thread() {
-            public void run() {
-                kit.observe().subscribe(new Observer<String>() {
-                    @Override public void onCompleted() {}
-                    @Override public void onError(Throwable e) { e.printStackTrace(); }
-                    @Override public void onNext(String output) {
-                        System.out.println(output);
-                    }
-                });
-            }
-        }).start();
-       
         for(String s : entries) {
-            kit.offer(s);
+            manual.onNext(s);
         }
         
-        try {
-            test.join();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-        
+        assertEquals(7, collected.size());
     }
 
 }

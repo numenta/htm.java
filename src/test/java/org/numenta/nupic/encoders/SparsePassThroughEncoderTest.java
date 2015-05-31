@@ -22,19 +22,16 @@
 
 package org.numenta.nupic.encoders;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 
-import java.util.Arrays;
 import java.util.HashMap;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.junit.rules.ExpectedException;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
