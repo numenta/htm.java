@@ -372,7 +372,11 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         }
         
         int i = 0;
-        while(i++ < fence) contents.add(it.next());
+        while(i++ < fence) {
+            String[] h = it.next();
+            System.out.println("makeHeader[" + i + "] : " + Arrays.toString(h));
+            contents.add(h);
+        }
         this.header = new BatchedCsvHeader(contents, fence);
     }
     

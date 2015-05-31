@@ -12,12 +12,12 @@ import java.util.stream.Stream;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.ValueList;
-import org.numenta.nupic.datagen.NetworkInputKit;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
 import rx.subjects.PublishSubject;
+import rx.subjects.ReplaySubject;
 
 
 /**
@@ -78,15 +78,37 @@ public class ObservableSensorTest {
         assertEquals(4391, count);
     }
     
-    @Ignore
+    @Test
     public void testProgrammaticStream() {
 //        NetworkInputKit kit = new NetworkInputKit();
-        PublishSubject<String> manual = PublishSubject.create();
+        final ReplaySubject<String> manual = ReplaySubject.create();
+        manual.onNext("timestamp,consumption");
+        manual.onNext("datetime,float");
+        manual.onNext("B");
+        
+        System.out.println("run called");
         Object[] n = { "some name", manual };
         SensorParams parms = SensorParams.create(Keys::obs, n);
-        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
-        long count = sensor.getInputStream().count();
-        assertEquals(4391, count);
+        final Sensor<ObservableSensor<String>> sensor = Sensor.create(ObservableSensor::create, parms);
+        
+        (new Thread() {
+            public void run() {
+                sensor.getInputStream().forEach(l -> { System.out.println(l); });
+            }
+        }).start();
+        
+        
+        String[] entries = { 
+            "7/2/10 0:00,21.2",
+            "7/2/10 1:00,34.0",
+            "7/2/10 2:00,40.4",
+            "7/2/10 3:00,123.4",
+        };
+        manual.onNext(entries[0]);
+        manual.onNext(entries[1]);
+        manual.onNext(entries[2]);
+        manual.onNext(entries[3]);
+        
     }
     
     int headerIdx = 0;
