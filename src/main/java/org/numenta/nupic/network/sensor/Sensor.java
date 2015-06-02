@@ -13,11 +13,15 @@ import rx.Observable;
  * Parent type for all {@link Sensor}s. This type describes strategies
  * used to connect to a data source on behalf of an HTM network
  * (see {@link Network}). Subtypes of this type use {@link SensorParams}
- * to configure the connection and location details.
+ * to configure the connection and location details. In this way, Sensors
+ * may be used to connect {@link Stream}s of data in multiple ways; either
+ * from a file or URL, or in a functional/reactive way via an {@link rx.Observable}
+ * or {@link Publisher} from this library.
  * 
  * @author David Ray
  * @see SensorParams
  * @see SensorFactory
+ * @see Publisher
  * @see Network
  * @param <T>       the resource type to retrieve (i.e. {@link File}, {@link URI}, {@link Observable}
  */
@@ -71,7 +75,7 @@ public interface Sensor<T> {
      * Returns the inner Stream's meta information.
      * @return
      */
-    public ValueList getHeader();
+    public ValueList getMetaInfo();
     
     
 }

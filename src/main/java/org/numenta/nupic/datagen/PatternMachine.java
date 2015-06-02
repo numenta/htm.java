@@ -20,7 +20,7 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic.util;
+package org.numenta.nupic.datagen;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.numenta.nupic.util.MersenneTwister;
 
 /**
  * Utilities for generating and manipulating patterns, for use in

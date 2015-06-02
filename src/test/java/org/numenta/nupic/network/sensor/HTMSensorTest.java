@@ -150,7 +150,7 @@ public class HTMSensorTest {
                 SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")));
         
         // Cast the ValueList to the more complex type (Header)
-        Header meta = (Header)sensor.getHeader();
+        Header meta = (Header)sensor.getMetaInfo();
         assertTrue(meta.getFieldTypes().stream().allMatch(
             l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
         assertTrue(meta.getFieldNames().stream().allMatch(
@@ -171,7 +171,7 @@ public class HTMSensorTest {
                 SensorParams.create(Keys::path, "", ResourceLocator.path("rec-center-hourly-small-noheaderflags.csv")));
         
         // Cast the ValueList to the more complex type (Header)
-        Header meta = (Header)sensor.getHeader();
+        Header meta = (Header)sensor.getMetaInfo();
         assertTrue(meta.getFieldTypes().stream().allMatch(
             l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
         assertTrue(meta.getFieldNames().stream().allMatch(
@@ -194,7 +194,7 @@ public class HTMSensorTest {
         
         // Cast the ValueList to the more complex type (Header)
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
-        Header meta = (Header)htmSensor.getHeader();
+        Header meta = (Header)htmSensor.getMetaInfo();
         assertTrue(meta.getFieldTypes().stream().allMatch(
             l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
         assertTrue(meta.getFieldNames().stream().allMatch(

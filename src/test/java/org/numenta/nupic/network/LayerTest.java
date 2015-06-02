@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
@@ -21,12 +42,12 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.datagen.NetworkKit;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
+import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
@@ -38,9 +59,13 @@ import org.numenta.nupic.util.MersenneTwister;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
-import rx.subjects.ReplaySubject;
 
-
+/**
+ * Tests the "heart and soul" of the Network API
+ * 
+ * @author DavidRay
+ *
+ */
 public class LayerTest {
 
     /** Total used for spatial pooler priming tests */
@@ -103,7 +128,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-        l.close();
         
         l.start();
         
@@ -146,7 +170,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-        l.close();
         
         l.start();
         
@@ -154,7 +177,7 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                if(l.getSensor().getHeader().isReset()) {
+                if(l.getSensor().getMetaInfo().isReset()) {
                     trueCount++;
                 }
             }
@@ -187,7 +210,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-        l.close();
         
         l.start();
         
@@ -195,7 +217,7 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                if(l.getSensor().getHeader().isReset()) {
+                if(l.getSensor().getMetaInfo().isReset()) {
                     seqResetCount++;
                 }
             }
@@ -211,12 +233,12 @@ public class LayerTest {
     }
     
     @Test
-    public void testObservableInputLayer() {
-        ReplaySubject<String> manual = NetworkKit.builder()
+    public void testLayerWithObservableInput() {
+        Publisher manual = Publisher.builder()
             .addHeader("timestamp,consumption")
             .addHeader("datetime,float")
             .addHeader("B")
-            .buildPublisher();
+            .build();
         
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, 
@@ -233,7 +255,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-        l.close();
         
         l.start();
         
@@ -242,7 +263,6 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                System.out.println("layer out: " + Arrays.toString(output.getSDR()));
                 switch(idx) {
                     case 0: assertEquals("[0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]", Arrays.toString(output.getSDR()));
                         break;
@@ -262,6 +282,7 @@ public class LayerTest {
                 "7/2/10 2:00,40.4",
             };
 
+            // Send inputs through the observable
             for(String s : entries) {
                 manual.onNext(s);
             }
@@ -281,7 +302,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, null, null, null, null);
-        l.close();
         
         final int[][] expected = new int[7][8];
         expected[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -316,7 +336,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, null, null, null, null);
-        l.close();
         
         final int[][] expected = new int[7][8];
         expected[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -361,7 +380,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-        l.close();
         
         int[][] expected = new int[][] {
             { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
@@ -436,7 +454,6 @@ public class LayerTest {
         final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
         
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
-        l.close();
         
         l.subscribe(new Observer<Inference>() {
             int test = 0;
@@ -480,7 +497,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor).add(new SpatialPooler());
-        l.close();
         l.start();
         
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
@@ -536,7 +552,6 @@ public class LayerTest {
         final int[][] expecteds = { expected1, expected2, expected3, expected4, expected5, expected6, expected7 };
         
         Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, null);
-        l.close();
         
         int timeUntilStable = 415;
         
@@ -623,7 +638,7 @@ public class LayerTest {
         
         // First test without prime directive :-P
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
-        l.close();
+        
         l.subscribe(new Observer<Inference>() {
             int test = 0;
             
@@ -653,7 +668,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, 1);
         
         Layer<int[]> l2 = new Layer<>(p, null, new SpatialPooler(), null, null, null);
-        l2.close();
+        
         l2.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -682,7 +697,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        l.close();
         
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -721,7 +735,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        l.close();
         
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -767,7 +780,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        l.close();
         
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -864,7 +876,6 @@ public class LayerTest {
         
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), 
             Boolean.TRUE, anomalyComputer);
-        l.close();
         
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -938,7 +949,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        l.close();
         
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -996,7 +1006,6 @@ public class LayerTest {
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        l.close();
         
         final List<int[]> emissions = new ArrayList<int[]>();
         Observable<Inference> o = l.observe();
@@ -1065,11 +1074,9 @@ public class LayerTest {
                 .add(Sensor.create(
                     FileSensor::create, 
                         SensorParams.create(
-                            Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))))
-                .close();
+                            Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
         
         l.getConnections().printParameters();
-        System.out.println("inhibit radius = " + l.getConnections().getInhibitionRadius());
         
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}

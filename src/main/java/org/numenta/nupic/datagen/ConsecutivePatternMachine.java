@@ -20,7 +20,7 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic.util;
+package org.numenta.nupic.datagen;
 
 import java.util.LinkedHashSet;
 

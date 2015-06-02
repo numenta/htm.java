@@ -118,6 +118,9 @@ public class Region {
      */
     @SuppressWarnings("unchecked")
     public <T> void compute(T input) {
+        if(!assemblyClosed) {
+            close();
+        }
         this.input = input;
         ((Layer<T>)tail).compute(input);
     }
@@ -182,6 +185,9 @@ public class Region {
      * @return
      */
     public Observable<Inference> observe() {
+        if(regionObservable == null && !assemblyClosed) {
+            close();
+        }
         return regionObservable;
     }
     
@@ -191,6 +197,10 @@ public class Region {
      * effect.
      */
     public void start() {
+        if(!assemblyClosed) {
+            close();
+        }
+        
         if(tail.hasSensor()) {
             LOGGER.info("Starting Region [" + getName() + "] input Layer thread.");
             tail.start();

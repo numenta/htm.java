@@ -463,7 +463,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * @return
      */
     @Override
-    public Header getHeader() {
+    public Header getMetaInfo() {
         return header;
     }
 

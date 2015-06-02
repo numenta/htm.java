@@ -70,7 +70,7 @@ public class ObservableSensorTest {
      * </ul>
      */
     @Test
-    public void testCanRetrieveStream() {
+    public void testObservableFromFile() {
         Object[] n = { "some name", makeFileObservable() };
         SensorParams parms = SensorParams.create(Keys::obs, n);
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
@@ -79,21 +79,19 @@ public class ObservableSensorTest {
     }
     
     @Test
-    public void testProgrammaticStream() {
-//        NetworkInputKit kit = new NetworkInputKit();
+    public void testOpenObservableWithExplicitEntry() {
         final ReplaySubject<String> manual = ReplaySubject.create();
         manual.onNext("timestamp,consumption");
         manual.onNext("datetime,float");
         manual.onNext("B");
         
-        System.out.println("run called");
         Object[] n = { "some name", manual };
         SensorParams parms = SensorParams.create(Keys::obs, n);
         final Sensor<ObservableSensor<String>> sensor = Sensor.create(ObservableSensor::create, parms);
         
         (new Thread() {
             public void run() {
-                sensor.getInputStream().forEach(l -> { System.out.println(l); });
+                sensor.getInputStream().forEach(l -> { System.out.println(Arrays.toString((String[])l)); });
             }
         }).start();
         
@@ -108,70 +106,6 @@ public class ObservableSensorTest {
         manual.onNext(entries[1]);
         manual.onNext(entries[2]);
         manual.onNext(entries[3]);
-        
-    }
-    
-    int headerIdx = 0;
-    @Ignore
-    public void testProgrammaticStreamX() {
-        PublishSubject<String> manual = PublishSubject.create();
-        final String[][] header = new String[][] {
-            { "timestamp", "consumption"},
-            { "datetime", "float"},
-            { "B" }
-        };
-        Object[] n = { "some name", manual, Arrays.asList(header) };
-        
-        SensorParams parms = SensorParams.create(new String[] { "", "ONSUB", "HEADER" }, n);
-        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(ObservableSensor::create, parms);
-        
-        ValueList headerValues = sensor.getHeader();
-        assertEquals(3, headerValues.size());
-        
-        String[][] expected = {
-            { "0", "7/2/10 0:00", "21.2" },
-            { "1", "7/2/10 1:00", "34.0" },
-            { "2", "7/2/10 2:00", "40.4" },
-        };
-        
-        final Stream<String[]> testStream = sensor.getInputStream();
-        
-        Thread testThread = null;
-        (testThread = new Thread() {
-            public void run() {
-                testStream.map(i -> {
-                    switch(headerIdx) {
-                        case 0: assertTrue(Arrays.equals((String[])expected[0], (String[])i)); break;
-                        case 1: assertTrue(Arrays.equals((String[])expected[1], (String[])i)); break;
-                        case 2: assertTrue(Arrays.equals((String[])expected[2], (String[])i)); break;
-                    }
-                    ++headerIdx;
-                    return (String[])i;
-                });
-                testStream.count();
-            }
-        }).start();
-        
-       
-        String[] entries = { 
-            "timestamp", "consumption",
-            "datetime", "float",
-            "B",
-            "7/2/10 0:00,21.2",
-            "7/2/10 1:00,34.0",
-            "7/2/10 2:00,40.4",
-        };
-        manual.onNext(entries[0]);
-        manual.onNext(entries[1]);
-        manual.onNext(entries[2]);
-        testStream.close();
-        
-        try {
-            testThread.join();
-            assertEquals(2, headerIdx);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
         
     }
 

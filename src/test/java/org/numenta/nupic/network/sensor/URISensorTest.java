@@ -1,13 +1,11 @@
 package org.numenta.nupic.network.sensor;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.net.URI;
 
 import org.junit.Ignore;
-import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.network.sensor.SensorParams;
-import org.numenta.nupic.network.sensor.URISensor;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 /**
@@ -32,6 +30,8 @@ public class URISensorTest {
         
         assertNotNull(sensor);
         assertNotNull(sensor.getParams());
+        
+        assertEquals(4391, sensor.getInputStream().count());
     }
 
 }

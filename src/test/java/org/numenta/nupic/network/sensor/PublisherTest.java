@@ -1,6 +1,7 @@
-package org.numenta.nupic.datagen;
+package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,18 +9,27 @@ import java.util.List;
 import org.junit.Test;
 
 import rx.Observer;
-import rx.subjects.ReplaySubject;
 
-
-public class NetworkInputKitTest {
+/**
+ * Tests the structured process for building an {@link Observable}
+ * emitter ({@code Publisher}) which can validate a manually constructed
+ * input header and allow manual entry.
+ * 
+ * @author David Ray
+ * @see Publisher
+ * @see Header
+ * @see ObservableSensor
+ * @see ObservableSensorTest
+ */
+public class PublisherTest {
 
     @Test
-    public void testHeaderAndDelayedEntry() {
-        ReplaySubject<String> manual = NetworkKit.builder()
+    public void testHeaderConstructionAndManualEntry() {
+        Publisher manual = Publisher.builder()
             .addHeader("timestamp,consumption")
             .addHeader("datetime,float")
             .addHeader("B")
-            .buildPublisher();
+            .build();
         
         final List<String> collected = new ArrayList<>();
         manual.subscribe(new Observer<String>() {
@@ -46,4 +56,14 @@ public class NetworkInputKitTest {
         assertEquals(7, collected.size());
     }
 
+    @Test
+    public void testHeader() {
+        try {
+            Publisher.builder().build();
+            fail();
+        }catch(IllegalStateException e) {
+            assertEquals("Header not properly formed (must contain 3 lines) see Header.java", e.getMessage());
+        }
+
+    }
 }

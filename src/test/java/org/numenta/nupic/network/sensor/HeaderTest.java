@@ -37,7 +37,7 @@ public class HeaderTest {
             FileSensor::create, 
                 SensorParams.create(Keys::path, n));
         
-        Header header = new Header(sensor2.getHeader());
+        Header header = new Header(sensor2.getMetaInfo());
         assertEquals("[T, B, R]", header.getFlags().toString());
     }
 

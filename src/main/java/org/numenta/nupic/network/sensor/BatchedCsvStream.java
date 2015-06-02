@@ -310,7 +310,6 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private BatchedCsvHeader header;
     private Stream<T> delegate;
     private int headerStateTracker = 0;
-    private List<String[]> headerCache = new ArrayList<>();
     
     /**
      * Constructs a new {@code BatchedCsvStream}
@@ -327,38 +326,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         this.fence = headerLength;
         makeHeader();
         
-//        this.it = s.map(line -> { 
-//            ++headerStateTracker;
-//            return line.split("[\\s]*,[\\s]*", -1); 
-//        }).filter(l -> { 
-//            headerCache.add(l);
-//            if(headerStateTracker == headerLength) {
-//               header = new BatchedCsvHeader(headerCache, headerLength);
-//               headerCache.clear();
-//               headerCache = null;
-//            }
-//            return true;
-//        }).iterator();
-//        this.fence = headerLength;
-    }
-    
-    /**
-     * Constructs a new {@code BatchedCsvStream} using the specified
-     * headerLength and header String array lines.
-     * 
-     * @param s                 the underlying JDK {@link Stream}
-     * @param headerLength      the number of header lines preceding the data.      
-     * @param header            headerLength String[] containing header info
-     */
-    public BatchedCsvStream(Stream<String> s, int headerLength, List<String[]> header) {
-        this.it = s.map(line -> { 
-            ++headerStateTracker;
-            return line.split("[\\s]*,[\\s]*", -1); 
-        }).iterator();
-        this.fence = headerLength;
-        
-        List<String[]> contents = new ArrayList<>(header);
-        this.header = new BatchedCsvHeader(contents, fence);
+        LOGGER.debug("Created BatchedCsvStream");
     }
     
     /**
@@ -367,17 +335,20 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private void makeHeader() {
         List<String[]> contents = new ArrayList<>();
         
-        if(headerStateTracker < fence) {
-            LOGGER.warn("Stream blocked waiting on first " + fence + " lines of content (i.e. header not created)\n");
-        }
-        
         int i = 0;
         while(i++ < fence) {
             String[] h = it.next();
-            System.out.println("makeHeader[" + i + "] : " + Arrays.toString(h));
             contents.add(h);
         }
         this.header = new BatchedCsvHeader(contents, fence);
+        
+        if(LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Created Header:");
+            for(String[] h : contents) {
+                LOGGER.debug("\t" + Arrays.toString(h));
+            }
+            LOGGER.debug("Successfully created BatchedCsvHeader.");
+        }
     }
     
     /**
@@ -564,28 +535,6 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         //parsing the sequence number later. (to avoid calling String.split() on each entry MULTIPLE TIMES (for the eventual sort))
         //Initializes and creates the CsvHeader here:
         BatchedCsvStream<String[]> csv = new BatchedCsvStream<>(stream, headerLength);
-        Stream<String[]> s = !isParallel ? csv.continuation(isParallel) : 
-            StreamSupport.stream(batchedSpliterator(csv, batchSize, isParallel, characteristics), isParallel);
-        csv.delegate = s;
-        return csv;
-    }
-    
-    /**
-     * Factory method to create a {@code BatchedCsvStream}.
-     *  
-     * @param stream                JDK Stream
-     * @param batchSize             the "chunk" length to be processed by each Threaded task
-     * @param isParallel            if true, batching will take place, otherwise not
-     * @param characteristics       stream configuration parameters
-     * @param headerLength          number of header lines
-     * @param header                String[] containing header line(s)
-     * @return
-     */
-    public static BatchedCsvStream<String[]> batch(Stream<String> stream, int batchSize, boolean isParallel, int characteristics, int headerLength, List<String[]> header) {
-        //Notice the Type of the Stream becomes String[] - This is an important optimization for 
-        //parsing the sequence number later. (to avoid calling String.split() on each entry MULTIPLE TIMES (for the eventual sort))
-        //Initializes and creates the CsvHeader here:
-        BatchedCsvStream<String[]> csv = new BatchedCsvStream<>(stream, headerLength, header);
         Stream<String[]> s = !isParallel ? csv.continuation(isParallel) : 
             StreamSupport.stream(batchedSpliterator(csv, batchSize, isParallel, characteristics), isParallel);
         csv.delegate = s;

@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.network;
 
 import java.util.ArrayList;
@@ -96,6 +117,10 @@ import rx.subjects.PublishSubject;
  *      Parameters p = Parameters.getDefaultParameters();
  *      p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
  * </pre>
+ * For an example of how to create the field encodings map in a reusable way, see {@link NetworkTestHarness} and
+ * its usage within the {@link LayerTest} class.
+ * 
+ * 
  * 
  *  
  * @author David Ray
@@ -264,6 +289,10 @@ public class Layer<T> {
      */
     @SuppressWarnings("unchecked")
     public Layer<T> close() {
+        if(isClosed) {
+            LOGGER.warn("Close called on Layer " + getName() + " which is already closed.");
+        }
+        
         params.apply(connections);
         
         if(sensor != null) {
@@ -286,6 +315,7 @@ public class Layer<T> {
                         KEY.FIELD_ENCODING_MAP));
             }
             
+            // Make the declared column dimensions match the actual input dimensions retrieved from the encoder 
             int inputLength, columnLength = 0;
             if(((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
                 (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) ||
@@ -566,6 +596,10 @@ public class Layer<T> {
      * @param t     the input object who's type is generic.
      */
     public void compute(T t) {
+        if(!isClosed) {
+            close();
+        }
+        
         increment();
         
         if(!dispatchCompleted()) {
@@ -612,6 +646,11 @@ public class Layer<T> {
      */
     @SuppressWarnings("unchecked")
     public void start() {
+        // Save boilerplate setup steps by automatically closing when start is called.
+        if(!isClosed) {
+            close();
+        }
+        
         if(sensor == null) {
             throw new IllegalStateException("A sensor must be added when the mode is not Network.Mode.MANUAL");
         }
@@ -1284,7 +1323,7 @@ public class Layer<T> {
     private int[] spatialInput(int[] input) {
         spatialPooler.compute(
             connections, input, activeColumns, 
-                sensor == null || sensor.getHeader().isLearn(), true);
+                sensor == null || sensor.getMetaInfo().isLearn(), true);
         return activeColumns;
     }
 
@@ -1297,11 +1336,11 @@ public class Layer<T> {
     private int[] temporalInput(int[] input) {
         ComputeCycle cc = null;
         if(sensor != null) {
-            if(sensor.getHeader().isReset()) {
+            if(sensor.getMetaInfo().isReset()) {
                 temporalMemory.reset(connections);
             }
             
-            cc = temporalMemory.compute(connections, input, sensor.getHeader().isLearn());
+            cc = temporalMemory.compute(connections, input, sensor.getMetaInfo().isLearn());
         } else {
             cc = temporalMemory.compute(connections, input, true);
         }

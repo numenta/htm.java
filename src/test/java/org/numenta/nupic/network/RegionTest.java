@@ -56,6 +56,31 @@ public class RegionTest {
     }
     
     @Test
+    public void testAutomaticClose() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network n = Network.create("test network", p);
+        Region r1 = n.createRegion("r1")
+            .add(n.createLayer("4", p)
+                .add(MultiEncoder.builder().name("").build()));
+            //.close(); // Not necessary due to implicit call during start() or compute()
+        
+        r1.start();
+        
+        assertTrue(r1.isClosed());
+        
+        try {
+            r1.add(n.createLayer("5", p));
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().isAssignableFrom(IllegalStateException.class));
+            assertEquals("Cannot add Layers when Region has already been closed.", e.getMessage());
+        }
+    }
+    
+    @Test
     public void testAdd() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
@@ -103,8 +128,7 @@ public class RegionTest {
                 .add(new SpatialPooler()))
             .connect("1", "2")
             .connect("2", "3")
-            .connect("3", "4")
-            .close();
+            .connect("3", "4");
         
         r1.observe().subscribe(new Subscriber<Inference>() {
             int seq = 0;
@@ -155,9 +179,9 @@ public class RegionTest {
         Network n = Network.create("test network", p);
         n.createRegion("r1")
             .add(n.createLayer("4", p)
-                .add(MultiEncoder.builder().name("").build()))
+            .add(MultiEncoder.builder().name("").build()))
             .close();
-        
+            
         // Should correct the above ( {40,40} ) to have only one dimension whose width is 8 ( {8} )
         assertTrue(Arrays.equals(new int[] { 8 }, (int[])p.getParameterByKey(KEY.INPUT_DIMENSIONS)));
     }
@@ -228,7 +252,6 @@ public class RegionTest {
             .connect("2", "3")
             .connect("3", "4");
         r1.lookup("3").using(r1.lookup("4").getConnections()); // How to share Connections object between Layers
-        r1.close();
         
         r1.observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
@@ -292,8 +315,7 @@ public class RegionTest {
                 .add(new SpatialPooler()))
             .connect("1", "2")
             .connect("2", "3")
-            .connect("3", "4")
-            .close();
+            .connect("3", "4");
         
         r1.observe().subscribe(new Subscriber<Inference>() {
             int idx = 0;
@@ -374,8 +396,7 @@ public class RegionTest {
                 .add(Sensor.create(FileSensor::create, SensorParams.create(
                     Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
                 .add(new SpatialPooler()))
-            .connect("2/3", "4")
-            .close();
+            .connect("2/3", "4");
         
         final int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };

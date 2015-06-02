@@ -66,6 +66,9 @@ public class URISensor implements Sensor<URI>  {
         return sensor;
     }
     
+    /**
+     * Returns the {@link SensorParams} used to configure this {@code URISensor}
+     */
     @Override
     public SensorParams getParams() {
         return params;
@@ -86,7 +89,7 @@ public class URISensor implements Sensor<URI>  {
      * Returns the values specifying meta information about the 
      * underlying stream.
      */
-    public ValueList getHeader() {
+    public ValueList getMetaInfo() {
         return stream.getMeta();
     }
 
