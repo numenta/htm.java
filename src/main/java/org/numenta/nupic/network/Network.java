@@ -101,7 +101,12 @@ public interface Network {
      * @param   name    The String identifier for the specified {@link Region}
      * @return
      */
-    public Region createRegion(String name);
+    public static Region createRegion(String name) {
+        NetworkImpl.checkName(name);
+        
+        Region r = new Region(name, null);
+        return r;
+    }
     
     /**
      * Creates a {@link Layer} to hold algorithmic components
@@ -110,16 +115,20 @@ public interface Network {
      * @param p
      * @return
      */
-    public Layer<?> createLayer(String name, Parameters p);
+    @SuppressWarnings("rawtypes")
+    public static Layer<?> createLayer(String name, Parameters p) {
+        NetworkImpl.checkName(name);
+        return new Layer(name, null, p);
+    }
     
     /**
-     * Creates a {@link Layer} using the default {@link Network} level parameters
-     * 
-     * @param name  the String identifier for the specified {@link Layer}
+     * Returns the {@link Region} with the specified name
+     * or null if it doesn't exist within this {@code Network}
+     * @param regionName
      * @return
      */
-    public Layer<?> createLayer(String name);
-    
+    public Region lookup(String regionName);
+
     /**
      * Returns the network-level {@link Parameters}.
      * @return
@@ -213,6 +222,7 @@ public interface Network {
         @Override
         public Network add(Region region) {
             regions.add(region);
+            region.setNetwork(this);
             return this;
         }
 
@@ -224,36 +234,21 @@ public interface Network {
             // TODO Auto-generated method stub
             return null;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Region createRegion(String name) {
-            checkName(name);
-            
-            Region r = new Region(name, this);
-            return r;
-        }
         
         /**
-         * {@inheritDoc}
+         * Returns the {@link Region} with the specified name
+         * or null if it doesn't exist within this {@code Network}
+         * @param regionName
+         * @return
          */
-        @SuppressWarnings("rawtypes")
         @Override
-        public Layer<?> createLayer(String name) {
-            checkName(name);
-            return new Layer(name, this, this.parameters);
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @SuppressWarnings("rawtypes")
-        @Override
-        public Layer<?> createLayer(String name, Parameters p) {
-            checkName(name);
-            return new Layer(name, this, p);
+        public Region lookup(String regionName) {
+            for(Region r : regions) {
+                if(r.getName().equals(regionName)) {
+                    return r;
+                }
+            }
+            return null;
         }
 
         /**
@@ -309,7 +304,7 @@ public interface Network {
          * 
          * @param name
          */
-        private void checkName(String name) {
+        private static void checkName(String name) {
             if(name.indexOf(":") != -1) {
                 throw new IllegalArgumentException("\":\" is a reserved character.");
             }

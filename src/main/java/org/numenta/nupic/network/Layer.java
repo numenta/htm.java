@@ -206,14 +206,6 @@ public class Layer<T> {
         this.parentNetwork = n;
         this.params = p;
 
-        if(n == null || p == null) {
-            if(n == null) {
-                LOGGER.warn("Attempt to instantiate Layer with null Network");
-            }else{
-                LOGGER.warn("Attempt to instantiate Layer with null Parameters");
-            }
-            return;
-        }
         connections = new Connections();
         
         this.autoCreateClassifiers = (Boolean)p.getParameterByKey(KEY.AUTO_CLASSIFY);
@@ -221,6 +213,14 @@ public class Layer<T> {
         factory = new FunctionFactory();
         
         observableDispatch = createDispatchMap();
+    }
+    
+    /**
+     * Sets the parent {@link Network} on this {@code Layer}
+     * @param network
+     */
+    public void setNetwork(Network network) {
+        this.parentNetwork = network;
     }
 
     /**
@@ -1580,7 +1580,12 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    return t1.anomalyScore(anomalyComputer.compute(t1.getSparseActives(), t1.getPreviousPrediction(), 0, 0));
+                    if(t1.getSparseActives() == null || t1.getPreviousPrediction() == null) {
+                        return t1.anomalyScore(0.0);
+                    }
+                    return t1.anomalyScore(
+                        anomalyComputer.compute(
+                            t1.getSparseActives(), t1.getPreviousPrediction(), 0, 0));
                 }
             };
         }

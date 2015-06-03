@@ -3,7 +3,6 @@ package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
@@ -38,16 +37,16 @@ public class RegionTest {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("4", p)
-                .add(MultiEncoder.builder().name("").build()))
-            .close();
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("4", p)
+                    .add(MultiEncoder.builder().name("").build()))
+                    .close());
         
-        assertTrue(r1.isClosed());
+        assertTrue(n.lookup("r1").isClosed());
         
         try {
-            r1.add(n.createLayer("5", p));
+            n.lookup("r1").add(Network.createLayer("5", p));
             fail();
         }catch(Exception e) {
             assertTrue(e.getClass().isAssignableFrom(IllegalStateException.class));
@@ -61,18 +60,19 @@ public class RegionTest {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("4", p)
-                .add(MultiEncoder.builder().name("").build()));
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+            .add(Network.createLayer("4", p)
+                .add(MultiEncoder.builder().name("").build())));
             //.close(); // Not necessary due to implicit call during start() or compute()
         
+        Region r1 = n.lookup("r1");
         r1.start();
         
         assertTrue(r1.isClosed());
         
         try {
-            r1.add(n.createLayer("5", p));
+            r1.add(Network.createLayer("5", p));
             fail();
         }catch(Exception e) {
             assertTrue(e.getClass().isAssignableFrom(IllegalStateException.class));
@@ -86,17 +86,18 @@ public class RegionTest {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("4", p)
-                .add(MultiEncoder.builder().name("").build()));
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("4", p)
+                    .add(MultiEncoder.builder().name("").build())));
         
+        Region r1 = n.lookup("r1");
         Layer<?>layer4 = r1.lookup("4");
         assertNotNull(layer4);
         assertEquals("r1:4", layer4.getName());
         
         try {
-            r1.add(n.createLayer("4"));
+            r1.add(Network.createLayer("4", p));
             fail();
         }catch(Exception e) {
             assertTrue(e.getClass().isAssignableFrom(IllegalArgumentException.class));
@@ -114,22 +115,23 @@ public class RegionTest {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("1", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
-            .add(n.createLayer("2", p)
-                .add(Anomaly.create(params)))
-            .add(n.createLayer("3", p)
-                .add(new TemporalMemory()))
-            .add(n.createLayer("4", p)
-                .add(Sensor.create(FileSensor::create, SensorParams.create(
-                    Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
-                .add(new SpatialPooler()))
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
+                    .add(new SpatialPooler()))
             .connect("1", "2")
             .connect("2", "3")
-            .connect("3", "4");
+            .connect("3", "4"));
         
+        Region r1 = n.lookup("r1");
         r1.observe().subscribe(new Subscriber<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {
@@ -176,11 +178,11 @@ public class RegionTest {
         // Purposefully set this to be wrong
         p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 40, 40 });
         
-        Network n = Network.create("test network", p);
-        n.createRegion("r1")
-            .add(n.createLayer("4", p)
-            .add(MultiEncoder.builder().name("").build()))
-            .close();
+        Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("4", p)
+                    .add(MultiEncoder.builder().name("").build()))
+                    .close());
             
         // Should correct the above ( {40,40} ) to have only one dimension whose width is 8 ( {8} )
         assertTrue(Arrays.equals(new int[] { 8 }, (int[])p.getParameterByKey(KEY.INPUT_DIMENSIONS)));
@@ -198,20 +200,19 @@ public class RegionTest {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("1", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
-            .add(n.createLayer("2", p)
-                .add(Anomaly.create(params)))
-            .add(n.createLayer("3", p)
-                .add(new TemporalMemory()))
-            .add(n.createLayer("4", p)
-                .add(new SpatialPooler())
-                .add(MultiEncoder.builder().name("").build()));
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build())));
         
-        assertNull(r1.lookup("1").getEncoder());
-            
+        Region r1 = n.lookup("r1");
         r1.connect("1", "2").connect("2", "3").connect("3", "4");
         
         assertNotNull(r1.lookup("1").getEncoder());
@@ -237,20 +238,22 @@ public class RegionTest {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("1", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
-            .add(n.createLayer("2", p)
-                .add(Anomaly.create(params)))
-            .add(n.createLayer("3", p)
-                .add(new TemporalMemory()))
-            .add(n.createLayer("4", p)
-                .add(new SpatialPooler())
-                .add(MultiEncoder.builder().name("").build()))
-            .connect("1", "2")
-            .connect("2", "3")
-            .connect("3", "4");
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build()))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        
+        Region r1 = n.lookup("r1");
         r1.lookup("3").using(r1.lookup("4").getConnections()); // How to share Connections object between Layers
         
         r1.observe().subscribe(new Subscriber<Inference>() {
@@ -301,23 +304,23 @@ public class RegionTest {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("1", p)
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+            .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
-            .add(n.createLayer("2", p)
+            .add(Network.createLayer("2", p)
                 .add(Anomaly.create(params)))
-            .add(n.createLayer("3", p)
+            .add(Network.createLayer("3", p)
                 .add(new TemporalMemory()))
-            .add(n.createLayer("4", p)
+            .add(Network.createLayer("4", p)
                 .add(Sensor.create(FileSensor::create, SensorParams.create(
                     Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
                 .add(new SpatialPooler()))
             .connect("1", "2")
             .connect("2", "3")
-            .connect("3", "4");
+            .connect("3", "4"));
         
-        r1.observe().subscribe(new Subscriber<Inference>() {
+        n.lookup("r1").observe().subscribe(new Subscriber<Inference>() {
             int idx = 0;
             
             @Override public void onCompleted() {}
@@ -362,6 +365,7 @@ public class RegionTest {
             }
         });
        
+        Region r1 = n.lookup("r1");
         r1.start();
         
         try {
@@ -387,16 +391,16 @@ public class RegionTest {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
-        Network n = Network.create("test network", p);
-        Region r1 = n.createRegion("r1")
-            .add(n.createLayer("2/3", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                .add(new TemporalMemory()))
-            .add(n.createLayer("4", p)
-                .add(Sensor.create(FileSensor::create, SensorParams.create(
-                    Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
-                .add(new SpatialPooler()))
-            .connect("2/3", "4");
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2/3", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
+                    .add(new SpatialPooler()))
+            .connect("2/3", "4"));
         
         final int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -407,6 +411,7 @@ public class RegionTest {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
         
+        Region r1 = n.lookup("r1");
         // Observe the top layer
         r1.lookup("4").observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}

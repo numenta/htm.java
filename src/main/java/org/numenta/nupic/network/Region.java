@@ -79,6 +79,33 @@ public class Region {
     }
     
     /**
+     * Sets the parent {@link Network} of this {@code Region}
+     * @param network
+     */
+    public void setNetwork(Network network) {
+        this.network = network;
+        for(Layer<?> l : layers.values()) {
+            l.setNetwork(network);
+            // Set the sensor reference for global access.
+            if(l.hasSensor() && network != null) {
+                network.setSensor(l.getSensor());
+                network.setEncoder(l.getSensor().getEncoder());
+            }else if(network != null && l.getEncoder() != null) {
+                network.setEncoder(l.getEncoder());
+            }
+        }
+        
+//        if(sources.size() > 0) {
+//            for(Layer<?> l : sources) {
+//                if(l.getEncoder() != null) {
+//                    l.getPrevious().passEncoder(l.getEncoder());
+//                    break;
+//                }
+//            }
+//        }
+    }
+    
+    /**
      * Closes the Region and completes the finalization of its assembly.
      * After this call, any attempt to mutate the structure of a Region
      * will result in an {@link IllegalStateException} being thrown.
@@ -157,7 +184,7 @@ public class Region {
         }
         
         // Set the sensor reference for global access.
-        if(l.hasSensor()) {
+        if(l.hasSensor() && network != null) {
             network.setSensor(l.getSensor());
             network.setEncoder(l.getSensor().getEncoder());
         }
@@ -170,6 +197,7 @@ public class Region {
         l.name(layerName);
         layers.put(l.getName(), (Layer<Inference>)l);
         l.setRegion(this);
+        l.setNetwork(network);
         
         return this;
     }
@@ -248,14 +276,32 @@ public class Region {
         return this;
     }
     
+    /**
+     * Returns this {@code Region}'s upstream region,
+     * if it exists.
+     * 
+     * @return
+     */
     public Region getUpstreamRegion() {
         return upstreamRegion;
     }
     
+    /**
+     * Returns the top-most (last in execution order from
+     * bottom to top) {@link Layer} in this {@code Region}
+     * 
+     * @return
+     */
     public Layer<?> getHead() {
         return this.head;
     }
     
+    /**
+     * Returns the bottom-most (first in execution order from
+     * bottom to top) {@link Layer} in this {@code Region}
+     * 
+     * @return
+     */
     public Layer<?> getTail() {
         return this.tail;
     }
@@ -362,10 +408,6 @@ public class Region {
     <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
         if(assemblyClosed) {
             throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
-        }
-        
-        if(out.getEncoder() != null) {
-            in.passEncoder(out.getEncoder());
         }
         
         sources.add(out);

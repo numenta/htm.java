@@ -1065,8 +1065,7 @@ public class LayerTest {
         params.put(KEY_USE_MOVING_AVG, true);
         Anomaly anomalyComputer = Anomaly.create(params);
         
-        Layer<?> l = Network.create("Fluent Network Layer", p)
-            .createLayer("TestLayer", p)
+        Layer<?> l = Network.createLayer("TestLayer", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(anomalyComputer)
                 .add(new TemporalMemory())
