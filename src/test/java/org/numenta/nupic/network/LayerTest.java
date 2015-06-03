@@ -947,6 +947,8 @@ public class LayerTest {
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
+        System.out.println("params \n" + p);
+        
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
         
