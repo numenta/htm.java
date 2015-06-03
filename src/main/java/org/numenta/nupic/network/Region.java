@@ -5,11 +5,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import rx.Observable;
+import rx.Observer;
 import rx.Subscriber;
 
  
@@ -43,6 +45,7 @@ public class Region {
     private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
     
     private Network network;
+    private Region upstreamRegion;
     private Map<String, Layer<Inference>> layers = new HashMap<>();
     private Observable<Inference> regionObservable;
     private Layer<?> tail;
@@ -229,7 +232,32 @@ public class Region {
      * @return
      */
     public Region connect(Region inputRegion) {
+        inputRegion.observe().subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @SuppressWarnings("unchecked")
+            @Override public void onNext(Inference i) {
+                if(i.getSDR().length > 0) {
+                    ((Layer<Inference>)tail).compute(i);
+                }
+            }
+        });
+        // Set the upstream region
+        this.upstreamRegion = inputRegion;
+        
         return this;
+    }
+    
+    public Region getUpstreamRegion() {
+        return upstreamRegion;
+    }
+    
+    public Layer<?> getHead() {
+        return this.head;
+    }
+    
+    public Layer<?> getTail() {
+        return this.tail;
     }
     
     /**
@@ -314,9 +342,9 @@ public class Region {
                     throw new IllegalArgumentException("Detected misconfigured Region too many or too few sources.");
                 }
                 head = temp.iterator().next();
-                
-                regionObservable = head.observe();
             }
+            
+            regionObservable = head.observe();
             
             assemblyClosed = true;
         }
@@ -336,16 +364,6 @@ public class Region {
             throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
         }
         
-        //Pass the Inference object from lowest to highest layer.
-        // The passing of the Inference is done in an Observable so that
-        // it happens on every pass through the chain, while the Encoder
-        // is only passed once, so the method is called directly here. We
-        // don't check to see if it exists or is null, since it is already
-        // null in the receiver, it doesn't hurt anything.
-        Observable<Inference> o = out.observe().map(i -> {
-            in.passInference(i);
-            return i;
-        });
         if(out.getEncoder() != null) {
             in.passEncoder(out.getEncoder());
         }
@@ -353,7 +371,7 @@ public class Region {
         sources.add(out);
         sinks.add(in);
         
-        o.subscribe(new Subscriber<Inference>() {
+        out.subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {

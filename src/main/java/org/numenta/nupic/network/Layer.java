@@ -341,6 +341,14 @@ public class Layer<T> {
                 factory.inference.classifiers(makeClassifiers(encoder));
             }
         }
+        
+        // We must adjust this Layer's inputDimensions to the size of the input received from the
+        // previous Region's output vector.
+        if(parentRegion != null && parentRegion.getUpstreamRegion() != null) {
+            int[] upstreamDims = parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions();
+            params.setInputDimensions(upstreamDims);
+            connections.setInputDimensions(upstreamDims);
+        }
 
         // Let the SpatialPooler initialize the matrix with its requirements
         if(spatialPooler != null) {
@@ -875,26 +883,6 @@ public class Layer<T> {
     }
     
     /**
-     * Called by Network infrastructure during assembly, to pass inference
-     * settings up the chain. Here we are careful not to overwrite the higher
-     * level's stored classifiers with a possible null reference from a lower
-     * layer.
-     * 
-     * @param inference
-     * @return
-     */
-    Inference passInference(Inference inference) {
-        // Preserve the top-most Observable's classifiers making sure they 
-        // are not overwritten by null references in previous Observable's 
-        // because the classifiers are always on the top most layer.
-        NamedTuple temp = factory.inference.getClassifiers();
-        currentInference = factory.inference = (ManualInput)inference;
-        factory.inference.classifiers = temp;
-        
-        return inference;
-    }
-    
-    /**
      * Returns the resident {@link MultiEncoder} or the encoder residing
      * in this {@code Layer}'s {@link Sensor}, if any.
      * 
@@ -1321,6 +1309,12 @@ public class Layer<T> {
      * @return
      */
     private int[] spatialInput(int[] input) {
+        if(input == null) {
+            LOGGER.info("Layer ".concat(getName()).concat(" received null input"));
+        }else if(input.length < 1) {
+            LOGGER.info("Layer ".concat(getName()).concat(" received zero length bit vector"));
+            return input;
+        }
         spatialPooler.compute(
             connections, input, activeColumns, 
                 sensor == null || sensor.getMetaInfo().isLearn(), true);
@@ -1373,8 +1367,7 @@ public class Layer<T> {
     //////////////////////////////////////////////////////////////
     class FunctionFactory {
         ManualInput inference = new ManualInput();
-        private boolean isDenseInput = true;
-
+        
         //////////////////////////////////////////////////////////////////////////////
         //                             TRANSFORMERS                                 //
         //////////////////////////////////////////////////////////////////////////////
@@ -1489,7 +1482,8 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(ManualInput t1) {
                         // Indicates a value that skips the encoding step
-                        return (inference = t1).layerInput(t1);
+                        //return (inference = t1).layerInput(t1);
+                        return inference.sdr(t1.getSDR()).recordNum(t1.getRecordNum()).layerInput(t1);
                     }
                 });
             }
@@ -1519,11 +1513,16 @@ public class Layer<T> {
         //                OBSERVABLE COMPONENT CREATION METHODS                     //
         //////////////////////////////////////////////////////////////////////////////
         public Func1<ManualInput, ManualInput> createSpatialFunc(final SpatialPooler sp) {
-            isDenseInput = sp != null;
-
             return new Func1<ManualInput, ManualInput>() {
+                int inputWidth = -1;
                 @Override
                 public ManualInput call(ManualInput t1) {
+                    if(t1.getSDR().length > 0 && ArrayUtils.isSparse(t1.getSDR())) {
+                        if(inputWidth == -1) {
+                            inputWidth = connections.getInputMatrix().getMaxIndex() + 1;
+                        }
+                       t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
+                    }
                     return t1.sdr(spatialInput(t1.getSDR())).activeColumns(t1.getSDR());
                 }
             };
@@ -1533,7 +1532,7 @@ public class Layer<T> {
             return new Func1<ManualInput, ManualInput>() {
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(isDenseInput) {
+                    if(!ArrayUtils.isSparse(t1.getSDR())) {
                         // Set on Layer, then set sparse actives as the sdr, then set on Manual Input (t1) 
                         t1 = t1.sdr(
                            sparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1)))

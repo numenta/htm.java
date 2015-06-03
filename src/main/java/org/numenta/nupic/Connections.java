@@ -1055,6 +1055,7 @@ public class Connections {
         System.out.println("------------ SpatialPooler Parameters ------------------");
         System.out.println("numInputs                  = " + getNumInputs());
         System.out.println("numColumns                 = " + getNumColumns());
+        System.out.println("cellsPerColumn             = " + getCellsPerColumn());
         System.out.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
         System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
         System.out.println("potentialPct               = " + getPotentialPct());
@@ -1072,6 +1073,16 @@ public class Connections {
         System.out.println("maxBoost                   = " + getMaxBoost());
         System.out.println("spVerbosity                = " + getSpVerbosity());
         System.out.println("version                    = " + getVersion());
+        
+        System.out.println("\n------------ TemporalMemory Parameters ------------------");
+        System.out.println("activationThreshold        = " + getActivationThreshold());
+        System.out.println("learningRadius             = " + getLearningRadius());
+        System.out.println("minThreshold               = " + getMinThreshold());
+        System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        System.out.println("initialPermanence          = " + getInitialPermanence());
+        System.out.println("connectedPermanence        = " + getConnectedPermanence());
+        System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
+        System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
     }
     
     /////////////////////////////// Temporal Memory //////////////////////////////

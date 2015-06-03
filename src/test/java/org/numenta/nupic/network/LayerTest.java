@@ -119,7 +119,7 @@ public class LayerTest {
                 Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -161,7 +161,7 @@ public class LayerTest {
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-4reset.csv")));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -201,7 +201,7 @@ public class LayerTest {
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-4seqReset.csv")));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -246,7 +246,7 @@ public class LayerTest {
                     Keys::obs, new Object[] {"name", manual}));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -297,7 +297,7 @@ public class LayerTest {
     @Test
     public void testBasicSetupEncoder_UsingSubscribe() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -331,7 +331,7 @@ public class LayerTest {
     @Test
     public void testBasicSetupEncoder_UsingObserve() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -371,7 +371,7 @@ public class LayerTest {
                 Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -488,7 +488,7 @@ public class LayerTest {
                 Keys::path, "", ResourceLocator.path("days-of-week.csv")));
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
@@ -692,7 +692,7 @@ public class LayerTest {
     @Test
     public void testBasicClassifierSetup() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -728,7 +728,7 @@ public class LayerTest {
         TOTAL = 0;
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
@@ -773,7 +773,7 @@ public class LayerTest {
         TOTAL = 0;
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
@@ -862,7 +862,7 @@ public class LayerTest {
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
@@ -942,12 +942,10 @@ public class LayerTest {
         TOTAL = 0;
         
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
-        
-        System.out.println("params \n" + p);
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
@@ -1003,7 +1001,7 @@ public class LayerTest {
     @Test
     public void testObservableRetrieval() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -1052,7 +1050,7 @@ public class LayerTest {
     @Test
     public void testFullLayerFluentAssembly() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getTestEncoderParams());
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);

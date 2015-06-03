@@ -22,9 +22,11 @@
 
 package org.numenta.nupic.algorithms;
 
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -133,6 +135,19 @@ public abstract class Anomaly {
             }
             movingAverage = new MovingAverage(null, windowSize);
         }
+    }
+    
+    /**
+     * Convenience method to create a simplistic Anomaly computer in 
+     * {@link Mode#PURE}
+     *  
+     * @return
+     */
+    public static Anomaly create() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        return create(params);
     }
     
     /**

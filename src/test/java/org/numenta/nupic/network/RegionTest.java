@@ -35,7 +35,7 @@ public class RegionTest {
     @Test
     public void testClose() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p);
@@ -58,7 +58,7 @@ public class RegionTest {
     @Test
     public void testAutomaticClose() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p);
@@ -83,7 +83,7 @@ public class RegionTest {
     @Test
     public void testAdd() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p);
@@ -108,7 +108,7 @@ public class RegionTest {
     @Test
     public void testHalt() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
@@ -170,7 +170,7 @@ public class RegionTest {
     @Test
     public void testInputDimensionsAutomaticallyInferredFromEncoderWidth() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         // Purposefully set this to be wrong
@@ -192,7 +192,7 @@ public class RegionTest {
     @Test
     public void testEncoderPassesUpToTopLayer() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
@@ -224,7 +224,7 @@ public class RegionTest {
     @Test
     public void testMultiLayerAssemblyNoSensor() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
         p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
         p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
@@ -295,7 +295,7 @@ public class RegionTest {
     @Test
     public void testMultiLayerAssemblyWithSensor() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
@@ -384,7 +384,7 @@ public class RegionTest {
     @Test
     public void test2LayerAssemblyWithSensor() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getSimpleTestEncoderParams());
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p);
@@ -443,8 +443,8 @@ public class RegionTest {
         }
         
         assertEquals(7, idx0);
-        assertEquals(7, idx1);
-        assertEquals(7, idx2);
+        assertEquals(1, idx1);
+        assertEquals(1, idx2);
     }
 
 }

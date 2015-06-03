@@ -38,6 +38,7 @@ public interface Network {
      * on their own. 
      */
     public void pause();
+    
     /**
      * If {@link Network.Mode} == {@link Mode#AUTO}, calling this 
      * method will start the main engine thread which pulls in data
@@ -58,6 +59,7 @@ public interface Network {
      * @return
      */
     public Mode getMode();
+    
     /**
      * Returns a {@link Iterator} capable of walking the tree of regions
      * from the root {@link Region} down through all the child Regions. In turn,
@@ -69,6 +71,7 @@ public interface Network {
     public default Iterator<Region> iterator() {
         return getRegions().iterator();
     }
+    
     /**
      * Returns a {@link List} view of the contained {@link Region}s.
      * @return

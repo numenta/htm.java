@@ -1,7 +1,6 @@
 package org.numenta.nupic.network.sensor;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -9,14 +8,11 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
-import rx.subjects.PublishSubject;
 import rx.subjects.ReplaySubject;
 
 

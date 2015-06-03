@@ -57,7 +57,7 @@ public class NetworkTestHarness {
         inner.put("resolution", resolution);
 
         if(periodic != null) inner.put("periodic", periodic);
-        if(clip != null) inner.put("clip", clip);
+        if(clip != null) inner.put("clipInput", clip);
         if(forced != null) inner.put("forced", forced);
         if(fieldName != null) inner.put("fieldName", fieldName);
         if(fieldType != null) inner.put("fieldType", fieldType);
@@ -70,7 +70,7 @@ public class NetworkTestHarness {
      * Returns the Hot Gym encoder setup.
      * @return
      */
-    public static Map<String, Map<String, Object>> getFieldEncodingMap() {
+    public static Map<String, Map<String, Object>> getHotGymFieldEncodingMap() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
                 null,
                 0, // n
@@ -90,13 +90,68 @@ public class NetworkTestHarness {
         
         return fieldEncodings;
     }
+    
+    /**
+     * Returns the Hot Gym encoder setup.
+     * @return
+     */
+    public static Map<String, Map<String, Object>> getNetworkDemoFieldEncodingMap() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+                null,
+                0, // n
+                0, // w
+                0, 0, 0, 0, null, null, null,
+                "timestamp", "datetime", "DateEncoder");
+        fieldEncodings = setupMap(
+                fieldEncodings, 
+                50, 
+                21, 
+                0, 100, 0, 0.1, null, Boolean.TRUE, null, 
+                "consumption", "float", "ScalarEncoder");
+        
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(21,9.5)); // Time of day
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        return fieldEncodings;
+    }
+    
+    /**
+     * Returns Encoder parameters and meta information for the "Hot Gym" encoder
+     * @return
+     */
+    public static Parameters getNetworkDemoTestEncoderParams() {
+        Map<String, Map<String, Object>> fieldEncodings = getNetworkDemoFieldEncodingMap();
+
+        Parameters p = Parameters.getEncoderDefaultParameters();
+        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 40.0);
+        p.setParameterByKey(KEY.POTENTIAL_PCT, 0.8);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED,0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.0001);
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.0005);
+        p.setParameterByKey(KEY.MAX_BOOST, 1.0);
+        
+        p.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.21);
+        p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1);
+        p.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.1);
+        p.setParameterByKey(KEY.MIN_THRESHOLD, 9);
+        p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 12);
+        
+        p.setParameterByKey(KEY.CLIP_INPUT, true);
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+
+        return p;
+    }
 
     /**
      * Returns Encoder parameters and meta information for the "Hot Gym" encoder
      * @return
      */
-    public static Parameters getTestEncoderParams() {
-        Map<String, Map<String, Object>> fieldEncodings = getFieldEncodingMap();
+    public static Parameters getHotGymTestEncoderParams() {
+        Map<String, Map<String, Object>> fieldEncodings = getHotGymFieldEncodingMap();
 
         Parameters p = Parameters.getEncoderDefaultParameters();
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
@@ -108,7 +163,7 @@ public class NetworkTestHarness {
      * Parameters and meta information for the "dayOfWeek" encoder
      * @return
      */
-    public static Map<String, Map<String, Object>> getSimpleFieldEncodingMap() {
+    public static Map<String, Map<String, Object>> getDayDemoFieldEncodingMap() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
                 null,
                 8, // n
@@ -122,8 +177,8 @@ public class NetworkTestHarness {
      * Returns Encoder parameters for the "dayOfWeek" test encoder.
      * @return
      */
-    public static Parameters getSimpleTestEncoderParams() {
-        Map<String, Map<String, Object>> fieldEncodings = getSimpleFieldEncodingMap();
+    public static Parameters getDayDemoTestEncoderParams() {
+        Map<String, Map<String, Object>> fieldEncodings = getDayDemoFieldEncodingMap();
 
         Parameters p = Parameters.getEncoderDefaultParameters();
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);

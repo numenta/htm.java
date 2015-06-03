@@ -1241,6 +1241,35 @@ public class ArrayUtils {
         }
         return retVal.toArray();
     }
+    
+    /**
+     * Returns a flag indicating whether the specified array
+     * is a sparse array of 0's and 1's or not.
+     * 
+     * @param ia
+     * @return
+     */
+    public static boolean isSparse(int[] ia) {
+        for(int i = ia.length - 1;i >= 0;i--) {
+            if(ia[i] > 1) return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Returns a bit vector of the specified size whose "on" bit
+     * indexes are specified in "in"; basically converting a sparse
+     * array to a dense one.
+     * 
+     * @param in       the sparse array specifying the on bits of the returned array
+     * @param size    the size of the dense array to be returned.
+     * @return
+     */
+    public static int[] asDense(int[] in, int size) {
+        int[] retVal = new int[size];
+        Arrays.stream(in).forEach(i -> {retVal[i] = 1;});
+        return retVal;
+    }
 
     /**
      * Scans the specified values and applies the {@link Condition} to each
