@@ -210,7 +210,7 @@ public class HTMSensorTest {
         assertTrue(multiEncoder instanceof MultiEncoder);
         
         // Set the Local parameters on the Sensor
-        htmSensor.setLocalParameters(getTestEncoderParams());
+        htmSensor.initEncoder(getTestEncoderParams());
         List<EncoderTuple> encoders = multiEncoder.getEncoders(multiEncoder);
         assertEquals(2, encoders.size());
         
@@ -277,7 +277,7 @@ public class HTMSensorTest {
         
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
         
-        htmSensor.setLocalParameters(getTestEncoderParams());
+        htmSensor.initEncoder(getTestEncoderParams());
         
         // Ensure that the HTMSensor's output stream can be retrieved more than once.
         Stream<int[]> outputStream = htmSensor.getOutputStream();

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -274,8 +273,6 @@ public class HTMSensor<T> implements Sensor<T> {
             final FieldMetaType[] fieldTypes = getFieldTypes();
             
             if(outputStream == null) {
-                //inputMap = new HashMap<>();
-                
                 if(indexFieldMap.isEmpty()) {
                     for(int i = 0;i < fieldNames.length;i++) {
                         indexFieldMap.put(fieldNames[i], i);
@@ -322,7 +319,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * 
      * @return
      */
-    public String[] getFieldNames() {
+    private String[] getFieldNames() {
         return (String[])header.getFieldNames().toArray(new String[header.getFieldNames().size()]);
     }
     
@@ -330,7 +327,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * Returns an array of {@link FieldMetaType}s in the order of field occurrence.
      * @return
      */
-    public FieldMetaType[] getFieldTypes() {
+    private FieldMetaType[] getFieldTypes() {
         return header.getFieldTypes().toArray(new FieldMetaType[header.getFieldTypes().size()]);
     }
     
@@ -355,7 +352,7 @@ public class HTMSensor<T> implements Sensor<T> {
      *                                  executes a binary search for the proper insertion index. The {@link List}
      *                                  handed in should thus be a {@link LinkedList} for faster insertion.
      */
-    public int[] input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
+    private int[] input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
         processHeader(arr);
         
         int[] encoding = encoder.encode(inputMap);
@@ -505,7 +502,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * algorithmic components.
      */
     @SuppressWarnings("unchecked")
-    public void setLocalParameters(Parameters p) {
+    public void initEncoder(Parameters p) {
         this.localParameters = p;
         
         Map<String, Map<String, Object>> encoderSettings;

@@ -297,7 +297,7 @@ public class Layer<T> {
         
         if(sensor != null) {
             encoder = encoder == null ? sensor.getEncoder() : encoder;
-            sensor.setLocalParameters(params);
+            sensor.initEncoder(params);
             connections.setNumInputs(encoder.getWidth());
         }
 

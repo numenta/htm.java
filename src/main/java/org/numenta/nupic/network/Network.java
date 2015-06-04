@@ -61,6 +61,12 @@ public interface Network {
     public Observable<Inference> observe();
     
     /**
+     * Returns the String identifier for this {@code Network}
+     * @return
+     */
+    public String getName();
+    
+    /**
      * Returns the top-most (last in execution order from
      * bottom to top) {@link Region} in this {@code Network}
      * 
@@ -225,6 +231,13 @@ public interface Network {
         /**
          * {@inheritDoc}
          */
+        public String getName() {
+            return name;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void start() {
             if(regions.size() < 1) {
@@ -256,8 +269,7 @@ public interface Network {
          */
         @Override
         public void pause() {
-            // TODO Auto-generated method stub
-            
+            throw new UnsupportedOperationException("Pausing is not (yet) supported.");
         }
 
         /**
@@ -391,7 +403,7 @@ public interface Network {
         @Override
         public void setSensor(HTMSensor<?> sensor) {
             this.sensor = sensor;
-            this.sensor.setLocalParameters(this.parameters);
+            this.sensor.initEncoder(this.parameters);
         }
         
         /**

@@ -13,7 +13,6 @@ import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
-import rx.subjects.ReplaySubject;
 
 
 /**
@@ -74,20 +73,35 @@ public class ObservableSensorTest {
         assertEquals(4391, count);
     }
     
+    /**
+     * Test input is "sequenced" and is processed by underlying HTMSensor
+     */
     @Test
     public void testOpenObservableWithExplicitEntry() {
-        final ReplaySubject<String> manual = ReplaySubject.create();
-        manual.onNext("timestamp,consumption");
-        manual.onNext("datetime,float");
-        manual.onNext("B");
+        Publisher manual = Publisher.builder()
+            .addHeader("timestamp,consumption")
+            .addHeader("datetime,float")
+            .addHeader("B")
+            .build();
         
         Object[] n = { "some name", manual };
         SensorParams parms = SensorParams.create(Keys::obs, n);
         final Sensor<ObservableSensor<String>> sensor = Sensor.create(ObservableSensor::create, parms);
         
+        // Test input is "sequenced" and is processed by underlying HTMSensor
+        final String[] expected = new String[] {
+            "[0, 7/2/10 0:00, 21.2]",
+            "[1, 7/2/10 1:00, 34.0]",
+            "[2, 7/2/10 2:00, 40.4]",
+            "[3, 7/2/10 3:00, 123.4]"           
+        };
         (new Thread() {
+            int i = 0;
             public void run() {
-                sensor.getInputStream().forEach(l -> { System.out.println(Arrays.toString((String[])l)); });
+                sensor.getInputStream().forEach(l -> { 
+                    System.out.println(Arrays.toString((String[])l));
+                    assertEquals(Arrays.toString((String[])l), expected[i++]);
+                });
             }
         }).start();
         
