@@ -46,6 +46,7 @@ public class Region {
     
     private Network network;
     private Region upstreamRegion;
+    private Region downstreamRegion;
     private Map<String, Layer<Inference>> layers = new HashMap<>();
     private Observable<Inference> regionObservable;
     private Layer<?> tail;
@@ -86,7 +87,7 @@ public class Region {
         this.network = network;
         for(Layer<?> l : layers.values()) {
             l.setNetwork(network);
-            // Set the sensor reference for global access.
+            // Set the sensor & encoder reference for global access.
             if(l.hasSensor() && network != null) {
                 network.setSensor(l.getSensor());
                 network.setEncoder(l.getSensor().getEncoder());
@@ -94,15 +95,6 @@ public class Region {
                 network.setEncoder(l.getEncoder());
             }
         }
-        
-//        if(sources.size() > 0) {
-//            for(Layer<?> l : sources) {
-//                if(l.getEncoder() != null) {
-//                    l.getPrevious().passEncoder(l.getEncoder());
-//                    break;
-//                }
-//            }
-//        }
     }
     
     /**
@@ -243,7 +235,7 @@ public class Region {
     /**
      * Stops each {@link Layer} contained within this {@code Region}
      */
-    public void stop() {
+    public void halt() {
         LOGGER.debug("Stop called on Region [" + getName() + "]");
         if(tail != null) {
             tail.halt();
@@ -272,6 +264,7 @@ public class Region {
         });
         // Set the upstream region
         this.upstreamRegion = inputRegion;
+        inputRegion.downstreamRegion = this;
         
         return this;
     }
@@ -284,6 +277,16 @@ public class Region {
      */
     public Region getUpstreamRegion() {
         return upstreamRegion;
+    }
+    
+    /**
+     * Returns the {@code Region} that receives this Region's
+     * output.
+     * 
+     * @return
+     */
+    public Region getDownstreamRegion() {
+        return downstreamRegion;
     }
     
     /**

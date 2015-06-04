@@ -901,7 +901,6 @@ public class Layer<T> {
             return e;
         }
         
-        LOGGER.warn("Could not retrieve encoder from Layer: {}, and finally from the network", getName());
         return null;
     }
     
@@ -1365,6 +1364,23 @@ public class Layer<T> {
     //////////////////////////////////////////////////////////////
     //        Inner Class Definition Transformer Example        //
     //////////////////////////////////////////////////////////////
+    /**
+     * Factory which returns an {@link Observable} capable of transforming
+     * known input formats to the universal format object passed between
+     * all Observables in the Observable chains making up the processing
+     * steps involving HTM algorithms.
+     * 
+     * The {@link Transformer} implementations are used to transform various
+     * inputs into a {@link ManualInput}, and thus are used at the beginning
+     * of any Observable chain; each succeding Observable in a given chain would
+     * then communicate via passed ManualInputs or {@link Inference}s (which are
+     * the same thing).
+     * 
+     * @author David Ray
+     * @see Layer#completeDispatch(Object)
+     * @see Layer#resolveObservableSequence(Object)
+     * @see Layer#fillInSequence(Observable)
+     */
     class FunctionFactory {
         ManualInput inference = new ManualInput();
         
@@ -1467,13 +1483,9 @@ public class Layer<T> {
         }
 
         /**
-         * <p>
-         * Emits an {@link Observable} which is transformed from a Map input
-         * type to one that emits {@link Inference}s. 
-         * </p><p>
-         * Used to insert data directly into a Layer, bypassing an Encoder but
-         * potentially "spoofing" Encoder data which typically would exist.
-         * </p>
+         * Emits an {@link Observable} which copies an Inference input to the 
+         * output, storing relevant information in this layer's inference object
+         * along the way.
          */
         class Copy2Inference implements Transformer<ManualInput, ManualInput> {
             @Override
@@ -1482,7 +1494,6 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(ManualInput t1) {
                         // Indicates a value that skips the encoding step
-                        //return (inference = t1).layerInput(t1);
                         return inference.sdr(t1.getSDR()).recordNum(t1.getRecordNum()).layerInput(t1);
                     }
                 });

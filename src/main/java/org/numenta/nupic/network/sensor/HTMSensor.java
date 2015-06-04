@@ -508,7 +508,7 @@ public class HTMSensor<T> implements Sensor<T> {
      */
     private void initEncoders(Map<String, Map<String, Object>> encoderSettings) {
         if(encoder instanceof MultiEncoder) {
-            if(encoderSettings == null) {
+            if(encoderSettings == null || encoderSettings.isEmpty()) {
                 throw new IllegalArgumentException(
                     "Cannot initialize this Sensor's MultiEncoder with a null settings");
             }

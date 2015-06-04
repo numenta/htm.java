@@ -152,7 +152,7 @@ public class RegionTest {
                 while(!isHalted) {
                     try { Thread.sleep(1); }catch(Exception e) {e.printStackTrace();}
                 }
-                r1.stop();
+                r1.halt();
             }
         }).start();
         

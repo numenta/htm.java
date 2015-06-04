@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.algorithms;
 
-import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
 

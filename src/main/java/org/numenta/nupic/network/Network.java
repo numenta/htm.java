@@ -10,19 +10,12 @@ import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
 
+import rx.Observable;
+
 
 public interface Network {
     public enum Mode { MANUAL, AUTO, REACTIVE };
     
-    
-    /**
-     * Updates the network with count of the number of inputs to
-     * process from all {@link SensorFactory}s which exist at the bottom 
-     * of this {@code Network}'s graph of nodes.
-     * 
-     * @param count
-     */
-    public void run(int count);
     
     /**
      * Halts this {@code Network}, stopping all threads and closing
@@ -42,7 +35,7 @@ public interface Network {
     /**
      * If {@link Network.Mode} == {@link Mode#AUTO}, calling this 
      * method will start the main engine thread which pulls in data
-     * from the connected {@link SensorFactory}(s).
+     * from the connected {@link Sensor}(s).
      * 
      * <em>Warning:</em> Calling this method with any other Mode than 
      * {@link Mode#AUTO} will result in an {@link UnsupportedOperationException}
@@ -59,6 +52,29 @@ public interface Network {
      * @return
      */
     public Mode getMode();
+    
+    /**
+     * Returns an {@link Observable} capable of emitting {@link Inferences}
+     * which contain the results of this {@code Network}'s processing chain.
+     * @return
+     */
+    public Observable<Inference> observe();
+    
+    /**
+     * Returns the top-most (last in execution order from
+     * bottom to top) {@link Region} in this {@code Network}
+     * 
+     * @return
+     */
+    public Region getHead();
+    
+    /**
+     * Returns the bottom-most (first in execution order from
+     * bottom to top) {@link Region} in this {@code Network}
+     * 
+     * @return
+     */
+    public Region getTail();
     
     /**
      * Returns a {@link Iterator} capable of walking the tree of regions
@@ -109,10 +125,11 @@ public interface Network {
     }
     
     /**
-     * Creates a {@link Layer} to hold algorithmic components
+     * Creates a {@link Layer} to hold algorithmic components and returns
+     * it.
      * 
      * @param name  the String identifier for the specified {@link Layer}
-     * @param p
+     * @param p     the {@link Parameters} to use for the specified {@link Layer}
      * @return
      */
     @SuppressWarnings("rawtypes")
@@ -120,6 +137,17 @@ public interface Network {
         NetworkImpl.checkName(name);
         return new Layer(name, null, p);
     }
+    
+    /**
+     * Connects the specified source to the specified sink (the order of
+     * processing flows from source to sink, or lower level region to higher
+     * level region). 
+     * @param regionSink        the receiving end of the connection
+     * @param regionSource      the source end of the connection
+     * 
+     * @return  this {@code Network}
+     */
+    public Network connect(String regionSink, String regionSource);
     
     /**
      * Returns the {@link Region} with the specified name
@@ -177,6 +205,8 @@ public interface Network {
         private Parameters parameters;
         private HTMSensor<?> sensor;
         private MultiEncoder encoder;
+        private Region head;
+        private Region tail;
         
         private List<Region> regions = new ArrayList<>();
         
@@ -187,31 +217,127 @@ public interface Network {
         public NetworkImpl(String name, Parameters parameters) {
             this.name = name;
             this.parameters = parameters;
+            if(parameters == null) {
+                throw new IllegalArgumentException("Network Parameters were null.");
+            }
         }
         
-
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void run(int count) {
-            // TODO Auto-generated method stub
+        public void start() {
+            if(regions.size() < 1) {
+                throw new IllegalStateException("Nothing to start - 0 regions");
+            }
             
+            Region tail = regions.get(0);
+            Region upstream = tail;
+            while((upstream = upstream.getUpstreamRegion()) != null) {
+                tail = upstream;
+            }
+            
+            tail.start();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void halt() {
-            // TODO Auto-generated method stub
-            
+            if(regions.size() == 1) {
+                this.tail = regions.get(0);
+            }
+            tail.halt();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void pause() {
             // TODO Auto-generated method stub
             
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Mode getMode() {
             // TODO Auto-generated method stub
             return null;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Observable<Inference> observe() {
+            if(regions.size() == 1) {
+                this.head = regions.get(0);
+            }
+            return head.observe();
+        }
+        
+        /**
+         * Returns the top-most (last in execution order from
+         * bottom to top) {@link Region} in this {@code Network}
+         * 
+         * @return
+         */
+        @Override
+        public Region getHead() {
+            if(regions.size() == 1) {
+                this.head = regions.get(0);
+            }
+            return this.head;
+        }
+        
+        /**
+         * Returns the bottom-most (first in execution order from
+         * bottom to top) {@link Region} in this {@code Network}
+         * 
+         * @return
+         */
+        @Override
+        public Region getTail() {
+            if(regions.size() == 1) {
+                this.tail = regions.get(0);
+            }
+            return this.tail;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Network connect(String regionSink, String regionSource) {
+            Region source = lookup(regionSource);
+            if(source == null) {
+                throw new IllegalArgumentException("Region with name: " + regionSource + " not added to Network.");
+            }
+            
+            Region sink = lookup(regionSink);
+            if(sink == null) {
+                throw new IllegalArgumentException("Region with name: " + regionSink + " not added to Network.");
+            }
+            
+            sink.connect(source);
+            
+            tail = tail == null ? source : tail;
+            head = head == null ? sink : head;
+            
+            Region bottom = source;
+            while((bottom = bottom.getUpstreamRegion()) != null) {
+                tail = bottom;
+            }
+            
+            Region top = sink;
+            while((top = top.getDownstreamRegion()) != null) {
+                head = top;
+            }
+            
+            return this;
         }
         
         /**
@@ -231,8 +357,7 @@ public interface Network {
          */
         @Override
         public List<Region> getRegions() {
-            // TODO Auto-generated method stub
-            return null;
+            return new ArrayList<Region>(regions);
         }
         
         /**
