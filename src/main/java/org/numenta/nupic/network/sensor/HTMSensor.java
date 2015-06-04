@@ -2,6 +2,7 @@ package org.numenta.nupic.network.sensor;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,9 +74,11 @@ public class HTMSensor<T> implements Sensor<T> {
     private MultiEncoder encoder;
     private Stream<int[]> outputStream;
     private List<int[]> output;
-    private Map<String, Object> inputMap;
+    private InputMap inputMap;
     
     private TIntObjectMap<Encoder<?>> indexToEncoderMap;
+    private TObjectIntHashMap<String> indexFieldMap = new TObjectIntHashMap<String>();
+    
     
     private Iterator<int[]> mainIterator;
     private List<LinkedList<int[]>> fanOuts = new ArrayList<>();
@@ -226,6 +229,26 @@ public class HTMSensor<T> implements Sensor<T> {
     }
     
     /**
+     * Specialized {@link Map} for the avoidance of key hashing. This
+     * optimization overrides {@link Map#get(Object)directly accesses the input arrays providing input
+     * and should be extremely faster.
+     */
+    class InputMap extends HashMap<String, Object> {
+        private static final long serialVersionUID = 1L;
+        
+        private FieldMetaType[] fTypes;
+        private String[] arr;
+        
+        @Override public Object get(Object key) {
+            int idx = indexFieldMap.get(key);
+            return fTypes[idx].decodeType(arr[idx + 1], indexToEncoderMap.get(idx));
+        }
+        @Override public boolean containsKey(Object key) {
+            return indexFieldMap.get(key) != -1;
+        }
+    }
+    
+    /**
      * Returns the encoded output stream of the underlying {@link Stream}'s encoder.
      * 
      * @return      the encoded output stream.
@@ -246,16 +269,32 @@ public class HTMSensor<T> implements Sensor<T> {
         Stream<int[]> retVal = null;
         try {
             criticalAccessLock.lock();
+            
+            final String[] fieldNames = getFieldNames();
+            final FieldMetaType[] fieldTypes = getFieldTypes();
+            
             if(outputStream == null) {
-                inputMap = new HashMap<>();
-                final String[] fieldNames = getFieldNames();
-                final FieldMetaType[] fieldTypes = getFieldTypes();
+                //inputMap = new HashMap<>();
+                
+                if(indexFieldMap.isEmpty()) {
+                    for(int i = 0;i < fieldNames.length;i++) {
+                        indexFieldMap.put(fieldNames[i], i);
+                    }
+                }
+              
+                if(inputMap == null) {
+                    inputMap = new InputMap();
+                    inputMap.fTypes = fieldTypes;
+                }
+                
+                
                 final boolean isParallel = delegate.getInputStream().isParallel();
                 
                 output = new ArrayList<>();
                 
                 outputStream = delegate.getInputStream().map(l -> {
                     String[] arr = (String[])l;
+                    inputMap.arr = arr;
                     return input(arr, fieldNames, fieldTypes, output, isParallel);
                 });
                 
@@ -317,12 +356,6 @@ public class HTMSensor<T> implements Sensor<T> {
      *                                  handed in should thus be a {@link LinkedList} for faster insertion.
      */
     public int[] input(String[] arr, String[] fieldNames, FieldMetaType[] fieldTypes, List<int[]> outputStreamSource, boolean isParallel) {
-        if(inputMap == null) inputMap = new LinkedHashMap<>();
-        
-        for(int i = 0;i < fieldNames.length;i++) {
-            inputMap.put(fieldNames[i], fieldTypes[i].decodeType(arr[i + 1], indexToEncoderMap.get(i)));
-        }
-        
         processHeader(arr);
         
         int[] encoding = encoder.encode(inputMap);

@@ -175,6 +175,7 @@ public class NetworkTest {
         assertEquals("On completed reached!", onCompleteStr);
     }
     
+    ManualInput netInference = null;
     ManualInput topInference = null;
     ManualInput bottomInference = null;
     @Test
@@ -201,6 +202,18 @@ public class NetworkTest {
         Region r1 = network.lookup("r1");
         Region r2 = network.lookup("r2");
         
+        network.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                netInference = (ManualInput)i;
+                
+                if(netInference.getPredictedColumns().length > 15) {
+                    network.halt();
+                }
+            }
+        });
+        
         r1.observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -226,6 +239,7 @@ public class NetworkTest {
             assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
                 bottomInference.getPredictedColumns()));
             assertTrue(topInference.getPredictedColumns().length > 0);
+            System.out.println("length = " + topInference.getPredictedColumns().length);
             assertTrue(bottomInference.getPredictedColumns().length > 0);
         }catch(Exception e) {
             e.printStackTrace();
@@ -252,7 +266,7 @@ public class NetworkTest {
             //         .addPath("..."))
             //     .add(new SpatialPooler())
             //     ...
-            Network n = Network.create("test network", p)   // Add Network.add() method for chaining region adds
+            Network.create("test network", p)   // Add Network.add() method for chaining region adds
                 .add(Network.createRegion("r1")             // Add version of createRegion(String name) for later connecting by name
                     .add(Network.createLayer("2/3", p)      // so that regions can be added and connecting in one long chain.
                         .using(new Connections())           // Test adding connections before elements which use them
