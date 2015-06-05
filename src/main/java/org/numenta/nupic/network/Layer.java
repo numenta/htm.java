@@ -79,8 +79,10 @@ import rx.subjects.PublishSubject;
  * in the field encoding map contains the typical {@link Encoder} parameters, plus a few "meta" parameters
  * needed to describe the field and its data type as follows:
  * </p>
+ * <p>
  * <pre>
  *      Map<String, Map<String, Object>> fieldEncodings = new HashMap<>();
+ *      
  *      Map<String, Object> inner = new HashMap<>();
  *      inner.put("n", n);
  *      inner.put("w", w);
@@ -119,9 +121,43 @@ import rx.subjects.PublishSubject;
  * </pre>
  * For an example of how to create the field encodings map in a reusable way, see {@link NetworkTestHarness} and
  * its usage within the {@link LayerTest} class.
+ * </p>
+ * <p>
+ * The following is an example of Layer construction with everything included (i.e. Sensor, SpatialPooler, TemporalMemory, CLAClassifier, Anomaly (computer))
+ * <pre>
+ *      // See the test harness for more information
+ *      Parameters p = NetworkTestHarness.getParameters();
+ *      
+ *      // How to merge (union) two {@link Parameters} objects. This one merges
+ *      // the Encoder parameters into default parameters.
+ *      p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+ *      
+ *      // You can overwrite parameters as needed like this
+ *      p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+ *      p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+ *      p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
+ *      p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
+ *      p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+ *      
+ *      Map<String, Object> params = new HashMap<>();
+ *      params.put(KEY_MODE, Mode.PURE);
+ *      params.put(KEY_WINDOW_SIZE, 3);
+ *      params.put(KEY_USE_MOVING_AVG, true);
+ *      Anomaly anomalyComputer = Anomaly.create(params);
+ *      
+ *      Layer<?> l = Network.createLayer("TestLayer", p)
+ *          .alterParameter(KEY.AUTO_CLASSIFY, true)
+ *          .add(anomalyComputer)
+ *          .add(new TemporalMemory())
+ *          .add(new SpatialPooler())
+ *          .add(Sensor.create(
+ *              FileSensor::create, 
+ *                  SensorParams.create(
+ *                      Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
+ * </pre>
+ * </p>
  * 
- * 
- * 
+ *  
  *  
  * @author David Ray
  * @see LayerTest
@@ -172,7 +208,12 @@ public class Layer<T> {
     /** This layer's thread */
     private Thread LAYER_THREAD;
     
+    static final byte SPATIAL_POOLER = 1;
+    static final byte TEMPORAL_MEMORY = 2;
+    static final byte CLA_CLASSIFIER = 4;
+    static final byte ANOMALY_COMPUTER = 8;
     
+    private byte algo_content_mask = 0;
     
     /**
      * Creates a new {@code Layer} using the {@link Network}
@@ -263,6 +304,8 @@ public class Layer<T> {
         factory = new FunctionFactory();
         
         observableDispatch = createDispatchMap();
+        
+        initializeMask();
 
         if(LOGGER.isDebugEnabled()) {
             LOGGER.debug("Layer successfully created containing: {}{}{}{}{}",
@@ -291,6 +334,7 @@ public class Layer<T> {
     public Layer<T> close() {
         if(isClosed) {
             LOGGER.warn("Close called on Layer " + getName() + " which is already closed.");
+            return this;
         }
         
         params.apply(connections);
@@ -299,6 +343,9 @@ public class Layer<T> {
             encoder = encoder == null ? sensor.getEncoder() : encoder;
             sensor.initEncoder(params);
             connections.setNumInputs(encoder.getWidth());
+            if(parentNetwork != null && parentRegion != null) {
+                parentNetwork.setSensorRegion(parentRegion);
+            }
         }
 
         // Create Encoder hierarchy from definitions & auto create classifiers if specified
@@ -316,30 +363,36 @@ public class Layer<T> {
             }
             
             // Make the declared column dimensions match the actual input dimensions retrieved from the encoder 
-            int inputLength, columnLength = 0;
+            int product = 0, inputLength = 0, columnLength = 0;
             if(((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) !=
                 (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) ||
-                    encoder.getWidth() != ArrayUtils.product((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS))) {
+                    encoder.getWidth() != (product = ArrayUtils.product((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS))) ) {
+                
+                LOGGER.warn("The number of Input Dimensions (" + inputLength + ") != number of Column Dimensions " +
+                    "(" + columnLength + ") --OR-- Encoder width (" + encoder.getWidth() + ") != product of dimensions (" + product +") -- now attempting to fix it.");
                 
                 int[] inferredDims = inferInputDimensions(encoder.getWidth(), columnLength);
-                
-                LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " +
-                    "(" + columnLength + ") in Parameters - now attempting to fix it.");
-                            
-                LOGGER.warn("Using calculated input dimensions: " + Arrays.toString(inferredDims));             
+                if(inferredDims != null && inferredDims.length > 0 && encoder.getWidth() == ArrayUtils.product(inferredDims)) {
+                    LOGGER.info("Input dimension fix successful!");
+                    LOGGER.info("Using calculated input dimensions: " + Arrays.toString(inferredDims));
+                }
                 
                 params.setInputDimensions(inferredDims);
                 connections.setInputDimensions(inferredDims);
             }
             
-            autoCreateClassifiers = autoCreateClassifiers != null && 
-                (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
+        }
+        
+        autoCreateClassifiers = autoCreateClassifiers != null && 
+            (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
+        
+        if(autoCreateClassifiers != null && 
+            autoCreateClassifiers.booleanValue() &&
+                (factory.inference.getClassifiers() == null || factory.inference.getClassifiers().size() < 1)) {
+            factory.inference.classifiers(makeClassifiers(encoder == null ? parentNetwork.getEncoder() : encoder));
             
-            if(autoCreateClassifiers != null && 
-                autoCreateClassifiers.booleanValue() &&
-                    (factory.inference.getClassifiers() == null || factory.inference.getClassifiers().size() < 1)) {
-                factory.inference.classifiers(makeClassifiers(encoder));
-            }
+            // Note classifier addition by setting content mask
+            algo_content_mask |= CLA_CLASSIFIER;
         }
         
         // We must adjust this Layer's inputDimensions to the size of the input received from the
@@ -348,6 +401,17 @@ public class Layer<T> {
             int[] upstreamDims = parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions();
             params.setInputDimensions(upstreamDims);
             connections.setInputDimensions(upstreamDims);
+        }else if(parentRegion != null && parentNetwork != null && 
+            parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null && spatialPooler != null) {
+            
+            Layer<?> curr = this;
+            while((curr = curr.getPrevious()) != null) {
+                if(curr.getEncoder() != null) {
+                    int[] dims = (int[])curr.getParameters().getParameterByKey(KEY.INPUT_DIMENSIONS);
+                    params.setInputDimensions(dims);
+                    connections.setInputDimensions(dims);
+                }
+            }
         }
 
         // Let the SpatialPooler initialize the matrix with its requirements
@@ -373,6 +437,8 @@ public class Layer<T> {
         this.cellsPerColumn = connections.getCellsPerColumn();
         
         this.isClosed = true;
+        
+        LOGGER.debug("Layer " + name + " content initialize mask = " + Integer.toBinaryString(algo_content_mask));
         
         return this;
     }
@@ -495,6 +561,9 @@ public class Layer<T> {
             throw new IllegalStateException("Layer already \"closed\"");
         }
         this.sensor = (HTMSensor<?>)sensor;
+        if(parentNetwork != null && parentRegion != null) {
+            parentNetwork.setSensorRegion(parentRegion);
+        }
         return this;
     }
 
@@ -517,6 +586,10 @@ public class Layer<T> {
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> add(SpatialPooler sp) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
+        this.algo_content_mask |= SPATIAL_POOLER;
         this.spatialPooler = sp;
         return this;
     }
@@ -527,6 +600,10 @@ public class Layer<T> {
      * @return          this Layer instance (in fluent-style)
      */
     public Layer<T> add(TemporalMemory tm) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
+        this.algo_content_mask |= TEMPORAL_MEMORY;
         this.temporalMemory = tm;
         temporalMemory.init(connections);
         return this;
@@ -541,6 +618,7 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+        this.algo_content_mask |= ANOMALY_COMPUTER;
         this.anomalyComputer = anomalyComputer;
         return this;
     }
@@ -562,12 +640,19 @@ public class Layer<T> {
             throw new IllegalStateException("Layer already \"closed\"");
         }
         
+        // Preserve any input dimensions that might have been set prior to this in 
+        // previous layers
+        int[] inputDims = (int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS);
+        
         this.params = this.params.copy();
         this.params.setParameterByKey(key, value);
+        this.params.setParameterByKey(KEY.INPUT_DIMENSIONS, inputDims);
         
         if(key == KEY.AUTO_CLASSIFY) {
             this.autoCreateClassifiers = value == null ? 
                 false : ((Boolean)value).booleanValue();
+            // Note the addition of a classifier
+            algo_content_mask |= CLA_CLASSIFIER;
         }
         return this;
     }
@@ -674,16 +759,22 @@ public class Layer<T> {
                 // Applies "terminal" function, at this point the input stream is  "sealed".
                 sensor.getOutputStream().filter(i ->  {
                     if(isHalted) {
-                        publisher.onCompleted();
+                        notifyComplete();
                         if(next != null) {
                             next.halt();
                         }
                         return false;
                     }
+                    
                     return true;
                 }).forEach(intArray -> {
                     ((ManualInput)Layer.this.factory.inference).encoding(intArray);
                     Layer.this.compute((T)intArray);
+                    
+                    // Notify all downstream observers that the stream is closed
+                    if(!sensor.hasNext()) {
+                        notifyComplete();
+                    }
                 });
             }
         }).start(); 
@@ -905,20 +996,6 @@ public class Layer<T> {
     }
     
     /**
-     * Internally called during assembly (see {@link Region#connect(Layer, Layer)}) to pass the field defining encoders
-     * up the chain to where a Layer encapsulating CLAClassifiers can make
-     * use of the encoder to define its classifiers.
-     * 
-     * @param encoder
-     */
-    void passEncoder(MultiEncoder encoder) {
-        this.encoder = encoder;
-        if(next != null) {
-            next.passEncoder(this.encoder);
-        }
-    }
-    
-    /**
      * Returns the values submitted to this {@code Layer} in an array 
      * whose indexes correspond to the indexes of probabilities returned
      * when calling {@link #getAllPredictions(String, int)}.
@@ -1015,7 +1092,51 @@ public class Layer<T> {
 
     //////////////////////////////////////////////////////////////
     //          PRIVATE METHODS AND CLASSES BELOW HERE          //
-    //////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////// 
+    /**
+     * Notify all subscribers through the delegate that stream processing
+     * has been completed or halted.
+     */
+    private void notifyComplete() {
+        for(Observer<Inference> o : subscribers) {
+            o.onCompleted();
+        }
+        for(Observer<Inference> o : observers) {
+            o.onCompleted();
+        }
+        publisher.onCompleted();
+    }
+    
+    /**
+     * <p>
+     * Returns the content mask used to indicate what algorithm
+     * contents this {@code Layer} has. This is used to determine
+     * whether the {@link Inference} object passed between layers
+     * should share values.
+     * </p> 
+     * <p>
+     * If any algorithms are repeated then
+     * {@link Inference}s will <em><b>NOT</b></em> be shared between layers.
+     * {@link Regions} <em><b>NEVER</b></em> share {@link Inference}s
+     * </p>
+     * @return
+     */
+    byte getMask() {
+        return algo_content_mask;
+    }
+    
+    /**
+     * Initializes the algorithm content mask used for detection
+     * of repeated algorithms among {@code Layer}s in a {@link Region}.
+     * see {@link #getMask()} for more information.
+     */
+    private void initializeMask() {
+        algo_content_mask |= (this.spatialPooler == null ? 0 : SPATIAL_POOLER);
+        algo_content_mask |= (this.temporalMemory == null ? 0 : TEMPORAL_MEMORY);
+        algo_content_mask |= (this.autoCreateClassifiers == null || !autoCreateClassifiers ? 0 : CLA_CLASSIFIER);
+        algo_content_mask |= (this.anomalyComputer == null ? 0 : ANOMALY_COMPUTER);
+    }
+    
     /**
      * Returns a flag indicating whether we've connected the first observable in 
      * the sequence (which lazily does the input type of &lt;T&gt; to {@link Inference} 
@@ -1491,8 +1612,17 @@ public class Layer<T> {
             @Override
             public Observable<ManualInput> call(Observable<ManualInput> t1) {
                 return t1.map(new Func1<ManualInput, ManualInput>() {
+                    NamedTuple swap;
+                    boolean swapped;
                     @Override
                     public ManualInput call(ManualInput t1) {
+                        // Inference is shared along entire network
+                        if(!swapped) {
+                            swap = inference.getClassifiers();
+                            inference = t1;
+                            inference.classifiers(swap);
+                            swapped = true;
+                        }
                         // Indicates a value that skips the encoding step
                         return inference.sdr(t1.getSDR()).recordNum(t1.getRecordNum()).layerInput(t1);
                     }

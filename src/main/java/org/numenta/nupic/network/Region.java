@@ -59,8 +59,16 @@ public class Region {
     private HashSet<Layer<Inference>> sources;
     private HashSet<Layer<Inference>> sinks;
     
-    private Object input;
+    /** Stores the overlap of algorithms state for {@link Inference} sharing determination */
+    byte flagAccumulator = 0;
+    /** 
+     * Indicates whether algorithms are repeated, if true then no, if false then yes
+     * (for {@link Inference} sharing determination) see {@link Region#connect(Layer, Layer)} 
+     * and {@link Layer#getMask()}
+     */
+    boolean layersDistinct = true;
     
+    private Object input;
     
     private String name;
     
@@ -253,12 +261,15 @@ public class Region {
      */
     public Region connect(Region inputRegion) {
         inputRegion.observe().subscribe(new Observer<Inference>() {
+            ManualInput localInf = new ManualInput();
+            
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @SuppressWarnings("unchecked")
             @Override public void onNext(Inference i) {
+                localInf.sdr(i.getSDR()).recordNum(i.getRecordNum()).classifierInput(i.getClassifierInput()).layerInput(i.getSDR());
                 if(i.getSDR().length > 0) {
-                    ((Layer<Inference>)tail).compute(i);
+                    ((Layer<Inference>)tail).compute(localInf);
                 }
             }
         });
@@ -413,14 +424,34 @@ public class Region {
             throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
         }
         
+        Set<Layer<?>> all = new HashSet<>(sources);
+        all.addAll(sinks);
+        byte inMask = in.getMask();
+        byte outMask = out.getMask();
+        if(!all.contains(out)) {
+            layersDistinct = (flagAccumulator & outMask) < 1;
+            flagAccumulator |= outMask;
+        }
+        if(!all.contains(in)) {
+            layersDistinct = (flagAccumulator & inMask) < 1;
+            flagAccumulator |= inMask;
+        }
+        
         sources.add(out);
         sinks.add(in);
         
         out.subscribe(new Subscriber<Inference>() {
+            ManualInput localInf = new ManualInput();
+            
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
-                in.compute(i);
+                if(layersDistinct) {
+                    in.compute(i);
+                }else{
+                    localInf.sdr(i.getSDR()).recordNum(i.getRecordNum()).layerInput(i.getSDR());
+                    in.compute(localInf);
+                }
             }
         });
     }

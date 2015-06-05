@@ -314,6 +314,10 @@ public class HTMSensor<T> implements Sensor<T> {
         return retVal;
     }
     
+    public boolean hasNext() {
+        return mainIterator.hasNext();
+    }
+    
     /**
      * Returns an array of field names in the order of column head occurrence.
      * 

@@ -2,6 +2,7 @@ package org.numenta.nupic.network;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -448,8 +449,64 @@ public class RegionTest {
         }
         
         assertEquals(7, idx0);
-        assertEquals(1, idx1);
-        assertEquals(1, idx2);
+        assertEquals(7, idx1);
+        assertEquals(7, idx2);
     }
 
+    /**
+     * Tests that we can detect if the occurrence of algorithms within a region's layers
+     * is repeated or not. If they are repeated, then we don't allow the Inference object's
+     * values to be passed from one layer to another because it is assumed that values 
+     * such as "activeColumns" or "previousPrediction" should not be overwritten in the case
+     * where algorithms are not repeated, and should be overwritten when algorithms are repeated.
+     * 
+     * The SDR is <em>always</em> passed between layers however.
+     */
+    @Test
+    public void testAlgorithmRepetitionDetection() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        // -- No overlap
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2/3", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
+                    .add(new SpatialPooler()))
+            .connect("2/3", "4"));
+        
+        Region r = n.lookup("r1");
+        assertTrue(r.layersDistinct);
+        byte flags = r.flagAccumulator;
+        flags ^= Layer.SPATIAL_POOLER;
+        flags ^= Layer.TEMPORAL_MEMORY;
+        flags ^= Layer.CLA_CLASSIFIER;
+        assertEquals(0, flags);
+        assertEquals(r.lookup("2/3").getMask(), (Layer.TEMPORAL_MEMORY | Layer.CLA_CLASSIFIER));
+        assertEquals(r.lookup("4").getMask(), Layer.SPATIAL_POOLER);
+        
+        // -- Test overlap detection
+        n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2/3", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler()))
+            .connect("2/3", "4"));
+        
+        r = n.lookup("r1");
+        assertFalse(r.layersDistinct);
+        assertEquals(r.lookup("2/3").getMask(), (Layer.TEMPORAL_MEMORY | Layer.CLA_CLASSIFIER));
+        assertEquals(r.lookup("4").getMask(), (Layer.SPATIAL_POOLER | Layer.TEMPORAL_MEMORY));
+        
+    }
 }

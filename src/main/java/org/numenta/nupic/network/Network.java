@@ -4,15 +4,128 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
+import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
+import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.research.TemporalMemory;
 
 import rx.Observable;
 
-
+/**
+ * <p>
+ * A {@code Network} is the fundamental component of the HTM.java Network API.
+ * It is comprised of {@link Region}s which are in turn comprised of {@link Layer}s;
+ * each Layer directly containing one or more algorithm or computational components
+ * such (i.e. {@link Sensor}, {@link MultiEncoder}, {@link SpatialPooler}, 
+ * {@link TemporalMemory}, {@link CLAClassifier} etc.)
+ * </p>
+ * <p>
+ * Networks in HTM.java are extremely easy to compose. For instance, here is an example 
+ * of a network which contains everything:
+ * <pre>
+ * Parameters p = NetworkTestHarness.getParameters();
+ * p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+ * 
+ * Network network = Network.create("test network", p)
+ *     .add(Network.createRegion("r1")
+ *         .add(Network.createLayer("1", p)
+ *             .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+ *             .add(Anomaly.create())
+ *             .add(new TemporalMemory())
+ *             .add(new SpatialPooler())
+ *             .add(Sensor.create(FileSensor::create, SensorParams.create(
+ *                 Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
+ * </pre>
+ * </p>                
+ * <p>
+ * As you can see, {@code Networks} can be composed in "fluent" style making their
+ * declaration much more concise.
+ * 
+ * While the above Network contains only 1 Region and only 1 Layer, Networks with many Regions
+ * and Layers within them; may be composed. For example:
+ * <pre>
+ * Connections cons = new Connections();
+ * 
+ * Network network = Network.create("test network", p)
+ *     .add(Network.createRegion("r1")
+ *         .add(Network.createLayer("1", p)
+ *             .add(Anomaly.create())
+ *             .add(new TemporalMemory())
+ *             .add(new SpatialPooler())))
+ *     .add(Network.createRegion("r2")
+ *         .add(Network.createLayer("1", p)
+ *             .using(cons)
+ *             .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+ *             .add(new TemporalMemory()))                    
+ *         .add(Network.createLayer("2", p)
+ *             .using(cons)
+ *             .add(new SpatialPooler())
+ *             .add(Sensor.create(FileSensor::create, SensorParams.create(
+ *                 Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")))))
+ *         .connect("1", "2")) // Tell the Region to connect the two layers {@link Region#connect(String, String)}.
+ *     .connect("r1", "r2");   // Tell the Network to connect the two regions {@link Network#connect(String, String)}.
+ * </pre>
+ * As you can see above, a {@link Connections} object is being shared among Region "r2"'s inner layers 
+ * via the use of the {@link Layer#using(Connections)} method. Additionally, {@link Parameters} may be
+ * altered in place without changing the values in the original Parameters object, by calling {@link Layer#alterParameter(KEY, Object)}
+ * as seen in the above examples.  
+ * </p>
+ * <p>
+ * Networks can be "observed", meaning they can return an {@link Observable} object
+ * which can be operated on in the map-reduce pattern of usage; and they can be 
+ * subscribed to, to receive {@link Inference} objects as output from every process
+ * cycle. For instance:
+ * <pre>
+ * network.observe().subscribe(new Subscriber<Inference>() {
+ *      public void onCompleted() { System.out.println("Input Completed!"); }
+ *      public void onError(Throwable e) { e.printStackTrace(); }
+ *      public void onNext(Inference i) {
+ *          System.out.println(String.format("%d: %s", i.getRecordNum(), Arrays.toString(i.getSDR())));
+ *      }
+ * });
+ * </pre>
+ * </p>
+ * <p>
+ * Likewise, each Region within a Network may be "observed" and/or subscribed to; and each
+ * Layer may be observed and subscribed to as well - for those instances where you would like 
+ * to obtain the processing from an individual component within the network for use outside 
+ * the network in some other area of your application. To find and subscribe to individual
+ * components try:
+ * <pre>
+ * Network network = ...
+ * 
+ * Region region = network.lookup("<region name>");
+ * region.observe().subscribe(new Subscriber<Inference>() {
+ *     public void onCompleted() { System.out.println("Input Completed!"); }
+ *     public void onError(Throwable e) { e.printStackTrace(); }
+ *     public void onNext(Inference i) {
+ *         int[] sdr = i.getSDR();
+ *         do something...
+ *     }    
+ * }
+ * 
+ * Layer l2_3 = region.lookup("<layer name>");
+ * l2_3.observe().subscribe(new Subscriber<Inference>() {
+ *     public void onCompleted() { System.out.println("Input Completed!"); }
+ *     public void onError(Throwable e) { e.printStackTrace(); }
+ *     public void onNext(Inference i) {
+ *         int[] sdr = i.getSDR();
+ *         do something...
+ *     }    
+ * }
+ * </p>
+ * <p>
+ * In addition there are many usage examples to be found in the 
+ * 
+ * @author David Ray
+ *
+ */
 public interface Network {
     public enum Mode { MANUAL, AUTO, REACTIVE };
     
@@ -99,6 +212,21 @@ public interface Network {
      * @return
      */
     public <T> List<Region> getRegions();
+    
+    /**
+     * Sets a reference to the {@link Region} which contains the {@link Sensor}
+     * (if any).
+     * 
+     * @param r
+     */
+    public void setSensorRegion(Region r);
+    
+    /**
+     * Returns a reference to the {@link Region} which contains the {@link Sensor}
+     * 
+     * @return  the Region which contains the Sensor
+     */
+    public Region getSensorRegion();
     
     /**
      * Creates and returns an implementation of {@link Network}
@@ -199,7 +327,6 @@ public interface Network {
     /////////////////////////////////////////////////////////////////////////
     //                   Internal Interface Definitions                    //
     /////////////////////////////////////////////////////////////////////////
-    
     /**
      * Implementation of the {@link Network} interface.
      * 
@@ -213,6 +340,7 @@ public interface Network {
         private MultiEncoder encoder;
         private Region head;
         private Region tail;
+        private Region sensorRegion;
         
         private List<Region> regions = new ArrayList<>();
         
@@ -370,6 +498,27 @@ public interface Network {
         @Override
         public List<Region> getRegions() {
             return new ArrayList<Region>(regions);
+        }
+        
+        /**
+         * Sets a reference to the {@link Region} which contains the {@link Sensor}
+         * (if any).
+         * 
+         * @param r the Region containing the Sensor 
+         */
+        @Override
+        public void setSensorRegion(Region r) {
+            this.sensorRegion = r;
+        }
+        
+        /**
+         * Returns a reference to the {@link Region} which contains the {@link Sensor}
+         * 
+         * @return  the Region which contains the Sensor
+         */
+        @Override
+        public Region getSensorRegion() {
+            return sensorRegion;
         }
         
         /**

@@ -110,6 +110,40 @@ public class LayerTest {
         return false;
     }
     
+    @Test
+    public void testMasking() {
+        byte algo_content_mask = 0;
+        
+        // -- Build up mask
+        algo_content_mask |= Layer.CLA_CLASSIFIER;
+        assertEquals(4, algo_content_mask);
+        
+        algo_content_mask |= Layer.SPATIAL_POOLER;
+        assertEquals(5, algo_content_mask);
+        
+        algo_content_mask |= Layer.TEMPORAL_MEMORY;
+        assertEquals(7, algo_content_mask);
+        
+        algo_content_mask |= Layer.ANOMALY_COMPUTER;
+        assertEquals(15, algo_content_mask);
+        
+        // -- Now Peel Off
+        algo_content_mask ^= Layer.ANOMALY_COMPUTER;
+        assertEquals(7, algo_content_mask);
+        
+        assertEquals(0, algo_content_mask & Layer.ANOMALY_COMPUTER);
+        assertEquals(2, algo_content_mask & Layer.TEMPORAL_MEMORY);
+        
+        algo_content_mask ^= Layer.TEMPORAL_MEMORY;
+        assertEquals(5, algo_content_mask);
+        
+        algo_content_mask ^= Layer.SPATIAL_POOLER;
+        assertEquals(4, algo_content_mask);
+        
+        algo_content_mask ^= Layer.CLA_CLASSIFIER;
+        assertEquals(0, algo_content_mask);
+    }
+    
     boolean isHalted = false;
     @Test
     public void testHalt() {
@@ -1066,14 +1100,14 @@ public class LayerTest {
         Anomaly anomalyComputer = Anomaly.create(params);
         
         Layer<?> l = Network.createLayer("TestLayer", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, true)
-                .add(anomalyComputer)
-                .add(new TemporalMemory())
-                .add(new SpatialPooler())
-                .add(Sensor.create(
-                    FileSensor::create, 
-                        SensorParams.create(
-                            Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
+            .alterParameter(KEY.AUTO_CLASSIFY, true)
+            .add(anomalyComputer)
+            .add(new TemporalMemory())
+            .add(new SpatialPooler())
+            .add(Sensor.create(
+                FileSensor::create, 
+                    SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
         
         l.getConnections().printParameters();
         

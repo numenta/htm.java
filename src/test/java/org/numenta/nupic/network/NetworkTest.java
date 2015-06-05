@@ -116,7 +116,7 @@ public class NetworkTest {
     
     String onCompleteStr = null;
     @Test
-    public void test() {
+    public void testBasicNetwork() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -207,8 +207,9 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                
+                System.out.println("rec # = " + i.getRecordNum());
                 if(netInference.getPredictedColumns().length > 15) {
+                    
                     network.halt();
                 }
             }
@@ -233,7 +234,7 @@ public class NetworkTest {
         
         // Let run for 5 secs.
         try {
-            r2.lookup("1").getLayerThread().join(5000);
+            r2.lookup("1").getLayerThread().join();//5000);
             assertTrue(!Arrays.equals(topInference.getSparseActives(), 
                 bottomInference.getSparseActives()));
             assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
@@ -302,6 +303,7 @@ public class NetworkTest {
         }catch(Exception e) {
             e.printStackTrace();
         }
+        
    }
 
 }
