@@ -40,10 +40,11 @@ import rx.Subscriber;
  * which can be the parent of many child encoders).
  * 
  * 
- * @author metaware
+ * @author cogmission
  *
  */
 public class NetworkAPIDemo {
+    /** 3 modes to choose from to demonstrate network usage */
     private static enum Mode { BASIC, MULTILAYER, MULTIREGION };
     
     private Network network;
@@ -67,6 +68,12 @@ public class NetworkAPIDemo {
         }
     }
     
+    /**
+     * Creates a basic {@link Network} with 1 {@link Region} and 1 {@link Layer}. However
+     * this basic network contains all algorithmic components.
+     * 
+     * @return  a basic Network
+     */
     private Network createBasicNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
@@ -83,6 +90,13 @@ public class NetworkAPIDemo {
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
     }
     
+    /**
+     * Creates a {@link Network} containing one {@link Region} with multiple 
+     * {@link Layer}s. This demonstrates the method by which multiple layers 
+     * are added and connected; and the flexibility of the fluent style api.
+     * 
+     * @return  a multi-layer Network
+     */
     private Network createMultiLayerNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
@@ -102,6 +116,12 @@ public class NetworkAPIDemo {
                 .connect("Layer 4", "Layer 5"));
     }
     
+    /**
+     * Creates a {@link Network} containing 2 {@link Region}s with multiple
+     * {@link Layer}s in each.
+     * 
+     * @return a multi-region Network
+     */
     private Network createMultiRegionNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
@@ -129,7 +149,21 @@ public class NetworkAPIDemo {
                      
     }
     
+    /**
+     * Demonstrates the composition of a {@link Subscriber} (may also use
+     * {@link Observer}). There are 3 methods one must be concerned with: 
+     * </p>
+     * <p>
+     * <pre>
+     * 1. onCompleted(). Called when the stream is exhausted and will be closed.
+     * 2. onError(). Called when there is an underlying exception or error in the processing.
+     * 3. onNext(). Called for each processing cycle of the network. This is the method
+     * that is overridden to do downstream work in your application.
+     * 
+     * @return
+     */
     private Subscriber<Inference> getSubscriber() {
+        
         return new Subscriber<Inference>() {
             @Override public void onCompleted() {
                 try {
@@ -148,6 +182,13 @@ public class NetworkAPIDemo {
         };
     }
     
+    /**
+     * Primitive file appender for collecting output. This just demonstrates how to use
+     * {@link Subscriber#onNext(Object)} to accomplish some work.
+     * 
+     * @param infer             The {@link Inference} object produced by the Network
+     * @param classifierField   The field we use in this demo for anomaly computing.
+     */
     private void writeToFile(Inference infer, String classifierField) {
         try {
             StringBuilder sb = new StringBuilder()
@@ -159,15 +200,27 @@ public class NetworkAPIDemo {
             pw.flush();
         }catch(Exception e) {
             e.printStackTrace();
+        }finally{
+            pw.flush();
+            pw.close();
         }
     }
     
+    /**
+     * Simple run hook
+     */
     private void runNetwork() {
         network.start();
     }
     
+    /**
+     * Main entry point of the demo
+     * @param args
+     */
     public static void main(String[] args) {
-        NetworkAPIDemo demo = new NetworkAPIDemo(Mode.MULTILAYER);
+        // Substitute the other modes here to see alternate examples of Network construction
+        // in operation.
+        NetworkAPIDemo demo = new NetworkAPIDemo(Mode.BASIC);
         demo.runNetwork();
     }
 }

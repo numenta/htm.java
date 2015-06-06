@@ -1,9 +1,13 @@
 package org.numenta.nupic.network.sensor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 import org.numenta.nupic.ValueList;
@@ -17,7 +21,7 @@ import org.numenta.nupic.network.Network;
  * Sensors are used to connect to a data source and feed data into the Network, therefore
  * there are no nodes beneath them or which precede them within the Network hierarchy, in
  * terms of data flow. In fact, a Sensor will throw an {@link Exception} if an attempt to 
- * connect another {@link Node} to the input of a Node containing a Sensor is made.
+ * connect another node to the input of a node containing a Sensor is made.
  *  
  * @author David Ray
  * @see SensorFactory
@@ -45,18 +49,29 @@ public class FileSensor implements Sensor<File> {
             throw new IllegalArgumentException("Passed improperly formed Tuple: no key for \"PATH\"");
         }
         
-        File f = new File((String)params.get("PATH"));
-        if(!f.exists()) {
-            throw new IllegalArgumentException("Passed improperly formed Tuple: invalid PATH: " + params.get("PATH"));
-        }
-        
-        try {
-            Stream<String> stream = Files.lines(f.toPath(), Charset.forName("UTF-8"));
+        String pathStr = (String)params.get("PATH");
+
+        if(pathStr.indexOf("!") != -1) {
+            pathStr = pathStr.substring("file:".length());
+            
+            Stream<String> stream = getJarEntryStream(pathStr);
             this.stream = BatchedCsvStream.batch(
                 stream, BATCH_SIZE, DEFAULT_PARALLEL_MODE, HEADER_SIZE);
-        } catch(IOException e) {
-            e.printStackTrace();
+        }else{
+            File f = new File(pathStr);
+            if(!f.exists()) {
+                throw new IllegalArgumentException("Passed improperly formed Tuple: invalid PATH: " + params.get("PATH"));
+            }
+            
+            try {
+                Stream<String> stream = Files.lines(f.toPath(), Charset.forName("UTF-8"));
+                this.stream = BatchedCsvStream.batch(
+                    stream, BATCH_SIZE, DEFAULT_PARALLEL_MODE, HEADER_SIZE);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
         }
+        
     }
     
     /**
@@ -100,4 +115,34 @@ public class FileSensor implements Sensor<File> {
         return stream.getMeta();
     }
 
+    /**
+     * Returns a {@link Stream} from a Jar entry
+     * @param path
+     * @return
+     */
+    public static Stream<String> getJarEntryStream(String path) {
+        Stream<String> retVal = null;
+        String[] parts = path.split("\\!");
+        try {
+            JarFile jar = new JarFile(parts[0]);
+            InputStream inStream = jar.getInputStream(jar.getEntry(parts[1].substring(1)));
+            BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+            retVal = br.lines().onClose(() -> {
+                try {
+                    br.close();
+                    jar.close();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }});
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        return retVal;
+    }
+    public static void main(String[] args) {
+        String path = "/Users/metaware/git/htm.java/NetworkAPIDemo_1.0.jar!/org/numenta/nupic/datagen/rec-center-hourly.csv";
+        Stream<String> stream = getJarEntryStream(path);
+        stream.forEach(l -> System.out.println(l));
+    }
 }
