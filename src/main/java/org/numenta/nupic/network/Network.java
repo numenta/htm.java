@@ -153,108 +153,31 @@ import rx.Observable;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public interface Network {
+public class Network {
     public enum Mode { MANUAL, AUTO, REACTIVE };
-    
-    
+
+    private String name;
+    private Parameters parameters;
+    private HTMSensor<?> sensor;
+    private MultiEncoder encoder;
+    private Region head;
+    private Region tail;
+    private Region sensorRegion;
+
+    private List<Region> regions = new ArrayList<>();
+
     /**
-     * Halts this {@code Network}, stopping all threads and closing
-     * all {@link SensorFactory} connections to incoming data, freeing up 
-     * any resources associated with the input connections.
+     * Creates a new {@link Network}
+     * @param parameters
      */
-    public void halt();
-    
-    /**
-     * Pauses all underlying {@code Network} nodes, maintaining any 
-     * connections (leaving them open until they possibly time out).
-     * Does nothing to prevent any sensor connections from timing out
-     * on their own. 
-     */
-    public void pause();
-    
-    /**
-     * If {@link Network.Mode} == {@link Mode#AUTO}, calling this 
-     * method will start the main engine thread which pulls in data
-     * from the connected {@link Sensor}(s).
-     * 
-     * <em>Warning:</em> Calling this method with any other Mode than 
-     * {@link Mode#AUTO} will result in an {@link UnsupportedOperationException}
-     * being thrown.
-     */
-    public default void start() {
-        throw new UnsupportedOperationException("Calling start is not valid for " +
-            getMode());
+    public Network(String name, Parameters parameters) {
+        this.name = name;
+        this.parameters = parameters;
+        if(parameters == null) {
+            throw new IllegalArgumentException("Network Parameters were null.");
+        }
     }
-    /**
-     * Returns the current {@link Mode} with which this {@link Network} is 
-     * currently configured.
-     * 
-     * @return
-     */
-    public Mode getMode();
-    
-    /**
-     * Returns an {@link Observable} capable of emitting {@link Inferences}
-     * which contain the results of this {@code Network}'s processing chain.
-     * @return
-     */
-    public Observable<Inference> observe();
-    
-    /**
-     * Returns the String identifier for this {@code Network}
-     * @return
-     */
-    public String getName();
-    
-    /**
-     * Returns the top-most (last in execution order from
-     * bottom to top) {@link Region} in this {@code Network}
-     * 
-     * @return
-     */
-    public Region getHead();
-    
-    /**
-     * Returns the bottom-most (first in execution order from
-     * bottom to top) {@link Region} in this {@code Network}
-     * 
-     * @return
-     */
-    public Region getTail();
-    
-    /**
-     * Returns a {@link Iterator} capable of walking the tree of regions
-     * from the root {@link Region} down through all the child Regions. In turn,
-     * a {@link Region} may be queried for a {@link Iterator} which will return
-     * an iterator capable of traversing the Region's contained {@link Layer}s.
-     * 
-     * @return
-     */
-    public default Iterator<Region> iterator() {
-        return getRegions().iterator();
-    }
-    
-    /**
-     * Returns a {@link List} view of the contained {@link Region}s.
-     * @return
-     */
-    public <T> List<Region> getRegions();
-    
-    /**
-     * Sets a reference to the {@link Region} which contains the {@link Sensor}
-     * (if any).
-     * 
-     * @param r
-     */
-    public void setSensorRegion(Region r);
-    
-    /**
-     * Returns a reference to the {@link Region} which contains the {@link Sensor}
-     * 
-     * @return  the Region which contains the Sensor
-     */
-    public Region getSensorRegion();
-    
+
     /**
      * Creates and returns an implementation of {@link Network}
      * 
@@ -262,16 +185,9 @@ public interface Network {
      * @return
      */
     public static Network create(String name, Parameters parameters) {
-        return new NetworkImpl(name, parameters);
+        return new Network(name, parameters);
     }
-    
-    /**
-     * Adds a {@link Region} to this {@code Network}
-     * @param region
-     * @return
-     */
-    public <T> Network add(Region region);
-    
+
     /**
      * Creates and returns a child {@link Region} of this {@code Network}
      * 
@@ -279,12 +195,12 @@ public interface Network {
      * @return
      */
     public static Region createRegion(String name) {
-        NetworkImpl.checkName(name);
-        
+        Network.checkName(name);
+
         Region r = new Region(name, null);
         return r;
     }
-    
+
     /**
      * Creates a {@link Layer} to hold algorithmic components and returns
      * it.
@@ -295,10 +211,124 @@ public interface Network {
      */
     @SuppressWarnings("rawtypes")
     public static Layer<?> createLayer(String name, Parameters p) {
-        NetworkImpl.checkName(name);
+        Network.checkName(name);
         return new Layer(name, null, p);
     }
-    
+
+    /**
+     * Returns the String identifier for this {@code Network}
+     * @return
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * If {@link Network.Mode} == {@link Mode#AUTO}, calling this 
+     * method will start the main engine thread which pulls in data
+     * from the connected {@link Sensor}(s).
+     * 
+     * <em>Warning:</em> Calling this method with any other Mode than 
+     * {@link Mode#AUTO} will result in an {@link UnsupportedOperationException}
+     * being thrown.
+     */
+    public void start() {
+        if(regions.size() < 1) {
+            throw new IllegalStateException("Nothing to start - 0 regions");
+        }
+
+        Region tail = regions.get(0);
+        Region upstream = tail;
+        while((upstream = upstream.getUpstreamRegion()) != null) {
+            tail = upstream;
+        }
+
+        tail.start();
+    }
+
+    /**
+     * Halts this {@code Network}, stopping all threads and closing
+     * all {@link SensorFactory} connections to incoming data, freeing up 
+     * any resources associated with the input connections.
+     */
+    public void halt() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        tail.halt();
+    }
+
+    /**
+     * Pauses all underlying {@code Network} nodes, maintaining any 
+     * connections (leaving them open until they possibly time out).
+     * Does nothing to prevent any sensor connections from timing out
+     * on their own. 
+     */
+    public void pause() {
+        throw new UnsupportedOperationException("Pausing is not (yet) supported.");
+    }
+
+    /**
+     * Returns the current {@link Mode} with which this {@link Network} is 
+     * currently configured.
+     * 
+     * @return
+     */
+    public Mode getMode() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Returns an {@link Observable} capable of emitting {@link Inferences}
+     * which contain the results of this {@code Network}'s processing chain.
+     * @return
+     */
+    public Observable<Inference> observe() {
+        if(regions.size() == 1) {
+            this.head = regions.get(0);
+        }
+        return head.observe();
+    }
+
+    /**
+     * Returns the top-most (last in execution order from
+     * bottom to top) {@link Region} in this {@code Network}
+     * 
+     * @return
+     */
+    public Region getHead() {
+        if(regions.size() == 1) {
+            this.head = regions.get(0);
+        }
+        return this.head;
+    }
+
+    /**
+     * Returns the bottom-most (first in execution order from
+     * bottom to top) {@link Region} in this {@code Network}
+     * 
+     * @return
+     */
+    public Region getTail() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return this.tail;
+    }
+
+    /**
+     * Returns a {@link Iterator} capable of walking the tree of regions
+     * from the root {@link Region} down through all the child Regions. In turn,
+     * a {@link Region} may be queried for a {@link Iterator} which will return
+     * an iterator capable of traversing the Region's contained {@link Layer}s.
+     * 
+     * @return
+     */
+    public Iterator<Region> iterator() {
+        return getRegions().iterator();
+    }
+
     /**
      * Connects the specified source to the specified sink (the order of
      * processing flows from source to sink, or lower level region to higher
@@ -308,320 +338,141 @@ public interface Network {
      * 
      * @return  this {@code Network}
      */
-    public Network connect(String regionSink, String regionSource);
-    
+    public Network connect(String regionSink, String regionSource) {
+        Region source = lookup(regionSource);
+        if(source == null) {
+            throw new IllegalArgumentException("Region with name: " + regionSource + " not added to Network.");
+        }
+
+        Region sink = lookup(regionSink);
+        if(sink == null) {
+            throw new IllegalArgumentException("Region with name: " + regionSink + " not added to Network.");
+        }
+
+        sink.connect(source);
+
+        tail = tail == null ? source : tail;
+        head = head == null ? sink : head;
+
+        Region bottom = source;
+        while((bottom = bottom.getUpstreamRegion()) != null) {
+            tail = bottom;
+        }
+
+        Region top = sink;
+        while((top = top.getDownstreamRegion()) != null) {
+            head = top;
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds a {@link Region} to this {@code Network}
+     * @param region
+     * @return
+     */
+    public Network add(Region region) {
+        regions.add(region);
+        region.setNetwork(this);
+        return this;
+    }
+
+    /**
+     * Returns a {@link List} view of the contained {@link Region}s.
+     * @return
+     */
+    public List<Region> getRegions() {
+        return new ArrayList<Region>(regions);
+    }
+
+    /**
+     * Sets a reference to the {@link Region} which contains the {@link Sensor}
+     * (if any).
+     * 
+     * @param r
+     */
+    public void setSensorRegion(Region r) {
+        this.sensorRegion = r;
+    }
+
+    /**
+     * Returns a reference to the {@link Region} which contains the {@link Sensor}
+     * 
+     * @return  the Region which contains the Sensor
+     */
+    public Region getSensorRegion() {
+        return sensorRegion;
+    }
+
     /**
      * Returns the {@link Region} with the specified name
      * or null if it doesn't exist within this {@code Network}
      * @param regionName
      * @return
      */
-    public Region lookup(String regionName);
+    public Region lookup(String regionName) {
+        for(Region r : regions) {
+            if(r.getName().equals(regionName)) {
+                return r;
+            }
+        }
+        return null;
+    }
 
     /**
      * Returns the network-level {@link Parameters}.
      * @return
      */
-    public Parameters getParameters();
-    
+    public Parameters getParameters() {
+        return parameters;
+    }
+
     /**
      * Sets the reference to this {@code Network}'s Sensor
      * @param encoder
      */
-    public void setSensor(HTMSensor<?> encoder);
-    
+    public void setSensor(HTMSensor<?> sensor) {
+        this.sensor = sensor;
+        this.sensor.initEncoder(this.parameters);
+    }
+
     /**
      * Returns the encoder present in one of this {@code Network}'s
      * {@link Sensor}s
      * 
      * @return
      */
-    public HTMSensor<?> getSensor();
-    
+    public HTMSensor<?> getSensor() {
+        return sensor;
+    }
+
     /**
      * Sets the {@link MultiEncoder} on this Network
      * @param e
      */
-    public void setEncoder(MultiEncoder e);
-    
+    public void setEncoder(MultiEncoder e) {
+        this.encoder = e;
+    }
+
     /**
      * Returns the {@link MultiEncoder} with which this Network is configured.
      * @return
      */
-    public MultiEncoder getEncoder();
-    
-    
-    /////////////////////////////////////////////////////////////////////////
-    //                   Internal Interface Definitions                    //
-    /////////////////////////////////////////////////////////////////////////
+    public MultiEncoder getEncoder() {
+        return this.encoder;
+    }
+
     /**
-     * Implementation of the {@link Network} interface.
+     * Checks the name for suitability within a given network, 
+     * checking for reserved characters and such.
      * 
-     * @author David Ray
-     * @see Network
+     * @param name
      */
-    public static class NetworkImpl implements Network {
-        private String name;
-        private Parameters parameters;
-        private HTMSensor<?> sensor;
-        private MultiEncoder encoder;
-        private Region head;
-        private Region tail;
-        private Region sensorRegion;
-        
-        private List<Region> regions = new ArrayList<>();
-        
-        /**
-         * Creates a new {@link NetworkImpl}
-         * @param parameters
-         */
-        public NetworkImpl(String name, Parameters parameters) {
-            this.name = name;
-            this.parameters = parameters;
-            if(parameters == null) {
-                throw new IllegalArgumentException("Network Parameters were null.");
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public String getName() {
-            return name;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void start() {
-            if(regions.size() < 1) {
-                throw new IllegalStateException("Nothing to start - 0 regions");
-            }
-            
-            Region tail = regions.get(0);
-            Region upstream = tail;
-            while((upstream = upstream.getUpstreamRegion()) != null) {
-                tail = upstream;
-            }
-            
-            tail.start();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void halt() {
-            if(regions.size() == 1) {
-                this.tail = regions.get(0);
-            }
-            tail.halt();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void pause() {
-            throw new UnsupportedOperationException("Pausing is not (yet) supported.");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Mode getMode() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Observable<Inference> observe() {
-            if(regions.size() == 1) {
-                this.head = regions.get(0);
-            }
-            return head.observe();
-        }
-        
-        /**
-         * Returns the top-most (last in execution order from
-         * bottom to top) {@link Region} in this {@code Network}
-         * 
-         * @return
-         */
-        @Override
-        public Region getHead() {
-            if(regions.size() == 1) {
-                this.head = regions.get(0);
-            }
-            return this.head;
-        }
-        
-        /**
-         * Returns the bottom-most (first in execution order from
-         * bottom to top) {@link Region} in this {@code Network}
-         * 
-         * @return
-         */
-        @Override
-        public Region getTail() {
-            if(regions.size() == 1) {
-                this.tail = regions.get(0);
-            }
-            return this.tail;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public Network connect(String regionSink, String regionSource) {
-            Region source = lookup(regionSource);
-            if(source == null) {
-                throw new IllegalArgumentException("Region with name: " + regionSource + " not added to Network.");
-            }
-            
-            Region sink = lookup(regionSink);
-            if(sink == null) {
-                throw new IllegalArgumentException("Region with name: " + regionSink + " not added to Network.");
-            }
-            
-            sink.connect(source);
-            
-            tail = tail == null ? source : tail;
-            head = head == null ? sink : head;
-            
-            Region bottom = source;
-            while((bottom = bottom.getUpstreamRegion()) != null) {
-                tail = bottom;
-            }
-            
-            Region top = sink;
-            while((top = top.getDownstreamRegion()) != null) {
-                head = top;
-            }
-            
-            return this;
-        }
-        
-        /**
-         * Adds a {@link Region} to this {@code Network}
-         * @param region
-         * @return
-         */
-        @Override
-        public Network add(Region region) {
-            regions.add(region);
-            region.setNetwork(this);
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Region> getRegions() {
-            return new ArrayList<Region>(regions);
-        }
-        
-        /**
-         * Sets a reference to the {@link Region} which contains the {@link Sensor}
-         * (if any).
-         * 
-         * @param r the Region containing the Sensor 
-         */
-        @Override
-        public void setSensorRegion(Region r) {
-            this.sensorRegion = r;
-        }
-        
-        /**
-         * Returns a reference to the {@link Region} which contains the {@link Sensor}
-         * 
-         * @return  the Region which contains the Sensor
-         */
-        @Override
-        public Region getSensorRegion() {
-            return sensorRegion;
-        }
-        
-        /**
-         * Returns the {@link Region} with the specified name
-         * or null if it doesn't exist within this {@code Network}
-         * @param regionName
-         * @return
-         */
-        @Override
-        public Region lookup(String regionName) {
-            for(Region r : regions) {
-                if(r.getName().equals(regionName)) {
-                    return r;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Parameters getParameters() {
-            return parameters;
-        }
-        
-        /**
-         * Sets the reference to this {@code Network}'s encoder
-         * @param encoder
-         */
-        @Override
-        public void setSensor(HTMSensor<?> sensor) {
-            this.sensor = sensor;
-            this.sensor.initEncoder(this.parameters);
-        }
-        
-        /**
-         * Returns the encoder present in one of this {@code Network}'s
-         * {@link Sensor}s
-         * 
-         * @return
-         */
-        @Override
-        public HTMSensor<?> getSensor() {
-            return sensor;
-        }
-        
-        /**
-         * Sets the {@link MultiEncoder} on this Network
-         * @param e
-         */
-        @Override
-        public void setEncoder(MultiEncoder e) {
-            this.encoder = e;
-        }
-        
-        /**
-         * Returns the {@link MultiEncoder} with which this Network is configured.
-         * @return
-         */
-        @Override
-        public MultiEncoder getEncoder() {
-            return this.encoder;
-        }
-        
-        /**
-         * Checks the name for suitability within a given network, 
-         * checking for reserved characters and such.
-         * 
-         * @param name
-         */
-        private static void checkName(String name) {
-            if(name.indexOf(":") != -1) {
-                throw new IllegalArgumentException("\":\" is a reserved character.");
-            }
+    private static void checkName(String name) {
+        if(name.indexOf(":") != -1) {
+            throw new IllegalArgumentException("\":\" is a reserved character.");
         }
     }
-     
+
 }
