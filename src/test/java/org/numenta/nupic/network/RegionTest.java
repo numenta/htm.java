@@ -84,8 +84,8 @@ public class RegionTest {
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
-            .add(Network.createLayer("4", p)
-                .add(MultiEncoder.builder().name("").build())));
+                .add(Network.createLayer("4", p)
+                    .add(MultiEncoder.builder().name("").build())));
             //.close(); // Not necessary due to implicit call during start() or compute()
         
         Region r1 = n.lookup("r1");

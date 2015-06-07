@@ -328,6 +328,22 @@ public class Network {
     public Iterator<Region> iterator() {
         return getRegions().iterator();
     }
+    
+    /**
+     * Used to manually input data into a {@link Network}, the other way 
+     * being the call to {@link Network#start()} for a Network that contains a
+     * Region that contains a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
+     * subscribing a receiving Region to this Region's output Observable.
+     * 
+     * @param input One of (int[], String[], {@link ManualInput}, or Map<String, Object>)
+     */
+    public <T> void compute(T input) {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        
+        tail.compute(input);
+    }
 
     /**
      * Connects the specified source to the specified sink (the order of

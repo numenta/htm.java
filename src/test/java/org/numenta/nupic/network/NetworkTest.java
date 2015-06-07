@@ -41,6 +41,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
@@ -325,6 +326,75 @@ public class NetworkTest {
             e.printStackTrace();
         }
         
-   }
+    }
+    
+    @Test
+    public void testNetworkComputeWithNoSensor() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build()))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        
+        Region r1 = n.lookup("r1");
+        r1.lookup("3").using(r1.lookup("4").getConnections()); // How to share Connections object between Layers
+        
+        r1.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
+//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
+//                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+//                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
+            }
+        });
+       
+        final int NUM_CYCLES = 400;
+        final int INPUT_GROUP_COUNT = 7; // Days of Week
+        Map<String, Object> multiInput = new HashMap<>();
+        for(int i = 0;i < NUM_CYCLES;i++) {
+            for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
+                multiInput.put("dayOfWeek", j);
+                r1.compute(multiInput);
+            }
+        }
+        
+        // Test that we get proper output after prediction stabilization
+        r1.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                int nextDay = ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue()));
+                assertEquals(6, nextDay);
+            }
+        });
+        
+        multiInput.put("dayOfWeek", 5.0);
+        n.compute(multiInput);
+    }
 
 }
