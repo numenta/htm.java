@@ -171,6 +171,7 @@ public class Header implements ValueList {
             }
         }
         
+        // Store lines in cache to detect when current input is a change.
         if(seqIndexes.length > 0) {
             boolean sequenceChanged = false;
             if(sequenceCache.isEmpty()) {

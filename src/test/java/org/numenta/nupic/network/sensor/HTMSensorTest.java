@@ -45,12 +45,7 @@ import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
-import org.numenta.nupic.network.sensor.FileSensor;
-import org.numenta.nupic.network.sensor.HTMSensor;
-import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.network.sensor.SensorFlags;
-import org.numenta.nupic.network.sensor.Header;
-import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.Tuple;
 
@@ -109,6 +104,42 @@ public class HTMSensorTest {
         fieldEncodings.get("timestamp").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(1, 1.0)); // Day of week
         fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(5, 4.0)); // Time of day
         fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        // This will work also
+        //fieldEncodings.get("timestamp").put(KEY.DATEFIELD_FORMATTER.getFieldName(), DateEncoder.FULL_DATE);
+                
+        Parameters p = Parameters.getEncoderDefaultParameters();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        
+        return p;
+    }
+    
+    private Parameters getCategoryEncoderParams() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+            null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        fieldEncodings = setupMap(
+            fieldEncodings, 
+            25, 
+            3, 
+            0, 0, 0, 0.1, null, null, null, 
+            "consumption", "float", "RandomDistributedScalarEncoder");
+        fieldEncodings = setupMap(
+            fieldEncodings, 
+            25, 
+            3, 
+            0, 0, 0, 0.0, null, null, Boolean.TRUE, 
+            "type", "list", "SDRCategoryEncoder");
+        
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(1, 1.0)); // Day of week
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(5, 4.0)); // Time of day
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        String categories = "ES;S1;S2;S3;S4;S5;S6;S7;S8;S9;S10;S11;S12;S13;S14;S15;S16;S17;S18;S19;GB;US";
+        fieldEncodings.get("type").put(KEY.CATEGORY_LIST.getFieldName(), categories);
         
         // This will work also
         //fieldEncodings.get("timestamp").put(KEY.DATEFIELD_FORMATTER.getFieldName(), DateEncoder.FULL_DATE);
@@ -199,6 +230,53 @@ public class HTMSensorTest {
             l -> l.equals("timestamp") || l.equals("consumption")));
         assertTrue(meta.getFlags().stream().allMatch(
             l -> l.equals(SensorFlags.B)));
+    }
+    
+    /**
+     * Special test case for extra processing for category encoder lists
+     */
+    @Test
+    public void testCategoryEncoderCreation() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, SensorParams.create(
+                Keys::path, "", ResourceLocator.path("rec-center-hourly-4period-cat.csv")));
+        
+        
+        // Cast the ValueList to the more complex type (Header)
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        Header meta = (Header)htmSensor.getMetaInfo();
+        assertTrue(meta.getFieldTypes().stream().allMatch(
+            l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT) || l.equals(FieldMetaType.LIST)));
+        assertTrue(meta.getFieldNames().stream().allMatch(
+            l -> l.equals("timestamp") || l.equals("consumption") || l.equals("type")));
+        assertTrue(meta.getFlags().stream().allMatch(
+            l -> l.equals(SensorFlags.T) || l.equals(SensorFlags.B) || l.equals(SensorFlags.C)));
+        
+        // Set the parameters on the sensor.
+        // This enables it to auto-configure itself; a step which will
+        // be done at the Region level.
+        Encoder<Object> multiEncoder = htmSensor.getEncoder();
+        assertNotNull(multiEncoder);
+        assertTrue(multiEncoder instanceof MultiEncoder);
+        
+        // Set the Local parameters on the Sensor
+        htmSensor.initEncoder(getCategoryEncoderParams());
+        List<EncoderTuple> encoders = multiEncoder.getEncoders(multiEncoder);
+        assertEquals(3, encoders.size());
+        
+        DateEncoder dateEnc = (DateEncoder)encoders.get(1).getEncoder();
+        SDRCategoryEncoder catEnc = (SDRCategoryEncoder)encoders.get(2).getEncoder();
+        assertEquals("[0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]", Arrays.toString(catEnc.encode("ES")));
+        
+        // Now test the encoding of an input row
+        Map<String, Object> d = new HashMap<String, Object>();
+        d.put("timestamp", dateEnc.parse("7/12/10 13:10"));
+        d.put("consumption", 35.3);
+        d.put("type", "ES");
+        int[] output = multiEncoder.encode(d);
+        int[] expected = {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                           0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        assertTrue(Arrays.equals(expected, output));
     }
     
     /**

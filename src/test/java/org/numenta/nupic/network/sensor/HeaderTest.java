@@ -93,6 +93,18 @@ public class HeaderTest {
     }
     
     @Test
+    public void testProcessCategories() {
+        Object[] n = { "some name", ResourceLocator.path("rec-center-hourly-4period-cat.csv") };
+        
+        Sensor<File> sensor2 = Sensor.create(
+            FileSensor::create, 
+                SensorParams.create(Keys::path, n));
+        
+        Header header = new Header(sensor2.getMetaInfo());
+        assertEquals("[T, B, C]", header.getFlags().toString());
+    }
+    
+    @Test
     public void testProcessReset() {
         Header header = new Header(getTestHeaderOff());
         List<String[]> lines = getLines(ResourceLocator.path("rec-center-hourly-4period.csv"));

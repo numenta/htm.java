@@ -587,7 +587,12 @@ public class HTMSensor<T> implements Sensor<T> {
                 String encoderType = (String) params.get("encoderType");
                 Builder<?, ?> builder = ((MultiEncoder)encoder).getBuilder(encoderType);
                 
-                if(encoderType.equals("DateEncoder")) {
+                if(encoderType.equals("SDRCategoryEncoder")) {
+                    ((MultiEncoder)encoder).setValue(builder, "n", params.get("n"));
+                    ((MultiEncoder)encoder).setValue(builder, "w", params.get("w"));
+                    ((MultiEncoder)encoder).setValue(builder, "forced", params.get("forced"));
+                    ((MultiEncoder)encoder).setValue(builder, "categoryList", params.get("categoryList"));
+                }else if(encoderType.equals("DateEncoder")) {
                     // Extract date specific mappings out of the map so that we can
                     // pre-configure the DateEncoder with its needed directives.
                     configureDateBuilder(encoderSettings, (DateEncoder.Builder)builder);

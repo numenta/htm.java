@@ -26,6 +26,7 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,8 @@ public class MultiEncoder extends Encoder<Object> {
     protected List<Tuple> categoryList;
 
     protected int width;
+    
+    protected static final String CATEGORY_DELIMITER = ";";
 
     /**
      * Constructs a new {@code MultiEncoder}
@@ -244,7 +247,19 @@ public class MultiEncoder extends Encoder<Object> {
                 builder.name((String) value);
                 break;
             case "categoryList":
-                ((CategoryEncoder.Builder) builder).categoryList((List<String>) value);
+                if(value instanceof String) {
+                    String strVal = (String)value;
+                    if(strVal.indexOf(CATEGORY_DELIMITER) == -1) {
+                        throw new IllegalArgumentException("Category field not delimited with '" + CATEGORY_DELIMITER + "' character.");
+                    }
+                    value = Arrays.<String>asList(strVal.split("[\\s]*\\" + CATEGORY_DELIMITER + "[\\s]*"));
+                }
+                if(builder instanceof CategoryEncoder.Builder) {
+                    ((CategoryEncoder.Builder) builder).categoryList((List<String>) value);
+                }else{
+                    ((SDRCategoryEncoder.Builder) builder).categoryList((List<String>) value);
+                }
+                
                 break;
             default:
                 throw new IllegalArgumentException("Invalid parameter: " + param);
