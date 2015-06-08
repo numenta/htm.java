@@ -9,7 +9,8 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 
 **NOTE: Minimum JavaSE version is 1.8**   
 
-### In The News - (We never updated with this latest change...)
+### In The News...
+* [HTM.java Recieves New Network API](http://rhyolight.github.io/numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html) (06/08/2015)
 * HTM.java is now [**OFFICIAL!**](https://github.com/numenta/htm.java/issues/193) See the [_**announcement**_](http://lists.numenta.org/pipermail/nupic_lists.numenta.org/2015-February/010404.html) (02/25/2015)
 * [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
 * [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
