@@ -25,7 +25,6 @@ package org.numenta.nupic.util;
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -35,7 +34,7 @@ import java.util.Arrays;
 @SuppressWarnings("rawtypes")
 public class SparseBinaryMatrix extends SparseMatrix {
     private TIntIntMap sparseMap = new TIntIntHashMap();
-    private TIntList trueCounts;
+    private int[] trueCounts;
     private Object backingArray;
     
     public SparseBinaryMatrix(int[] dimensions) {
@@ -45,10 +44,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     public SparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
         this.backingArray = Array.newInstance(int.class, dimensions);
-        this.trueCounts = new TIntArrayList(dimensions[0]);
-        for(int i = 0;i < dimensions[0];i++) {
-        	trueCounts.add(0);
-        }
+        this.trueCounts = new int[dimensions[0]];
     }
     
     /**
@@ -60,7 +56,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     private void back(int val, int... coordinates) {
 		ArrayUtils.setValue(this.backingArray, val, coordinates);
         //update true counts
-        trueCounts.set(coordinates[0], ArrayUtils.aggregateArray(((Object[])this.backingArray)[coordinates[0]]));
+		trueCounts[coordinates[0]] = ArrayUtils.aggregateArray(((Object[])this.backingArray)[coordinates[0]]);
 	}
     
     /**
@@ -76,8 +72,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      public Object getSlice(int... coordinates) {
 		Object slice = backingArray;
 		for(int i = 0;i < coordinates.length;i++) {
-			Object s = Array.get(slice, coordinates[i]);
-			slice = s.getClass().isArray() ? s : s;
+			slice = Array.get(slice, coordinates[i]);;
 		}
 		//Ensure return value is of type Array
 		if(!slice.getClass().isArray()) {
@@ -158,6 +153,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     }
     
     /**
+     * Call This for TEST METHODS ONLY
      * Sets the specified values at the specified indexes.
      * 
      * @param indexes   indexes of the values to be set
@@ -179,7 +175,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      * @return
      */
     public int getTrueCount(int index) {
-    	return trueCounts.get(index);
+        return trueCounts[index];
     }
     
     /**
@@ -188,7 +184,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      * @param count
      */
     public void setTrueCount(int index, int count) {
-    	this.trueCounts.set(index, count);
+        this.trueCounts[index] = count;
     }
     
     /**
@@ -196,7 +192,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
      * @return
      */
     public int[] getTrueCounts() {
-    	return trueCounts.toArray();
+        return trueCounts;
     }
     
     /**
@@ -206,7 +202,7 @@ public class SparseBinaryMatrix extends SparseMatrix {
     public void clearStatistics(int row) {
     	int[] slice = (int[])Array.get(backingArray, row);
     	Arrays.fill(slice, 0);
-		trueCounts.set(row, 0);
+    	trueCounts[row] = 0;
 		sparseMap.put(row, 0);
     }
     

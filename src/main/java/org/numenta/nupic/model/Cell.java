@@ -36,20 +36,23 @@ import org.numenta.nupic.Connections;
 public class Cell implements Comparable<Cell> {
     /** This cell's index */
     private final int index;
+    /** Remove boxing where necessary */
+    final Integer boxedIndex;
     /** The owning {@link Column} */
     private final Column parentColumn;
-    
-    
+
+
     /**
      * Constructs a new {@code Cell} object
      * @param column    the parent {@link Column}
-     * @param index     this {@code Cell}'s index
+     * @param colSeq    this index of this {@code Cell} within its column
      */
-    public Cell(Column column, int index) {
+    public Cell(Column column, int colSeq) {
         this.parentColumn = column;
-        this.index = column.getIndex() * column.getNumCellsPerColumn() + index;
+        this.index = column.getIndex() * column.getNumCellsPerColumn() + colSeq;
+        this.boxedIndex = new Integer(colSeq);
     }
-    
+
     /**
      * Returns this {@code Cell}'s index.
      * @return
@@ -57,7 +60,7 @@ public class Cell implements Comparable<Cell> {
     public int getIndex() {
         return index;
     }
-    
+
     /**
      * Returns the column within which this cell resides
      * @return
@@ -65,7 +68,7 @@ public class Cell implements Comparable<Cell> {
     public Column getParentColumn() {
         return parentColumn;
     }
-    
+
     /**
      * Adds a {@link Synapse} which is the receiver of signals
      * from this {@code Cell}
@@ -76,7 +79,7 @@ public class Cell implements Comparable<Cell> {
     public void addReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this).add(s);
     }
-    
+
     /**
      * Returns the Set of {@link Synapse}s which have this cell
      * as their source cells.
@@ -88,21 +91,21 @@ public class Cell implements Comparable<Cell> {
     public Set<Synapse> getReceptorSynapses(Connections c) {
         return c.getReceptorSynapses(this);
     }
-    
+
     /**
      * Returns a newly created {@link DistalDendrite}
      * 
      * @param   c       the connections state of the temporal memory
      * @param index     the index of the new {@link DistalDendrite}
-     * @return           a newly created {@link DistalDendrite}
+     * @return          a newly created {@link DistalDendrite}
      */
     public DistalDendrite createSegment(Connections c, int index) {
         DistalDendrite dd = new DistalDendrite(this, index);
         c.getSegments(this).add(dd);
-        
+
         return dd;
     }
-    
+
     /**
      * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      * 
@@ -112,7 +115,7 @@ public class Cell implements Comparable<Cell> {
     public List<DistalDendrite> getSegments(Connections c) {
         return c.getSegments(this);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -127,6 +130,6 @@ public class Cell implements Comparable<Cell> {
      */
     @Override
     public int compareTo(Cell arg0) {
-        return new Integer(index).compareTo(arg0.getIndex());
+        return boxedIndex.compareTo(arg0.boxedIndex);
     }
 }

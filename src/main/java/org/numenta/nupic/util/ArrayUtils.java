@@ -66,6 +66,22 @@ public class ArrayUtils {
         @Override public boolean eval(int n) { return n >= 0; }
     };
     
+    
+    /**
+     * Returns the product of each integer in the specified array.
+     * 
+     * @param dims
+     * @return
+     */
+    public static int product(int[] dims) {
+        int retVal = 1;
+        for(int i = 0;i < dims.length;i++) {
+            retVal *= dims[i];
+        }
+        
+        return retVal;
+    }
+    
     /**
      * Returns an array containing the successive elements of each
      * argument array as in [ first[0], second[0], first[1], second[1], ... ].
@@ -684,20 +700,7 @@ public class ArrayUtils {
      * @return
      */
     public static double variance(double[] arr) {
-        double mean = average(arr);
-        
-        double accum = 0.0;
-        double dev = 0.0;
-        double accum2 = 0.0;
-        for (int i = 0; i < arr.length; i++) {
-            dev = arr[i] - mean;
-            accum += dev * dev;
-            accum2 += dev;
-        }
-        
-        double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
-        
-        return var;
+        return variance(arr, average(arr));
     }
 
     /**
@@ -1238,6 +1241,35 @@ public class ArrayUtils {
         }
         return retVal.toArray();
     }
+    
+    /**
+     * Returns a flag indicating whether the specified array
+     * is a sparse array of 0's and 1's or not.
+     * 
+     * @param ia
+     * @return
+     */
+    public static boolean isSparse(int[] ia) {
+        for(int i = ia.length - 1;i >= 0;i--) {
+            if(ia[i] > 1) return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Returns a bit vector of the specified size whose "on" bit
+     * indexes are specified in "in"; basically converting a sparse
+     * array to a dense one.
+     * 
+     * @param in       the sparse array specifying the on bits of the returned array
+     * @param size    the size of the dense array to be returned.
+     * @return
+     */
+    public static int[] asDense(int[] in, int size) {
+        int[] retVal = new int[size];
+        Arrays.stream(in).forEach(i -> {retVal[i] = 1;});
+        return retVal;
+    }
 
     /**
      * Scans the specified values and applies the {@link Condition} to each
@@ -1546,7 +1578,7 @@ public class ArrayUtils {
     }
 
     /**
-     * Returns a new int array containing the or'd on bits of
+     * Returns a new int array containing the and'd bits of
      * both arg1 and arg2.
      *
      * @param arg1

@@ -52,13 +52,13 @@ public class Synapse {
     private int synapseIndex;
     private int inputIndex;
     private double permanence;
-    
-    
+
+
     /**
      * Constructor used when setting parameters later.
      */
     public Synapse() {}
-    
+
     /**
      * Constructs a new {@code Synapse}
      * 
@@ -73,32 +73,32 @@ public class Synapse {
         this.sourceCell = sourceCell;
         this.segment = segment;
         this.pool = pool;
-		this.synapseIndex = index;
+        this.synapseIndex = index;
         this.inputIndex = inputIndex;
-        
+
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
-        	sourceCell.addReceptorSynapse(c, this);
+            sourceCell.addReceptorSynapse(c, this);
         }
     }
-    
+
     /**
      * Returns this {@code Synapse}'s index.
      * @return
      */
     public int getIndex() {
-    	return synapseIndex;
+        return synapseIndex;
     }
-    
+
     /**
      * Returns the index of this {@code Synapse}'s input item
      * whether it is a "sourceCell" or inputVector bit.
      * @return
      */
     public int getInputIndex() {
-    	return inputIndex;
+        return inputIndex;
     }
-    
+
     /**
      * Returns this {@code Synapse}'s degree of connectedness.
      * @return
@@ -106,7 +106,7 @@ public class Synapse {
     public double getPermanence() {
         return permanence;
     }
-    
+
     /**
      * Sets this {@code Synapse}'s degree of connectedness.
      * @param perm
@@ -115,7 +115,7 @@ public class Synapse {
         this.permanence = perm;
         pool.updatePool(c, this, perm);
     }
-    
+
     /**
      * Returns the owning dendritic segment
      * @return
@@ -123,7 +123,7 @@ public class Synapse {
     public Segment getSegment() {
         return segment;
     }
-    
+
     /**
      * Returns the containing {@link Cell} 
      * @return
@@ -131,7 +131,7 @@ public class Synapse {
     public Cell getSourceCell() {
         return sourceCell;
     }
-    
+
     /**
      * {@inheritDoc}
      */

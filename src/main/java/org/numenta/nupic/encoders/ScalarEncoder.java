@@ -24,6 +24,15 @@ package org.numenta.nupic.encoders;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
@@ -33,12 +42,6 @@ import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -51,7 +54,7 @@ import java.util.Map;
  * The encoding is linear. If you want a nonlinear encoding, just transform
  * the scalar (e.g. by applying a logarithm function) before encoding.
  * It is not recommended to bin the data as a pre-processing step, e.g.
- * "1" = $0 - $.20, "2" = $.21-$0.80, "3" = $.81-$1.20, et as this
+ * "1" = $0 - $.20, "2" = $.21-$0.80, "3" = $.81-$1.20, etc as this
  * removes a lot of information and prevents nearby values from overlapping
  * in the output. Instead, use a continuous transformation that scales
  * the data (a piecewise transformation is fine).
@@ -72,7 +75,7 @@ import java.util.Map;
  *             otherwise maxval is a true upper bound.
  *
  * There are three mutually exclusive parameters that determine the overall size of
- * of the output. Only one of these should be specifed to the constructor:
+ * of the output. Only one of these should be specified to the constructor:
  *
  * n      --      The number of bits in the output. Must be greater than or equal to w
  * radius --      Two inputs separated by more than the radius have non-overlapping
@@ -105,7 +108,7 @@ import java.util.Map;
  * monday noon  -> 11100000000000
  * monday midnight-> 01110000000000
  * tuesday noon -> 00111000000000
- * et
+ * etc
  *
  *
  * It may not be natural to specify "n", especially with non-periodic
@@ -361,8 +364,8 @@ public class ScalarEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<FieldMetaType> getDecoderOutputFieldTypes() {
-		return Arrays.asList(FieldMetaType.FLOAT);
+	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+		return new LinkedHashSet<>(Arrays.asList(FieldMetaType.FLOAT, FieldMetaType.INTEGER));
 	}
 
 	/**

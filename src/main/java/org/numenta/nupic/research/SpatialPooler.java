@@ -120,6 +120,9 @@ public class SpatialPooler {
      * of static members so that they may be set at a different point in 
      * the initialization (as sometimes needed by tests).
      * 
+     * This step prepares the proximal dendritic synapse pools with their 
+     * initial permanence values and connected inputs.
+     * 
      * @param c		the {@link Connections} memory
      */
     public void connectAndConfigureInputs(Connections c) {
@@ -165,7 +168,9 @@ public class SpatialPooler {
      */
     public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
-            throw new IllegalArgumentException("Input array must be same size as the defined number of inputs");
+            throw new IllegalArgumentException(
+                "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
+                    ", From Input Vector: " + inputVector.length);
         }
         
         updateBookeepingVars(c, learn);
@@ -869,9 +874,9 @@ public class SpatialPooler {
     	ArrayUtils.d_add(overlaps, c.getTieBreaker());
     	
     	if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
-    		int[] nhibit = inhibitColumnsGlobal(c, overlaps, density);
-    		return nhibit;
+    		return inhibitColumnsGlobal(c, overlaps, density);
     	}
+    	
     	return inhibitColumnsLocal(c, overlaps, density);
     }
     

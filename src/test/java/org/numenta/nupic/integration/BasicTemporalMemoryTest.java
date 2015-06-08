@@ -33,10 +33,10 @@ import java.util.Set;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.datagen.ConsecutivePatternMachine;
+import org.numenta.nupic.datagen.SequenceMachine;
 import org.numenta.nupic.integration.TemporalMemoryTestMachine.DetailedResults;
 import org.numenta.nupic.research.TemporalMemory;
-import org.numenta.nupic.util.ConsecutivePatternMachine;
-import org.numenta.nupic.util.SequenceMachine;
 
 
 /**

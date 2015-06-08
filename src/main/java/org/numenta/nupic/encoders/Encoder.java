@@ -29,9 +29,11 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.ArrayUtils;
@@ -125,7 +127,7 @@ public abstract class Encoder<T> {
     protected double rangeInternal;
     protected double range;
     protected boolean encLearningEnabled;
-    protected List<FieldMetaType> flattenedFieldTypeList;
+    protected Set<FieldMetaType> flattenedFieldTypeList;
     protected Map<Tuple, List<FieldMetaType>> decoderFieldTypes;
     /**
      * This matrix is used for the topDownCompute. We build it the first time
@@ -535,7 +537,7 @@ public abstract class Encoder<T> {
      *
      * @return	List<FieldMetaType>
      */
-    public List<FieldMetaType> getFlattenedFieldTypeList() {
+    public Set<FieldMetaType> getFlattenedFieldTypeList() {
     	return flattenedFieldTypeList;
     }
 
@@ -544,7 +546,7 @@ public abstract class Encoder<T> {
      *
      * @param l		list of {@link FieldMetaType}s
      */
-    public void setFlattenedFieldTypeList(List<FieldMetaType> l) {
+    public void setFlattenedFieldTypeList(Set<FieldMetaType> l) {
     	this.flattenedFieldTypeList = l;
     }
 
@@ -663,14 +665,14 @@ public abstract class Encoder<T> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public List<FieldMetaType> getDecoderOutputFieldTypes() {
+	public Set<FieldMetaType> getDecoderOutputFieldTypes() {
 		if(getFlattenedFieldTypeList() != null) {
-			return getFlattenedFieldTypeList();
+			return new HashSet<>(getFlattenedFieldTypeList());
 		}
 
-		List<FieldMetaType> retVal = new ArrayList<FieldMetaType>();
+		Set<FieldMetaType> retVal = new HashSet<FieldMetaType>();
 		for(Tuple t : getEncoders(this)) {
-			List<FieldMetaType> subTypes = ((Encoder<T>)t.get(1)).getDecoderOutputFieldTypes();
+			Set<FieldMetaType> subTypes = ((Encoder<T>)t.get(1)).getDecoderOutputFieldTypes();
 			retVal.addAll(subTypes);
 		}
 		setFlattenedFieldTypeList(retVal);
@@ -694,29 +696,6 @@ public abstract class Encoder<T> {
 			return map.get(fieldName);
 		}
 		return null;
-	}
-
-	/**
-	 * Returns a reference to each sub-encoder in this encoder. They are
-     * returned in the same order as they are for getScalarNames() and
-     * getScalars()
-     *
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public List<Encoder<T>> getEncoderList() {
-		List<Encoder<T>> encoders = new ArrayList<Encoder<T>>();
-
-		List<EncoderTuple> registeredList = getEncoders(this);
-		if(registeredList != null && !registeredList.isEmpty()) {
-			for(Tuple t : registeredList) {
-				List<Encoder<T>> subEncoders = ((Encoder<T>)t.get(1)).getEncoderList();
-				encoders.addAll(subEncoders);
-			}
-		}else{
-			encoders.add(this);
-		}
-		return encoders;
 	}
 
 	/**

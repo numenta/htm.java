@@ -23,6 +23,7 @@
 package org.numenta.nupic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -97,7 +98,7 @@ public class Connections {
      * of the topology of the inputs and columns, they are treated as being a
      * one dimensional array. Since a column is typically connected to only a
      * subset of the inputs, many of the entries in the matrix are 0. Therefore
-     * the potentialPool matrix is stored using the SparseBinaryMatrix
+     * the potentialPool matrix is stored using the SparseObjectMatrix
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
@@ -117,7 +118,7 @@ public class Connections {
     /**
      * The inhibition radius determines the size of a column's local
      * neighborhood. of a column. A cortical column must overcome the overlap
-     * score of columns in his neighborhood in order to become actives. This
+     * score of columns in its neighborhood in order to become actives. This
      * radius is updated every learning round. It grows and shrinks with the
      * average number of connected synapses per column.
      */
@@ -364,6 +365,10 @@ public class Connections {
         return random;
     }
 
+    /**
+     * Sets the random number generator.
+     * @param random
+     */
     public void setRandom(Random random){
         this.random = random;
     }
@@ -423,6 +428,11 @@ public class Connections {
         return numInputs;
     }
     
+    /**
+     * Sets the product of the input dimensions to
+     * establish a flat count of bits in the input field.
+     * @param n
+     */
     public void setNumInputs(int n) {
     	this.numInputs = n;
     }
@@ -435,6 +445,11 @@ public class Connections {
         return numColumns;
     }
     
+    /**
+     * Sets the product of the column dimensions to be 
+     * the column count.
+     * @param n
+     */
     public void setNumColumns(int n) {
     	this.numColumns = n;
     }
@@ -926,7 +941,7 @@ public class Connections {
     }
     
     /**
-     * 
+     * Returns the minimum {@link Synapse} permanence.
      * @return
      */
     public double getSynPermMin() {
@@ -934,7 +949,7 @@ public class Connections {
     }
     
     /**
-     * 
+     * Returns the maximum {@link Synapse} permanence.
      * @return
      */
     public double getSynPermMax() {
@@ -1040,11 +1055,14 @@ public class Connections {
         System.out.println("------------ SpatialPooler Parameters ------------------");
         System.out.println("numInputs                  = " + getNumInputs());
         System.out.println("numColumns                 = " + getNumColumns());
-        System.out.println("columnDimensions           = " + getColumnDimensions());
+        System.out.println("cellsPerColumn             = " + getCellsPerColumn());
+        System.out.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
         System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
         System.out.println("potentialPct               = " + getPotentialPct());
+        System.out.println("potentialRadius            = " + getPotentialRadius());
         System.out.println("globalInhibition           = " + getGlobalInhibition());
         System.out.println("localAreaDensity           = " + getLocalAreaDensity());
+        System.out.println("inhibitionRadius           = " + getInhibitionRadius());
         System.out.println("stimulusThreshold          = " + getStimulusThreshold());
         System.out.println("synPermActiveInc           = " + getSynPermActiveInc());
         System.out.println("synPermInactiveDec         = " + getSynPermInactiveDec());
@@ -1055,6 +1073,16 @@ public class Connections {
         System.out.println("maxBoost                   = " + getMaxBoost());
         System.out.println("spVerbosity                = " + getSpVerbosity());
         System.out.println("version                    = " + getVersion());
+        
+        System.out.println("\n------------ TemporalMemory Parameters ------------------");
+        System.out.println("activationThreshold        = " + getActivationThreshold());
+        System.out.println("learningRadius             = " + getLearningRadius());
+        System.out.println("minThreshold               = " + getMinThreshold());
+        System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        System.out.println("initialPermanence          = " + getInitialPermanence());
+        System.out.println("connectedPermanence        = " + getConnectedPermanence());
+        System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
+        System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
     }
     
     /////////////////////////////// Temporal Memory //////////////////////////////

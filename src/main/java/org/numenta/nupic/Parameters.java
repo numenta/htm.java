@@ -22,6 +22,15 @@
 
 package org.numenta.nupic;
 
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -31,13 +40,7 @@ import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
-
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -54,6 +57,7 @@ public class Parameters {
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
+    private static final Map<KEY, Object> DEFAULTS_ENCODER;
 
 
     static {
@@ -77,10 +81,11 @@ public class Parameters {
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
         defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
+        defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
         defaultParams.putAll(DEFAULTS_TEMPORAL);
 
-        /// Spatial Pooler Parameters ///////////
+        //////////// Spatial Pooler Parameters ///////////
         Map<KEY, Object> defaultSpatialParams = new ParametersMap();
         defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
         defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, 16);
@@ -100,8 +105,28 @@ public class Parameters {
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
         defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
         defaultSpatialParams.put(KEY.SP_VERBOSITY, 0);
+        defaultSpatialParams.put(KEY.LEARN, true);
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
+        
+        ///////////  Encoder Parameters ///////////
+        Map<KEY, Object> defaultEncoderParams = new ParametersMap();
+        defaultEncoderParams.put(KEY.N, 500);
+        defaultEncoderParams.put(KEY.W, 21);
+        defaultEncoderParams.put(KEY.MIN_VAL, 0.);
+        defaultEncoderParams.put(KEY.MAX_VAL, 1000.);
+        defaultEncoderParams.put(KEY.RADIUS, 21.);
+        defaultEncoderParams.put(KEY.RESOLUTION, 1.);
+        defaultEncoderParams.put(KEY.PERIODIC, false);
+        defaultEncoderParams.put(KEY.CLIP_INPUT, false);
+        defaultEncoderParams.put(KEY.FORCED, false);
+        defaultEncoderParams.put(KEY.FIELD_NAME, "UNSET");
+        defaultEncoderParams.put(KEY.FIELD_TYPE, "int");
+        defaultEncoderParams.put(KEY.ENCODER, "ScalarEncoder");
+        defaultEncoderParams.put(KEY.FIELD_ENCODING_MAP, Collections.emptyMap());
+        defaultEncoderParams.put(KEY.AUTO_CLASSIFY, Boolean.FALSE);
+        DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
+        defaultParams.putAll(DEFAULTS_ENCODER);
 
         DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
@@ -119,6 +144,10 @@ public class Parameters {
          * Total number of cells per column
          */
         CELLS_PER_COLUMN("cellsPerColumn", Integer.class, 1, null),
+        /**
+         * Learning variable
+         */
+        LEARN("learn", Boolean.class),
         /**
          * Random Number Generator
          */
@@ -189,7 +218,72 @@ public class Parameters {
         MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),//TODO add range here?
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
-        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10);
+        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
+        
+        ///////////// SpatialPooler / Network Parameter(s) /////////////
+        /** Number of cycles to send through the SP before forwarding data to the rest of the network. */
+        SP_PRIMER_DELAY("sp_primer_delay", Integer.class),
+        
+        ///////////// Encoder Parameters //////////////
+        /** number of bits in the representation (must be >= w) */
+        N("n", Integer.class),
+        /** 
+         * The number of bits that are set to encode a single value - the
+         * "width" of the output signal
+         */
+        W("w", Integer.class),
+        /** The minimum value of the input signal.  */
+        MIN_VAL("minVal", Double.class),
+        /** The maximum value of the input signal. */
+        MAX_VAL("maxVal", Double.class),
+        /**
+         * inputs separated by more than, or equal to this distance will have non-overlapping
+         * representations
+         */
+        RADIUS("radius", Double.class),
+        /** inputs separated by more than, or equal to this distance will have different representations */
+        RESOLUTION("resolution", Double.class),
+        /**
+         * If true, then the input value "wraps around" such that minval = maxval
+         * For a periodic value, the input must be strictly less than maxval,
+         * otherwise maxval is a true upper bound.
+         */
+        PERIODIC("periodic", Boolean.class),
+        /** 
+         * if true, non-periodic inputs smaller than minval or greater
+         * than maxval will be clipped to minval/maxval 
+         */
+        CLIP_INPUT("clipInput", Boolean.class),
+        /** 
+         * If true, skip some safety checks (for compatibility reasons), default false 
+         * Mostly having to do with being able to set the window size < 21 
+         */
+        FORCED("forced", Boolean.class),
+        /** Name of the field being encoded */
+        FIELD_NAME("fieldName", String.class),
+        /** Primitive type of the field, used to auto-configure the type of encoder */
+        FIELD_TYPE("fieldType", String.class),
+        /** Encoder name */
+        ENCODER("encoderType", String.class),
+        /** Designates holder for the Multi Encoding Map */
+        FIELD_ENCODING_MAP("fieldEncodings", Map.class),
+        CATEGORY_LIST("categoryList", List.class),
+        
+        // Network Layer indicator for auto classifier generation
+        AUTO_CLASSIFY("hasClassifiers", Boolean.class),
+        
+        
+        // How many bits to use if encoding the respective date fields.
+        // e.g. Tuple(bits to use:int, radius:double)
+        DATEFIELD_SEASON("season", Tuple.class), 
+        DATEFIELD_DOFW("dayOfWeek", Tuple.class),
+        DATEFIELD_WKEND("weekend", Tuple.class),
+        DATEFIELD_HOLIDAY("holiday", Tuple.class),
+        DATEFIELD_TOFD("timeOfDay", Tuple.class),
+        DATEFIELD_CUSTOM("customDays", Tuple.class), // e.g. Tuple(bits:int, List<String>:"mon,tue,fri")
+        DATEFIELD_PATTERN("formatPattern", String.class),
+        DATEFIELD_FORMATTER("dateFormatter", DateTimeFormatter.class);
+        
 
         private static final Map<String, KEY> fieldMap = new HashMap<>();
 
@@ -325,7 +419,15 @@ public class Parameters {
     }
 
     /**
-     * Factory method. Return encoder {@link Parameters} object with default values
+     * Factory method. Return Encoder {@link Parameters} object with default values
+     * @return
+     */
+    public static Parameters getEncoderDefaultParameters() {
+        return getParameters(DEFAULTS_ENCODER);
+    }
+    /**
+     * Called internally to populate a {@link Parameters} object with the keys
+     * and values specified in the passed in map.
      *
      * @return {@link Parameters} object
      */
@@ -361,7 +463,46 @@ public class Parameters {
             }
         }
     }
-
+    
+    /**
+     * Copies the specified parameters into this {@code Parameters}
+     * object over writing the intersecting keys and values.
+     * @param p     the Parameters to perform a union with.
+     * @return      this Parameters object combined with the specified
+     *              Parameters object.
+     */
+    public Parameters union(Parameters p) {
+        for(KEY k : p.paramMap.keySet()) {
+            setParameterByKey(k, p.getParameterByKey(k));
+        }
+        return this;
+    }
+    
+    /**
+     * Returns a Set view of the keys in this {@code Parameter}s 
+     * object
+     * @return
+     */
+    public Set<KEY> keys() {
+        Set<KEY> retVal = paramMap.keySet();
+        return retVal;
+    }
+    
+    /**
+     * Returns a separate instance of the specified {@code Parameters} object.
+     * @return      a unique instance.
+     */
+    public Parameters copy() {
+        return new Parameters().union(this);
+    }
+    
+    /**
+     * Returns an empty instance of {@code Parameters};
+     * @return
+     */
+    public static Parameters empty() {
+        return new Parameters();
+    }
 
     /**
      * Set parameter by Key{@link KEY}
@@ -384,7 +525,8 @@ public class Parameters {
     }
 
     /**
-     * @param key IMPORTANT! This is a nuclear option, should be used with care. Will knockout key's parameter from map and compromise integrity
+     * @param key IMPORTANT! This is a nuclear option, should be used with care. 
+     * Will knockout key's parameter from map and compromise integrity
      */
     public void clearParameter(KEY key) {
         paramMap.remove(key);
