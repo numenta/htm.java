@@ -27,6 +27,8 @@ import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.util.NamedTuple;
 
+import rx.functions.Func1;
+
 /**
  * Container for output from a given {@link Layer}. Represents the
  * result accumulated by the computation of a sequence of algorithms
@@ -44,6 +46,14 @@ public interface Inference {
      * @return
      */
     public int getRecordNum();
+    /**
+     * Returns a custom Object during sequence processing where one or more 
+     * {@link Func1}(s) were added to a {@link Layer} in between algorithmic
+     * components.
+     *  
+     * @return  the custom object set during processing
+     */
+    public Object getCustomObject();
     /**
      * Returns the {@link Map} used as input into a given {@link CLAClassifier}
      * if it exists.

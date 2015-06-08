@@ -1578,7 +1578,7 @@ public class ArrayUtils {
     }
 
     /**
-     * Returns a new int array containing the or'd on bits of
+     * Returns a new int array containing the and'd bits of
      * both arg1 and arg2.
      *
      * @param arg1

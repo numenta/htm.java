@@ -78,7 +78,7 @@ import rx.subjects.ReplaySubject;
  * manual.onNext(entries[3]);
  * </pre>
  * 
- * @author metaware
+ * @author David Ray
  *
  */
 public class Publisher {

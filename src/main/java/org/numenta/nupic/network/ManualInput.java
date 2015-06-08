@@ -30,6 +30,8 @@ import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
+import rx.functions.Func1;
+
 /**
  * <p>
  * Abstraction used within the Network API, to contain the significant return values of all {@link Layer}
@@ -69,6 +71,7 @@ public class ManualInput implements Inference {
     private int[] currentPrediction;
     private Map<String,ClassifierResult<Object>> classification;
     private double anomalyScore;
+    private Object customObject;
     
     
     /**
@@ -97,6 +100,30 @@ public class ManualInput implements Inference {
     @Override
     public int getRecordNum() {
         return recordNum;
+    }
+    
+    /**
+     * Returns a custom Object during sequence processing where one or more 
+     * {@link Func1}(s) were added to a {@link Layer} in between algorithmic
+     * components.
+     *  
+     * @return  the custom object set during processing
+     */
+    public Object getCustomObject() {
+        return customObject;
+    }
+    
+    /**
+     * Sets a custom Object during sequence processing where one or more 
+     * {@link Func1}(s) were added to a {@link Layer} in between algorithmic
+     * components.
+     *  
+     * @param o
+     * @return
+     */
+    public ManualInput customObject(Object o) {
+        this.customObject = o;
+        return this;
     }
     
     /**

@@ -202,6 +202,17 @@ public class Layer<T> {
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
     private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
     
+    /** Retains the order of added items - for use with interposed {@link Observable} */
+    private List<Object> addedItems = new ArrayList<>();
+    /** Indicates whether there is a generic processing node entered */
+    private boolean hasGenericProcess;
+    
+    /** 
+     * List of {@link Encoders} used when storing bucket information 
+     * see {@link #doEncoderBucketMapping(Inference, Map)} 
+     */
+    private List<EncoderTuple> encoderTuples;
+    
     private Map<Class<T>, Observable<ManualInput>> observableDispatch = 
         Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
 
@@ -560,6 +571,7 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+     
         this.sensor = (HTMSensor<?>)sensor;
         if(parentNetwork != null && parentRegion != null) {
             parentNetwork.setSensorRegion(parentRegion);
@@ -576,6 +588,7 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+        
         this.encoder = encoder;
         return this;
     }
@@ -589,6 +602,10 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+        
+        // Preserve addition order
+        addedItems.add(sp);
+        
         this.algo_content_mask |= SPATIAL_POOLER;
         this.spatialPooler = sp;
         return this;
@@ -603,6 +620,10 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+        
+        // Preserve addition order
+        addedItems.add(tm);
+        
         this.algo_content_mask |= TEMPORAL_MEMORY;
         this.temporalMemory = tm;
         temporalMemory.init(connections);
@@ -618,8 +639,37 @@ public class Layer<T> {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
+        
+        // Preserve addition order
+        addedItems.add(anomalyComputer);
+        
         this.algo_content_mask |= ANOMALY_COMPUTER;
         this.anomalyComputer = anomalyComputer;
+        return this;
+    }
+    
+    /**
+     * Adds a "generic" processing node into this {@code Layer}'s 
+     * processing chain.
+     * 
+     * <em><b>NOTE: When adding a generic node, the order of calls to
+     * the addXXX() methods becomes crucially important. Make sure you 
+     * have added items in a valid order in your "fluent" add call declarations.</b></em>
+     * 
+     * @param o
+     * @return
+     */
+    public Layer<T> add(Func1<ManualInput, ManualInput> func) {
+        if(isClosed) {
+            throw new IllegalStateException("Layer already \"closed\"");
+        }
+        if(func == null) {
+            throw new IllegalArgumentException("Cannot add a null Function");
+        }
+        
+        hasGenericProcess = true;
+        // Preserve addition order
+        addedItems.add(func);
         return this;
     }
     
@@ -1202,7 +1252,7 @@ public class Layer<T> {
         publisher = PublishSubject.create();
         
         observableDispatch.put((Class<T>)Map.class, factory.createMultiMapFunc(publisher));
-        observableDispatch.put((Class<T>)ManualInput.class, factory.createSensorInputFunc(publisher));
+        observableDispatch.put((Class<T>)ManualInput.class, factory.createManualInputFunc(publisher));
         observableDispatch.put((Class<T>)String[].class, factory.createEncoderFunc(publisher));
         observableDispatch.put((Class<T>)int[].class, factory.createVectorFunc(publisher));
         
@@ -1255,7 +1305,14 @@ public class Layer<T> {
         return sequenceStart;
     }
     
-    List<EncoderTuple> encoderTuples;
+    /**
+     * Stores a {@link NamedTuple} which contains the input values and
+     * bucket information - keyed to the encoded field name so that a 
+     * classifier can retrieve it later on in the processing sequence.
+     * 
+     * @param inference
+     * @param encoderInputMap
+     */
     private void doEncoderBucketMapping(Inference inference, Map<String, Object> encoderInputMap) {
         if(encoderTuples == null) {
             encoderTuples = encoder.getEncoders(encoder);
@@ -1295,6 +1352,11 @@ public class Layer<T> {
      * @return      the completed {@link Observable} sequence.
      */
     private Observable<ManualInput> fillInSequence(Observable<ManualInput> o) {
+        // Route to ordered dispatching if required.
+        if(hasGenericProcess) {
+            return fillInOrderedSequence(o);
+        }
+        
         // Spatial Pooler config
         if(spatialPooler != null) {
             Integer skipCount = 0;
@@ -1320,6 +1382,43 @@ public class Layer<T> {
             o = o.map(factory.createAnomalyFunc(anomalyComputer));
         }
 
+        return o;
+    }
+    
+    /**
+     * Connects {@link Observable} or {@link Transformer} emissions in the order
+     * they are declared.
+     * 
+     * @param o     first {@link Observable} in sequence.
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Observable<ManualInput> fillInOrderedSequence(Observable<ManualInput> o) {
+        for(Object node : addedItems) {
+            if(node instanceof Func1<?,?>) {
+                o = o.map((Func1<ManualInput,ManualInput>)node);
+            }else if(node instanceof SpatialPooler) {
+                Integer skipCount = 0;
+                if((skipCount = ((Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY))) != null) {
+                    o = o.map(factory.createSpatialFunc(spatialPooler)).skip(skipCount.intValue());
+                }else{
+                    o = o.map(factory.createSpatialFunc(spatialPooler));
+                }
+            }else if(node instanceof TemporalMemory) {
+                o = o.map(factory.createTemporalFunc(temporalMemory));
+            }
+        }
+        
+        // Classifier config
+        if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue()) {
+            o = o.map(factory.createClassifierFunc());
+        }
+
+        // Anomaly config
+        if(anomalyComputer != null) {
+            o = o.map(factory.createAnomalyFunc(anomalyComputer));
+        }
+        
         return o;
     }
     
@@ -1645,7 +1744,7 @@ public class Layer<T> {
             return in.ofType(int[].class).compose(new Vector2Inference());
         }
 
-        public Observable<ManualInput> createSensorInputFunc(Observable<T> in) {
+        public Observable<ManualInput> createManualInputFunc(Observable<T> in) {
             return in.ofType(ManualInput.class).compose(new Copy2Inference());
         }
 

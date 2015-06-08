@@ -57,8 +57,11 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observable;
+import rx.Observable.Transformer;
 import rx.Observer;
 import rx.Subscriber;
+import rx.functions.Func1;
+import rx.subjects.PublishSubject;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -326,6 +329,101 @@ public class LayerTest {
             e.printStackTrace();
             fail();
         }
+    }
+    
+    @Test 
+    public void testLayerWithGenericObservable() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        int[][] inputs = new int[7][8];
+        inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
+        inputs[1] = new int[] { 1, 1, 1, 0, 0, 0, 0, 0 };
+        inputs[2] = new int[] { 0, 1, 1, 1, 0, 0, 0, 0 };
+        inputs[3] = new int[] { 0, 0, 1, 1, 1, 0, 0, 0 };
+        inputs[4] = new int[] { 0, 0, 0, 1, 1, 1, 0, 0 };
+        inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
+        inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
+        
+        final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        
+        Func1<ManualInput, ManualInput> addedFunc = l -> { 
+            return l.customObject("Interposed: " + Arrays.toString(l.getSDR()));
+        };
+        
+        Network n = Network.create("Generic Test", p)
+            .add(Network.createRegion("R1")
+                .add(Network.createLayer("L1", p)
+                    .add(addedFunc)
+                    .add(new SpatialPooler())));
+        
+        @SuppressWarnings("unchecked")
+        Layer<int[]> l = (Layer<int[]>)n.lookup("R1").lookup("L1");
+        l.subscribe(new Observer<Inference>() {
+            int test = 0;
+            
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference i) {
+                if(test == 0) {
+                    assertTrue(Arrays.equals(expected0, i.getSDR()));
+                    assertEquals("Interposed: [1, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
+                }
+                if(test == 1) {
+                    assertTrue(Arrays.equals(expected1, i.getSDR()));
+                    assertEquals("Interposed: [1, 1, 1, 0, 0, 0, 0, 0]", i.getCustomObject());
+                }
+                ++test; 
+            }
+        });
+        
+        // SHOULD RECEIVE BOTH
+        // Now push some fake data through so that "onNext" is called above
+        l.compute(inputs[0]);
+        l.compute(inputs[1]);
+    }
+    
+    public static void main(String[] args) {
+        Observable<String> o1 = Observable.<String>from(new String[] { "1", "2", "3", "4"});
+        Observable<String> generic = PublishSubject.<String>create().map(f -> { 
+            System.out.println("Interposed: " + f); 
+            return f; 
+        });
+        
+        Transformer<String, String> t = new Transformer<String, String>() {
+            public Observable<String> call(Observable<String> s) {
+//                return s.map(new Func1<String, String>() {
+//                    public String call(String str) {
+//                        return str;
+//                    }
+//                });
+                return generic;
+            }
+        };
+        
+        Func1<String, String> f = new Func1<String, String>() {
+
+            @Override
+            public String call(String t) {
+                // TODO Auto-generated method stub
+                return t + " - in func";
+            }
+            
+        };
+       
+            
+        Observable<String> o2 = o1.map(f);
+        o2.subscribe(new Subscriber<String>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(String i) {
+                System.out.println("on next = " + i);
+            }
+            
+        });
     }
     
     @Test

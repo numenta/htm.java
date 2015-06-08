@@ -355,13 +355,14 @@ public class Region {
      * @return
      * @throws IllegalStateException if Region is already closed
      */
+    @SuppressWarnings("unchecked")
     public Region connect(String toLayerName, String fromLayerName) {
         if(assemblyClosed) {
             throw new IllegalStateException("Cannot connect Layers when Region has already been closed.");
         }
         
-        Layer<Inference> in = lookup(toLayerName);
-        Layer<Inference> out = lookup(fromLayerName);
+        Layer<Inference> in = (Layer<Inference>)lookup(toLayerName);
+        Layer<Inference> out = (Layer<Inference>)lookup(fromLayerName);
         if(in == null) {
             throw new IllegalArgumentException("Could not lookup (to) Layer with name: " + toLayerName);
         }else if(out == null){
@@ -386,7 +387,7 @@ public class Region {
      * @param layerName
      * @return
      */
-    public Layer<Inference> lookup(String layerName) {
+    public Layer<?> lookup(String layerName) {
         if(layerName.indexOf(":") != -1) {
             return layers.get(layerName);
         }
