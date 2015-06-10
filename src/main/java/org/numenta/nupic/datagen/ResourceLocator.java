@@ -25,7 +25,7 @@ public interface ResourceLocator {
         if(url == null) {
             url = ResourceLocator.class.getClassLoader().getResource(s);
         }
-        return url.getPath();
+        return new File(url.getPath()).getPath();
     }
     
     public static String locate(String s) {
