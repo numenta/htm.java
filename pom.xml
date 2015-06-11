@@ -1,16 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>htm.java</groupId>
+
+  <groupId>org.numenta</groupId>
   <artifactId>htm.java</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <name>htm.java</name>
+
+  <version>0.5.0</version>
+
+  <name>Numenta htm.java</name>
   <description>The Java version of Numenta's HTM technology</description>
+
+  <url>https://github.com/numenta/htm.java</url>
+
+  <licenses>
+    <license>
+      <name>The GNU General Public License.</name>
+      <url>https://github.com/numenta/htm.java/blob/master/LICENSE.txt</url>
+    </license>
+  </licenses>
+  
   <scm>
     <connection>scm:git:git://github.com/numenta/htm.java.git</connection>
     <developerConnection>scm:git:git://github.com/numenta/htm.java.git</developerConnection>
     <url>https://github.com/numenta/htm.java</url>
   </scm>
+
   <dependencies>
     <dependency>
       <groupId>joda-time</groupId>
@@ -82,13 +96,14 @@
       <version>1.1.2</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
+	<dependency>
       <groupId>io.reactivex</groupId>
       <artifactId>rxjava</artifactId>
       <version>1.0.10</version>
       <scope/>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -112,7 +127,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.2.201409121644</version>
+        <version>0.7.5.201505241946</version>
         <executions>
           <execution>
             <id>prepare-agent</id>
@@ -124,4 +139,81 @@
       </plugin>
     </plugins>
   </build>
+  
+  <profiles>
+    <profile>
+      <id>sonatype-repo</id>
+
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+
+      <distributionManagement>
+        <snapshotRepository>
+          <id>htm-central-repo</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	    </snapshotRepository>
+	  <repository>
+	    <id>htm-central-repo</id>
+	    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	  </repository>
+      </distributionManagement>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.3</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>htm-central-repo</serverId>
+	        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+<!--      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.9.1</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin> -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

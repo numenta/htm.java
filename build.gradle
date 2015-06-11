@@ -1,16 +1,18 @@
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'signing'
 
-group = 'htm.java'
-version = '0.40'
+group = 'org.numenta'
+version = '0.5.0-SNAPSHOT'
+archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': 0.40
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.5.0-SNAPSHOT'
     }
 }
 
@@ -35,7 +37,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.4.4'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.4.4'
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.10'
-    compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
+	compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
     testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version:'1.1.2'
 }
@@ -84,6 +86,75 @@ check.doLast {
     tasks.runBench.execute()
 }
 /////////////////// END jmh /////////////////////
+
+/////////////////////////////////////////////////////////////////
+//                   SonaType Central Repo                     //
+/////////////////////////////////////////////////////////////////
+/*
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+*/
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+
+  if(!project.hasProperty('ossrhUsername')) {
+	println "property not found"
+	return
+  } else {
+	println "property found"
+  }
+
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        name 'Numenta htm.java'
+        packaging 'jar'
+        artifactId 'htm.java' 
+        description "The Java version of Numenta's HTM technology."
+        url 'https://github.com/numenta/htm.java'
+
+        scm {
+          connection 'scm:git:git://github.com/numenta/htm.java.git'
+          developerConnection 'scm:git:git://github.com/numenta/htm.java.git'
+          url 'https://github.com/numenta/htm.java'
+        }
+
+        licenses {
+          license {
+            name 'The GNU General Public License.'
+            url 'https://github.com/numenta/htm.java/blob/master/LICENSE.txt'
+          }
+        }
+      }
+    }
+  }
+}
+/////////////////// END Central Repo ////////////////
 
 // create Gradle wrapper with command line `gradle wrapper` in terminal
 task wrapper(type: Wrapper) {
