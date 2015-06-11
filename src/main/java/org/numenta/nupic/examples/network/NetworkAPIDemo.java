@@ -221,7 +221,6 @@ public class NetworkAPIDemo {
             pw.flush();
         }catch(Exception e) {
             e.printStackTrace();
-        }finally{
             pw.flush();
             pw.close();
         }
@@ -241,7 +240,7 @@ public class NetworkAPIDemo {
     public static void main(String[] args) {
         // Substitute the other modes here to see alternate examples of Network construction
         // in operation.
-        NetworkAPIDemo demo = new NetworkAPIDemo(Mode.BASIC);
+        NetworkAPIDemo demo = new NetworkAPIDemo(Mode.MULTIREGION);
         demo.runNetwork();
     }
 }
