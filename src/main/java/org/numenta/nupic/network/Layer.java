@@ -1147,7 +1147,7 @@ public class Layer<T> {
      * Notify all subscribers through the delegate that stream processing
      * has been completed or halted.
      */
-    private void notifyComplete() {
+    void notifyComplete() {
         for(Observer<Inference> o : subscribers) {
             o.onCompleted();
         }
