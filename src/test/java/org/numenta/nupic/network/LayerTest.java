@@ -145,6 +145,44 @@ public class LayerTest {
         assertEquals(0, algo_content_mask);
     }
     
+    @Test
+    public void testGetAllValues() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        MultiEncoder me = MultiEncoder.builder().name("").build();
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        // Test that we get the expected exception if there hasn't been any processing.
+        try {
+            l.getAllValues("dayOfWeek", 1);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Predictions not available. Either classifiers unspecified or inferencing has not yet begun.", e.getMessage());
+        }
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                assertNotNull(i);
+                assertEquals(0, i.getSDR().length);
+            }
+        });
+        
+        // Now push some fake data through so that "onNext" is called above
+        Map<String, Object> multiInput = new HashMap<>();
+        multiInput.put("dayOfWeek", 0.0);
+        l.compute(multiInput);
+        
+        Object[] values = l.getAllValues("dayOfWeek", 1);
+        assertNotNull(values);
+        assertTrue(values.length == 1);
+        assertEquals(0.0D, values[0]);
+    }
+    
     boolean isHalted = false;
     @Test
     public void testHalt() {
