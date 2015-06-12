@@ -57,11 +57,9 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observable;
-import rx.Observable.Transformer;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
-import rx.subjects.PublishSubject;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -145,6 +143,44 @@ public class LayerTest {
         
         algo_content_mask ^= Layer.CLA_CLASSIFIER;
         assertEquals(0, algo_content_mask);
+    }
+    
+    @Test
+    public void testGetAllValues() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        MultiEncoder me = MultiEncoder.builder().name("").build();
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        // Test that we get the expected exception if there hasn't been any processing.
+        try {
+            l.getAllValues("dayOfWeek", 1);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Predictions not available. Either classifiers unspecified or inferencing has not yet begun.", e.getMessage());
+        }
+        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                assertNotNull(i);
+                assertEquals(0, i.getSDR().length);
+            }
+        });
+        
+        // Now push some fake data through so that "onNext" is called above
+        Map<String, Object> multiInput = new HashMap<>();
+        multiInput.put("dayOfWeek", 0.0);
+        l.compute(multiInput);
+        
+        Object[] values = l.getAllValues("dayOfWeek", 1);
+        assertNotNull(values);
+        assertTrue(values.length == 1);
+        assertEquals(0.0D, values[0]);
     }
     
     boolean isHalted = false;
@@ -383,47 +419,6 @@ public class LayerTest {
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
-    }
-    
-    public static void main(String[] args) {
-        Observable<String> o1 = Observable.<String>from(new String[] { "1", "2", "3", "4"});
-        Observable<String> generic = PublishSubject.<String>create().map(f -> { 
-            System.out.println("Interposed: " + f); 
-            return f; 
-        });
-        
-        Transformer<String, String> t = new Transformer<String, String>() {
-            public Observable<String> call(Observable<String> s) {
-//                return s.map(new Func1<String, String>() {
-//                    public String call(String str) {
-//                        return str;
-//                    }
-//                });
-                return generic;
-            }
-        };
-        
-        Func1<String, String> f = new Func1<String, String>() {
-
-            @Override
-            public String call(String t) {
-                // TODO Auto-generated method stub
-                return t + " - in func";
-            }
-            
-        };
-       
-            
-        Observable<String> o2 = o1.map(f);
-        o2.subscribe(new Subscriber<String>() {
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(String i) {
-                System.out.println("on next = " + i);
-            }
-            
-        });
     }
     
     @Test

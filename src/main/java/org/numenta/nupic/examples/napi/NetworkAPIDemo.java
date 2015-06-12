@@ -221,10 +221,10 @@ public class NetworkAPIDemo {
             pw.flush();
         }catch(Exception e) {
             e.printStackTrace();
-        }finally{
             pw.flush();
             pw.close();
         }
+        
     }
     
     /**

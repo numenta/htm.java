@@ -280,11 +280,13 @@ public class Region {
      *                      this Region.
      * @return
      */
-    public Region connect(Region inputRegion) {
+    Region connect(Region inputRegion) {
         inputRegion.observe().subscribe(new Observer<Inference>() {
             ManualInput localInf = new ManualInput();
             
-            @Override public void onCompleted() {}
+            @Override public void onCompleted() {
+            	tail.notifyComplete();
+            }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @SuppressWarnings("unchecked")
             @Override public void onNext(Inference i) {
@@ -465,7 +467,7 @@ public class Region {
         out.subscribe(new Subscriber<Inference>() {
             ManualInput localInf = new ManualInput();
             
-            @Override public void onCompleted() {}
+            @Override public void onCompleted() { in.notifyComplete(); }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 if(layersDistinct) {
