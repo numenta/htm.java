@@ -79,11 +79,11 @@ import rx.subjects.PublishSubject;
  * in the field encoding map contains the typical {@link Encoder} parameters, plus a few "meta" parameters
  * needed to describe the field and its data type as follows:
  * </p>
- * <p>
+ * 
  * <pre>
- *      Map<String, Map<String, Object>> fieldEncodings = new HashMap<>();
+ *      Map&lt;String, Map&lt;String, Object&gt;&gt; fieldEncodings = new HashMap&lt;&gt;();
  *      
- *      Map<String, Object> inner = new HashMap<>();
+ *      Map&lt;String, Object&gt; inner = new HashMap&lt;&gt;();
  *      inner.put("n", n);
  *      inner.put("w", w);
  *      inner.put("minVal", min);
@@ -98,7 +98,7 @@ import rx.subjects.PublishSubject;
  *      inner.put("fieldType", fieldType); (see {@link FieldMetaType} for type examples)
  *      inner.put("encoderType", encoderType); (i.e. ScalarEncoder, SDRCategoryEncoder, DateEncoder...etc.)
  *      
- *      Map<String, Object> inner2 = new HashMap<>();
+ *      Map&lt;String, Object&gt; inner2 = new HashMap&lt;&gt;();
  *      inner.put("n", n);
  *      inner.put("w", w);
  *      inner.put("minVal", min);
@@ -119,9 +119,9 @@ import rx.subjects.PublishSubject;
  *      Parameters p = Parameters.getDefaultParameters();
  *      p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
  * </pre>
- * For an example of how to create the field encodings map in a reusable way, see {@link NetworkTestHarness} and
- * its usage within the {@link LayerTest} class.
- * </p>
+ * For an example of how to create the field encodings map in a reusable way, see NetworkTestHarness and
+ * its usage within the LayerTest class.
+ * 
  * <p>
  * The following is an example of Layer construction with everything included (i.e. Sensor, SpatialPooler, TemporalMemory, CLAClassifier, Anomaly (computer))
  * <pre>
@@ -139,13 +139,13 @@ import rx.subjects.PublishSubject;
  *      p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
  *      p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
  *      
- *      Map<String, Object> params = new HashMap<>();
+ *      Map&lt;String, Object&gt; params = new HashMap&lt;&gt;();
  *      params.put(KEY_MODE, Mode.PURE);
  *      params.put(KEY_WINDOW_SIZE, 3);
  *      params.put(KEY_USE_MOVING_AVG, true);
  *      Anomaly anomalyComputer = Anomaly.create(params);
  *      
- *      Layer<?> l = Network.createLayer("TestLayer", p)
+ *      Layer&lt;?&gt; l = Network.createLayer("TestLayer", p)
  *          .alterParameter(KEY.AUTO_CLASSIFY, true)
  *          .add(anomalyComputer)
  *          .add(new TemporalMemory())
@@ -155,12 +155,11 @@ import rx.subjects.PublishSubject;
  *                  SensorParams.create(
  *                      Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
  * </pre>
- * </p>
+ * 
  * 
  *  
  *  
  * @author David Ray
- * @see LayerTest
  */
 public class Layer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
@@ -465,7 +464,7 @@ public class Layer<T> {
      * if the input field dimensionality is correctly specified, this method 
      * should <b>not</b> be used.
      * 
-     * @param flatSize          the flat input width of an {@link Encoder}'s output or the
+     * @param inputWidth        the flat input width of an {@link Encoder}'s output or the
      *                          vector used as input to the {@link SpatialPooler}
      * @param numColumnDims     a number specifying the number of column dimensions that 
      *                          should be returned.
@@ -510,8 +509,6 @@ public class Layer<T> {
      * from the configured algorithms.
      * 
      * @param subscriber	a {@link Subscriber} to be notified as data is published.
-     * @param <T>           the input value type.
-     * 
      * @return
      */
     public Subscription subscribe(final Observer<Inference> subscriber) {
@@ -547,7 +544,7 @@ public class Layer<T> {
      * parameter settings. In this case, one could use {@link #alterParameter(KEY, Object)}
      * method to change a local setting without impacting the same setting
      * in the source parameters object. This is made possible because the 
-     * {@link #alterParameter(KEY, Object)] method first makes a local copy
+     * {@link #alterParameter(KEY, Object)} method first makes a local copy
      * of the {@link Parameters} object, then modifies the specified parameter.
      * 
      * @param p
@@ -656,7 +653,8 @@ public class Layer<T> {
      * the addXXX() methods becomes crucially important. Make sure you 
      * have added items in a valid order in your "fluent" add call declarations.</b></em>
      * 
-     * @param o
+     * @param func  a {@link Func1} function to be performed at the point of 
+     *              insertion within the {@code Layer}'s declaration.
      * @return
      */
     public Layer<T> add(Func1<ManualInput, ManualInput> func) {

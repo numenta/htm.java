@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.5.0-SNAPSHOT'
+version = '0.5.1-SNAPSHOT'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
@@ -12,7 +12,7 @@ targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.5.0-SNAPSHOT'
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.5.1-SNAPSHOT'
     }
 }
 
@@ -90,12 +90,10 @@ check.doLast {
 /////////////////////////////////////////////////////////////////
 //                   SonaType Central Repo                     //
 /////////////////////////////////////////////////////////////////
-/*
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
     from javadoc
 }
-*/
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
@@ -103,7 +101,7 @@ task sourcesJar(type: Jar) {
 }
 
 artifacts {
-    archives sourcesJar
+    archives javadocJar, sourcesJar
 }
 
 signing {
@@ -113,13 +111,11 @@ signing {
 }
 
 uploadArchives {
+  javadoc.failOnError = false 
 
   if(!project.hasProperty('ossrhUsername')) {
-	println "property not found"
 	return
-  } else {
-	println "property found"
-  }
+  } 
 
   repositories {
     mavenDeployer {

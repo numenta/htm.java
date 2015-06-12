@@ -4,10 +4,8 @@
 
   <groupId>org.numenta</groupId>
   <artifactId>htm.java</artifactId>
-
-  <version>0.5.0</version>
-
-  <name>Numenta htm.java</name>
+  <version>0.5.1-SNAPSHOT</version>
+  <name>htm.java</name>
   <description>The Java version of Numenta's HTM technology</description>
 
   <url>https://github.com/numenta/htm.java</url>
@@ -18,6 +16,20 @@
       <url>https://github.com/numenta/htm.java/blob/master/LICENSE.txt</url>
     </license>
   </licenses>
+  <developers>
+  	<developer>
+		<id>cogmission</id>
+		<name>David Ray</name>
+		<email>cognitionmission@gmail.com</email>
+		<organization>numenta.org</organization>
+		<organizationUrl>http://numenta.org</organizationUrl>
+		<roles>
+			<role>Project-Administrator</role>
+			<role>Lead Developer</role>
+		</roles>
+		<timezone>-5</timezone>
+	</developer>
+  </developers>
   
   <scm>
     <connection>scm:git:git://github.com/numenta/htm.java.git</connection>
@@ -139,7 +151,6 @@
       </plugin>
     </plugins>
   </build>
-  
   <profiles>
     <profile>
       <id>sonatype-repo</id>
@@ -185,19 +196,22 @@
               </execution>
             </executions>
           </plugin>
-<!--      <plugin>
+      	  <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <version>2.9.1</version>
             <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin> -->
+ 			   <execution>
+			   <phase>package</phase>
+			          <goals>
+			              <goal>jar</goal>
+			          </goals>
+			          <configuration>
+			              <additionalparam>-Xdoclint:none</additionalparam>
+			          </configuration>
+			   </execution>
+		    </executions>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
