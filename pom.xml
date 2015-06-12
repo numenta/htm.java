@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>htm.java</groupId>
   <artifactId>htm.java</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.5.1-SNAPSHOT</version>
   <name>htm.java</name>
   <description>The Java version of Numenta's HTM technology</description>
 
