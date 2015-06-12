@@ -64,7 +64,7 @@ import rx.Observable;
  *             .add(Sensor.create(FileSensor::create, SensorParams.create(
  *                 Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
  * </pre>
- * </p>                
+ *                 
  * <p>
  * As you can see, {@code Networks} can be composed in "fluent" style making their
  * declaration much more concise.
@@ -97,14 +97,14 @@ import rx.Observable;
  * via the use of the {@link Layer#using(Connections)} method. Additionally, {@link Parameters} may be
  * altered in place without changing the values in the original Parameters object, by calling {@link Layer#alterParameter(KEY, Object)}
  * as seen in the above examples.  
- * </p>
+ * 
  * <p>
  * Networks can be "observed", meaning they can return an {@link Observable} object
  * which can be operated on in the map-reduce pattern of usage; and they can be 
  * subscribed to, to receive {@link Inference} objects as output from every process
  * cycle. For instance:
  * <pre>
- * network.observe().subscribe(new Subscriber<Inference>() {
+ * network.observe().subscribe(new Subscriber&lt;Inference&gt;() {
  *      public void onCompleted() { System.out.println("Input Completed!"); }
  *      public void onError(Throwable e) { e.printStackTrace(); }
  *      public void onNext(Inference i) {
@@ -122,8 +122,8 @@ import rx.Observable;
  * <pre>
  * Network network = ...
  * 
- * Region region = network.lookup("<region name>");
- * region.observe().subscribe(new Subscriber<Inference>() {
+ * Region region = network.lookup("&lt;region name&gt;");
+ * region.observe().subscribe(new Subscriber&lt;Inference&gt;() {
  *     public void onCompleted() { System.out.println("Input Completed!"); }
  *     public void onError(Throwable e) { e.printStackTrace(); }
  *     public void onNext(Inference i) {
@@ -132,8 +132,8 @@ import rx.Observable;
  *     }    
  * }
  * 
- * Layer l2_3 = region.lookup("<layer name>");
- * l2_3.observe().subscribe(new Subscriber<Inference>() {
+ * Layer l2_3 = region.lookup("&lt;layer name&gt;");
+ * l2_3.observe().subscribe(new Subscriber&lt;Inference&gt;() {
  *     public void onCompleted() { System.out.println("Input Completed!"); }
  *     public void onError(Throwable e) { e.printStackTrace(); }
  *     public void onNext(Inference i) {
@@ -141,8 +141,8 @@ import rx.Observable;
  *         do something...
  *     }    
  * }
- * </p>
- * <p>
+ * </pre>
+ * 
  * In addition there are many usage examples to be found in the {@link org.numenta.nupic.examples.network} package
  * where there are tests which may be examined for details, and the {@link NetworkAPIDemo}
  * 
@@ -168,6 +168,7 @@ public class Network {
 
     /**
      * Creates a new {@link Network}
+     * @param name
      * @param parameters
      */
     public Network(String name, Parameters parameters) {
@@ -181,6 +182,7 @@ public class Network {
     /**
      * Creates and returns an implementation of {@link Network}
      * 
+     * @param name
      * @param parameters
      * @return
      */
@@ -280,7 +282,7 @@ public class Network {
     }
 
     /**
-     * Returns an {@link Observable} capable of emitting {@link Inferences}
+     * Returns an {@link Observable} capable of emitting {@link Inference}s
      * which contain the results of this {@code Network}'s processing chain.
      * @return
      */
@@ -335,7 +337,7 @@ public class Network {
      * Region that contains a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
      * subscribing a receiving Region to this Region's output Observable.
      * 
-     * @param input One of (int[], String[], {@link ManualInput}, or Map<String, Object>)
+     * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     public <T> void compute(T input) {
         if(regions.size() == 1) {
@@ -446,7 +448,7 @@ public class Network {
 
     /**
      * Sets the reference to this {@code Network}'s Sensor
-     * @param encoder
+     * @param sensor
      */
     public void setSensor(HTMSensor<?> sensor) {
         this.sensor = sensor;
