@@ -27,6 +27,7 @@ import java.util.Map;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
@@ -127,6 +128,7 @@ public class ManualInput implements Inference {
     }
     
     /**
+     * <p>
      * Returns the {@link Map} used as input into the {@link CLAClassifier}
      * 
      * This mapping contains the name of the field being classified mapped
@@ -138,7 +140,6 @@ public class ManualInput implements Inference {
      *      <li>bucketIdx</li>
      *      <li>encoding</li>
      * </ul>
-     * </p>
      * 
      * @return the current classifier input
      */

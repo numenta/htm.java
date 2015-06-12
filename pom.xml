@@ -6,6 +6,30 @@
   <version>1.0-SNAPSHOT</version>
   <name>htm.java</name>
   <description>The Java version of Numenta's HTM technology</description>
+
+  <url>https://github.com/numenta/htm.java</url>
+
+  <licenses>
+    <license>
+      <name>The GNU General Public License.</name>
+      <url>https://github.com/numenta/htm.java/blob/master/LICENSE.txt</url>
+    </license>
+  </licenses>
+  <developers>
+  	<developer>
+		<id>cogmission</id>
+		<name>David Ray</name>
+		<email>cognitionmission@gmail.com</email>
+		<organization>numenta.org</organization>
+		<organizationUrl>http://numenta.org</organizationUrl>
+		<roles>
+			<role>Project-Administrator</role>
+			<role>Lead Developer</role>
+		</roles>
+		<timezone>-5</timezone>
+	</developer>
+  </developers>
+  
   <scm>
     <connection>scm:git:git://github.com/numenta/htm.java.git</connection>
     <developerConnection>scm:git:git://github.com/numenta/htm.java.git</developerConnection>
@@ -124,4 +148,83 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>sonatype-repo</id>
+
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+
+      <distributionManagement>
+        <snapshotRepository>
+          <id>htm-central-repo</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	    </snapshotRepository>
+	  <repository>
+	    <id>htm-central-repo</id>
+	    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	  </repository>
+      </distributionManagement>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.3</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>htm-central-repo</serverId>
+	        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+      	  <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.9.1</version>
+            <executions>
+			   <execution>
+			   <phase>package</phase>
+			          <goals>
+			              <goal>jar</goal>
+			          </goals>
+			          <configuration>
+			              <additionalparam>-Xdoclint:none</additionalparam>
+			          </configuration>
+			   </execution>
+		    </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
