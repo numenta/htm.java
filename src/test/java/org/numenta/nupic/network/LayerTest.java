@@ -57,11 +57,9 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observable;
-import rx.Observable.Transformer;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
-import rx.subjects.PublishSubject;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -383,47 +381,6 @@ public class LayerTest {
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
-    }
-    
-    public static void main(String[] args) {
-        Observable<String> o1 = Observable.<String>from(new String[] { "1", "2", "3", "4"});
-        Observable<String> generic = PublishSubject.<String>create().map(f -> { 
-            System.out.println("Interposed: " + f); 
-            return f; 
-        });
-        
-        Transformer<String, String> t = new Transformer<String, String>() {
-            public Observable<String> call(Observable<String> s) {
-//                return s.map(new Func1<String, String>() {
-//                    public String call(String str) {
-//                        return str;
-//                    }
-//                });
-                return generic;
-            }
-        };
-        
-        Func1<String, String> f = new Func1<String, String>() {
-
-            @Override
-            public String call(String t) {
-                // TODO Auto-generated method stub
-                return t + " - in func";
-            }
-            
-        };
-       
-            
-        Observable<String> o2 = o1.map(f);
-        o2.subscribe(new Subscriber<String>() {
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(String i) {
-                System.out.println("on next = " + i);
-            }
-            
-        });
     }
     
     @Test
