@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.examples.network;
+package org.numenta.nupic.examples.napi;
 
 import java.io.File;
 import java.io.FileWriter;

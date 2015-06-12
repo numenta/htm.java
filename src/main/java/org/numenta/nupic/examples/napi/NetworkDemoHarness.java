@@ -1,4 +1,4 @@
-package org.numenta.nupic.examples.network;
+package org.numenta.nupic.examples.napi;
 
 import java.util.HashMap;
 import java.util.Map;
