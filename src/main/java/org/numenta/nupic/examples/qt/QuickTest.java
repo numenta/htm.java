@@ -62,6 +62,7 @@ import org.numenta.nupic.util.ArrayUtils;
  * @author cogmission
  */
 public class QuickTest {
+    static boolean isResetting = true;
 
     /**
      * @param args the command line arguments
@@ -69,6 +70,9 @@ public class QuickTest {
     public static void main(String[] args) {
     	Parameters params = getParameters();
     	System.out.println(params);
+    	
+    	// Toggle this to switch between resetting on every week start day
+    	isResetting = false;
     	
     	//Layer components
     	ScalarEncoder.Builder dayBuilder =
@@ -88,12 +92,11 @@ public class QuickTest {
     	
     	Layer<Double> layer = getLayer(params, encoder, sp, tm, classifier);
     	
-    	for(double i = 1, x = 0;x < 10000;i = (i == 7 ? 1 : i + 1), x++) {  // USE "X" here to control run length
-    		//if (i == 1) tm.reset(layer.getMemory());
-    	    if(x == 9988) {
-    	        x = 9988;
-    	    }
-    		runThroughLayer(layer, i, (int)i, (int)x);
+    	for(double i = 0, x = 0;x < 10000;i = (i == 6 ? 0 : i + 1), x++) {  // USE "X" here to control run length
+    		if (i == 0 && isResetting) tm.reset(layer.getMemory());
+    	    
+    	    // For 3rd argument: Use "i" for record num if re-cycling records (isResetting == true) - otherwise use "x" (the sequence number)
+    		runThroughLayer(layer, i + 1, isResetting ? (int)i : (int)x, (int)x);
     	}
     	
     }
@@ -111,8 +114,8 @@ public class QuickTest {
         parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
         parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
         parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.0005);
+        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.0015);
         parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
         parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
@@ -196,17 +199,17 @@ public class QuickTest {
     	@Override
     	public void input(Double value, int recordNum, int sequenceNum) {
     		String recordOut = "";
-    		switch(recordNum) {
+    		switch((sequenceNum + 1) % 7) {
     			case 1: recordOut = "Monday (1)";break; 
     			case 2: recordOut = "Tuesday (2)";break;
     			case 3: recordOut = "Wednesday (3)";break;
     			case 4: recordOut = "Thursday (4)";break;
     			case 5: recordOut = "Friday (5)";break;
     			case 6: recordOut = "Saturday (6)";break;
-    			case 7: recordOut = "Sunday (7)";break;
+    			case 0: recordOut = "Sunday (7)";break;
     		}
     		
-    		if(recordNum == 1) {
+    		if((sequenceNum + 1) % 7 == 1) {
     			theNum++;
     			System.out.println("--------------------------------------------------------");
     			System.out.println("Iteration: " + theNum);
