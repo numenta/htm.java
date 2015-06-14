@@ -39,7 +39,7 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
  * [NuPIC Community](http://numenta.org/community.html)
 
-## Installation - [***NEW! Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+## Installation - [***Updated!(05/2015) Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
@@ -56,6 +56,16 @@ gradle check  # Executes the tests and runs the benchmarks
 gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 ```
 **Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+
+## Project Integration (New)
+For tips and insights on how to use the Network API to add HTM's into your own applications, see:
+
+[Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+
+...and for more in-depth answers see:
+
+[NAPI Overview](https://github.com/numenta/htm.java/wiki/NAPI-In-Depth-Component-Overview)
+
 
 ## For Updates Follow
 
