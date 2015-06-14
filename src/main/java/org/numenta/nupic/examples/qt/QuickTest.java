@@ -227,6 +227,9 @@ public class QuickTest {
             spatialPooler.compute(memory, encoding, output, true, true);
 //          System.out.println("SpatialPooler Output = " + Arrays.toString(output));
             
+            // Let the SpatialPooler train independently (warm up) first
+            if(sequenceNum < 1400) return;
+            
             //Input through temporal memory
             int[] input = actual = ArrayUtils.where(output, ArrayUtils.WHERE_1);
             ComputeCycle cc = temporalMemory.compute(memory, input, true);
