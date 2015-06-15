@@ -88,6 +88,7 @@ public enum SensorFlags {
             case "s" : return S;
             case "t" : return T;
             case "c" : return C;
+            case "l" : return L;
             default : return B;
         }
     }
