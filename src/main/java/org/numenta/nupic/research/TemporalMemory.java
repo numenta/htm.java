@@ -107,7 +107,7 @@ public class TemporalMemory {
         connections.setActiveCells(result.activeCells());
         connections.setWinnerCells(result.winnerCells());
         connections.setPredictiveCells(result.predictiveCells());
-        connections.setPredictedColumns(result.predictedColumns());
+        connections.setSuccessfullyPredictedColumns(result.successfullyPredictedColumns());
         connections.setActiveSegments(result.activeSegments());
         connections.setLearningSegments(result.learningSegments());
         connections.setActiveSynapsesForSegment(result.activeSynapsesForSegment());
@@ -135,7 +135,7 @@ public class TemporalMemory {
         
         activateCorrectlyPredictiveCells(cycle, prevPredictiveCells, activeColumns);
         
-        burstColumns(cycle, c, activeColumns, cycle.predictedColumns, prevActiveSynapsesForSegment);
+        burstColumns(cycle, c, activeColumns, cycle.successfullyPredictedColumns, prevActiveSynapsesForSegment);
         
         if(learn) {
             learnOnSegments(c, prevActiveSegments, cycle.learningSegments, prevActiveSynapsesForSegment, cycle.winnerCells, prevWinnerCells);
@@ -169,7 +169,7 @@ public class TemporalMemory {
             if(activeColumns.contains(column)) {
                 c.activeCells.add(cell);
                 c.winnerCells.add(cell);
-                c.predictedColumns.add(column);
+                c.successfullyPredictedColumns.add(column);
             }
         }
     }

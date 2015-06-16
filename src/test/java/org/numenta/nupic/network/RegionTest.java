@@ -48,6 +48,7 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 
+import rx.Observer;
 import rx.Subscriber;
 
 
@@ -74,6 +75,49 @@ public class RegionTest {
             assertTrue(e.getClass().isAssignableFrom(IllegalStateException.class));
             assertEquals("Cannot add Layers when Region has already been closed.", e.getMessage());
         }
+    }
+    
+    @Test
+    public void testResetMethod() {
+        Parameters p = NetworkTestHarness.getParameters();
+        Region r1 = Network.createRegion("r1");
+        r1.add(Network.createLayer("l1", p).add(new TemporalMemory()));
+        try {
+            r1.reset();
+            assertTrue(r1.lookup("l1").hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+        
+        r1 = Network.createRegion("r1");
+        r1.add(Network.createLayer("l1", p).add(new SpatialPooler()));
+        try {
+            r1.reset();
+            assertFalse(r1.lookup("l1").hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+    }
+    
+    @Test
+    public void testResetRecordNum() {
+        Parameters p = NetworkTestHarness.getParameters();
+        Region r1 = Network.createRegion("r1");
+        r1.add(Network.createLayer("l1", p).add(new TemporalMemory()));
+        r1.observe().subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                System.out.println("output = " + Arrays.toString(output.getSDR()));
+            }
+        });
+        
+        r1.compute(new int[] { 2,3,4 });
+        r1.compute(new int[] { 2,3,4 });
+        assertEquals(1, r1.lookup("l1").getRecordNum());
+        
+        r1.resetRecordNum();
+        assertEquals(0, r1.lookup("l1").getRecordNum());
     }
     
     @Test

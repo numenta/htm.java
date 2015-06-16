@@ -67,7 +67,7 @@ public class TemporalMemoryTest {
         tm.activateCorrectlyPredictiveCells(c, cn.getCellSet(prevPredictiveCells), cn.getColumnSet(activeColumns));
         Set<Cell> activeCells = cn.getActiveCells();
         Set<Cell> winnerCells = cn.getWinnerCells();
-        Set<Column> predictedColumns = cn.getPredictedColumns();
+        Set<Column> predictedColumns = cn.getSuccessfullyPredictedColumns();
         
         int[] expectedActiveWinners = new int[] { 1026, 26337, 26339 };
         int[] expectedPredictCols = new int[] { 32, 823 };
@@ -99,7 +99,7 @@ public class TemporalMemoryTest {
         tm.activateCorrectlyPredictiveCells(c, cn.getCellSet(prevPredictiveCells), cn.getColumnSet(activeColumns));
         Set<Cell> activeCells = c.activeCells();
         Set<Cell> winnerCells = c.winnerCells();
-        Set<Column> predictedColumns = c.predictedColumns();
+        Set<Column> predictedColumns = c.successfullyPredictedColumns();
         
         assertTrue(activeCells.isEmpty());
         assertTrue(winnerCells.isEmpty());
@@ -112,7 +112,7 @@ public class TemporalMemoryTest {
         tm.activateCorrectlyPredictiveCells(c, cn.getCellSet(prevPredictiveCells), cn.getColumnSet(activeColumns));
         activeCells = c.activeCells();
         winnerCells = c.winnerCells();
-        predictedColumns = c.predictedColumns();
+        predictedColumns = c.successfullyPredictedColumns();
         
         assertTrue(activeCells.isEmpty());
         assertTrue(winnerCells.isEmpty());

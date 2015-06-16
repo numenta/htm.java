@@ -273,6 +273,27 @@ public class Region {
     }
     
     /**
+     * Finds any {@link Layer} containing a {@link TemporalMemory} 
+     * and resets them.
+     */
+    public void reset() {
+        for(Layer<?> l : layers.values()) {
+            if(l.hasTemporalMemory()) {
+                l.reset();
+            }
+        }
+    }
+    
+    /**
+     * Resets the recordNum in all {@link Layer}s.
+     */
+    public void resetRecordNum() {
+        for(Layer<?> l : layers.values()) {
+            l.resetRecordNum();
+        }
+    }
+    
+    /**
      * Connects the output of the specified {@code Region} to the 
      * input of this Region
      * 
