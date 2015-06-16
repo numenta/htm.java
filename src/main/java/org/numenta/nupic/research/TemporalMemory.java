@@ -84,8 +84,6 @@ public class TemporalMemory {
             }
             //If columns have not been previously configured
             if(colZero == null) matrix.set(i, column);
-            
-            System.out.println("set " + i + " --> column = " + column);
         }
         //Only the TemporalMemory initializes cells so no need to test 
         c.setCells(cells);
@@ -201,36 +199,25 @@ public class TemporalMemory {
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
         
     	activeColumns.removeAll(predictedColumns);
-    	int idx = 0;
-        try {
-    	    for(Column column : activeColumns) {
-    	        if(idx == 22) {
-    	            idx = 22;
-    	        }
-                List<Cell> cells = column.getCells();
-                cycle.activeCells.addAll(cells);
-                
-                Object[] bestSegmentAndCell = getBestMatchingCell(c, column, prevActiveSynapsesForSegment);
-                DistalDendrite bestSegment = (DistalDendrite)bestSegmentAndCell[0];
-                Cell bestCell = (Cell)bestSegmentAndCell[1];
-                if(bestCell != null) {
-                    cycle.winnerCells.add(bestCell);
-                }
-                
-                int segmentCounter = c.getSegmentCount();
-                if(bestSegment == null) {
-                    bestSegment = bestCell.createSegment(c, segmentCounter);
-                    c.setSegmentCount(segmentCounter + 1);
-                }
-                
-                cycle.learningSegments.add(bestSegment);
-                
-                ++idx;
+    	for(Column column : activeColumns) {
+            List<Cell> cells = column.getCells();
+            cycle.activeCells.addAll(cells);
+            
+            Object[] bestSegmentAndCell = getBestMatchingCell(c, column, prevActiveSynapsesForSegment);
+            DistalDendrite bestSegment = (DistalDendrite)bestSegmentAndCell[0];
+            Cell bestCell = (Cell)bestSegmentAndCell[1];
+            if(bestCell != null) {
+                cycle.winnerCells.add(bestCell);
             }
-    	}catch(Exception e) {
-    	    e.printStackTrace();
-    	    
-    	}
+            
+            int segmentCounter = c.getSegmentCount();
+            if(bestSegment == null) {
+                bestSegment = bestCell.createSegment(c, segmentCounter);
+                c.setSegmentCount(segmentCounter + 1);
+            }
+            
+            cycle.learningSegments.add(bestSegment);
+        }
     }
     
     /**

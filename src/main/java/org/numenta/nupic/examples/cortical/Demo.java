@@ -243,6 +243,20 @@ public class Demo {
         };
     }
     
+    private void subscribeToNetwork(Network network) {
+        Subscriber<Inference> subscriber = createSubscriber();
+        network.observe().subscribe(subscriber);
+    }
+    
+    private void feedNetwork(Network network, Iterator<String[]> it) {
+        for(;it.hasNext();) {
+            for(String term : it.next()) {
+                int[] sdr = getFingerprintSDR(term);
+                network.compute(sdr);
+            }
+        }
+    }
+    
     public static void main(String[] args) {
         Demo test = new Demo("foxeat.csv");
         boolean success = test.connectionValid("dd");//"d059e560-1372-11e5-a409-7159d0ac8188");
@@ -265,17 +279,9 @@ public class Demo {
         System.out.println("count = " + count + ", " + test.input.size());
         
         Network network = test.createNetwork();
-        Subscriber<Inference> subscriber = test.createSubscriber();
-        network.observe().subscribe(subscriber);
+        test.subscribeToNetwork(network);
+        test.feedNetwork(network, test.inputIterator());
         
-        for(Iterator<String[]> it = test.inputIterator();it.hasNext();) {
-            for(String term : it.next()) {
-                if(term == null) {
-                    term = null;
-                }
-                sdr = test.getFingerprintSDR(term);
-                network.compute(sdr);
-            }
-        }
+        
     }
 }
