@@ -1587,6 +1587,9 @@ public class Connections {
     public LinkedHashSet<Column> getColumnSet(int[] indexes) {
     	LinkedHashSet<Column> retVal = new LinkedHashSet<Column>();
     	for(int i = 0;i < indexes.length;i++) {
+    	    if(memory.getObject(indexes[i]) == null) {
+    	        System.out.println("found null index = " + i + ", column = " + indexes[i]);
+    	    }
     		retVal.add(memory.getObject(indexes[i]));
     	}
     	return retVal;

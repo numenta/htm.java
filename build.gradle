@@ -24,6 +24,7 @@ repositories {
 }
 
 dependencies {
+    compile files('libs/retina-service-java-api-client-2.2.1-jar-with-dependencies.jar')
     compile group: 'joda-time', name: 'joda-time', version: '2.5'
     compile(group: 'com.chaschev', name: 'chutils', version:'1.4') {
         exclude(module: 'mockito-all')

@@ -2,6 +2,7 @@ package org.numenta.nupic.examples.cortical;
 
 import io.cortical.rest.model.Fingerprint;
 import io.cortical.rest.model.Term;
+import io.cortical.services.Expressions;
 import io.cortical.services.RetinaApis;
 import io.cortical.services.Terms;
 
@@ -15,13 +16,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.network.Inference;
+import org.numenta.nupic.network.Network;
+import org.numenta.nupic.research.TemporalMemory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import rx.Subscriber;
 
-public class Test {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Test.class);
+
+public class Demo {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Demo.class);
     
     private static final String RETINA_NAME = "en_associative";    
     private static final String RETINA_IP = "api.cortical.io";
@@ -33,14 +41,15 @@ public class Test {
     
     private List<String[]> input;
     
-    private Terms api;
+    private Terms termsApi;
+    private Expressions exprApi;
     
     
     /**
      * Constructs a new...
      * @param pathToSource
      */
-    public Test(String pathToSource) {
+    public Demo(String pathToSource) {
         this.filePath = pathToSource;
         this.input = readFile(filePath);
     }
@@ -55,8 +64,10 @@ public class Test {
     private boolean connectionValid(String apiKey) {
         try {
             this.apiKey = apiKey;
-            api = new RetinaApis(RETINA_NAME, RETINA_IP, this.apiKey).termsApi();
-            System.out.println(Arrays.toString(api.getTerm("apple", false).get(0).getFingerprint().getPositions()));
+            RetinaApis ra = new RetinaApis(RETINA_NAME, RETINA_IP, this.apiKey);
+            termsApi = ra.termsApi();
+            exprApi = ra.expressionsApi();
+            System.out.println(Arrays.toString(termsApi.getTerm("apple", false).get(0).getFingerprint().getPositions()));
             
             LOGGER.debug("Successfully initialized retinal api");
             
@@ -67,8 +78,26 @@ public class Test {
         }
     }
     
+    /**
+     * Returns the most similar {@link Term} for the term represented by
+     * the specified sdr
+     * 
+     * @param sdr   sparse int array
+     * @return
+     */
     private Term getClosestTerm(int[] sdr) {
-        api.get
+        Fingerprint fp = new Fingerprint(sdr);
+        try {
+            List<Term> terms = exprApi.getSimilarTerms(fp);
+            if(terms != null && terms.size() > 0) {
+                return terms.get(0);
+            }
+        }catch(Exception e) {
+            LOGGER.debug("Problem using Expressions API");
+            e.printStackTrace();
+        }
+        
+        return null;
     }
     
     /**
@@ -112,7 +141,7 @@ public class Test {
      */
     private Fingerprint getFingerprint(String term) {
         try {
-            return api.getTerm(term, true).get(0).getFingerprint();
+            return termsApi.getTerm(term, true).get(0).getFingerprint();
         }catch(Exception e) {
             LOGGER.debug("Problem retrieving fingerprint for term: " + term);
         }
@@ -124,7 +153,7 @@ public class Test {
      * Returns an {@link Iterator} over the list of string arrays (lines)
      * @return
      */
-    private Iterator<String[]> iterator() {
+    private Iterator<String[]> inputIterator() {
         return input.iterator();
     }
     
@@ -138,7 +167,7 @@ public class Test {
     private List<String[]> readFile(String pathToFile) {
         Stream<String> stream = getFileStream(pathToFile);
         
-        List<String[]> list = stream.map(l -> { return (String[])l.split("[\\s]+\\,[\\s]+"); }).collect(Collectors.toList());
+        List<String[]> list = stream.map(l -> { return (String[])l.split("[\\s]*\\,[\\s]*"); }).collect(Collectors.toList());
         
         return list;
     }
@@ -172,20 +201,81 @@ public class Test {
         return retVal;
     }
     
+    /**
+     * Creates and returns a {@link Parameters} object configured
+     * for this demo.
+     * 
+     * @return
+     */
+    private Parameters createParameters() {
+        Parameters tmParams = Parameters.getTemporalDefaultParameters();
+        tmParams.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 16384 });
+        tmParams.setParameterByKey(KEY.CELLS_PER_COLUMN, 8);
+        tmParams.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.5);
+        tmParams.setParameterByKey(KEY.MIN_THRESHOLD, 164);
+        tmParams.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 164);
+        tmParams.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1);
+        tmParams.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.0);
+        tmParams.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 164);
+        return tmParams;
+    }
+    
+    /**
+     * Creates and returns a {@link Network} for demo processing
+     * @return
+     */
+    private Network createNetwork() {
+        Parameters temporalParams = createParameters();
+        Network network = Network.create("Cortical.io API Demo", temporalParams)
+            .add(Network.createRegion("Region 1")
+                .add(Network.createLayer("Layer 2/3", temporalParams)
+                    .add(new TemporalMemory())));
+        return network;            
+    }
+    
+    private Subscriber<Inference> createSubscriber() {
+        return new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                System.out.println("prediction = " + Arrays.toString(i.getSDR()));
+            }
+        };
+    }
+    
     public static void main(String[] args) {
-        Test test = new Test("foxeat.csv");
+        Demo test = new Demo("foxeat.csv");
         boolean success = test.connectionValid("dd");//"d059e560-1372-11e5-a409-7159d0ac8188");
         System.out.println("success = " + success);
         
         success = test.connectionValid("d059e560-1372-11e5-a409-7159d0ac8188");
         System.out.println("success = " + success);
         
-        int[] sdr = test.getFingerprintSDR("apple");
+        int[] sdr = test.getFingerprintSDR("work");
         System.out.println("sdr = " + sdr);
         
         int sparsity = test.getSparsity(sdr);
         System.out.println("sparsity = " + sparsity + "%");
         
+        Term closest = test.getClosestTerm(sdr);
+        System.out.println("closest term = " + closest.getTerm());
         
+        int count = 0;
+        for(Iterator<String[]> it = test.inputIterator();it.hasNext();it.next(),count++);
+        System.out.println("count = " + count + ", " + test.input.size());
+        
+        Network network = test.createNetwork();
+        Subscriber<Inference> subscriber = test.createSubscriber();
+        network.observe().subscribe(subscriber);
+        
+        for(Iterator<String[]> it = test.inputIterator();it.hasNext();) {
+            for(String term : it.next()) {
+                if(term == null) {
+                    term = null;
+                }
+                sdr = test.getFingerprintSDR(term);
+                network.compute(sdr);
+            }
+        }
     }
 }
