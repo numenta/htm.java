@@ -280,6 +280,25 @@ public class Network {
         // TODO Auto-generated method stub
         return null;
     }
+    
+    /**
+     * Finds any {@link Region} containing a {@link Layer} which contains a {@link TemporalMemory} 
+     * and resets them.
+     */
+    public void reset() {
+        for(Region r : regions) {
+            r.reset();
+        }
+    }
+    
+    /**
+     * Resets the recordNum in all {@link Region}s.
+     */
+    public void resetRecordNum() {
+        for(Region r : regions) {
+            r.resetRecordNum();
+        }
+    }
 
     /**
      * Returns an {@link Observable} capable of emitting {@link Inference}s

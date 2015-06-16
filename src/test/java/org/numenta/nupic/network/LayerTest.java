@@ -22,6 +22,7 @@
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -181,6 +182,47 @@ public class LayerTest {
         assertNotNull(values);
         assertTrue(values.length == 1);
         assertEquals(0.0D, values[0]);
+    }
+    
+    @Test
+    public void testResetMethod() {
+        Parameters p = NetworkTestHarness.getParameters();
+        Layer<?> l = Network.createLayer("l1", p).add(new TemporalMemory());
+        try {
+            l.reset();
+            assertTrue(l.hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+        
+        Layer<?> l2 = Network.createLayer("l2", p).add(new SpatialPooler());
+        try {
+            l2.reset();
+            assertFalse(l2.hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+    }
+    
+    @Test
+    public void testResetRecordNum() {
+        Parameters p = NetworkTestHarness.getParameters();
+        @SuppressWarnings("unchecked")
+        Layer<int[]> l = (Layer<int[]>)Network.createLayer("l1", p).add(new TemporalMemory());
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                System.out.println("output = " + Arrays.toString(output.getSDR()));
+            }
+        });
+        
+        l.compute(new int[] { 2,3,4 });
+        l.compute(new int[] { 2,3,4 });
+        assertEquals(1, l.getRecordNum());
+        
+        l.resetRecordNum();
+        assertEquals(0, l.getRecordNum());
     }
     
     boolean isHalted = false;
