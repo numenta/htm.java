@@ -623,7 +623,7 @@ public class Layer<T> {
         
         this.algo_content_mask |= TEMPORAL_MEMORY;
         this.temporalMemory = tm;
-        temporalMemory.init(connections);
+        
         return this;
     }
 
