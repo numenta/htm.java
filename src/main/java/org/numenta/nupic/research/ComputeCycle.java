@@ -46,7 +46,7 @@ public class ComputeCycle {
     Set<Cell> activeCells = new LinkedHashSet<Cell>();
     Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-    Set<Column> predictedColumns = new LinkedHashSet<Column>();
+    Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
     Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
     Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
@@ -68,7 +68,7 @@ public class ComputeCycle {
         this.activeCells = new LinkedHashSet<Cell>(c.getActiveCells());
         this.winnerCells = new LinkedHashSet<Cell>(c.getWinnerCells());
         this.predictiveCells = new LinkedHashSet<Cell>(c.getPredictiveCells());
-        this.predictedColumns = new LinkedHashSet<Column>(c.getPredictedColumns());
+        this.successfullyPredictedColumns = new LinkedHashSet<Column>(c.getSuccessfullyPredictedColumns());
         this.activeSegments = new LinkedHashSet<DistalDendrite>(c.getActiveSegments());
         this.learningSegments = new LinkedHashSet<DistalDendrite>(c.getLearningSegments());
         this.activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>(c.getActiveSynapsesForSegment());
@@ -101,12 +101,12 @@ public class ComputeCycle {
     }
     
     /**
-     * Returns the current {@link Set} of predicted columns
+     * Returns the {@link Set} of columns successfully predicted from t - 1.
      * 
      * @return  the current {@link Set} of predicted columns
      */
-    public Set<Column> predictedColumns() {
-        return predictedColumns;
+    public Set<Column> successfullyPredictedColumns() {
+        return successfullyPredictedColumns;
     }
     
     /**

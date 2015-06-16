@@ -35,6 +35,7 @@ public class NamedTuple extends Tuple {
     String[] keys;
     
     int hash;
+    int thisHashcode;
     
     private static final String[] EMPTY_KEYS = {};
     
@@ -61,6 +62,8 @@ public class NamedTuple extends Tuple {
         for(int i = 0;i < keys.length;i++) {
             addEntry(keys[i], objects[i]);
         }
+        
+        this.thisHashcode = hashCode();
     }
     
     /**
@@ -169,7 +172,7 @@ public class NamedTuple extends Tuple {
         if(!super.equals(obj))
             return false;
         NamedTuple other = (NamedTuple)obj;
-        if(!Arrays.equals(entries, other.entries))
+        if(this.thisHashcode != other.thisHashcode)
             return false;
         return true;
     }

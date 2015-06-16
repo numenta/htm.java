@@ -142,7 +142,7 @@ public class CLAClassifier {
 		this.actValueAlpha = actValueAlpha;
 		this.verbosity = verbosity;
 		actualValues.add(null);
-		patternNZHistory = new Deque<Tuple>(steps.size() + 1);
+		patternNZHistory = new Deque<Tuple>(ArrayUtils.max(steps.toArray()) + 1);
 	}
 	
 	/**
@@ -251,8 +251,7 @@ public class CLAClassifier {
 			        // buckets equally likely. There is no actual prediction for this
 			        // timestep so any of the possible predictions are just as good.
 					if(sumVotes.length > 0) {
-						Arrays.fill(sumVotes, 1);
-						sumVotes = ArrayUtils.divide(sumVotes, sumVotes.length);
+						Arrays.fill(sumVotes, 1.0 / (double)sumVotes.length);
 					}
 				}
 				

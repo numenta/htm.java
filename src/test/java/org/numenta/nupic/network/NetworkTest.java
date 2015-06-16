@@ -22,6 +22,7 @@
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -50,10 +51,57 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 
+import rx.Observer;
 import rx.Subscriber;
 
 
 public class NetworkTest {
+    @Test
+    public void testResetMethod() {
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        Network network = new Network("", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("l1", p).add(new TemporalMemory())));
+        try {
+            network.reset();
+            assertTrue(network.lookup("r1").lookup("l1").hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+        
+        network = new Network("", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("l1", p).add(new SpatialPooler())));
+        try {
+            network.reset();
+            assertFalse(network.lookup("r1").lookup("l1").hasTemporalMemory());
+        }catch(Exception e) {
+            fail();
+        }
+    }
+    
+    @Test
+    public void testResetRecordNum() {
+        Parameters p = NetworkTestHarness.getParameters();
+        Network network = new Network("", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("l1", p).add(new TemporalMemory())));
+        network.observe().subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                System.out.println("output = " + Arrays.toString(output.getSDR()));
+            }
+        });
+        
+        network.compute(new int[] { 2,3,4 });
+        network.compute(new int[] { 2,3,4 });
+        assertEquals(1, network.lookup("r1").lookup("l1").getRecordNum());
+        
+        network.resetRecordNum();
+        assertEquals(0, network.lookup("r1").lookup("l1").getRecordNum());
+    }
     
     @Test
     public void testAdd() {

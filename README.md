@@ -10,6 +10,7 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 **NOTE: Minimum JavaSE version is 1.8**   
 
 ### In The News...
+* [HTM.java Now versioned and up on Maven Central!](http://search.maven.org/#search%7Cga%7C1%7Chtm.java) (06/12/2015)
 * [HTM.java Recieves New Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html) (06/08/2015)
 * HTM.java is now [**OFFICIAL!**](https://github.com/numenta/htm.java/issues/193) See the [_**announcement**_](http://lists.numenta.org/pipermail/nupic_lists.numenta.org/2015-February/010404.html) (02/25/2015)
 * [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
@@ -38,7 +39,7 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
  * [NuPIC Community](http://numenta.org/community.html)
 
-## Installation - [***NEW! Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+## Installation - [***Updated!(05/2015) Eclipse Environment Setup Wiki***](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
@@ -55,6 +56,16 @@ gradle check  # Executes the tests and runs the benchmarks
 gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 ```
 **Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+
+## Project Integration (New)
+For tips and insights on how to use the Network API to add HTM's into your own applications, see:
+
+[Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+
+...and for more in-depth answers see:
+
+[NAPI Overview](https://github.com/numenta/htm.java/wiki/NAPI-In-Depth-Component-Overview)
+
 
 ## For Updates Follow
 

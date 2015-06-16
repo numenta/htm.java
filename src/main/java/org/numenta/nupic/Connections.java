@@ -137,7 +137,7 @@ public class Connections {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-    protected Set<Column> predictedColumns = new LinkedHashSet<Column>();
+    protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
     protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
@@ -228,7 +228,7 @@ public class Connections {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
-        predictedColumns.clear();
+        successfullyPredictedColumns.clear();
         activeSegments.clear();
         learningSegments.clear();
         activeSynapsesForSegment.clear();
@@ -1138,20 +1138,20 @@ public class Connections {
     }
     
     /**
-     * Returns the current {@link Set} of predicted columns
+     * Returns the {@link Set} of columns successfully predicted from t - 1.
      * 
      * @return  the current {@link Set} of predicted columns
      */
-    public Set<Column> getPredictedColumns() {
-        return predictedColumns;
+    public Set<Column> getSuccessfullyPredictedColumns() {
+        return successfullyPredictedColumns;
     }
     
     /**
-     * Sets the {@link Set} of predictedColumns
+     * Sets the {@link Set} of columns successfully predicted from t - 1.
      * @param columns
      */
-    public void setPredictedColumns(Set<Column> columns) {
-    	this.predictedColumns = columns;
+    public void setSuccessfullyPredictedColumns(Set<Column> columns) {
+    	this.successfullyPredictedColumns = columns;
     }
     
     /**

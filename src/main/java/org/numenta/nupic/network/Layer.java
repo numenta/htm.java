@@ -975,6 +975,28 @@ public class Layer<T> {
         recordNum = 0;
         return this;
     }
+    
+    /**
+     * Resets the {@link TemporalMemory} if it exists.
+     * @return
+     */
+    public void reset() {
+        if(temporalMemory == null) {
+            LOGGER.debug("Attempt to reset Layer: " + getName() + "without TemporalMemory");
+        }else{
+            temporalMemory.reset(connections);
+            resetRecordNum();
+        }
+    }
+    
+    /**
+     * Returns a flag indicating whether this {@code Layer} contains
+     * a {@link TemporalMemory}.
+     * @return
+     */
+    public boolean hasTemporalMemory() {
+        return temporalMemory != null;
+    }
 
     /**
      * Increments the current record sequence number.
