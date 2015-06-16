@@ -37,6 +37,8 @@ public class Tuple {
     /** The internal container array */
 	protected Object[] container;
 	
+	private int hashcode;
+	
 	/**
 	 * Instantiates a new {@code Tuple}
 	 * @param objects
@@ -44,6 +46,7 @@ public class Tuple {
 	public Tuple(Object... objects) {
 		container = new Object[objects.length];
 		for(int i = 0;i < objects.length;i++) container[i] = objects[i];
+		this.hashcode = hashCode();
 	}
 	
 	/**
@@ -115,7 +118,7 @@ public class Tuple {
 		if (getClass() != obj.getClass())
 			return false;
 		Tuple other = (Tuple) obj;
-		if (!Arrays.equals(container, other.container))
+		if (this.hashcode != other.hashcode)
 			return false;
 		return true;
 	}
