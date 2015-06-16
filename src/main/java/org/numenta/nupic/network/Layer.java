@@ -985,6 +985,7 @@ public class Layer<T> {
             LOGGER.debug("Attempt to reset Layer: " + getName() + "without TemporalMemory");
         }else{
             temporalMemory.reset(connections);
+            resetRecordNum();
         }
     }
     
