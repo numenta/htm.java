@@ -8,11 +8,16 @@ import io.cortical.services.Terms;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import rx.Subscriber;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 public class Demo {
     private static final Logger LOGGER = LoggerFactory.getLogger(Demo.class);
@@ -36,13 +43,19 @@ public class Demo {
     
     private static final double SDR_WIDTH = 16384D;
     
+    private static final String cachePath = System.getProperty("user.home") + File.separator + ".cortical" + File.separator + "cache";
+    
     private String apiKey = "";
     private String filePath;
     
     private List<String[]> input;
+    private Map<String, Term> cache;
     
     private Terms termsApi;
     private Expressions exprApi;
+    
+    private Subscriber<Inference> subscriber;
+    private Network network;
     
     
     /**
@@ -52,6 +65,83 @@ public class Demo {
     public Demo(String pathToSource) {
         this.filePath = pathToSource;
         this.input = readFile(filePath);
+    }
+    
+    private File getCacheFile() {
+        File f = new File(cachePath);
+        if(!f.exists()) {
+            try {
+                new File(cachePath.substring(0, cachePath.lastIndexOf(File.separator))).mkdir();
+                f.createNewFile();
+            } catch(IOException e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Unable to write cache file.");
+            }
+            
+            LOGGER.debug("Created cache file: " + cachePath);
+        }
+        return f;
+    }
+    
+    private void loadCache() {
+        if(cache == null) {
+            cache = new HashMap<>();
+        }
+        
+        File f = getCacheFile();
+        
+        String json = null;
+        try {
+            StringBuilder sb = new StringBuilder();
+            Files.lines(f.toPath()).forEach(l -> { sb.append(l); });
+            json = sb.toString();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
+        if(json.isEmpty()) {
+            LOGGER.debug("Term cache is empty.");
+            return;
+        }
+        
+        ObjectMapper mapper = new ObjectMapper();
+        List<Term> terms = null;
+        try {
+            terms = Arrays.asList(mapper.readValue(json, Term[].class));
+            if(terms == null) {
+                LOGGER.debug("Term cache is empty or malformed.");
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
+        for(Term t : terms) {
+            cache.put(t.getTerm(), t);
+        }
+    }
+    
+    private void writeCache() {
+        File f = getCacheFile();
+        try(PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            StringBuilder builderStr = new StringBuilder();
+            int i = 0;
+            for(Iterator<Term> it = cache.values().iterator();it.hasNext();i++) {
+                Term t = it.next();
+                String termStr = Term.toJson(t);
+                if(i > 0) {
+                    termStr = termStr.substring(1).trim();
+                }
+                termStr = termStr.substring(0, termStr.length() - 1).trim();
+                builderStr.append(termStr).append(",");
+            }
+            builderStr.setLength(builderStr.length() - 1);
+            builderStr.append(" ]");
+            
+            pw.println(builderStr.toString());
+            pw.flush();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -141,7 +231,12 @@ public class Demo {
      */
     private Fingerprint getFingerprint(String term) {
         try {
-            return termsApi.getTerm(term, true).get(0).getFingerprint();
+            Term t = cache.get(term) == null ?
+                termsApi.getTerm(term, true).get(0) :
+                    cache.get(term);
+            cache.put(t.getTerm(), t);
+            
+            return t.getFingerprint();
         }catch(Exception e) {
             LOGGER.debug("Problem retrieving fingerprint for term: " + term);
         }
@@ -226,7 +321,7 @@ public class Demo {
      */
     private Network createNetwork() {
         Parameters temporalParams = createParameters();
-        Network network = Network.create("Cortical.io API Demo", temporalParams)
+        network = Network.create("Cortical.io API Demo", temporalParams)
             .add(Network.createRegion("Region 1")
                 .add(Network.createLayer("Layer 2/3", temporalParams)
                     .add(new TemporalMemory())));
@@ -234,8 +329,10 @@ public class Demo {
     }
     
     private Subscriber<Inference> createSubscriber() {
-        return new Subscriber<Inference>() {
-            @Override public void onCompleted() {}
+        return subscriber = new Subscriber<Inference>() {
+            @Override public void onCompleted() {
+                writeCache();
+            }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 System.out.println("prediction = " + Arrays.toString(i.getSDR()));
@@ -254,34 +351,39 @@ public class Demo {
                 int[] sdr = getFingerprintSDR(term);
                 network.compute(sdr);
             }
+            network.reset();
         }
+        
+        //Notify onCompleted
+        subscriber.onCompleted();
     }
     
     public static void main(String[] args) {
-        Demo test = new Demo("foxeat.csv");
-        boolean success = test.connectionValid("dd");//"d059e560-1372-11e5-a409-7159d0ac8188");
+        Demo demo = new Demo("foxeat.csv");
+        
+        demo.loadCache();
+        
+        boolean success = demo.connectionValid("dd");//"d059e560-1372-11e5-a409-7159d0ac8188");
         System.out.println("success = " + success);
         
-        success = test.connectionValid("d059e560-1372-11e5-a409-7159d0ac8188");
+        success = demo.connectionValid("d059e560-1372-11e5-a409-7159d0ac8188");
         System.out.println("success = " + success);
         
-        int[] sdr = test.getFingerprintSDR("work");
+        int[] sdr = demo.getFingerprintSDR("work");
         System.out.println("sdr = " + sdr);
         
-        int sparsity = test.getSparsity(sdr);
+        int sparsity = demo.getSparsity(sdr);
         System.out.println("sparsity = " + sparsity + "%");
         
-        Term closest = test.getClosestTerm(sdr);
+        Term closest = demo.getClosestTerm(sdr);
         System.out.println("closest term = " + closest.getTerm());
         
         int count = 0;
-        for(Iterator<String[]> it = test.inputIterator();it.hasNext();it.next(),count++);
-        System.out.println("count = " + count + ", " + test.input.size());
+        for(Iterator<String[]> it = demo.inputIterator();it.hasNext();it.next(),count++);
+        System.out.println("count = " + count + ", " + demo.input.size());
         
-        Network network = test.createNetwork();
-        test.subscribeToNetwork(network);
-        test.feedNetwork(network, test.inputIterator());
-        
-        
+        Network network = demo.createNetwork();
+        demo.subscribeToNetwork(network);
+        demo.feedNetwork(network, demo.inputIterator());
     }
 }
