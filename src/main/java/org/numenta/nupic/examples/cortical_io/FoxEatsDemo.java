@@ -479,9 +479,7 @@ public class FoxEatsDemo {
         System.out.println(network.getParameters().toString());
         
         int[] prediction = network.lookup("Region 1").lookup("Layer 2/3").getPredictedColumns();
-        System.out.println("layer prediction = " + Arrays.toString(prediction));
         Term term = getClosestTerm(prediction);
-        System.out.println("closest term = " + term.getTerm());
         cache.put(term.getTerm(), term);
         
         return term;
