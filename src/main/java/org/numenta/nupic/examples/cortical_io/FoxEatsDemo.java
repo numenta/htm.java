@@ -1,10 +1,12 @@
-package org.numenta.nupic.examples.cortical;
+package org.numenta.nupic.examples.cortical_io;
 
+import gnu.trove.list.array.TIntArrayList;
 import io.cortical.rest.model.Fingerprint;
 import io.cortical.rest.model.Term;
 import io.cortical.services.Expressions;
 import io.cortical.services.RetinaApis;
 import io.cortical.services.Terms;
+import io.cortical.services.api.client.ApiException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,32 +20,35 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Network;
 import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.MersenneTwister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rx.Subscriber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-public class Demo {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Demo.class);
+public class FoxEatsDemo {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FoxEatsDemo.class);
     
     private static final String RETINA_NAME = "en_associative";    
     private static final String RETINA_IP = "api.cortical.io";
     
     private static final double SDR_WIDTH = 16384D;
+    private static final double SPARSITY = 0.02D;
     
     private static final String cachePath = System.getProperty("user.home") + File.separator + ".cortical" + File.separator + "cache";
+    
+    private static final Random RANDOM = new MersenneTwister(42);
     
     private String apiKey = "";
     private String filePath;
@@ -54,19 +59,29 @@ public class Demo {
     private Terms termsApi;
     private Expressions exprApi;
     
-    private Subscriber<Inference> subscriber;
     private Network network;
     
     
     /**
-     * Constructs a new...
+     * Constructs a new Network API demo to demonstrate interaction with
+     * the Cortical.io API specifically.
+     * 
      * @param pathToSource
      */
-    public Demo(String pathToSource) {
+    public FoxEatsDemo(String pathToSource) {
         this.filePath = pathToSource;
         this.input = readFile(filePath);
     }
     
+    /**
+     * Returns the cache {@link File} specified by the pre-configured file path.
+     * (see {@link #Demo(String)}) The cache file is by default stored in the user's
+     * home directory in the ".cortical/cache" file. This file stores the {@link Term}
+     * objects retrieved via the Cortical.io API so that the server is "pounded" by 
+     * queries from this demo.
+     * 
+     * @return
+     */
     private File getCacheFile() {
         File f = new File(cachePath);
         if(!f.exists()) {
@@ -83,6 +98,12 @@ public class Demo {
         return f;
     }
     
+    /**
+     * Loads the fingerprint cache file into memory if it exists. If it
+     * does not exist, this method creates the file; however it won't be
+     * written to until the demo is finished processing, at which point
+     * {@link #writeCache()} is called to store the cache file.
+     */
     private void loadCache() {
         if(cache == null) {
             cache = new HashMap<>();
@@ -118,8 +139,14 @@ public class Demo {
         for(Term t : terms) {
             cache.put(t.getTerm(), t);
         }
+        
+        checkCache(true, true);
     }
     
+    /**
+     * Writes the fingerprint cache file to disk. This takes place at the
+     * end of the demo's processing.
+     */
     private void writeCache() {
         File f = getCacheFile();
         try(PrintWriter pw = new PrintWriter(new FileWriter(f))) {
@@ -142,6 +169,63 @@ public class Demo {
         } catch(IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Called to check the coherence of the cache file to make sure there
+     * is no missing data and that the fingerprint {@link Term}s stored internally are
+     * valid.
+     * 
+     * @param print         flag indicating whether the check should be logged
+     * @param failOnCheck   flag indicating whether a failed cache entry should cause this
+     *                      demo to exit. 
+     */
+    private void checkCache(boolean print, boolean failOnCheck) {
+        int count = 0;
+        for(String key : cache.keySet()) {
+            if(print) { LOGGER.debug((count++) + ". key: " + key); }
+            
+            if(!checkTerm(key, cache.get(key), print)) {
+                if(failOnCheck) {
+                    throw new IllegalStateException("Term cache for key: " + key + " was invalid or missing data.");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Called by {@link #checkCache(boolean, boolean)} for every line in
+     * the cache file to validate the contents of the specified {@link Term}
+     * 
+     * @param key
+     * @param t
+     * @param print
+     * @return
+     */
+    private boolean checkTerm(String key, Term t, boolean print) {
+        Fingerprint fp = t.getFingerprint();
+        if(fp == null) {
+            if(print) { LOGGER.debug("\tkey: " + key + ", missing fingerprint"); }
+            return false;
+        }
+        
+        int[] pos = fp.getPositions();
+        if(pos == null) {
+            if(print) { LOGGER.debug("\tkey: " + key + ", has null positions"); }
+            return false;
+        }
+        
+        if(pos.length < 1) {
+            if(print) { LOGGER.debug("\tkey: " + key + ", had empty positions"); }
+            return false;
+        }
+        
+        int sdrLen = pos.length;
+        if(print) {
+            LOGGER.debug("\tkey: " + key + ", term len: " + sdrLen);
+        }
+        
+        return true;
     }
     
     /**
@@ -179,8 +263,13 @@ public class Demo {
         Fingerprint fp = new Fingerprint(sdr);
         try {
             List<Term> terms = exprApi.getSimilarTerms(fp);
+            Term retVal = null;
             if(terms != null && terms.size() > 0) {
-                return terms.get(0);
+                retVal = terms.get(0);
+                if(checkTerm(retVal.getTerm(), retVal, true)) {
+                    return retVal;
+                }
+                return termsApi.getTerm(retVal.getTerm(), true).get(0);
             }
         }catch(Exception e) {
             LOGGER.debug("Problem using Expressions API");
@@ -196,9 +285,24 @@ public class Demo {
      * @param sdr
      * @return
      */
-    private int getSparsity(int[] sdr) {
+    int getSparsity(int[] sdr) {
         double sparsity = ((double)sdr.length / SDR_WIDTH) * 100;
         return (int)sparsity;
+    }
+    
+    /**
+     * Returns the randomly culled array whose entries are equal
+     * to {@link #SPARSITY}
+     * 
+     * @param input     the int array to ensure proper sparsity for.
+     * @return
+     */
+    int[] subsample(int[] input) {
+        int sparsity = getSparsity(input);
+        if(sparsity > 2) {
+           input = ArrayUtils.sample((int)(SDR_WIDTH * SPARSITY) + 1, new TIntArrayList(input), RANDOM); 
+        }
+        return input;
     }
     
     /**
@@ -234,6 +338,11 @@ public class Demo {
             Term t = cache.get(term) == null ?
                 termsApi.getTerm(term, true).get(0) :
                     cache.get(term);
+                
+            if(!checkTerm(t.getTerm(), t, true)) {
+                System.exit(1);
+            }
+                
             cache.put(t.getTerm(), t);
             
             return t.getFingerprint();
@@ -307,11 +416,13 @@ public class Demo {
         tmParams.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 16384 });
         tmParams.setParameterByKey(KEY.CELLS_PER_COLUMN, 8);
         tmParams.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.5);
+        tmParams.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.4);
         tmParams.setParameterByKey(KEY.MIN_THRESHOLD, 164);
         tmParams.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 164);
         tmParams.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.1);
         tmParams.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.0);
         tmParams.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 164);
+        
         return tmParams;
     }
     
@@ -328,62 +439,87 @@ public class Demo {
         return network;            
     }
     
-    private Subscriber<Inference> createSubscriber() {
-        return subscriber = new Subscriber<Inference>() {
-            @Override public void onCompleted() {
-                writeCache();
-            }
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference i) {
-                System.out.println("prediction = " + Arrays.toString(i.getSDR()));
-            }
-        };
-    }
-    
-    private void subscribeToNetwork(Network network) {
-        Subscriber<Inference> subscriber = createSubscriber();
-        network.observe().subscribe(subscriber);
-    }
-    
-    private void feedNetwork(Network network, Iterator<String[]> it) {
+    /**
+     * Feeds the specified {@link Network} with the contents of the specified
+     * {@link Iterator}
+     * @param network   the current {@link Network} object
+     * @param it        an {@link Iterator} over the input source file lines
+     * @return
+     */
+    private String[] feedNetwork(Network network, Iterator<String[]> it) {
         for(;it.hasNext();) {
-            for(String term : it.next()) {
+            String[] next = it.next();
+            
+            if(!it.hasNext()) return next;
+            
+            for(String term : next) {
                 int[] sdr = getFingerprintSDR(term);
                 network.compute(sdr);
             }
             network.reset();
         }
         
-        //Notify onCompleted
-        subscriber.onCompleted();
+        return null;
+    }
+    
+    /**
+     * Feeds the {@link Network with the final phrase consisting of the first
+     * two words of the final question "fox, eats, ...".
+     * 
+     * @param network   the current {@link Network} object
+     * @param it        an {@link Iterator} over the input source file lines
+     * @return
+     */
+    private Term feedQuestion(Network network, String[] phrase) {
+        for(int i = 0;i < 2;i++) {
+            int[] sdr = getFingerprintSDR(phrase[i]);
+            network.compute(sdr);
+        }
+        
+        System.out.println(network.getParameters().toString());
+        
+        int[] prediction = network.lookup("Region 1").lookup("Layer 2/3").getPredictedColumns();
+        System.out.println("layer prediction = " + Arrays.toString(prediction));
+        Term term = getClosestTerm(prediction);
+        System.out.println("closest term = " + term.getTerm());
+        cache.put(term.getTerm(), term);
+        
+        return term;
     }
     
     public static void main(String[] args) {
-        Demo demo = new Demo("foxeat.csv");
+        // Check for the existence of a proper API Key
+        if(args.length < 1 || !args[0].startsWith("-K")) {
+            throw new IllegalStateException("Demo must be started with arguments [-K]<your-api-key>");
+        }
         
+        // Extract api key from arguments
+        String apiKey = args[0].substring(2);
+        
+        // Instantiate the Demo
+        FoxEatsDemo demo = new FoxEatsDemo("foxeat.csv");
         demo.loadCache();
         
-        boolean success = demo.connectionValid("dd");//"d059e560-1372-11e5-a409-7159d0ac8188");
-        System.out.println("success = " + success);
-        
-        success = demo.connectionValid("d059e560-1372-11e5-a409-7159d0ac8188");
-        System.out.println("success = " + success);
-        
-        int[] sdr = demo.getFingerprintSDR("work");
-        System.out.println("sdr = " + sdr);
-        
-        int sparsity = demo.getSparsity(sdr);
-        System.out.println("sparsity = " + sparsity + "%");
-        
-        Term closest = demo.getClosestTerm(sdr);
-        System.out.println("closest term = " + closest.getTerm());
-        
-        int count = 0;
-        for(Iterator<String[]> it = demo.inputIterator();it.hasNext();it.next(),count++);
-        System.out.println("count = " + count + ", " + demo.input.size());
-        
+        // Test api connection by executing dummy query
+        boolean success = demo.connectionValid(apiKey);
+        if(!success) {
+            throw new RuntimeException(new ApiException());
+        }
+
+        // Create the Network
         Network network = demo.createNetwork();
-        demo.subscribeToNetwork(network);
-        demo.feedNetwork(network, demo.inputIterator());
+
+        // Returns the last line of the file which is has the question terms: "fox, eats, <something>"
+        String[] question = demo.feedNetwork(network, demo.inputIterator());
+        
+        // Returns the Term for the answer to what a fox eats.
+        Term answer = demo.feedQuestion(network, question);
+        
+        // Print it to standard out. (For now...)
+        System.out.println("What does a fox eat? Answer: " + answer.getTerm());
+        
+        // Cache fingerprints
+        demo.writeCache();
+        
     }
 }
