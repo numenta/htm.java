@@ -504,8 +504,6 @@ public class FoxEatsDemo {
             network.compute(sdr);
         }
         
-        System.out.println(network.getParameters().toString());
-        
         int[] prediction = network.lookup("Region 1").lookup("Layer 2/3").getPredictedColumns();
         Term term = getClosestTerm(prediction);
         cache.put(term.getTerm(), term);
