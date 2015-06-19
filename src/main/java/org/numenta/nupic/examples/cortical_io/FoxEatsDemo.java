@@ -28,6 +28,7 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.Network;
+import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
@@ -410,7 +411,13 @@ public class FoxEatsDemo {
         if(pathToFile.indexOf(File.separator) != -1) {
             inputFile = new File(pathToFile);
         }else{
-            inputFile = new File(ResourceLocator.path(pathToFile));
+            String path = ResourceLocator.path(pathToFile);
+            if(path.indexOf("!") != -1) {
+                path = path.substring("file:".length());
+                return FileSensor.getJarEntryStream(path);
+            }else{
+                inputFile = new File(path);
+            }
         }
         
         try {
