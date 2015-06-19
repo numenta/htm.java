@@ -28,3 +28,9 @@ technology, utilizes SDRs (Sparse Data Representations) to encode property quali
 sparse data bits. The use of this technology to reverse engineer the HTM's "prediction"
 to see what "meal" the HTM generalizes for foxes, exhibits vast potential in the combination
 of these two advanced Machine Intelligence technologies.
+
+#### Demo Usage
+```
+java -jar FoxEatsDemo.jar -K<Cortical.io API Key>
+```
+
