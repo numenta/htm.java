@@ -2,8 +2,8 @@
 # What Does A Fox Eat?
 
 This the [Java™](http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html) version of Subutai Ahmad's [2013 Fall Hackathon Demo](http://numenta.org/blog/2013/11/06/2013-fall-hackathon-outcome.html#fox) illustrating the 
-integration of HTM technology; [Cortical.io's Natural Language Programming (NLP)
-technology](http:cortical.io); and the [HTM.java Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html).
+integration of HTM technology; [Cortical.io's](http://www.cortical.io/technology.html) Natural Language Programming (NLP)
+technology; and the [HTM.java Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html).
 
 This demo demonstrates the powerful similarity and word association technology of
 Cortial.io and the generalization power of HTM technology by "teaching" the HTM triplets
