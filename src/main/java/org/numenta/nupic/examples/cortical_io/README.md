@@ -24,7 +24,7 @@ But what does a fox eat?
 
 The HTM, having never "seen" the word fox before, comes back with "rodent" or "squirrel",
 which is what an animal that is "fox-like" might eat. Cortical.io's "Semantic Folding" 
-technology, utilizes SDRs (Sparse Data Representations) to encode property qualities to
+technology, utilizes SDRs ([Sparse Data Representations](http://www.cortical.io/technology_representations.html)) to encode property qualities to
 sparse data bits. The use of this technology to reverse engineer the HTM's "prediction"
 to see what "meal" the HTM generalizes for foxes, exhibits vast potential in the combination
 of these two advanced Machine Intelligence technologies.
