@@ -34,3 +34,8 @@ of these two advanced Machine Intelligence technologies.
 java -jar FoxEatsDemo.jar -K<Cortical.io API Key>
 ```
 
+The execution of this demo requires the use of a **Free** API Key from [Cortical.io](http://www.cortical.io/resources_apikey.html). Just follow the link. It's real easy and the whole process takes just a few minutes (5 secs. on your part, and 2mins. 55secs. on Cortical.io's part) - and an internet connection. Once the demo has been run once, the fingerprints for the terms in the demo are cached locally - however the demo still requires an internet connection.
+
+* For more information on Cortical.io API usage you can have a look at their online [API interactive website](http://api.cortical.io); and their [Java SDK here...](https://github.com/cortical-io)
+* For more information on NuPIC and Numenta's HTM technology, go [here...](http://numenta.org) 
+* For more information about [HTM.java...](https://github.com/numenta/htm.java)
