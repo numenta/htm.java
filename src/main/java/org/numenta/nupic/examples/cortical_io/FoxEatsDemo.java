@@ -36,7 +36,27 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/**
+ * This the HTM.java version of Subutai Ahmad's Hackathon Demo illustrating the 
+ * integration of HTM technology; Cortical.io's Natural Language Programming (NLP)
+ * technology; and the HTM.java Network API.
+ * 
+ * This demo demonstrates the powerful similarity and word association technology of
+ * Cortial.io and the generalization power of HTM technology by "teaching" the HTM triplets
+ * of animals, actions, and objects such as "frog eats flies", and "cow eat grain". After
+ * presenting the HTM with 36 different examples of triplet animal "preferences", we then
+ * ask the HTM what a "fox" would eat.
+ * 
+ * The HTM, having never "seen" the word fox before, comes back with "rodent" or "squirrel",
+ * which is what an animal that is "fox-like" might eat. Cortical.io's "Semantic Folding" 
+ * technology, utilizes SDRs (Sparse Data Representations) to encode property qualities to
+ * sparse data bits. The use of this technology to reverse engineer the HTM's "prediction"
+ * to see what "meal" the HTM generalizes for foxes, exhibits vast potential in the combination
+ * of these two advanced Machine Intelligence technologies. 
+ * 
+ * @author cogmission
+ *
+ */
 public class FoxEatsDemo {
     private static final Logger LOGGER = LoggerFactory.getLogger(FoxEatsDemo.class);
     
@@ -46,7 +66,8 @@ public class FoxEatsDemo {
     private static final double SDR_WIDTH = 16384D;
     private static final double SPARSITY = 0.02D;
     
-    private static final String cachePath = System.getProperty("user.home") + File.separator + ".cortical" + File.separator + "cache";
+    private static final String cachePath = System.getProperty("user.home").concat(File.separator).
+        concat(".cortical").concat(File.separator).concat("cache");
     
     private static final Random RANDOM = new MersenneTwister(42);
     
