@@ -2,24 +2,47 @@ package org.numenta.nupic.examples.cortical_io;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import io.cortical.rest.model.Fingerprint;
 import io.cortical.rest.model.Term;
+import io.cortical.services.api.client.ApiException;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.Test;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.network.Inference;
+import org.numenta.nupic.network.Layer;
+import org.numenta.nupic.network.Network;
+import org.numenta.nupic.network.Region;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import rx.Subscriber;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class FoxEatsDemoTest {
+    private File cacheFile;
+    private FoxEatsDemo mockDemo;
+    
+    
     String json = "[ {"+
                     "\"term\" : \"flies\","+
                     "\"df\" : 7.31582825193336E-4,"+
@@ -226,7 +249,7 @@ public class FoxEatsDemoTest {
     
     private Map<String, Term> cache;
     
-    private void loadCache() {
+    private void loadTestCache() {
         if(cache == null) {
             cache = new HashMap<>();
         }
@@ -246,15 +269,42 @@ public class FoxEatsDemoTest {
             cache.put(t.getTerm(), t);
         }
         
-        checkCache(true, true);
+        checkTestCache(true, true);
     }
     
-    private void checkCache(boolean print, boolean failOnCheck) {
+    private List<Term> toTermList(String json) {
+        ObjectMapper mapper = new ObjectMapper();
+        List<Term> terms = null;
+        try {
+            terms = Arrays.asList(mapper.readValue(json, Term[].class));
+            if(terms == null) {
+                LOGGER.debug("Term cache is empty or malformed.");
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
+        return terms;
+    }
+    
+    private String toJson(File f) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            Files.lines(f.toPath()).forEach(l -> { sb.append(l); });
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        
+        return sb.toString();
+    }
+    
+    private void checkTestCache(boolean print, boolean failOnCheck) {
         int count = 0;
         for(String key : cache.keySet()) {
             if(print) { LOGGER.debug((count++) + ". key: " + key); }
             
-            if(!checkTerm(key, cache.get(key), print)) {
+            if(!checkTestTerm(key, cache.get(key), print)) {
                 if(failOnCheck) {
                     throw new IllegalStateException("Term cache for key: " + key + " was invalid or missing data.");
                 }
@@ -262,7 +312,7 @@ public class FoxEatsDemoTest {
         }
     }
     
-    private boolean checkTerm(String key, Term t, boolean print) {
+    private boolean checkTestTerm(String key, Term t, boolean print) {
         Fingerprint fp = t.getFingerprint();
         if(fp == null) {
             if(print) { LOGGER.debug("\tkey: " + key + ", missing fingerprint"); }
@@ -288,10 +338,45 @@ public class FoxEatsDemoTest {
         return true;
     }
     
+    public File getTempCacheFile() {
+        File retVal = null;
+        try {
+            retVal = File.createTempFile("testCache", ".tmp");
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        return retVal;
+    }
+    
+    public void setup() {
+        cacheFile = getTempCacheFile();
+        
+        try(PrintWriter pw = new PrintWriter(new FileWriter(cacheFile))) {
+            pw.println(json);
+            pw.flush();
+        }catch(IOException e) {
+            e.printStackTrace();
+            fail();
+        }
+        
+        mockDemo = new FoxEatsDemo("foxeat.csv") {
+            @Override
+            public Stream<String> getCacheStream() {
+                try {
+                    return Files.lines(cacheFile.toPath());
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+                return null;
+            }
+        };
+    }
+    
     @Test
     public void testSetup() {
         try {
-            loadCache();
+            loadTestCache();
         }catch(Exception e) {
             fail();
         }
@@ -333,7 +418,259 @@ public class FoxEatsDemoTest {
         System.out.println(sample.length);
     }
 
+    /**
+     * Assert that the demo functionality loads the exact info as the test.
+     * This confirms the machinery of the demo works as expected.
+     */
+    @Test
+    public void testLoadCache() {
+        setup();
+        
+        mockDemo.loadCache();
+        
+        Map<String, Term> testCache = mockDemo.getCache();
+        assertEquals(25, testCache.size());
+        
+        loadTestCache();
+        for(String key : testCache.keySet()) {
+            assertTrue(cache.containsKey(key));
+            assertTrue(checkTestTerm(key, testCache.get(key), false));
+        }
+        
+        for(String key : cache.keySet()) {
+            assertTrue(testCache.containsKey(key));
+        }
+    }
     
+    @Test
+    public void testWriteCache() {
+        setup();
+        
+        mockDemo = new FoxEatsDemo("foxeat.csv") {
+            @Override
+            public File getCacheFile() {
+                return cacheFile;
+            }
+            @Override
+            public Stream<String> getCacheStream() {
+                try {
+                    return Files.lines(cacheFile.toPath());
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+                return null;
+            }
+        };
+        
+        mockDemo.loadCache();
+        
+        // Get file contents before write
+        List<Term> beforeList = toTermList(toJson(mockDemo.getCacheFile()));
+        
+        Map<String, Term> testCache = mockDemo.getCache();
+        assertEquals(25, testCache.size());
+        
+        try {
+            mockDemo.writeCache();
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        
+        // Get written file contents 
+        List<Term> afterList = toTermList(toJson(mockDemo.getCacheFile()));
+        
+        // Compare before/after
+        assertEquals(beforeList.size(), afterList.size());
+        
+        int mutualCount = 0;
+        for(Term bT : beforeList) {
+            for(Term aT : afterList) {
+                if(bT.getTerm().equals(aT.getTerm())) {
+                    ++mutualCount;
+                    assertTrue(checkTestTerm(aT.getTerm(), aT, false));
+                }
+            }
+        }
+        
+        assertEquals(mutualCount, beforeList.size());
+    }
+    
+    @Test
+    public void testGetFingerPrint() {
+        setup();
+        
+        mockDemo.loadCache();
+        
+        loadTestCache();
+        Term testTerm = cache.get("fox");
+        assertNotNull(testTerm);
+        assertTrue(checkTestTerm(testTerm.getTerm(), testTerm, false));
+        
+        Fingerprint fp = mockDemo.getFingerprint("fox");
+        assertTrue(Arrays.equals(testTerm.getFingerprint().getPositions(), fp.getPositions()));
+    }
+    
+    @Test
+    public void testInputIterator() {
+        setup();
+        
+        mockDemo.loadCache();
+        
+        Iterator<String[]> it = mockDemo.inputIterator();
+        int termCount = 0;
+        while(it.hasNext()) {
+            it.next();
+            termCount++;
+        }
+        
+        assertEquals(37, termCount);
+    }
+    
+    @Test
+    public void testReadInputData() {
+        setup();
+        
+        mockDemo.loadCache();
+        
+        List<String[]> testData = mockDemo.readInputData("foxeat.csv");
+        assertNotNull(testData);
+        assertEquals(37, testData.size());
+    }
+    
+    @Test
+    public void testGetInputDataStream() {
+        setup();
+        
+        mockDemo.loadCache();
+        
+        Stream<String> testData = mockDemo.getInputDataStream("foxeat.csv");
+        assertNotNull(testData);
+        assertEquals(37, testData.count());
+    }
+    
+    @Test
+    public void testCreateParameters() {
+        setup();
+        
+        Parameters p = mockDemo.createParameters();
+        assertEquals(12, p.keys().size());
+        
+        int[] dims = (int[])p.getParameterByKey(KEY.COLUMN_DIMENSIONS);
+        assertEquals(1, dims.length);
+        assertEquals(16384, dims[0]);
+        
+        int cellsPerCol = (int)p.getParameterByKey(KEY.CELLS_PER_COLUMN);
+        assertEquals(8, cellsPerCol);
+        
+        double conPerm = (double)p.getParameterByKey(KEY.CONNECTED_PERMANENCE);
+        assertEquals(0.5, conPerm, 0);
+        
+        double initPerm = (double)p.getParameterByKey(KEY.INITIAL_PERMANENCE);
+        assertEquals(0.4, initPerm, 0);
+        
+        int minT = (int)p.getParameterByKey(KEY.MIN_THRESHOLD);
+        assertEquals(164, minT);
+        
+        int maxSyns = (int)p.getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT);
+        assertEquals(164, maxSyns);
+        
+        double permInc = (double)p.getParameterByKey(KEY.PERMANENCE_INCREMENT);
+        assertEquals(0.1, permInc, 0);
+        
+        double permDec = (double)p.getParameterByKey(KEY.PERMANENCE_DECREMENT);
+        assertEquals(0, permDec, 0);
+        
+        int actT = (int)p.getParameterByKey(KEY.ACTIVATION_THRESHOLD);
+        assertEquals(164, actT);
+    }
+    
+    @Test
+    public void testCreateNetwork() {
+        setup();
+        
+        Network testNet = mockDemo.createNetwork();
+        assertNotNull(testNet);
+        
+        Region region = testNet.lookup("Region 1");
+        assertNotNull(region);
+        
+        Layer<?> layer = region.lookup("Layer 2/3");
+        assertNotNull(layer);
+       
+    }
+    
+    int testVar;
+    @Test
+    public void testFeedNetwork() {
+        testVar = 0;
+        
+        setup();
+        
+        mockDemo.loadCache();
+        
+        Iterator<String[]> it = mockDemo.inputIterator();
+        List<String[]> l = new ArrayList<>();
+        l.add(it.next());
+        l.add(it.next());
+        it = l.iterator();
+        
+        Network testNet = mockDemo.createNetwork();
+        assertNotNull(testNet);
+        
+        testNet.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {
+                try {
+                    System.out.println("onCompleted called");
+                }catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                testVar++;
+            }
+        });
+        
+        mockDemo.feedNetwork(testNet, it);
+        
+        assertTrue(testVar > 0);
+    }
+    
+    @Test
+    public void testFeedQuestion() {
+        setup();
+        
+        loadTestCache();
+        
+        mockDemo = new FoxEatsDemo("foxeat.csv") {
+            @Override
+            public Stream<String> getCacheStream() {
+                try {
+                    return Files.lines(cacheFile.toPath());
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+                return null;
+            }
+            
+            @Override
+            List<Term> getSimilarTerms(Fingerprint fp) throws ApiException, JsonProcessingException {
+                return Arrays.asList(new Term[] { cache.get("squirrel") } );
+            }
+        };
+        
+        mockDemo.loadCache();
+        
+        Network testNet = mockDemo.createNetwork();
+        assertNotNull(testNet);
+        
+        Term answer = mockDemo.feedQuestion(testNet, new String[] { "fox", "eat" });
+        assertTrue(answer.getTerm().equals("squirrel") ||
+            answer.getTerm().equals("rodent"));
+    }
 }
 
 

@@ -35,6 +35,7 @@ import org.numenta.nupic.util.MersenneTwister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -67,7 +68,7 @@ public class FoxEatsDemo {
     private static final double SDR_WIDTH = 16384D;
     private static final double SPARSITY = 0.02D;
     
-    private static final String cachePath = System.getProperty("user.home").concat(File.separator).
+    static String cachePath = System.getProperty("user.home").concat(File.separator).
         concat(".cortical").concat(File.separator).concat("cache");
     
     private static final Random RANDOM = new MersenneTwister(42);
@@ -92,7 +93,15 @@ public class FoxEatsDemo {
      */
     public FoxEatsDemo(String pathToSource) {
         this.filePath = pathToSource;
-        this.input = readFile(filePath);
+        this.input = readInputData(filePath);
+    }
+    
+    /**
+     * Used for testing to set the cache file path
+     * @param path
+     */
+    void setCachePath(String path) {
+        cachePath = path;
     }
     
     /**
@@ -104,7 +113,7 @@ public class FoxEatsDemo {
      * 
      * @return
      */
-    private File getCacheFile() {
+    File getCacheFile() {
         File f = new File(cachePath);
         if(!f.exists()) {
             try {
@@ -121,22 +130,39 @@ public class FoxEatsDemo {
     }
     
     /**
+     * Returns the {@link Fingerprint} cache.
+     * @return
+     */
+    Map<String, Term> getCache() {
+        return cache;
+    }
+    
+    /**
+     * Returns the persisted cache as a {@link Stream}
+     * @return
+     */
+    Stream<String> getCacheStream() throws IOException {
+        File f = getCacheFile();
+        Stream<String> stream = Files.lines(f.toPath());
+        
+        return stream;
+    }
+    
+    /**
      * Loads the fingerprint cache file into memory if it exists. If it
      * does not exist, this method creates the file; however it won't be
      * written to until the demo is finished processing, at which point
      * {@link #writeCache()} is called to store the cache file.
      */
-    private void loadCache() {
+    void loadCache() {
         if(cache == null) {
             cache = new HashMap<>();
         }
         
-        File f = getCacheFile();
-        
         String json = null;
         try {
             StringBuilder sb = new StringBuilder();
-            Files.lines(f.toPath()).forEach(l -> { sb.append(l); });
+            getCacheStream().forEach(l -> { sb.append(l); });
             json = sb.toString();
         } catch(IOException e) {
             e.printStackTrace();
@@ -169,8 +195,9 @@ public class FoxEatsDemo {
      * Writes the fingerprint cache file to disk. This takes place at the
      * end of the demo's processing.
      */
-    private void writeCache() {
+    void writeCache() {
         File f = getCacheFile();
+        
         try(PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             StringBuilder builderStr = new StringBuilder();
             int i = 0;
@@ -202,7 +229,7 @@ public class FoxEatsDemo {
      * @param failOnCheck   flag indicating whether a failed cache entry should cause this
      *                      demo to exit. 
      */
-    private void checkCache(boolean print, boolean failOnCheck) {
+    void checkCache(boolean print, boolean failOnCheck) {
         int count = 0;
         for(String key : cache.keySet()) {
             if(print) { LOGGER.debug((count++) + ". key: " + key); }
@@ -224,7 +251,7 @@ public class FoxEatsDemo {
      * @param print
      * @return
      */
-    private boolean checkTerm(String key, Term t, boolean print) {
+    boolean checkTerm(String key, Term t, boolean print) {
         Fingerprint fp = t.getFingerprint();
         if(fp == null) {
             if(print) { LOGGER.debug("\tkey: " + key + ", missing fingerprint"); }
@@ -257,7 +284,7 @@ public class FoxEatsDemo {
      * 
      * @param apiKey
      */
-    private boolean connectionValid(String apiKey) {
+    boolean connectionValid(String apiKey) {
         try {
             this.apiKey = apiKey;
             RetinaApis ra = new RetinaApis(RETINA_NAME, RETINA_IP, this.apiKey);
@@ -275,23 +302,49 @@ public class FoxEatsDemo {
     }
     
     /**
+     * Returns a list of {@link Term}s using the Terms API.
+     * 
+     * @param term  a term.
+     * @param includeFingerprint    true if call should return the positions array,
+     *                              false if not.
+     * @return
+     * @throws ApiException
+     * @throws JsonProcessingException
+     */
+    List<Term>  getTerms(String term, boolean includeFingerprint) throws ApiException, JsonProcessingException {
+        return termsApi.getTerm(term, includeFingerprint);
+    }
+    
+    /**
+     * Returns a list of similar terms using the Expressions API.
+     * 
+     * @param fp    a Fingerprint from which to get similar terms.
+     * @return  List view of similar {@link Term}s
+     * @throws ApiException
+     * @throws JsonProcessingException
+     */
+    List<Term> getSimilarTerms(Fingerprint fp) throws ApiException, JsonProcessingException {
+        return exprApi.getSimilarTerms(fp);
+    }
+    
+    /**
      * Returns the most similar {@link Term} for the term represented by
      * the specified sdr
      * 
      * @param sdr   sparse int array
      * @return
      */
-    private Term getClosestTerm(int[] sdr) {
+    Term getClosestTerm(int[] sdr) {
         Fingerprint fp = new Fingerprint(sdr);
         try {
-            List<Term> terms = exprApi.getSimilarTerms(fp);
+            List<Term> terms = getSimilarTerms(fp);
             Term retVal = null;
             if(terms != null && terms.size() > 0) {
                 retVal = terms.get(0);
                 if(checkTerm(retVal.getTerm(), retVal, true)) {
                     return retVal;
                 }
-                return termsApi.getTerm(retVal.getTerm(), true).get(0);
+                return getTerms(retVal.getTerm(), true).get(0);
             }
         }catch(Exception e) {
             LOGGER.debug("Problem using Expressions API");
@@ -334,7 +387,7 @@ public class FoxEatsDemo {
      * @param term
      * @return
      */
-    private int[] getFingerprintSDR(String term) {
+    int[] getFingerprintSDR(String term) {
         return getFingerprintSDR(getFingerprint(term));
     }
     
@@ -345,7 +398,7 @@ public class FoxEatsDemo {
      * @param fp
      * @return
      */
-    private int[] getFingerprintSDR(Fingerprint fp) {
+    int[] getFingerprintSDR(Fingerprint fp) {
         return fp.getPositions();
     }
     
@@ -355,10 +408,10 @@ public class FoxEatsDemo {
      * @param term
      * @return
      */
-    private Fingerprint getFingerprint(String term) {
+    Fingerprint getFingerprint(String term) {
         try {
             Term t = cache.get(term) == null ?
-                termsApi.getTerm(term, true).get(0) :
+                getTerms(term, false).get(0) :
                     cache.get(term);
                 
             if(!checkTerm(t.getTerm(), t, true)) {
@@ -379,7 +432,7 @@ public class FoxEatsDemo {
      * Returns an {@link Iterator} over the list of string arrays (lines)
      * @return
      */
-    private Iterator<String[]> inputIterator() {
+    Iterator<String[]> inputIterator() {
         return input.iterator();
     }
     
@@ -390,8 +443,8 @@ public class FoxEatsDemo {
      * @param pathToFile
      * @return
      */
-    private List<String[]> readFile(String pathToFile) {
-        Stream<String> stream = getFileStream(pathToFile);
+    List<String[]> readInputData(String pathToFile) {
+        Stream<String> stream = getInputDataStream(pathToFile);
         
         List<String[]> list = stream.map(l -> { return (String[])l.split("[\\s]*\\,[\\s]*"); }).collect(Collectors.toList());
         
@@ -404,7 +457,7 @@ public class FoxEatsDemo {
      * @param pathToFile
      * @return
      */
-    private Stream<String> getFileStream(String pathToFile) {
+    Stream<String> getInputDataStream(String pathToFile) {
         File inputFile = null;
         Stream<String> retVal = null;
         
@@ -439,7 +492,7 @@ public class FoxEatsDemo {
      * 
      * @return
      */
-    private Parameters createParameters() {
+    Parameters createParameters() {
         Parameters tmParams = Parameters.getTemporalDefaultParameters();
         tmParams.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 16384 });
         tmParams.setParameterByKey(KEY.CELLS_PER_COLUMN, 8);
@@ -458,7 +511,7 @@ public class FoxEatsDemo {
      * Creates and returns a {@link Network} for demo processing
      * @return
      */
-    private Network createNetwork() {
+    Network createNetwork() {
         Parameters temporalParams = createParameters();
         network = Network.create("Cortical.io API Demo", temporalParams)
             .add(Network.createRegion("Region 1")
@@ -474,7 +527,7 @@ public class FoxEatsDemo {
      * @param it        an {@link Iterator} over the input source file lines
      * @return
      */
-    private String[] feedNetwork(Network network, Iterator<String[]> it) {
+    String[] feedNetwork(Network network, Iterator<String[]> it) {
         for(;it.hasNext();) {
             String[] next = it.next();
             
@@ -498,7 +551,7 @@ public class FoxEatsDemo {
      * @param it        an {@link Iterator} over the input source file lines
      * @return
      */
-    private Term feedQuestion(Network network, String[] phrase) {
+    Term feedQuestion(Network network, String[] phrase) {
         for(int i = 0;i < 2;i++) {
             int[] sdr = getFingerprintSDR(phrase[i]);
             network.compute(sdr);
@@ -518,7 +571,7 @@ public class FoxEatsDemo {
         }
         
         // Extract api key from arguments
-        String apiKey = args[0].substring(2);
+        String apiKey = args[0].substring(2).trim();
         
         // Instantiate the Demo
         FoxEatsDemo demo = new FoxEatsDemo("foxeat.csv");
