@@ -24,7 +24,13 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.Parameters;
+import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.paint.Color;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.Network;
@@ -59,7 +65,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author cogmission
  *
  */
-public class FoxEatsDemo {
+public class FoxEatsDemo extends Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(FoxEatsDemo.class);
     
     private static final String RETINA_NAME = "en_associative";    
@@ -85,15 +91,31 @@ public class FoxEatsDemo {
     private Network network;
     
     
+    
     /**
-     * Constructs a new Network API demo to demonstrate interaction with
-     * the Cortical.io API specifically.
-     * 
-     * @param pathToSource
+     * Constructs a new demo class.
      */
-    public FoxEatsDemo(String pathToSource) {
-        this.filePath = pathToSource;
+    public FoxEatsDemo() {
+        
+    }
+    
+    /**
+     * Constructs a new demo object with the specified input
+     * file path.
+     * 
+     * @param path
+     */
+    public FoxEatsDemo(String path) {
+        this.filePath = "foxeat.csv";
         this.input = readInputData(filePath);
+    }
+    
+    void setDataFilePath(String path) {
+        this.filePath = path;
+    }
+    
+    void setInputData(List<String[]> inputData) {
+        this.input = inputData;
     }
     
     /**
@@ -492,8 +514,8 @@ public class FoxEatsDemo {
      * 
      * @return
      */
-    Parameters createParameters() {
-        Parameters tmParams = Parameters.getTemporalDefaultParameters();
+    org.numenta.nupic.Parameters createParameters() {
+        org.numenta.nupic.Parameters tmParams = org.numenta.nupic.Parameters.getTemporalDefaultParameters();
         tmParams.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 16384 });
         tmParams.setParameterByKey(KEY.CELLS_PER_COLUMN, 8);
         tmParams.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.5);
@@ -512,7 +534,7 @@ public class FoxEatsDemo {
      * @return
      */
     Network createNetwork() {
-        Parameters temporalParams = createParameters();
+        org.numenta.nupic.Parameters temporalParams = createParameters();
         network = Network.create("Cortical.io API Demo", temporalParams)
             .add(Network.createRegion("Region 1")
                 .add(Network.createLayer("Layer 2/3", temporalParams)
@@ -533,14 +555,24 @@ public class FoxEatsDemo {
             
             if(!it.hasNext()) return next;
             
-            for(String term : next) {
-                int[] sdr = getFingerprintSDR(term);
-                network.compute(sdr);
-            }
-            network.reset();
+            feedLine(network, next);
         }
         
         return null;
+    }
+    
+    /**
+     * Feeds a single array of phrase words into the {@link Network}.
+     * 
+     * @param network
+     * @param phrase
+     */
+    void feedLine(Network network, String[] phrase) {
+        for(String term : phrase) {
+            int[] sdr = getFingerprintSDR(term);
+            network.compute(sdr);
+        }
+        network.reset();
     }
     
     /**
@@ -564,39 +596,28 @@ public class FoxEatsDemo {
         return term;
     }
     
-    public static void main(String[] args) {
+    @Override
+    public void start(Stage stage) throws Exception {
+        Application.Parameters params = getParameters();
+        List<String> paramList = params.getUnnamed();
+        
         // Check for the existence of a proper API Key
-        if(args.length < 1 || !args[0].startsWith("-K")) {
+        if(paramList.size() < 1 || !paramList.get(0).startsWith("-K")) {
             throw new IllegalStateException("Demo must be started with arguments [-K]<your-api-key>");
         }
         
-        // Extract api key from arguments
-        String apiKey = args[0].substring(2).trim();
+        FoxEatsDemoView view = new FoxEatsDemoView(this, params);
+        Scene scene = new Scene(view, 600, 600, Color.WHITE);
+        stage.setScene(scene);
+        stage.show();
         
-        // Instantiate the Demo
-        FoxEatsDemo demo = new FoxEatsDemo("foxeat.csv");
-        demo.loadCache();
+        Rectangle2D primScreenBounds = Screen.getPrimary(). getVisualBounds(); 
+        stage.setX(( primScreenBounds.getWidth() - stage.getWidth()) / 2); 
+        stage.setY(( primScreenBounds.getHeight() - stage.getHeight()) / 4);
         
-        // Test api connection by executing dummy query
-        boolean success = demo.connectionValid(apiKey);
-        if(!success) {
-            throw new RuntimeException(new ApiException());
-        }
-
-        // Create the Network
-        Network network = demo.createNetwork();
-
-        // Returns the last line of the file which is has the question terms: "fox, eats, <something>"
-        String[] question = demo.feedNetwork(network, demo.inputIterator());
-        
-        // Returns the Term for the answer to what a fox eats.
-        Term answer = demo.feedQuestion(network, question);
-        
-        // Print it to standard out. (For now...)
-        System.out.println("What does a fox eat? Answer: " + answer.getTerm());
-        
-        // Cache fingerprints
-        demo.writeCache();
-        
+    }
+    
+    public static void main(String[] args) {
+        launch(args);
     }
 }

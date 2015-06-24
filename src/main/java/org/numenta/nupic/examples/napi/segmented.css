@@ -1,0 +1,74 @@
+#buttonbar {
+    -border-blue: rgb(36, 87, 145);
+    -blue-highlight: rgb(78, 137, 198);
+    -blue-gradient-start: rgb(52, 117, 188);
+    -light-black: rgb(74, 75, 78);
+    -dark-highlight: rgb(87, 89, 92);
+    -dark-black: rgb(39, 40, 40);
+    -darkest-black: rgb(5, 5, 5);
+    -mid-gray: rgb(216, 222, 227);
+    -fx-background-color: -mid-gray;
+}
+
+#iphone Text {
+    -fx-effect: dropshadow( one-pass-box , rgba(0,0,0,0.8) , 0, 0.0 , 0 , -1 );
+}
+
+.segmented-button-bar .button {
+    -fx-background-color:
+        -border-blue,
+        -blue-highlight,
+        linear-gradient(to bottom, -blue-gradient-start 2%, -border-blue 98%);
+    -fx-background-insets: 0, 1 1 1 0, 2 1 1 1;
+    -fx-background-radius: 0;
+    -fx-padding: 0.4em 1.833333em 0.4em 1.833333em;
+    -fx-text-fill: white;
+}
+ 
+.segmented-button-bar .button.first {
+    -fx-background-insets: 0, 1, 2 1 1 1;
+    -fx-background-radius: 4 0 0 4, 3 0 0 3, 3 0 0 3;
+}
+ 
+.segmented-button-bar .button.last {
+    -fx-background-insets: 0, 1 1 1 0, 2 1 1 1;
+    -fx-background-radius: 0 4 4 0, 0 3 3 0, 0 3 3 0;
+}
+ 
+.segmented-button-bar .button:pressed {
+    -fx-background-color:
+        -border-blue,
+        -blue-highlight,
+        linear-gradient(to top, -blue-highlight 2%, -border-blue 98%);
+}
+
+
+.segmented-button-bar .toggle-button {
+    -fx-background-color:
+        -border-blue,
+        -blue-highlight,
+        linear-gradient(to bottom, -blue-gradient-start 2%, -border-blue 98%);
+    -fx-background-insets: 0, 1 1 1 0, 2 1 1 1;
+    -fx-background-radius: 0;
+    -fx-padding: 0.4em 1.833333em 0.4em 1.833333em;
+    -fx-text-fill: white;
+}
+ 
+.segmented-button-bar .toggle-button.first {
+    -fx-background-insets: 0, 1, 2 1 1 1;
+    -fx-background-radius: 4 0 0 4, 3 0 0 3, 3 0 0 3;
+}
+ 
+.segmented-button-bar .toggle-button.last {
+    -fx-background-insets: 0, 1 1 1 0, 2 1 1 1;
+    -fx-background-radius: 0 4 4 0, 0 3 3 0, 0 3 3 0;
+}
+ 
+.segmented-button-bar .toggle-button:selected {
+    -fx-background-color:
+        -border-blue,
+        -blue-highlight,
+        linear-gradient(to top, -blue-highlight 2%, -border-blue 98%);
+    -fx-font-weight: bold;
+}
+

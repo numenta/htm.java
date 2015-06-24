@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.numenta.nupic.examples.napi.*?>
+ 
+<SegmentedButtonBar id="buttonbar" stylesheets="@./segmented.css" xmlns:fx="http://javafx.com/fxml"/>
