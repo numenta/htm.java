@@ -445,13 +445,16 @@ public class ScalarEncoder extends Encoder<Double> {
 			ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
 		}
 
-		LOGGER.trace("");
-		LOGGER.trace("input: " + input);
-		LOGGER.trace("range: " + getMinVal() + " - " + getMaxVal());
-		LOGGER.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
-				"radius:" + getRadius() + "periodic:" + isPeriodic());
-		LOGGER.trace("output: " + Arrays.toString(output));
-		LOGGER.trace("input desc: " + decode(output, ""));
+		// Added guard against immense string concatenation
+		if(LOGGER.isTraceEnabled()) {
+    		LOGGER.trace("");
+    		LOGGER.trace("input: " + input);
+    		LOGGER.trace("range: " + getMinVal() + " - " + getMaxVal());
+    		LOGGER.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
+    				"radius:" + getRadius() + "periodic:" + isPeriodic());
+    		LOGGER.trace("output: " + Arrays.toString(output));
+    		LOGGER.trace("input desc: " + decode(output, ""));
+		}
 	}
 
 	/**
