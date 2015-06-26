@@ -62,9 +62,25 @@ public class MersenneTwisterFastTest {
     }
     
     @Test
+    public void testNextBytes() {
+        MersenneTwisterFast m = new MersenneTwisterFast(42);
+        try {
+            m.nextBytes(new byte[] { 0x00 });
+        }catch(Exception e) {
+            fail();
+        }
+    }
+    
+    @Test
     public void testNextLong() {
         MersenneTwisterFast m = new MersenneTwisterFast(42);
         assertTrue(m.nextLong() > 0);
+    }
+    
+    @Test
+    public void testNextLongBoundary() {
+        MersenneTwisterFast m = new MersenneTwisterFast(42);
+        assertTrue(m.nextLong(4) < 4);
     }
     
     @Test
@@ -102,7 +118,16 @@ public class MersenneTwisterFastTest {
     @Test
     public void testNextIntBoundary() {
         MersenneTwisterFast m = new MersenneTwisterFast(42);
-        assertTrue(m.nextInt(3) < 3);
+        assertTrue(m.nextInt(4) < 4);
+    }
+    
+    @Test
+    public void testMain() {
+        try {
+            MersenneTwisterFast.main(new String[0]);
+        }catch(Exception e) {
+            fail();
+        }
     }
 
 }
