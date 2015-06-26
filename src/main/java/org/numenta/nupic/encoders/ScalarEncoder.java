@@ -414,48 +414,47 @@ public class ScalarEncoder extends Encoder<Double> {
 	 * @param inputData Data to encode. This should be validated by the encoder.
 	 * @param output 1-D array of same length returned by {@link Connections#getW()}
      */
-	@Override
-	public void encodeIntoArray(Double input, int[] output) {
-		if(Double.isNaN(input)) {
-			Arrays.fill(output, 0);
-			return;
-		}
-
-		Integer bucketVal = getFirstOnBit(input);
-		if(bucketVal != null) {
-			int bucketIdx = bucketVal;
-			Arrays.fill(output, 0);
-			int minbin = bucketIdx;
-			int maxbin = minbin + 2*getHalfWidth();
-			if(isPeriodic()) {
-				if(maxbin >= getN()) {
-					int bottombins = maxbin - getN() + 1;
-					int[] range = ArrayUtils.range(0, bottombins);
-					ArrayUtils.setIndexesTo(output, range, 1);
-					maxbin = getN() - 1;
-				}
-				if(minbin < 0) {
-					int topbins = -minbin;
-					ArrayUtils.setIndexesTo(
-						output, ArrayUtils.range(getN() - topbins, getN()), 1);
-					minbin = 0;
-				}
-			}
-
-			ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
-		}
-
-		// Added guard against immense string concatenation
-		if(LOGGER.isTraceEnabled()) {
-    		LOGGER.trace("");
-    		LOGGER.trace("input: " + input);
-    		LOGGER.trace("range: " + getMinVal() + " - " + getMaxVal());
-    		LOGGER.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
-    				"radius:" + getRadius() + "periodic:" + isPeriodic());
-    		LOGGER.trace("output: " + Arrays.toString(output));
-    		LOGGER.trace("input desc: " + decode(output, ""));
-		}
-	}
+    @Override
+    public void encodeIntoArray(Double input, int[] output) {
+        if(Double.isNaN(input)) {
+            Arrays.fill(output, 0);
+            return;
+        }
+    
+        Integer bucketVal = getFirstOnBit(input);
+        if(bucketVal != null) {
+            int bucketIdx = bucketVal;
+            Arrays.fill(output, 0);
+            int minbin = bucketIdx;
+            int maxbin = minbin + 2*getHalfWidth();
+            if(isPeriodic()) {
+                if(maxbin >= getN()) {
+                    int bottombins = maxbin - getN() + 1;
+                    int[] range = ArrayUtils.range(0, bottombins);
+                    ArrayUtils.setIndexesTo(output, range, 1);
+                    maxbin = getN() - 1;
+                }
+                if(minbin < 0) {
+                    int topbins = -minbin;
+                    ArrayUtils.setIndexesTo(output, ArrayUtils.range(getN() - topbins, getN()), 1);
+                    minbin = 0;
+                }
+            }
+    
+            ArrayUtils.setIndexesTo(output, ArrayUtils.range(minbin, maxbin + 1), 1);
+        }
+    
+        // Added guard against immense string concatenation
+        if(LOGGER.isTraceEnabled()) {
+            LOGGER.trace("");
+            LOGGER.trace("input: " + input);
+            LOGGER.trace("range: " + getMinVal() + " - " + getMaxVal());
+            LOGGER.trace("n:" + getN() + "w:" + getW() + "resolution:" + getResolution() +
+                "radius:" + getRadius() + "periodic:" + isPeriodic());
+            LOGGER.trace("output: " + Arrays.toString(output));
+            LOGGER.trace("input desc: " + decode(output, ""));
+        }
+    }
 
 	/**
 	 * Returns a {@link DecodeResult} which is a tuple of range names
