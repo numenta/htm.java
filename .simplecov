@@ -3,6 +3,6 @@ require 'coveralls'
 
 SimpleCov.formatter = Coveralls::SimpleCov::Formatter
 SimpleCov.start do
-   add_filter 'util/Mersenne'
+   add_filter 'util/Mersenne*'
 end
 
