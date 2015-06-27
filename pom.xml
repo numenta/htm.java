@@ -114,6 +114,12 @@
       <version>1.0.10</version>
       <scope/>
     </dependency>
+    <dependency>
+      <groupId>io.cortical</groupId>
+      <artifactId>retina-service-java-api-client</artifactId>
+      <version>2.2.1</version>
+      <scope/>
+    </dependency>
   </dependencies>
 
   <build>

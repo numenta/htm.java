@@ -338,13 +338,24 @@ public class FoxEatsDemo {
         Fingerprint fp = new Fingerprint(sdr);
         try {
             List<Term> terms = getSimilarTerms(fp);
+            
+            // Retrieve terms from cache if present
+            for(int i = 0;i < terms.size();i++) {
+                if(cache.containsKey(terms.get(i).getTerm())) {
+                    terms.set(i, cache.get(terms.get(i).getTerm()));
+                }
+            }
+            
             Term retVal = null;
             if(terms != null && terms.size() > 0) {
                 retVal = terms.get(0);
                 if(checkTerm(retVal.getTerm(), retVal, true)) {
                     return retVal;
                 }
-                return getTerms(retVal.getTerm(), true).get(0);
+                
+                // Cache fall through incomplete term for next time
+                cache.put(retVal.getTerm(), retVal = getTerms(retVal.getTerm(), true).get(0));
+                return retVal;
             }
         }catch(Exception e) {
             LOGGER.debug("Problem using Expressions API");
