@@ -6,7 +6,7 @@ integration of HTM technology ([NuPIC](https://github.com/numenta/nupic)); [Cort
 technology; and the [HTM.java Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html).
 
 This demo demonstrates the powerful similarity and word association technology of
-Cortial.io and the generalization power of HTM technology by "teaching" the HTM triplets
+Cortical.io and the generalization power of HTM technology by "teaching" the HTM triplets
 of animals, actions, and objects such as "frog eats flies", and "cow eat grain". After
 presenting the HTM with 36 different examples of triplet animal "preferences", we then
 ask the HTM what a "fox" would eat.

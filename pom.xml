@@ -4,7 +4,7 @@
 
   <groupId>org.numenta</groupId>
   <artifactId>htm.java</artifactId>
-  <version>0.5.2-SNAPSHOT</version>
+  <version>0.5.1</version>
   <name>htm.java</name>
   <description>The Java version of Numenta's HTM technology</description>
 
@@ -113,7 +113,7 @@
       <artifactId>rxjava</artifactId>
       <version>1.0.10</version>
       <scope/>
-    </dependency> 
+    </dependency>
     <dependency>
       <groupId>io.cortical</groupId>
       <artifactId>retina-service-java-api-client</artifactId>
