@@ -280,6 +280,190 @@ public class HTMSensorTest {
     }
     
     /**
+     * Tests that a meaningful exception is thrown when no list category encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testListCategoryEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("list")
+            .addHeader("C")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no string category encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testStringCategoryEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("string")
+            .addHeader("C")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no date encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testDateEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("datetime")
+            .addHeader("T")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null, 
+            25, 
+            3, 
+            0, 0, 0, 0.1, null, null, null, 
+            "consumption", "float", "RandomDistributedScalarEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no geo encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testGeoEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("geo")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no coordinate encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testCoordinateEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("coord")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no int number encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testIntNumberEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("int")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no float number encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testFloatNumberEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("float")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no boolean encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testBoolEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("bool")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
      * Tests the auto-creation of Encoders from Sensor meta data.
      */
     @Test
