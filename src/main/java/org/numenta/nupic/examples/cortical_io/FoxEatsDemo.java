@@ -25,11 +25,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
@@ -78,6 +82,12 @@ public class FoxEatsDemo extends Application {
         concat(".cortical").concat(File.separator).concat("cache");
     
     private static final Random RANDOM = new MersenneTwister(42);
+    
+    private ObjectProperty<String[]> phraseEntryProperty = new SimpleObjectProperty<>();
+    private ObjectProperty<String[]> phraseEndedProperty = new SimpleObjectProperty<>();
+    
+    private String[] finalResult;
+    private Callback<String[], Void> callback;
     
     private String apiKey = "";
     private String filePath;
@@ -312,7 +322,6 @@ public class FoxEatsDemo extends Application {
             RetinaApis ra = new RetinaApis(RETINA_NAME, RETINA_IP, this.apiKey);
             termsApi = ra.termsApi();
             exprApi = ra.expressionsApi();
-            System.out.println(Arrays.toString(termsApi.getTerm("apple", false).get(0).getFingerprint().getPositions()));
             
             LOGGER.debug("Successfully initialized retinal api");
             
@@ -561,15 +570,65 @@ public class FoxEatsDemo extends Application {
      * @return
      */
     String[] feedNetwork(Network network, Iterator<String[]> it) {
+        (new Thread() {
+            public void run() {
+                for(;it.hasNext();) {
+                    String[] next = it.next();
+                    
+                    phraseEntryProperty.set(next);
+                    
+                    if(!it.hasNext()) {
+                        phraseEndedProperty.set(next);
+                        finalResult = next;
+                        break;
+                    }
+                    
+                    feedLine(network, next);
+                }
+                
+                Platform.runLater(() -> { callback.call(finalResult); });
+            }
+        }).start();
+        
+        return null;
+    }
+    
+    /**
+     * <em>WARNING:</em> For test only!
+     * 
+     * Runs same method as {@link #feedNetwork(Network, Iterator)} without
+     * threading.
+     * 
+     * Feeds the specified {@link Network} with the contents of the specified
+     * {@link Iterator}
+     * @param network   the current {@link Network} object
+     * @param it        an {@link Iterator} over the input source file lines
+     * @return
+     */
+    String[] feedNetworkForTest(Network network, Iterator<String[]> it) {
         for(;it.hasNext();) {
             String[] next = it.next();
             
-            if(!it.hasNext()) return next;
+            phraseEntryProperty.set(next);
+            
+            if(!it.hasNext()) {
+                phraseEndedProperty.set(next);
+                finalResult = next;
+                break;
+            }
             
             feedLine(network, next);
         }
         
-        return null;
+        return finalResult;
+    }
+    
+    /**
+     * Called by "view" for notification of feed completion.
+     * @param c
+     */
+    void setCallBack(Callback<String[], Void> c) {
+        this.callback = c;
     }
     
     /**
@@ -583,7 +642,26 @@ public class FoxEatsDemo extends Application {
             int[] sdr = getFingerprintSDR(term);
             network.compute(sdr);
         }
+        
         network.reset();
+    }
+    
+    /**
+     * Returns a property which can be monitored for new phrase entries.
+     * 
+     * @return
+     */
+    ObjectProperty<String[]> getPhraseEntryProperty() {
+        return phraseEntryProperty;
+    }
+    
+    /**
+     * Returns a property which can be monitored for new phrase entries.
+     * 
+     * @return
+     */
+    ObjectProperty<String[]> getPhraseEndedProperty() {
+        return phraseEndedProperty;
     }
     
     /**
@@ -618,7 +696,7 @@ public class FoxEatsDemo extends Application {
         }
         
         FoxEatsDemoView view = new FoxEatsDemoView(this, params);
-        Scene scene = new Scene(view, 600, 600, Color.WHITE);
+        Scene scene = new Scene(view, 900, 600, Color.WHITE);
         stage.setScene(scene);
         stage.show();
         
