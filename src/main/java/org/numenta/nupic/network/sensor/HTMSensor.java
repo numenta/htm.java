@@ -146,49 +146,46 @@ public class HTMSensor<T> implements Sensor<T> {
      * which services the encoding of the field occurring in that position. This
      * sequence of types is contained by an instance of {@link Header} which
      * makes available an array of {@link FieldMetaType}s.
-     *    
      */
     private void makeIndexEncoderMap() {
         indexToEncoderMap = new TIntObjectHashMap<Encoder<?>>();
         
-        final FieldMetaType[] fieldTypes = header.getFieldTypes().toArray(new FieldMetaType[header.getFieldTypes().size()]);
-        
-        for(int i = 0;i < fieldTypes.length;i++) {
-            switch(fieldTypes[i]) {
+        for (int i = 0, size = header.getFieldNames().size(); i < size; i++) {
+            switch (header.getFieldTypes().get(i)) {
                 case DATETIME:
                     Optional<DateEncoder> de = getDateEncoder(encoder);
-                    if(de.isPresent()) {
+                    if (de.isPresent()) {
                         indexToEncoderMap.put(i, de.get());
-                    }else{
-                        throw new IllegalArgumentException("DateEncoder never initialized.");
+                    } else {
+                        throw new IllegalArgumentException("DateEncoder never initialized: " + header.getFieldNames().get(i));
                     }
                     break;
                 case BOOLEAN:
                 case FLOAT:
                 case INTEGER:
-                    Optional<Encoder<?>> opt = getNumberEncoder(encoder);
-                    if(opt.isPresent()) {
-                        indexToEncoderMap.put(i, opt.get());
-                    }else{
-                        throw new IllegalArgumentException("Number (Boolean also) encoder never initialized.");
+                    Optional<Encoder<?>> ne = getNumberEncoder(encoder);
+                    if (ne.isPresent()) {
+                        indexToEncoderMap.put(i, ne.get());
+                    } else {
+                        throw new IllegalArgumentException("Number (or Boolean) encoder never initialized: " + header.getFieldNames().get(i));
                     }
                     break;
                 case LIST:
                 case STRING:
-                    opt = getCategoryEncoder(encoder);
-                    if(opt.isPresent()) {
-                        indexToEncoderMap.put(i, opt.get());
-                    }else{
-                        throw new IllegalArgumentException("Category encoder never initialized.");
+                    Optional<Encoder<?>> ce = getCategoryEncoder(encoder);
+                    if (ce.isPresent()) {
+                        indexToEncoderMap.put(i, ce.get());
+                    } else {
+                        throw new IllegalArgumentException("Category encoder never initialized: " + header.getFieldNames().get(i));
                     }
                     break;
                 case COORD:
                 case GEO:
-                    opt = getCoordinateEncoder(encoder);
-                    if(opt.isPresent()) {
-                        indexToEncoderMap.put(i, opt.get());
-                    }else{
-                        throw new IllegalArgumentException("Coordinate encoder never initialized.");
+                    Optional<Encoder<?>> ge = getCoordinateEncoder(encoder);
+                    if (ge.isPresent()) {
+                        indexToEncoderMap.put(i, ge.get());
+                    } else {
+                        throw new IllegalArgumentException("Coordinate encoder never initialized: " + header.getFieldNames().get(i));
                     }
                     break;
                 default:
@@ -432,7 +429,7 @@ public class HTMSensor<T> implements Sensor<T> {
             }
         }
         
-        return null;
+        return Optional.empty();
     }
     
     /**
@@ -451,7 +448,7 @@ public class HTMSensor<T> implements Sensor<T> {
             }
         }
         
-        return null;
+        return Optional.empty();
     }
     
     /**
@@ -468,7 +465,7 @@ public class HTMSensor<T> implements Sensor<T> {
            }
        }
        
-       return Optional.of(null);
+       return Optional.empty();
     }
     
     /**
@@ -492,7 +489,7 @@ public class HTMSensor<T> implements Sensor<T> {
             }
         }
         
-        return Optional.of(null);
+        return Optional.empty();
      }
     
     /**
