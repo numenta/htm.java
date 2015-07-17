@@ -44,6 +44,7 @@ import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 
+import rx.Observer;
 import rx.Subscriber;
 
 /**
@@ -66,7 +67,7 @@ import rx.Subscriber;
  */
 public class NetworkAPIDemo {
     /** 3 modes to choose from to demonstrate network usage */
-    private static enum Mode { BASIC, MULTILAYER, MULTIREGION };
+    static enum Mode { BASIC, MULTILAYER, MULTIREGION };
     
     private Network network;
     
@@ -95,7 +96,7 @@ public class NetworkAPIDemo {
      * 
      * @return  a basic Network
      */
-    private Network createBasicNetwork() {
+    Network createBasicNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
         
@@ -118,7 +119,7 @@ public class NetworkAPIDemo {
      * 
      * @return  a multi-layer Network
      */
-    private Network createMultiLayerNetwork() {
+    Network createMultiLayerNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
         
@@ -143,7 +144,7 @@ public class NetworkAPIDemo {
      * 
      * @return a multi-region Network
      */
-    private Network createMultiRegionNetwork() {
+    Network createMultiRegionNetwork() {
         Parameters p = NetworkDemoHarness.getParameters();
         p = p.union(NetworkDemoHarness.getNetworkDemoTestEncoderParams());
         
@@ -183,7 +184,7 @@ public class NetworkAPIDemo {
      * 
      * @return
      */
-    private Subscriber<Inference> getSubscriber() {
+    Subscriber<Inference> getSubscriber() {
         
         return new Subscriber<Inference>() {
             @Override public void onCompleted() {
