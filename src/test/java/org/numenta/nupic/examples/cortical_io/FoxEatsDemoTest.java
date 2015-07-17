@@ -633,7 +633,7 @@ public class FoxEatsDemoTest {
             }
         });
         
-        mockDemo.feedNetwork(testNet, it);
+        mockDemo.feedNetworkForTest(testNet, it);
         
         assertTrue(testVar > 0);
     }
