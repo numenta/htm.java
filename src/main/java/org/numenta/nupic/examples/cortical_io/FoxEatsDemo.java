@@ -453,7 +453,7 @@ public class FoxEatsDemo extends Application {
     Fingerprint getFingerprint(String term) {
         try {
             Term t = cache.get(term) == null ?
-                getTerms(term, false).get(0) :
+                getTerms(term, true).get(0) :
                     cache.get(term);
                 
             if(!checkTerm(t.getTerm(), t, true)) {

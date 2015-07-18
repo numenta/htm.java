@@ -103,7 +103,7 @@ public class FoxEatsDemoView extends GridPane {
     }
     
     public LabelledRadiusPane getDisplayPane() {
-        LabelledRadiusPane left = new LabelledRadiusPane("Input Tweet");
+        LabelledRadiusPane left = new LabelledRadiusPane("Input Phrases");
         lArea = new TextArea();
         lArea.setWrapText(true);
         lArea.setFont(Font.font("Helvetica", FontWeight.MEDIUM, 16));
