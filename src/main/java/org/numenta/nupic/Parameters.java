@@ -389,6 +389,14 @@ public class Parameters {
     private final Map<Parameters.KEY, Object> paramMap = Collections.synchronizedMap(new ParametersMap());
 
     //TODO apply from container to parameters
+    
+    /**
+     * Returns the size of the internal parameter storage.
+     * @return
+     */
+    public int size() {
+        return paramMap.size();
+    }
 
     /**
      * Factory method. Return global {@link Parameters} object with default values

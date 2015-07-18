@@ -199,7 +199,7 @@ public class TemporalMemory {
         Map<DistalDendrite, Set<Synapse>> prevActiveSynapsesForSegment) {
         
     	activeColumns.removeAll(predictedColumns);
-        for(Column column : activeColumns) {
+    	for(Column column : activeColumns) {
             List<Cell> cells = column.getCells();
             cycle.activeCells.addAll(cells);
             

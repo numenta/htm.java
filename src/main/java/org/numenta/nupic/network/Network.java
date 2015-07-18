@@ -30,7 +30,7 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.examples.network.NetworkAPIDemo;
+import org.numenta.nupic.examples.napi.NetworkAPIDemo;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
@@ -143,7 +143,7 @@ import rx.Observable;
  * }
  * </pre>
  * 
- * In addition there are many usage examples to be found in the {@link org.numenta.nupic.examples.network} package
+ * In addition there are many usage examples to be found in the {@link org.numenta.nupic.examples.napi} package
  * where there are tests which may be examined for details, and the {@link NetworkAPIDemo}
  * 
  * @author David Ray
