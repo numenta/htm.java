@@ -10,17 +10,8 @@ Cortical.io and the generalization power of HTM technology by "teaching" the HTM
 of animals, actions, and objects such as "frog eats flies", and "cow eat grain". After
 presenting the HTM with 36 different examples of triplet animal "preferences", we then
 ask the HTM what a "fox" would eat.
-```
-...
-coyote,eat,rabbit
-wolf,eat,squirrel
-dog,likes,sleep
-cat,eat,salmon
-cat,likes,ball
-cow,eat,grass
 
-But what does a fox eat?  
-```
+![](http://cognitionmission.com/foxeats.png)
 
 The HTM, having never "seen" the word fox before, comes back with "rodent" or "squirrel",
 which is what an animal that is "fox-like" might eat. Cortical.io's "Semantic Folding" 
