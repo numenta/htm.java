@@ -575,12 +575,12 @@ public class FoxEatsDemo extends Application {
                 for(;it.hasNext();) {
                     String[] next = it.next();
                     
-                    phraseEntryProperty.set(next);
-                    
                     if(!it.hasNext()) {
                         phraseEndedProperty.set(next);
                         finalResult = next;
                         break;
+                    }else{
+                        phraseEntryProperty.set(next);
                     }
                     
                     feedLine(network, next);
