@@ -1,4 +1,4 @@
-package org.numenta.nupic.examples.cortical_io;
+package org.numenta.nupic.examples.cortical_io.foxeats;
 
 import io.cortical.fx.webstyle.CorticalLogoBackground;
 import io.cortical.fx.webstyle.LabelledRadiusPane;

@@ -1,4 +1,4 @@
-package org.numenta.nupic.examples.cortical_io;
+package org.numenta.nupic.examples.cortical_io.foxeats;
 
 import gnu.trove.list.array.TIntArrayList;
 import io.cortical.rest.model.Fingerprint;

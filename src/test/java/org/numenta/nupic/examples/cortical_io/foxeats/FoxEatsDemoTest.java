@@ -1,4 +1,4 @@
-package org.numenta.nupic.examples.cortical_io;
+package org.numenta.nupic.examples.cortical_io.foxeats;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.examples.cortical_io.foxeats.FoxEatsDemo;
 import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
