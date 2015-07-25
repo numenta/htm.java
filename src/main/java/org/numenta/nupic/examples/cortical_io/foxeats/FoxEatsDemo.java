@@ -457,7 +457,7 @@ public class FoxEatsDemo extends Application {
                     cache.get(term);
                 
             if(!checkTerm(t.getTerm(), t, true)) {
-                System.exit(1);
+                throw new IllegalStateException("Checkterm failed: " + t.getTerm());
             }
                 
             cache.put(t.getTerm(), t);
