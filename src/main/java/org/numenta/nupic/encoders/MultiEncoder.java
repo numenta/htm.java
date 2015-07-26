@@ -100,7 +100,7 @@ public class MultiEncoder extends Encoder<Object> {
             }catch(Exception e) {
                 System.out.println("input = " + input + ", name = " + name + ",  inputValue = " + getInputValue(input, name));
                 e.printStackTrace();
-                System.exit(1);
+                throw new IllegalStateException(e);
             }
 
             System.arraycopy(tempArray, 0, output, offset, tempArray.length);
