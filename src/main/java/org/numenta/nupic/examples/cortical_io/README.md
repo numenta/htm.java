@@ -2,7 +2,9 @@
 # Example Demos
 _(Illustrating the integration of [NuPIC](https://github.com/numenta/nupic) & [Cortical.io](http://cortical.io))_
 
-This directory is the collecting place for programs which demonstrate the use of Cortical.io's Java API together with NuPIC.
+This directory is the collecting place for programs which demonstrate the use of Cortical.io's Java API together with NuPIC. 
+
+> _Usage instructions are located in directories pointed to by the links (demo titles) below._
 
 1. [**Fox Eats Demo**](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io/foxeats) - Java version of Subutai Ahmad's 2013 Fall Hackathon project which integrates Cortical.io's API to determine semantic similarity between the diet of animals. ([Executable Jar](http://cognitionmission.com/FoxEatsDemo.jar))
 
