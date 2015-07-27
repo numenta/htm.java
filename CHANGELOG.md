@@ -23,4 +23,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Tests for the above demos
 - Executable Jar files for the above demos
 - New wiki pages for demo orientation and instructions
-- New JavaDocs for demo packages and classes
+- New JavaDocs for demo packages and classes (2015-07-27, Brev Patterson)
