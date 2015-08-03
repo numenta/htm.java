@@ -38,6 +38,7 @@ import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
 
 import rx.Observable;
+import rx.Subscriber;
 
 /**
  * <p>
@@ -163,7 +164,7 @@ public class Network {
     private Region head;
     private Region tail;
     private Region sensorRegion;
-
+    
     private List<Region> regions = new ArrayList<>();
 
     /**
@@ -359,11 +360,49 @@ public class Network {
      * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     public <T> void compute(T input) {
-        if(regions.size() == 1) {
+        if(tail == null && regions.size() == 1) {
             this.tail = regions.get(0);
         }
         
+        if(head == null) {
+            addDummySubscriber();
+        }
+        
         tail.compute(input);
+    }
+    
+    /**
+     * Used to manually input data into a {@link Network} in a synchronous way, the other way 
+     * being the call to {@link Network#start()} for a Network that contains a
+     * Region that contains a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
+     * subscribing a receiving Region to this Region's output Observable.
+     * 
+     * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
+     */
+    public <T> Inference computeImmediate(T input) {
+        if(tail == null && regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        
+        if(head == null) {
+            addDummySubscriber();
+        }
+        
+        tail.compute(input);
+        return head.getHead().getInference();
+    }
+    
+    /**
+     * Added when a synchronous call is made and there is no subscriber. No
+     * Subscriber leads to the observable chain not being constructed, therefore
+     * we must always have at least one subscriber.
+     */
+    private void addDummySubscriber() {
+        observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {}
+        });
     }
 
     /**
