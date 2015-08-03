@@ -441,5 +441,53 @@ public class NetworkTest {
         multiInput.put("dayOfWeek", 5.0);
         n.compute(multiInput);
     }
-
+    
+    @Test
+    public void testSynchronousBlockingComputeCall() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build())));
+        
+        boolean gotResult = false;
+        final int NUM_CYCLES = 400;
+        final int INPUT_GROUP_COUNT = 7; // Days of Week
+        Map<String, Object> multiInput = new HashMap<>();
+        for(int i = 0;i < NUM_CYCLES;i++) {
+            for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
+                multiInput.put("dayOfWeek", j);
+                Inference inf = n.computeImmediate(multiInput);
+                if(inf.getPredictedColumns().length > 6) {
+                    assertTrue(inf.getPredictedColumns() != null);
+                    // Make sure we've gotten all the responses
+                    assertEquals((i * 7) + (int)j, inf.getRecordNum());
+                    gotResult = true;
+                    break;
+                }
+            }
+            if(gotResult) {
+                break;
+            }
+        }
+         
+        assertTrue(gotResult);
+    }
+    
 }
