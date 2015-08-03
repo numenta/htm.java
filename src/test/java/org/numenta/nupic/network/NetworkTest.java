@@ -277,9 +277,7 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                System.out.println("rec # = " + i.getRecordNum());
                 if(netInference.getPredictedColumns().length > 15) {
-                    
                     network.halt();
                 }
             }
@@ -300,7 +298,7 @@ public class NetworkTest {
             }
         });
         
-        r2.start();
+        network.start();
         
         // Let run for 5 secs.
         try {
@@ -310,7 +308,6 @@ public class NetworkTest {
             assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
                 bottomInference.getPredictedColumns()));
             assertTrue(topInference.getPredictedColumns().length > 0);
-            System.out.println("length = " + topInference.getPredictedColumns().length);
             assertTrue(bottomInference.getPredictedColumns().length > 0);
         }catch(Exception e) {
             e.printStackTrace();
