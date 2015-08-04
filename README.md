@@ -21,7 +21,7 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 
 ### View [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Newly Added! 2015-07-27)
 * Change log itemizes the release history.
-* Contains an **"Unreleased" section** which lays out changes due for following releases as their being worked on - (should help users keep in touch with current evolution of htm.java)
+* Contains an **"Unreleased" section** which lists changes coming in the next release as they're being worked on - (should help users keep in touch with the current evolution of htm.java)
 
 ***
 
