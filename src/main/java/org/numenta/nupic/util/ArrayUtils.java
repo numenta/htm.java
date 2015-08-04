@@ -108,9 +108,10 @@ public class ArrayUtils {
     }
     
     /**
+     * <p>
      * Return a new double[] containing the difference of each element and its
      * succeding element.
-     * <p/>
+     * </p><p>
      * The first order difference is given by ``out[n] = a[n+1] - a[n]``
      * along the given axis, higher order differences are calculated by using `diff`
      * recursively.
@@ -257,8 +258,7 @@ public class ArrayUtils {
      * from each of the argument sequences.  The returned list is
      * truncated in length to the length of the shortest argument sequence.
      *
-     * @param arg1 the first list to be the zero'th entry in the returned tuple
-     * @param arg2 the first list to be the one'th entry in the returned tuple
+     * @param args  the array of Objects to be wrapped in {@link Tuple}s
      * @return a list of tuples
      */
     public static List<Tuple> zip(Object[]... args) {
@@ -989,7 +989,7 @@ public class ArrayUtils {
 
     /**
      * Sets the values in range start to stop to the value specified. If
-     * stop < 0, then stop indicates the number of places counting from the
+     * stop &lt; 0, then stop indicates the number of places counting from the
      * length of "values" back.
      *
      * @param values the array to alter
@@ -1180,7 +1180,7 @@ public class ArrayUtils {
 
     /**
      * Raises the values at the indexes specified by the amount specified.
-     * @param amount the amount to raise the values
+     * @param amounts the amounts to raise the values
      * @param values the values to raise
      */
     public static void raiseValuesBy(double[] amounts, double[] values) {
@@ -1211,11 +1211,11 @@ public class ArrayUtils {
      * @param c      the condition used to test each value
      * @return
      */
-    public static <T> int[] where(double[] d, Condition<T> c) {
+    public static <T> int[] where(double[] values, Condition<T> c) {
         TIntArrayList retVal = new TIntArrayList();
-        int len = d.length;
+        int len = values.length;
         for (int i = 0; i < len; i++) {
-            if (c.eval(d[i])) {
+            if (c.eval(values[i])) {
                 retVal.add(i);
             }
         }
@@ -1231,11 +1231,11 @@ public class ArrayUtils {
      * @param c      the condition used to test each value
      * @return
      */
-    public static <T> int[] where(int[] d, Condition<T> c) {
+    public static <T> int[] where(int[] values, Condition<T> c) {
         TIntArrayList retVal = new TIntArrayList();
-        int len = d.length;
+        int len = values.length;
         for (int i = 0; i < len; i++) {
-            if (c.eval(d[i])) {
+            if (c.eval(values[i])) {
                 retVal.add(i);
             }
         }
@@ -1280,11 +1280,11 @@ public class ArrayUtils {
      * @param c      the condition used to test each value
      * @return
      */
-    public static <T> int[] where(List<T> l, Condition<T> c) {
+    public static <T> int[] where(List<T> values, Condition<T> c) {
         TIntArrayList retVal = new TIntArrayList();
-        int len = l.size();
+        int len = values.size();
         for (int i = 0; i < len; i++) {
-            if (c.eval(l.get(i))) {
+            if (c.eval(values.get(i))) {
                 retVal.add(i);
             }
         }
@@ -1300,10 +1300,10 @@ public class ArrayUtils {
      * @param c      the condition used to test each value
      * @return
      */
-    public static <T> int[] where(T[] t, Condition<T> c) {
+    public static <T> int[] where(T[] values, Condition<T> c) {
         TIntArrayList retVal = new TIntArrayList();
-        for (int i = 0; i < t.length; i++) {
-            if (c.eval(t[i])) {
+        for (int i = 0; i < values.length; i++) {
+            if (c.eval(values[i])) {
                 retVal.add(i);
             }
         }

@@ -29,7 +29,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Double ended queue implementation which has a restricted capacity.
  * Operations may be conducted on both ends and when capacity is reached,
  * the next addition to either end will result in a removal on the opposite
- * end, thus always maintaining a size <= initial size.
+ * end, thus always maintaining a size &lt;= initial size.
  * 
  * This behavior differs from the {@link LinkedBlockingDeque} implementation
  * of the Java Collections Framework, and is the reason for the development of this

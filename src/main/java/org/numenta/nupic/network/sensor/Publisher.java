@@ -40,11 +40,11 @@ import rx.subjects.ReplaySubject;
  * consumption as designed by Numenta's input file format.
  * 
  * <b>NOTE:</b> The {@link Publisher.Builder#addHeader(String)} method must be called
- * before adding the publisher to the {@Link Layer} (i.e. {@link Sensor}).
+ * before adding the publisher to the {@link Layer} (i.e. {@link Sensor}).
  * 
  * Typical usage is as follows:
  * <pre>
- * <h1>In the case of manual input</h1>
+ * <b>In the case of manual input</b>
  * Publisher manualPublisher = Publisher.builder()
  *     .addHeader("timestamp,consumption")
  *     .addHeader("datetime,float")
@@ -53,14 +53,14 @@ import rx.subjects.ReplaySubject;
  * 
  * ...then add the object to a {@link SensorParams}, and {@link Sensor}
  * 
- * Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+ * Sensor&lt;ObservableSensor&lt;String[]&gt;&gt; sensor = Sensor.create(
  *     ObservableSensor::create, 
  *         SensorParams.create(
  *             Keys::obs, new Object[] { "your name", manualPublisher }));
  *             
  * ...you can then add the "sensor" to a {@link Layer}
  * 
- * Layer<int[]> l = new Layer<>(n)
+ * Layer&lt;int[]&gt; l = new Layer&lt;&gt;(n)
  *     .addSensor(sensor);
  *     
  * ...then manually input comma separated strings as such:
@@ -142,11 +142,10 @@ public class Publisher {
      * <p>
      * The {@link Observable} may call this method 0 or more times.
      * <p>
-     * The {@code Observable} will not call this method again after it calls either {@link #onCompleted} or
+     * The {@code Observable} will not call this method again after it calls either {@link #onComplete} or
      * {@link #onError}.
      * 
-     * @param t
-     *          the item emitted by the Observable
+     * @param input the item emitted by the Observable
      */
     public void onNext(String input) {
         subject.onNext(input);
@@ -165,7 +164,7 @@ public class Publisher {
      * Notifies the Observer that the {@link Observable} has experienced an error condition.
      * <p>
      * If the {@link Observable} calls this method, it will not thereafter call {@link #onNext} or
-     * {@link #onCompleted}.
+     * {@link #onComplete}.
      * 
      * @param e     the exception encountered by the Observable
      */

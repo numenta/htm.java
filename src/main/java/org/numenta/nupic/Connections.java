@@ -475,7 +475,7 @@ public class Connections {
     /**
      * Returns the configured potential radius
      * @return  the configured potential radius
-     * @see {@link #setPotentialRadius(int)}
+     * @see setPotentialRadius
      */
     public int getPotentialRadius() {
         return Math.min(numInputs, potentialRadius);
@@ -503,7 +503,7 @@ public class Connections {
      * Returns the configured potential pct
      * 
      * @return the configured potential pct
-     * @see {@link #setPotentialPct(double)}
+     * @see setPotentialPct
      */
     public double getPotentialPct() {
         return potentialPct;
@@ -567,8 +567,7 @@ public class Connections {
     
     /**
      * Sets the connected count {@link SparseBinaryMatrix}
-     * @param columnIndex
-     * @param count
+     * @param matrix
      */
     public void setConnectedMatrix(SparseBinaryMatrix matrix) {
     	this.connectedCounts = matrix;
@@ -610,7 +609,8 @@ public class Connections {
     /**
      * Returns the configured global inhibition flag
      * @return  the configured global inhibition flag
-     * @see {@link #setGlobalInhibition(boolean)}
+     * 
+     * @see setGlobalInhibition
      */
     public boolean getGlobalInhibition() {
         return globalInhibition;
@@ -636,7 +636,7 @@ public class Connections {
     /**
      * Returns the configured local area density
      * @return  the configured local area density
-     * @see {@link #setLocalAreaDensity(double)}
+     * @see setLocalAreaDensity
      */
     public double getLocalAreaDensity() {
         return localAreaDensity;
@@ -671,7 +671,7 @@ public class Connections {
      * inhibition area.
      * @return  the configured number of active columns per
      * inhibition area.
-     * @see {@link #setNumActiveColumnsPerInhArea(double)}
+     * @see setNumActiveColumnsPerInhArea
      */
     public double getNumActiveColumnsPerInhArea() {
         return numActiveColumnsPerInhArea;
@@ -693,7 +693,7 @@ public class Connections {
     /**
      * Returns the stimulus threshold
      * @return  the stimulus threshold
-     * @see {@link #setStimulusThreshold(double)}
+     * @see setStimulusThreshold
      */
     public double getStimulusThreshold() {
         return stimulusThreshold;
@@ -713,7 +713,7 @@ public class Connections {
     /**
      * Returns the synaptic permanence inactive decrement.
      * @return  the synaptic permanence inactive decrement.
-     * @see {@link #setSynPermInactiveDec(double)}
+     * @see setSynPermInactiveDec
      */
     public double getSynPermInactiveDec() {
         return synPermInactiveDec;
@@ -733,7 +733,7 @@ public class Connections {
     /**
      * Returns the configured active permanence increment
      * @return the configured active permanence increment
-     * @see {@link #setSynPermActiveInc(double)}
+     * @see setSynPermActiveInc
      */
     public double getSynPermActiveInc() {
         return synPermActiveInc;
@@ -745,7 +745,7 @@ public class Connections {
      * a "connected synapse", meaning it can contribute to
      * the cell's firing.
      * 
-     * @param minPctOverlapDutyCycle
+     * @param synPermConnected
      */
     public void setSynPermConnected(double synPermConnected) {
         this.synPermConnected = synPermConnected;
@@ -754,7 +754,7 @@ public class Connections {
     /**
      * Returns the synapse permanence connected threshold
      * @return the synapse permanence connected threshold
-     * @see {@link #setSynPermConnected(double)}
+     * @see setSynPermConnected
      */
     public double getSynPermConnected() {
         return synPermConnected;
@@ -805,7 +805,7 @@ public class Connections {
     }
     
     /**
-     * {@see #setMinPctOverlapDutyCycles(double)}
+     * see {@link #setMinPctOverlapDutyCycles(double)}
      * @return
      */
     public double getMinPctOverlapDutyCycles() {
@@ -833,8 +833,8 @@ public class Connections {
     
     /**
      * Returns the minPctActiveDutyCycle
+     * see {@link #setMinPctActiveDutyCycles(double)}
      * @return  the minPctActiveDutyCycle
-     * @see {@link #setMinPctActiveDutyCycle(double)}
      */
     public double getMinPctActiveDutyCycles() {
         return minPctActiveDutyCycles;
@@ -854,8 +854,8 @@ public class Connections {
     
     /**
      * Returns the configured duty cycle period
+     * see {@link #setDutyCyclePeriod(double)}
      * @return  the configured duty cycle period
-     * @see {@link #setDutyCyclePeriod(double)}
      */
     public int getDutyCyclePeriod() {
         return dutyCyclePeriod;
@@ -867,7 +867,7 @@ public class Connections {
      * before it gets considered for inhibition.
      * The actual boost factor for a column is number
      * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
+     * used if the duty cycle is &gt;= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
      * 2 end points.
@@ -880,8 +880,8 @@ public class Connections {
     
     /**
      * Returns the max boost
+     * see {@link #setMaxBoost(double)}
      * @return  the max boost
-     * @see {@link #setMaxBoost(double)}
      */
     public double getMaxBoost() {
         return maxBoost;
@@ -898,8 +898,8 @@ public class Connections {
     
     /**
      * Returns the verbosity setting.
+     * see {@link #setSpVerbosity(int)}
      * @return  the verbosity setting.
-     * @see {@link #setSpVerbosity(int)}
      */
     public int getSpVerbosity() {
         return spVerbosity;
@@ -1114,7 +1114,7 @@ public class Connections {
     }
     
     /**
-     * Sets the current {@link Set} of winner {@link Cells}s
+     * Sets the current {@link Set} of winner {@link Cell}s
      * @param cells
      */
     public void setWinnerCells(Set<Cell> cells) {
@@ -1339,9 +1339,8 @@ public class Connections {
     
     /**
      * Returns the configured input dimensions
-     *
+     * see {@link #setInputDimensions(int[])}
      * @return the configured input dimensions
-     * @see {@link #setInputDimensions(int[])}
      */
     public int[] getInputDimensions() {
         return inputDimensions;
@@ -1356,7 +1355,7 @@ public class Connections {
     }
     
     /**
-     * Gets the number of {@link Cells} per {@link Column}.
+     * Gets the number of {@link Cell}s per {@link Column}.
      * 
      * @return cellsPerColumn
      */
@@ -1443,7 +1442,7 @@ public class Connections {
     /** 
      * Initial permanence of a new synapse 
      * 
-     * @param   
+     * @param   initialPermanence
      */
     public void setInitialPermanence(double initialPermanence) {
         this.initialPermanence = initialPermanence;
@@ -1492,8 +1491,6 @@ public class Connections {
     /** 
      * Amount by which permanences of synapses
      * are incremented during learning.
-     * 
-     * @param   permanenceIncrement
      */
     public double getPermanenceIncrement() {
         return this.permanenceIncrement;
@@ -1512,8 +1509,6 @@ public class Connections {
     /** 
      * Amount by which permanences of synapses
      * are decremented during learning.
-     * 
-     * @param   permanenceDecrement
      */
     public double getPermanenceDecrement() {
         return this.permanenceDecrement;
@@ -1536,7 +1531,7 @@ public class Connections {
     }
     
     /**
-     * Converts a {@link Collection} of {@link Columns}s to a list
+     * Converts a {@link Collection} of {@link Column}s to a list
      * of column indexes.
      * 
      * @param columns
