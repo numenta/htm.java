@@ -14,7 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
-- [Issue #260] - Add [synchronous compute call](https://github.com/numenta/htm.java/issues/260) to get an immediate response back in a "blocking way" in the same thread that calls the network.
+- [Issue #260] - Add [synchronous compute call](https://github.com/numenta/htm.java/issues/260) to get an immediate response back in a "blocking way" in the same thread that calls the network. Solved in [PR #263]
 
 ## [0.5.2] - 2015-07-26
 ### Added 
