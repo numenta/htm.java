@@ -23,7 +23,6 @@
 package org.numenta.nupic.model;
 
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Represents a connection with varying strength which when above 
@@ -43,7 +42,7 @@ import org.numenta.nupic.research.TemporalMemory;
  * @author David Ray
  * 
  * @see DistalDendrite
- * @see TemporalMemory.Connections
+ * @see Connections
  */
 public class Synapse {
     private Cell sourceCell;

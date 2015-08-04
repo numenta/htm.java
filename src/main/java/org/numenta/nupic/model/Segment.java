@@ -27,7 +27,7 @@ import java.util.List;
 import org.numenta.nupic.Connections;
 
 /**
- * Base class which handles the creation of {@link Synapses} on behalf of
+ * Base class which handles the creation of {@link Synapse}s on behalf of
  * inheriting class types.
  * 
  * @author David Ray

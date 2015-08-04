@@ -978,7 +978,6 @@ public class Layer<T> {
     
     /**
      * Resets the {@link TemporalMemory} if it exists.
-     * @return
      */
     public void reset() {
         if(temporalMemory == null) {

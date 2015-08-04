@@ -61,7 +61,6 @@ public class PatternMachine {
     /**
      * @param n   Number of available bits in pattern
      * @param w   Number of on bits in pattern
-     * @param num Number of available patterns
      * 
      * Constructs a new {@code PatternMachine}
      */
@@ -72,7 +71,7 @@ public class PatternMachine {
     /**
      * @param n   Number of available bits in pattern
      * @param w   Number of on bits in pattern
-     * @param num Number of available patterns
+     * @param seed Random seed
      * 
      * Constructs a new {@code PatternMachine}
      */

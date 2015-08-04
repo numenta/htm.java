@@ -112,7 +112,7 @@ public class ProximalDendrite extends Segment {
     }
 
     /**
-     * Sets the input vector synapse indexes which are connected (>= synPermConnected)
+     * Sets the input vector synapse indexes which are connected (&gt;= synPermConnected)
      * @param c
      * @param connectedIndexes
      */

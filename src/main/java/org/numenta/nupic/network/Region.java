@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.research.TemporalMemory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import rx.Subscriber;
  
 
 /**
+ * <p>
  * Regions are collections of {@link Layer}s, which are in turn collections
  * of algorithmic components. Regions can be connected to each other to establish
  * a hierarchy of processing. To connect one Region to another, typically one 
@@ -165,7 +167,7 @@ public class Region {
      * a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
      * subscribing a receiving Region to this Region's output Observable.
      * 
-     * @param input One of (int[], String[], {@link ManualInput}, or Map<String, Object>)
+     * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     @SuppressWarnings("unchecked")
     public <T> void compute(T input) {

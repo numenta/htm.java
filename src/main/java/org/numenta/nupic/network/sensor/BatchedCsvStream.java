@@ -75,12 +75,12 @@ import org.slf4j.LoggerFactory;
  * <pre>
  * To reorder the Stream use code such as:
  *      Stream thisStream;
- *      List<String> sortedList = thisStream.sorted(
- *          (String[] i, String[] j) -> {
+ *      List&lt;String&gt; sortedList = thisStream.sorted(
+ *          (String[] i, String[] j) -&gt; {
  *              return Integer.valueOf(i[0]).compareTo(Integer.valueOf(j[0]));
  *          }).collect(Collectors.toList());
  * </pre>
- * </p>
+ *
  * 
  * The batching implemented is pretty straight forward. The underlying iterator is
  * advanced to i + min(batchSize, remainingCount), where each line is fed into

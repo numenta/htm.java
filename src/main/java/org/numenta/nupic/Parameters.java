@@ -225,7 +225,7 @@ public class Parameters {
         SP_PRIMER_DELAY("sp_primer_delay", Integer.class),
         
         ///////////// Encoder Parameters //////////////
-        /** number of bits in the representation (must be >= w) */
+        /** number of bits in the representation (must be &gt;= w) */
         N("n", Integer.class),
         /** 
          * The number of bits that are set to encode a single value - the
@@ -256,7 +256,7 @@ public class Parameters {
         CLIP_INPUT("clipInput", Boolean.class),
         /** 
          * If true, skip some safety checks (for compatibility reasons), default false 
-         * Mostly having to do with being able to set the window size < 21 
+         * Mostly having to do with being able to set the window size &lt; 21 
          */
         FORCED("forced", Boolean.class),
         /** Name of the field being encoded */
@@ -601,8 +601,9 @@ public class Parameters {
     }
 
     /**
+     * <p>
      * Sets the activation threshold.
-     * <p/>
+     * </p>
      * If the number of active connected synapses on a segment
      * is at least this threshold, the segment is said to be active.
      *
@@ -654,7 +655,7 @@ public class Parameters {
     /**
      * Initial permanence of a new synapse
      *
-     * @param
+     * @param   initialPermanence
      */
     public void setInitialPermanence(double initialPermanence) {
         paramMap.put(KEY.INITIAL_PERMANENCE, initialPermanence);
@@ -937,7 +938,7 @@ public class Parameters {
      * before it gets considered for inhibition.
      * The actual boost factor for a column is number
      * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
+     * used if the duty cycle is &gt;= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
      * 2 end points.

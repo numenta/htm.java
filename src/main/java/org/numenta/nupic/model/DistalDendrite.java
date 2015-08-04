@@ -103,8 +103,8 @@ public class DistalDendrite extends Segment {
      * Returns the synapses on a segment that are active due to lateral input
      * from active cells.
      * 
-     * @param activeSynapsesForSegment      Set of this {@code Segment}'s active {@code Synapse}s
-     * @param permanenceThreshold           Threshold at which a {@Synapse} is considered connected.
+     * @param activeSynapsesForSegment      Set of this {@link Segment}'s active {@link Synapse}s
+     * @param permanenceThreshold           Threshold at which a {@link Synapse} is considered connected.
      * @return                              Set of connected Synapses
      */
     public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
