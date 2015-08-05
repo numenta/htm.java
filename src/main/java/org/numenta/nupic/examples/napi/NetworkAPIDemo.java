@@ -58,7 +58,7 @@ import rx.Subscriber;
  * 
  * Layers contain most of the operation logic and are the only constructs that contain
  * algorithm components (i.e. {@link CLAClassifier}, {@link Anomaly} (the anomaly computer), 
- * {@link TemoralMemory}, {@link SpatialPooler}, and {@link Encoder} (actually, a {@link MultiEncoder}
+ * {@link TemporalMemory}, {@link SpatialPooler}, and {@link Encoder} (actually, a {@link MultiEncoder}
  * which can be the parent of many child encoders).
  * 
  * 

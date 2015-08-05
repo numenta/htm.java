@@ -5,4 +5,4 @@ jdk:
 
 after_success:
   - sudo chown -R ${USER} /home/travis/build/numenta
-  - mvn clean test jacoco:report coveralls:report
+  - mvn clean test -Dmaven.test.failure.ignore=true jacoco:report coveralls:report

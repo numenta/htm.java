@@ -41,7 +41,7 @@ import org.numenta.nupic.util.NamedTuple;
  *  Object[] n = { "rec-center-hourly", ResourceLocator.locate("rec-center-hourly") };
     SensorParams parms = SensorParams.create(Keys::uri, n); // May be (Keys::path, Keys::obs) also
  * </pre>
- * </p>
+ * 
  * 
  * @author David Ray
  */

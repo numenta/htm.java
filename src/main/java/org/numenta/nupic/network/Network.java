@@ -113,7 +113,7 @@ import rx.Subscriber;
  *      }
  * });
  * </pre>
- * </p>
+ * 
  * <p>
  * Likewise, each Region within a Network may be "observed" and/or subscribed to; and each
  * Layer may be observed and subscribed to as well - for those instances where you would like 

@@ -37,6 +37,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.encoders.MultiEncoder;
 
 /**
  * Simple abstraction to hold the contents of a list of csv records indicated by 

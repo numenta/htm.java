@@ -35,8 +35,8 @@ import org.numenta.nupic.encoders.RangeList;
  * 
  * @author David Ray
  *
- * @param <T>	the fieldsMap
- * @param <K>	the fieldsOrder
+ * @param <M>	the fieldsMap
+ * @param <L>	the fieldsOrder
  */
 public class DecodeTuple<M extends Map<String, RangeList>, L extends List<String>> extends Tuple {
 	protected M fields;

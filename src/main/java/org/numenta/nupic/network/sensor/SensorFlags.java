@@ -51,7 +51,7 @@ import org.numenta.nupic.FieldMetaType;
  *      
  *      <li><b>B</b> - <em>"blank"</em> -       Blank meaning do nothing (space filler)
  * </ul>
- * </p>
+ * 
  * 
  * @author David Ray
  */
