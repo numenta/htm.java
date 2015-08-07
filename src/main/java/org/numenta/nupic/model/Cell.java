@@ -99,8 +99,22 @@ public class Cell implements Comparable<Cell> {
      * @param index     the index of the new {@link DistalDendrite}
      * @return          a newly created {@link DistalDendrite}
      */
+    @Deprecated
     public DistalDendrite createSegment(Connections c, int index) {
         DistalDendrite dd = new DistalDendrite(this, index);
+        c.getSegments(this).add(dd);
+
+        return dd;
+    }
+    
+    /**
+     * Returns a newly created {@link DistalDendrite}
+     * 
+     * @param   c       the connections state of the temporal memory
+     * @return          a newly created {@link DistalDendrite}
+     */
+    public DistalDendrite createSegment(Connections c) {
+        DistalDendrite dd = new DistalDendrite(this, c.incrementSegment());
         c.getSegments(this).add(dd);
 
         return dd;

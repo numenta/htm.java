@@ -44,8 +44,7 @@ import org.numenta.nupic.Connections;
 public class DistalDendrite extends Segment {
 
     private Cell cell;
-    private int index;
-
+    
     private static final Set<Synapse> EMPTY_SYNAPSE_SET = Collections.emptySet();
 
     /**
@@ -82,9 +81,28 @@ public class DistalDendrite extends Segment {
      * 
      * @return
      */
+    @Deprecated
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
         Pool pool = new Pool(1);
         Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index, sourceCell.getIndex());
+        pool.setPermanence(c, s, permanence);
+        return s;
+    }
+    
+    /**
+     * Creates and returns a newly created {@link Synapse} with the specified
+     * source cell, permanence, and index.
+     * 
+     * @param c             the connections state of the temporal memory
+     * @param sourceCell    the source cell which will activate the new {@code Synapse}
+     * @param permanence    the new {@link Synapse}'s initial permanence.
+     * @param index         the new {@link Synapse}'s index.
+     * 
+     * @return
+     */
+    public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
+        Pool pool = new Pool(1);
+        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapse(), sourceCell.getIndex());
         pool.setPermanence(c, s, permanence);
         return s;
     }

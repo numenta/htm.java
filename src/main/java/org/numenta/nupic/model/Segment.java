@@ -35,6 +35,16 @@ import org.numenta.nupic.Connections;
  * @see ProximalDendrite
  */
 public abstract class Segment {
+    protected int index;
+    
+    /**
+     * Returns this {@link ProximalDendrite}'s index.
+     * @return
+     */
+    public int getIndex() {
+        return index;
+    }
+
     /**
      * Creates and returns a newly created {@link Synapse} with the specified
      * source cell, permanence, and index.

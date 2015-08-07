@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -67,6 +68,7 @@ public class Connections {
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
+    private double predictedSegmentDecrement = 0.0;
     private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
@@ -198,9 +200,9 @@ public class Connections {
     protected Map<Segment, List<Synapse>> synapses;
     
     /** Helps index each new Segment */
-    protected int segmentCounter = 0;
+    protected AtomicInteger segmentCounter = new AtomicInteger(0);
     /** Helps index each new Synapse */
-    protected int synapseCounter = 0;
+    protected AtomicInteger synapseCounter = new AtomicInteger(0);
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
@@ -235,19 +237,27 @@ public class Connections {
     }
     
     /**
-     * Returns the segment counter
+     * Atomically returns the segment counter
      * @return
      */
     public int getSegmentCount() {
-    	return segmentCounter;
+    	return segmentCounter.get();
     }
     
     /**
-     * Sets the segment counter
+     * Atomically increments and returns the incremented count.
+     * @return
+     */
+    public int incrementSegment() {
+        return segmentCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically sets the segment counter
      * @param counter
      */
     public void setSegmentCount(int counter) {
-    	this.segmentCounter = counter;
+    	this.segmentCounter.set(counter);
     }
     
     /**
@@ -523,19 +533,29 @@ public class Connections {
     }
     
     /**
-     * Returns the count of {@link Synapse}s
+     * Atomically returns the count of {@link Synapse}s
      * @return
      */
     public int getSynapseCount() {
-    	return synapseCounter;
+    	return synapseCounter.get();
     }
     
     /**
-     * Sets the count of {@link Synapse}s
+     * Atomically sets the count of {@link Synapse}s
      * @param i
      */
     public void setSynapseCount(int i) {
-    	this.synapseCounter = i;
+    	this.synapseCounter.set(i);
+    }
+    
+    /**
+     * Atomically increments and returns the incremented
+     * {@link Synapse} count.
+     * 
+     * @return
+     */
+    public int incrementSynapse() {
+        return this.synapseCounter.getAndIncrement();
     }
     
     /**
@@ -1512,6 +1532,22 @@ public class Connections {
      */
     public double getPermanenceDecrement() {
         return this.permanenceDecrement;
+    }
+    
+    /**
+     * Amount by which active permanences of synapses of previously predicted but inactive segments are decremented.
+     * @param predictedSegmentDecrement
+     */
+    public void setPredictedSegmentDecrement(double predictedSegmentDecrement) {
+        this.predictedSegmentDecrement = predictedSegmentDecrement;
+    }
+    
+    /**
+     * Returns the predictedSegmentDecrement amount.
+     * @return
+     */
+    public double getPredictedSegmentDecrement() {
+        return this.predictedSegmentDecrement;
     }
     
     /**

@@ -30,7 +30,7 @@ import org.numenta.nupic.Connections;
  * 
  * IMPORTANT: 	For DistalDendrites, there is only one synapse per pool, so the
  * 				synapse's index doesn't really matter (in terms of tracking its
- * 				order within the pool. In that case, the index is a global counter
+ * 				order within the pool). In that case, the index is a global counter
  * 				of all distal dendrite synapses.
  * 
  * 				For ProximalDendrites, there are many synapses within a pool, and in
