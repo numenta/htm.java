@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +15,6 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 
 /**
@@ -168,16 +168,16 @@ public class NewTemporalMemoryTest {
         tm.init(cn);
         
         DistalDendrite dd = cn.getCell(0).createSegment(cn);
-        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
-        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        dd.createSynapse(cn, cn.getCell(23), 0.6);
+        dd.createSynapse(cn, cn.getCell(37), 0.4);
         dd.createSynapse(cn, cn.getCell(477), 0.9);
         
         DistalDendrite dd2 = cn.getCell(0).createSegment(cn);
-        Synapse s2 = dd2.createSynapse(cn, cn.getCell(49), 0.9);
+        dd2.createSynapse(cn, cn.getCell(49), 0.9);
         dd2.createSynapse(cn, cn.getCell(3), 0.8);
         
         DistalDendrite dd3 = cn.getCell(1).createSegment(cn);
-        Synapse s3 = dd3.createSynapse(cn, cn.getCell(733), 0.7);
+        dd3.createSynapse(cn, cn.getCell(733), 0.7);
         
         DistalDendrite dd4 = cn.getCell(108).createSegment(cn);
         dd4.createSynapse(cn, cn.getCell(486), 0.9);
@@ -211,5 +211,105 @@ public class NewTemporalMemoryTest {
         
         // Check that new segment was added to winner cell (6) in column 1
         assertTrue(!cn.getSegments(cn.getCell(5)).isEmpty() && cn.getSegments(cn.getCell(5)).get(0).getIndex() == 4);
+    }
+    
+    @Test
+    public void testBurstColumnsEmpty() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setCellsPerColumn(4);
+        tm.init(cn);
+        
+        int[] activeColumns = new int[] { };
+        int[] predictedColumns = new int[] { };
+        int[] prevActiveCells = new int[] { };
+        int[] prevWinnerCells = new int[] { };
+        
+        ComputeCycle cycle = new ComputeCycle();
+        tm.burstColumns(cycle, cn, cn.getColumnSet(activeColumns), 
+            cn.getColumnSet(predictedColumns), cn.getCellSet(prevActiveCells), cn.getCellSet(prevWinnerCells));
+        
+        assertTrue(cycle.activeCells().isEmpty());
+        assertTrue(cycle.winnerCells().isEmpty());
+        assertTrue(cycle.learningSegments.isEmpty());
+    }
+    
+    @Test
+    public void testLearnOnSegments() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setMaxNewSynapseCount(2);
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        DistalDendrite dd1 = cn.getCell(1).createSegment(cn);
+        Synapse s3 = dd1.createSynapse(cn, cn.getCell(733), 0.7);
+        
+        DistalDendrite dd2 = cn.getCell(8).createSegment(cn);
+        Synapse s4 = dd2.createSynapse(cn, cn.getCell(486), 0.9);
+        
+        DistalDendrite dd3 = cn.getCell(100).createSegment(cn);
+        
+        Set<DistalDendrite> prevActiveSegments = new LinkedHashSet<>();
+        prevActiveSegments.add(dd);
+        prevActiveSegments.add(dd2);
+        
+        Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
+        learningSegments.add(dd1);
+        learningSegments.add(dd3);
+        Set<Cell> prevActiveCells = cn.getCellSet(new int[] { 23, 37, 733 });
+        Set<Cell> winnerCells = new LinkedHashSet<>();
+        winnerCells.add(cn.getCell(0));
+        Set<Cell> prevWinnerCells = new LinkedHashSet<>();
+        prevWinnerCells.add(cn.getCell(10));
+        prevWinnerCells.add(cn.getCell(11));
+        prevWinnerCells.add(cn.getCell(12));
+        prevWinnerCells.add(cn.getCell(13));
+        prevWinnerCells.add(cn.getCell(14));
+        Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
+        Set<DistalDendrite> prevMatchingSegments = new LinkedHashSet<>();
+        
+        //Before
+        
+        //Check segment 0
+        assertEquals(0.6, s0.getPermanence(), 0.01);
+        assertEquals(0.4, s1.getPermanence(), 0.01);
+        assertEquals(0.9, s2.getPermanence(), 0.01);
+        
+        //Check segment 1
+        assertEquals(0.7, s3.getPermanence(), 0.01);
+        assertEquals(1, dd1.getAllSynapses(cn).size(), 0);
+        
+        //Check segment 2
+        assertEquals(0.9, s4.getPermanence(), 0.01);
+        assertEquals(1, dd2.getAllSynapses(cn).size(), 0);
+        
+        //Check segment 3
+        assertEquals(0, dd3.getAllSynapses(cn).size(), 0);
+        
+        // The tested method
+        tm.learnOnSegments(cn, prevActiveSegments, learningSegments, prevActiveCells, winnerCells, prevWinnerCells, predictedInactiveCells, prevMatchingSegments);
+        
+        //After
+        
+        //Check segment 0
+        assertEquals(0.7, s0.getPermanence(), 0.01); //was 0.6
+        assertEquals(0.5, s1.getPermanence(), 0.01); //was 0.4
+        assertEquals(0.8, s2.getPermanence(), 0.01); //was 0.9
+        
+        //Check segment 1
+        assertEquals(0.8, s3.getPermanence(), 0.01); //was 0.7
+        assertEquals(2, dd1.getAllSynapses(cn).size(), 0); // was 1
+        
+        //Check segment 2
+        assertEquals(0.9, s4.getPermanence(), 0.01); //unchanged
+        assertEquals(1, dd2.getAllSynapses(cn).size(), 0); //unchanged
+        
+        //Check segment 3
+        assertEquals(2, dd3.getAllSynapses(cn).size(), 0);// was 0
     }
 }

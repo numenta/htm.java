@@ -1,5 +1,6 @@
 package org.numenta.nupic.research;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -147,6 +148,78 @@ public class NewTemporalMemory {
             cycle.learningSegments.add(bestSegment);
         }
     }
+    
+    /**
+     * Phase 3: Perform learning by adapting segments.
+     * <pre>
+     * Pseudocode:
+     *
+     * - (learning) for each previously active or learning segment
+     *   - if learning segment or from winner cell
+     *     - strengthen active synapses
+     *     - weaken inactive synapses
+     *   - if learning segment
+     *     - add some synapses to the segment
+     *       - sub sample from previous winner cells
+     *   
+     *   - if predictedSegmentDecrement > 0
+     *     - for each previously matching segment
+     *       - weaken active synapses but don't touch inactive synapses
+     * </pre>    
+     *     
+     * @param c                             the Connections state of the temporal memory
+     * @param prevActiveSegments            the Set of segments active in the previous cycle. "t-1"
+     * @param learningSegments              the Set of segments marked as learning segments in "t"
+     * @param prevActiveCells               the Set of active cells in "t-1"
+     * @param winnerCells                   the Set of winner cells in "t"
+     * @param prevWinnerCells               the Set of winner cells in "t-1"
+     * @param predictedInactiveCells        the Set of predicted inactive cells
+     * @param prevMatchingSegments          the Set of segments with
+     * 
+     */
+    public void learnOnSegments(Connections c, Set<DistalDendrite> prevActiveSegments, 
+        Set<DistalDendrite> learningSegments, Set<Cell> prevActiveCells, Set<Cell> winnerCells, Set<Cell> prevWinnerCells, 
+            Set<Cell> predictedInactiveCells, Set<DistalDendrite> prevMatchingSegments) {
+        
+        double permanenceIncrement = c.getPermanenceIncrement();
+        double permanenceDecrement = c.getPermanenceDecrement();
+            
+        List<DistalDendrite> prevAndLearning = new ArrayList<DistalDendrite>(prevActiveSegments);
+        prevAndLearning.addAll(learningSegments);
+        
+        for(DistalDendrite dd : prevAndLearning) {
+            boolean isLearningSegment = learningSegments.contains(dd);
+            boolean isFromWinnerCell = winnerCells.contains(dd.getParentCell());
+            
+            Set<Synapse> activeSynapses = dd.getConnectedActiveSynapses(c, prevActiveCells);
+            
+            if(isLearningSegment || isFromWinnerCell) {
+                dd.adaptSegment(c, activeSynapses, permanenceIncrement, permanenceDecrement);
+            }
+            
+            int n = c.getMaxNewSynapseCount() - activeSynapses.size();
+            if(isLearningSegment && n > 0) {
+                Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.getRandom());
+                for(Cell sourceCell : learnCells) {
+                    dd.createSynapse(c, sourceCell, c.getInitialPermanence());
+                }
+            }
+        }
+        
+        if(c.getPredictedSegmentDecrement() > 0) {
+            for(DistalDendrite segment : prevMatchingSegments) {
+                boolean isPredictedInactiveCell = predictedInactiveCells.contains(segment.getParentCell());
+                
+                if(isPredictedInactiveCell) {
+                    Set<Synapse> activeSynapses = segment.getConnectedActiveSynapses(c, prevActiveCells);
+                    segment.adaptSegment(c, activeSynapses, -c.getPredictedSegmentDecrement(), 0.0);
+                }
+            }
+        }
+    }
+    
+    
+    // Helper functions
     
     /**
      * Gets the cell with the best matching segment

@@ -74,10 +74,21 @@ public class Cell implements Comparable<Cell> {
      * from this {@code Cell}
      * 
      * @param c     the connections state of the temporal memory
-     * @param s
+     * @param s     the Synapse to add
      */
     public void addReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this).add(s);
+    }
+    
+    /**
+     * Removes a {@link Synapse} which is no longer a receiver of
+     * signals from this {@code Cell}
+     * 
+     * @param c     the connections state of the temporal memory
+     * @param s     the Synapse to remove
+     */
+    public void removeReceptorSynapse(Connections c, Synapse s) {
+        c.getReceptorSynapses(this).remove(s);
     }
 
     /**

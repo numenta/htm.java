@@ -84,6 +84,7 @@ public class QuickTestTest {
                 QuickTest.runThroughLayer(layer, i, (int)i, (int)x);
             }
         }catch(Exception e) {
+            e.printStackTrace();
             fail();
         }
         

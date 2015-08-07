@@ -15,7 +15,7 @@ public class NetworkDemoHarnessTest {
     @Test
     public void testGetParameters() {
         Parameters p = NetworkDemoHarness.getParameters();
-        assertEquals(46, p.size());
+        assertEquals(47, p.size());
     }
     
     @Test

@@ -130,6 +130,22 @@ public class Synapse {
     public Cell getSourceCell() {
         return sourceCell;
     }
+    
+    /**
+     * Removes the references to this Synapse in its associated
+     * {@link Pool} and its upstream presynapticCell's reference.
+     * 
+     * @param c
+     */
+    public void destroy(Connections c) {
+        this.pool.destroySynapse(this);
+        if(sourceCell != null) {
+            c.getSynapses((DistalDendrite)segment).remove(this);
+            sourceCell.removeReceptorSynapse(c, this);
+        }else{
+            c.getSynapses((ProximalDendrite)segment).remove(this);
+        }
+    }
 
     /**
      * {@inheritDoc}

@@ -22,6 +22,7 @@
 package org.numenta.nupic.research;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -628,11 +629,15 @@ public class TemporalMemoryTest {
         
         Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>();
         
-        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
-        assertEquals(0.0, s0.getPermanence(), 0.01);
         
+        // Changed due to new algorithm implementation
         dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
-        assertEquals(0.0, s0.getPermanence(), 0.01);
+//        assertEquals(0.0, s0.getPermanence(), 0.01);
+//        
+//        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+//        assertEquals(0.0, s0.getPermanence(), 0.01);
+        
+        assertFalse(cn.getSynapses(dd).contains(s0));
     }
     
     @Test

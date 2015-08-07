@@ -42,7 +42,8 @@ import org.numenta.nupic.Connections;
  * @author David Ray
  */
 public class DistalDendrite extends Segment {
-
+    private static final double EPSILON = 0.0000001;
+    
     private Cell cell;
     
     private static final Set<Synapse> EMPTY_SYNAPSE_SET = Collections.emptySet();
@@ -125,6 +126,7 @@ public class DistalDendrite extends Segment {
      * @param permanenceThreshold           Threshold at which a {@link Synapse} is considered connected.
      * @return                              Set of connected Synapses
      */
+    @Deprecated
     public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
         Set<Synapse> connectedSynapses = null;
 
@@ -142,6 +144,26 @@ public class DistalDendrite extends Segment {
         }
         return connectedSynapses == null ? EMPTY_SYNAPSE_SET : connectedSynapses;
     }
+    
+    /**
+     * Returns the synapses on a segment that are active due to lateral input
+     * from active cells.
+     * 
+     * @param c                 the layer connectivity
+     * @param activeCells       the active cells
+     * @return  Set of {@link Synapse}s connected to active presynaptic cells.
+     */
+    public Set<Synapse> getConnectedActiveSynapses(Connections c, Set<Cell> activeCells) {
+        Set<Synapse> synapses = new LinkedHashSet<>();
+        
+        for(Synapse synapse : c.getSynapses(this)) {
+            if(activeCells.contains(synapse.getSourceCell())) {
+                synapses.add(synapse);
+            }
+        }
+        
+        return synapses;
+    }
 
     /**
      * Called for learning {@code Segment}s so that they may adjust the
@@ -155,6 +177,8 @@ public class DistalDendrite extends Segment {
      * @param permanenceDecrement       the increment by which permanences are decreased.
      */
     public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
+        List<Synapse> synapsesToDestroy = null;
+        
         for(Synapse synapse : c.getSynapses(this)) {
             double permanence = synapse.getPermanence();
             if(activeSynapses.contains(synapse)) {
@@ -165,7 +189,20 @@ public class DistalDendrite extends Segment {
 
             permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
 
-            synapse.setPermanence(c, permanence);
+            if(Math.abs(permanence) < EPSILON) {
+                if(synapsesToDestroy == null) {
+                    synapsesToDestroy = new ArrayList<>();
+                }
+                synapsesToDestroy.add(synapse);
+            }else{
+                synapse.setPermanence(c, permanence);
+            }
+        }
+        
+        if(synapsesToDestroy != null) {
+            for(Synapse s : synapsesToDestroy) {
+                s.destroy(c);
+            }
         }
     }
 

@@ -556,7 +556,7 @@ public class FoxEatsDemoTest {
         setup();
         
         Parameters p = mockDemo.createParameters();
-        assertEquals(12, p.keys().size());
+        assertEquals(13, p.keys().size());
         
         int[] dims = (int[])p.getParameterByKey(KEY.COLUMN_DIMENSIONS);
         assertEquals(1, dims.length);
