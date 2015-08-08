@@ -7,10 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -20,6 +18,7 @@ import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.NewTemporalMemory.CellSearch;
+import org.numenta.nupic.research.NewTemporalMemory.SegmentSearch;
 
 /**
  * Basic unit test for {@link TemporalMemory}
@@ -418,5 +417,49 @@ public class NewTemporalMemoryTest {
             CellSearch result = tm.getBestMatchingCell(cn, cn.getColumn(0).getCells(), activeCells);
             assertEquals(1, result.bestCell.getIndex());
         }
+    }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testGetBestMatchingSegment() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setConnectedPermanence(0.50);
+        cn.setMinThreshold(1);
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        DistalDendrite dd1 = cn.getCell(0).createSegment(cn);
+        Synapse s3 = dd1.createSynapse(cn, cn.getCell(49), 0.9);
+        Synapse s4 = dd1.createSynapse(cn, cn.getCell(3), 0.8);
+        
+        DistalDendrite dd2 = cn.getCell(1).createSegment(cn);
+        Synapse s5 = dd2.createSynapse(cn, cn.getCell(733), 0.7);
+        
+        DistalDendrite dd3 = cn.getCell(8).createSegment(cn);
+        Synapse s6 = dd3.createSynapse(cn, cn.getCell(486), 0.9);
+        
+        Set<Cell> activeCells = cn.getCellSet(new int[] { 733, 37, 974, 23 });
+        
+        SegmentSearch result = tm.getBestMatchingSegment(cn, cn.getCell(0), activeCells);
+        assertEquals(dd, result.bestSegment);
+        assertEquals(2, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(1), activeCells);
+        assertEquals(dd2, result.bestSegment);
+        assertEquals(1, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(8), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(100), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
     }
 }
