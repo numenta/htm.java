@@ -1,6 +1,7 @@
 package org.numenta.nupic.research;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -484,5 +485,62 @@ public class NewTemporalMemoryTest {
             Cell leastUsed = column0.getLeastUsedCell(cn, cn.getRandom());
             assertEquals(1, leastUsed.getIndex());
         }
+    }
+    
+    @Test
+    public void testAdaptSegment() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>();
+        activeSynapses.add(s0);
+        activeSynapses.add(s1);
+        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        
+        assertEquals(0.7, s0.getPermanence(), 0.01);
+        assertEquals(0.5, s1.getPermanence(), 0.01);
+        assertEquals(0.8, s2.getPermanence(), 0.01);
+    }
+    
+    @Test
+    public void testAdaptSegmentToMax() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.9);
+        
+        Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>();
+        activeSynapses.add(s0);
+        
+        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertEquals(1.0, s0.getPermanence(), 0.01);
+        
+        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertEquals(1.0, s0.getPermanence(), 0.01);
+    }
+
+    @Test
+    public void testAdaptSegmentToMin() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.1);
+        
+        Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>();
+        
+        
+        // Changed due to new algorithm implementation
+        dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertFalse(cn.getSynapses(dd).contains(s0));
     }
 }
