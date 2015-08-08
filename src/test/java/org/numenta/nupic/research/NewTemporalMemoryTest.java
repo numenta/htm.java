@@ -7,8 +7,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -392,5 +394,29 @@ public class NewTemporalMemoryTest {
         assertNull(result.bestSegment);
         assertEquals(31993, result.bestCell.getIndex());
         
+    }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testGetBestMatchingCellFewestSegments() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setColumnDimensions(new int[] { 2 });
+        cn.setCellsPerColumn(2);
+        cn.setConnectedPermanence(0.50);
+        cn.setMinThreshold(1);
+        cn.setSeed(42);
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(3), 0.3);
+        
+        Set<Cell> activeCells = new HashSet<>();
+        
+        //Never pick cell 0, always pick cell 1
+        for(int i = 0;i < 100;i++) {
+            CellSearch result = tm.getBestMatchingCell(cn, cn.getColumn(0).getCells(), activeCells);
+            assertEquals(1, result.bestCell.getIndex());
+        }
     }
 }
