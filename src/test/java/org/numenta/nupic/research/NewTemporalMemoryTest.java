@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.junit.Test;
@@ -461,5 +462,27 @@ public class NewTemporalMemoryTest {
         assertEquals(null, result.bestSegment);
         assertEquals(0, result.numActiveSynapses);
         
+    }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testGetLeastUsedCell() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setColumnDimensions(new int[] { 2 });
+        cn.setCellsPerColumn(2);
+        cn.setSeed(42);
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(3), 0.3);
+        
+        Column column0 = cn.getColumn(0);
+        Random random = cn.getRandom();
+        // Never pick cell 0, always pick cell 1
+        for(int i = 0;i < 100;i++) {
+            Cell leastUsed = column0.getLeastUsedCell(cn, cn.getRandom());
+            assertEquals(1, leastUsed.getIndex());
+        }
     }
 }
