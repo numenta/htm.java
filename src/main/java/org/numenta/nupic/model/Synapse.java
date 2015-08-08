@@ -151,6 +151,12 @@ public class Synapse {
      * {@inheritDoc}
      */
     public String toString() {
-        return "" + synapseIndex;
+        StringBuilder sb = new StringBuilder("synapse: [ synIdx=").append(synapseIndex).append(", inIdx=")
+            .append(inputIndex).append(", sgmtIdx=").append(segment.getIndex());
+        if(sourceCell != null) {
+            sb.append(", srcCellIdx=").append(sourceCell.getIndex());
+        }
+        sb.append(" ]");
+        return sb.toString();
     }
 }

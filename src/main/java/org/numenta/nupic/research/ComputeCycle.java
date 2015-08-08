@@ -47,9 +47,11 @@ public class ComputeCycle {
     Set<Cell> winnerCells = new LinkedHashSet<>();
     Set<Cell> predictiveCells = new LinkedHashSet<>();
     Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
+    Set<Cell> matchingCells = new LinkedHashSet<>();
     Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
     Set<DistalDendrite> activeSegments = new LinkedHashSet<>();
     Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
+    Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
     Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<>();
     
     
@@ -140,5 +142,23 @@ public class ComputeCycle {
      */
     public Set<Cell> predictedInactiveCells() {
         return predictedInactiveCells;
+    }
+    
+    /**
+     * Returns the Set of matching {@link DistalDendrite}s from 
+     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * @return
+     */
+    public Set<DistalDendrite> matchingSegments() {
+        return matchingSegments;
+    }
+    
+    /**
+     * Returns the Set of matching {@link Cell}s from
+     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * @return
+     */
+    public Set<Cell> matchingCells() {
+        return matchingCells;
     }
 }

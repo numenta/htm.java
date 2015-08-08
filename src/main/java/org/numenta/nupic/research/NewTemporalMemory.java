@@ -1,5 +1,8 @@
 package org.numenta.nupic.research;
 
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,6 +13,7 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
@@ -213,6 +217,55 @@ public class NewTemporalMemory {
                 if(isPredictedInactiveCell) {
                     Set<Synapse> activeSynapses = segment.getConnectedActiveSynapses(c, prevActiveCells);
                     segment.adaptSegment(c, activeSynapses, -c.getPredictedSegmentDecrement(), 0.0);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Phase 4: Compute predictive cells due to lateral input on distal dendrites.
+     *
+     * Pseudocode:
+     *
+     * - for each distal dendrite segment with activity >= activationThreshold
+     *   - mark the segment as active
+     *   - mark the cell as predictive
+     *   
+     * - if predictedSegmentDecrement > 0
+     *   - for each distal dendrite segment with unconnected activity > = minThreshold
+     *     - mark the segment as matching
+     *     - mark the cell as matching
+     * 
+     * @param c                 the Connections state of the temporal memory
+     * @param cycle             the state during the current compute cycle
+     * @param activeCells       the active {@link Cell}s in t
+     */
+    public void computePredictiveCells(Connections c, ComputeCycle cycle, Set<Cell> activeCells) {
+        TObjectIntMap<DistalDendrite> numActiveConnectedSynapsesForSegment = new TObjectIntHashMap<>();
+        TObjectIntMap<DistalDendrite> numActiveSynapsesForSegment = new TObjectIntHashMap<>();
+        for(Cell cell : activeCells) {
+            for(Synapse syn : c.getReceptorSynapses(cell)) {
+                DistalDendrite segment = (DistalDendrite)syn.getSegment();
+                double permanence = syn.getPermanence();
+                
+                if(permanence >= c.getConnectedPermanence()) {
+                    numActiveConnectedSynapsesForSegment.putIfAbsent(segment, 0);
+                    numActiveConnectedSynapsesForSegment.increment(segment);
+                    
+                    if(numActiveConnectedSynapsesForSegment.get(segment) >= c.getActivationThreshold()) {
+                        cycle.activeSegments.add(segment);
+                        cycle.predictiveCells.add(segment.getParentCell());
+                    }
+                }
+                
+                if(permanence > 0 && c.getPredictedSegmentDecrement() > 0) {
+                    numActiveSynapsesForSegment.putIfAbsent(segment, 0);
+                    numActiveSynapsesForSegment.increment(segment);
+                    
+                    if(numActiveSynapsesForSegment.get(segment) >= c.getMinThreshold()) {
+                        cycle.matchingSegments.add(segment);
+                        cycle.matchingCells.add(segment.getParentCell());
+                    }
                 }
             }
         }

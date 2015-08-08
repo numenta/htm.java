@@ -1,6 +1,7 @@
 package org.numenta.nupic.research;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.research.NewTemporalMemory.CellSearch;
 
 /**
  * Basic unit test for {@link TemporalMemory}
@@ -312,4 +314,43 @@ public class NewTemporalMemoryTest {
         //Check segment 3
         assertEquals(2, dd3.getAllSynapses(cn).size(), 0);// was 0
     }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testComputePredictiveCells() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setActivationThreshold(2);
+        cn.setMinThreshold(2);
+        cn.setPredictedSegmentDecrement(0.004);
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.5);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        DistalDendrite dd1 = cn.getCell(1).createSegment(cn);
+        Synapse s3 = dd1.createSynapse(cn, cn.getCell(733), 0.7);
+        Synapse s4 = dd1.createSynapse(cn, cn.getCell(733), 0.4);
+        
+        DistalDendrite dd2 = cn.getCell(1).createSegment(cn);
+        Synapse s5 = dd2.createSynapse(cn, cn.getCell(974), 0.9);
+        
+        DistalDendrite dd3 = cn.getCell(8).createSegment(cn);
+        Synapse s6 = dd3.createSynapse(cn, cn.getCell(486), 0.9);
+        
+        DistalDendrite dd4 = cn.getCell(100).createSegment(cn);
+        
+        Set<Cell> activeCells = cn.getCellSet(new int[] { 733, 37, 974, 23 });
+        
+        ComputeCycle cycle = new ComputeCycle();
+        tm.computePredictiveCells(cn, cycle, activeCells);
+        
+        assertTrue(cycle.activeSegments().contains(dd) && cycle.activeSegments().size() == 1);
+        assertTrue(cycle.predictiveCells().contains(cn.getCell(0)) && cycle.predictiveCells().size() == 1);
+        assertTrue(cycle.matchingSegments().contains(dd) && cycle.matchingSegments().contains(dd1));
+        assertTrue(cycle.matchingCells().contains(cn.getCell(0)) && cycle.matchingCells().contains(cn.getCell(1)));
+    }
+    
 }

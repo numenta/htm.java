@@ -334,47 +334,6 @@ public class TemporalMemoryTest {
     
     @SuppressWarnings("unused")
     @Test
-    public void testComputeActiveSynapses() {
-        TemporalMemory tm = new TemporalMemory();
-        Connections cn = new Connections();
-        tm.init(cn);
-        
-        int segmentCounter = 0;
-        int synapseCounter = 0;
-        
-        DistalDendrite dd = cn.getCell(0).createSegment(cn, segmentCounter++);
-        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6, synapseCounter++);
-        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4, synapseCounter++);
-        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9, synapseCounter++);
-        
-        DistalDendrite dd1 = cn.getCell(1).createSegment(cn, segmentCounter++);
-        Synapse s3 = dd1.createSynapse(cn, cn.getCell(733), 0.7, synapseCounter++);
-        
-        DistalDendrite dd2 = cn.getCell(8).createSegment(cn, segmentCounter++);
-        Synapse s4 = dd2.createSynapse(cn, cn.getCell(486), 0.9, synapseCounter++);
-        
-        Set<Cell> activeCells = new LinkedHashSet<Cell>(
-            Arrays.asList(
-                new Cell[] {
-                	cn.getCell(23), cn.getCell(37), cn.getCell(733), cn.getCell(4973) 
-                } 
-            )
-        );
-        
-        Map<DistalDendrite, Set<Synapse>> activeSegmentSynapses = tm.computeActiveSynapses(cn, activeCells);
-        
-        Set<Synapse> syns = activeSegmentSynapses.get(dd);
-        assertEquals(2, syns.size());
-        assertTrue(syns.contains(s0));
-        assertTrue(syns.contains(s1));
-        
-        syns = activeSegmentSynapses.get(dd1);
-        assertEquals(1, syns.size());
-        assertTrue(syns.contains(s3));
-    }
-    
-    @SuppressWarnings("unused")
-    @Test
     public void testGetBestMatchingCell() {
         TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
