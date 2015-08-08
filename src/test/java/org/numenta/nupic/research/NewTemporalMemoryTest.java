@@ -353,4 +353,44 @@ public class NewTemporalMemoryTest {
         assertTrue(cycle.matchingCells().contains(cn.getCell(0)) && cycle.matchingCells().contains(cn.getCell(1)));
     }
     
+    @SuppressWarnings("unused")
+    @Test
+    public void testGetBestMatchingCell() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setConnectedPermanence(0.50);
+        cn.setMinThreshold(1);
+        cn.setSeed(42);
+        tm.init(cn);
+       
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        DistalDendrite dd1 = cn.getCell(0).createSegment(cn);
+        Synapse s3 = dd1.createSynapse(cn, cn.getCell(49), 0.9);
+        Synapse s4 = dd1.createSynapse(cn, cn.getCell(3), 0.8);
+        
+        DistalDendrite dd2 = cn.getCell(1).createSegment(cn);
+        Synapse s5 = dd2.createSynapse(cn, cn.getCell(733), 0.7);
+        
+        DistalDendrite dd3 = cn.getCell(1).createSegment(cn);
+        Synapse s6 = dd3.createSynapse(cn, cn.getCell(486), 0.9);
+        
+        Set<Cell> activeCells = cn.getCellSet(new int[] { 733, 37, 974, 23 });
+        
+        CellSearch result = tm.getBestMatchingCell(cn, cn.getColumn(0).getCells(), activeCells);
+        assertEquals(dd, result.bestSegment);
+        assertEquals(0, result.bestCell.getIndex());
+        
+        result = tm.getBestMatchingCell(cn, cn.getColumn(3).getCells(), activeCells);
+        assertNull(result.bestSegment);
+        assertEquals(107, result.bestCell.getIndex());
+        
+        result = tm.getBestMatchingCell(cn, cn.getColumn(999).getCells(), activeCells);
+        assertNull(result.bestSegment);
+        assertEquals(31993, result.bestCell.getIndex());
+        
+    }
 }
