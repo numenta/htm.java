@@ -510,7 +510,7 @@ public class NewTemporalMemoryTest {
     
     @Test
     public void testAdaptSegmentToMax() {
-        TemporalMemory tm = new TemporalMemory();
+        NewTemporalMemory tm = new NewTemporalMemory();
         Connections cn = new Connections();
         tm.init(cn);
         
@@ -529,7 +529,7 @@ public class NewTemporalMemoryTest {
 
     @Test
     public void testAdaptSegmentToMin() {
-        TemporalMemory tm = new TemporalMemory();
+        NewTemporalMemory tm = new NewTemporalMemory();
         Connections cn = new Connections();
         tm.init(cn);
         
@@ -542,5 +542,35 @@ public class NewTemporalMemoryTest {
         // Changed due to new algorithm implementation
         dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
         assertFalse(cn.getSynapses(dd).contains(s0));
+    }
+    
+    @Test
+    public void testPickCellsToLearnOn() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        
+        Set<Cell> winnerCells = new LinkedHashSet<Cell>();
+        winnerCells.add(cn.getCell(4));
+        winnerCells.add(cn.getCell(47));
+        winnerCells.add(cn.getCell(58));
+        winnerCells.add(cn.getCell(93));
+        
+        List<Cell> learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 2, winnerCells, cn.getRandom()));
+        assertEquals(2, learnCells.size());
+        assertTrue(learnCells.contains(cn.getCell(47)));
+        assertTrue(learnCells.contains(cn.getCell(93)));
+        
+        learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 100, winnerCells, cn.getRandom()));
+        assertEquals(4, learnCells.size());
+        assertEquals(93, learnCells.get(0).getIndex());
+        assertEquals(58, learnCells.get(1).getIndex());
+        assertEquals(47, learnCells.get(2).getIndex());
+        assertEquals(4, learnCells.get(3).getIndex());
+        
+        learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 0, winnerCells, cn.getRandom()));
+        assertEquals(0, learnCells.size());
     }
 }
