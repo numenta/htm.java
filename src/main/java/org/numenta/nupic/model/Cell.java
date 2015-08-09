@@ -39,16 +39,16 @@ public class Cell implements Comparable<Cell> {
     /** Remove boxing where necessary */
     final Integer boxedIndex;
     /** The owning {@link Column} */
-    private final Column parentColumn;
+    private final Column column;
 
 
     /**
      * Constructs a new {@code Cell} object
-     * @param column    the parent {@link Column}
+     * @param column    the containing {@link Column}
      * @param colSeq    this index of this {@code Cell} within its column
      */
     public Cell(Column column, int colSeq) {
-        this.parentColumn = column;
+        this.column = column;
         this.index = column.getIndex() * column.getNumCellsPerColumn() + colSeq;
         this.boxedIndex = new Integer(colSeq);
     }
@@ -65,8 +65,8 @@ public class Cell implements Comparable<Cell> {
      * Returns the column within which this cell resides
      * @return
      */
-    public Column getParentColumn() {
-        return parentColumn;
+    public Column getColumn() {
+        return column;
     }
 
     /**
@@ -145,7 +145,7 @@ public class Cell implements Comparable<Cell> {
      * {@inheritDoc}
      */
     public String toString() {
-        return "Cell: col=" + parentColumn.getIndex() + ", idx=" + index;
+        return "Cell: col=" + column.getIndex() + ", idx=" + index;
     }
 
     /**

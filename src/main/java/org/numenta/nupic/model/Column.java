@@ -41,9 +41,11 @@ import org.numenta.nupic.research.TemporalMemory;
  * @author David Ray
  *
  */
-public class Column {
+public class Column implements Comparable<Column> {
     /** The flat non-topological index of this column */
     private final int index;
+    /** Stored boxed form to eliminate need for boxing on the fly */
+    private final Integer boxedIndex;
     /** Configuration of cell count */
     private final int numCells;
     /** Connects {@link SpatialPooler} input pools */
@@ -60,6 +62,7 @@ public class Column {
     public Column(int numCells, int index) {
         this.numCells = numCells;
         this.index = index;
+        this.boxedIndex = index;
         cells = new Cell[numCells];
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
@@ -184,5 +187,15 @@ public class Column {
      */
     public String toString() {
         return "Column: idx=" + index;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @param otherColumn     the {@code Column} to compare to
+     * @return
+     */
+    @Override
+    public int compareTo(Column otherColumn) {
+        return boxedIndex.compareTo(otherColumn.boxedIndex);
     }
 }

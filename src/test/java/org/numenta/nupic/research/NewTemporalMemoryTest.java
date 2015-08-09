@@ -590,4 +590,32 @@ public class NewTemporalMemoryTest {
         List<Cell> learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 2, winnerCells, cn.getRandom()));
         assertTrue(learnCells.isEmpty());
     }
+    
+    @Test
+    public void testColumnForCell1D() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setColumnDimensions(new int[] { 2048 });
+        cn.setCellsPerColumn(5);
+        tm.init(cn);
+        
+        assertEquals(0, cn.getCell(0).getColumn().getIndex());
+        assertEquals(0, cn.getCell(4).getColumn().getIndex());
+        assertEquals(1, cn.getCell(5).getColumn().getIndex());
+        assertEquals(2047, cn.getCell(10239).getColumn().getIndex());
+    }
+    
+    @Test
+    public void testColumnForCell2D() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        cn.setColumnDimensions(new int[] { 64, 64 });
+        cn.setCellsPerColumn(4);
+        tm.init(cn);
+        
+        assertEquals(0, cn.getCell(0).getColumn().getIndex());
+        assertEquals(0, cn.getCell(3).getColumn().getIndex());
+        assertEquals(1, cn.getCell(4).getColumn().getIndex());
+        assertEquals(4095, cn.getCell(16383).getColumn().getIndex());
+    }
 }

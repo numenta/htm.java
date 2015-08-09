@@ -165,7 +165,7 @@ public class TemporalMemory {
      */
     public void activateCorrectlyPredictiveCells(ComputeCycle c, Set<Cell> prevPredictiveCells, Set<Column> activeColumns) {
         for(Cell cell : prevPredictiveCells) {
-            Column column = cell.getParentColumn();
+            Column column = cell.getColumn();
             if(activeColumns.contains(column)) {
                 c.activeCells.add(cell);
                 c.winnerCells.add(cell);

@@ -92,7 +92,7 @@ public class NewTemporalMemory {
         ComputeCycle c, Set<Cell> prevPredictiveCells, Set<Cell> prevMatchingCells, Set<Column> activeColumns) {
         
         for(Cell cell : prevPredictiveCells) {
-            Column column = cell.getParentColumn();
+            Column column = cell.getColumn();
             if(activeColumns.contains(column)) {
                 c.activeCells.add(cell);
                 c.winnerCells.add(cell);
@@ -102,7 +102,7 @@ public class NewTemporalMemory {
         
         if(cnx.getPredictedSegmentDecrement() > 0) {
             for(Cell cell : prevMatchingCells) {
-                Column column = cell.getParentColumn();
+                Column column = cell.getColumn();
                 
                 if(!activeColumns.contains(column)) {
                     c.predictedInactiveCells.add(cell);
