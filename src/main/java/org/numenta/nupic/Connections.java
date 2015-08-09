@@ -139,9 +139,12 @@ public class Connections {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
+    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
     protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
+    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
+    @Deprecated
     protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
     
     /** Total number of columns */
@@ -1158,6 +1161,22 @@ public class Connections {
     }
     
     /**
+     * Returns the Set of matching {@link Cell}s
+     * @return
+     */
+    public Set<Cell> getMatchingCells() {
+        return matchingCells;
+    }
+    
+    /**
+     * Sets the Set of matching {@link Cell}s
+     * @param cells
+     */
+    public void setMatchingCells(Set<Cell> cells) {
+        this.matchingCells = cells;
+    }
+    
+    /**
      * Returns the {@link Set} of columns successfully predicted from t - 1.
      * 
      * @return  the current {@link Set} of predicted columns
@@ -1207,9 +1226,26 @@ public class Connections {
     }
     
     /**
+     * Returns the Set of matching {@link DistalDendrite}s
+     * @return
+     */
+    public Set<DistalDendrite> getMatchingSegments() {
+        return matchingSegments;
+    }
+    
+    /**
+     * Sets the Set of matching {@link DistalDendrite}s
+     * @param segments
+     */
+    public void setMatchingSegments(Set<DistalDendrite> segments) {
+        this.matchingSegments = segments;
+    }
+    
+    /**
      * Returns the mapping of Segments to active synapses in t-1
      * @return
      */
+    @Deprecated
     public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
         return activeSynapsesForSegment;
     }
@@ -1218,6 +1254,7 @@ public class Connections {
      * Sets the mapping of {@link Segment}s to active {@link Synapse}s
      * @param syns
      */
+    @Deprecated
     public void setActiveSynapsesForSegment(Map<DistalDendrite, Set<Synapse>> syns) {
     	this.activeSynapsesForSegment = syns;
     }

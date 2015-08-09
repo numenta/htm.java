@@ -6,6 +6,8 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,6 +72,64 @@ public class NewTemporalMemory {
     }
     
     /////////////////////////// CORE FUNCTIONS /////////////////////////////
+    /**
+     * Feeds input record through TM, performing inferencing and learning
+     * 
+     * @param connections       the connection memory
+     * @param activeColumns     direct proximal dendrite input
+     * @param learn             learning mode flag
+     * @return                  {@link ComputeCycle} container for one cycle of inference values.
+     */
+    public ComputeCycle compute(Connections connections, int[] activeColumns, boolean learn) {
+        ComputeCycle result = computeFn(connections, connections.getColumnSet(activeColumns), connections.getPredictiveCells(), 
+            connections.getActiveSegments(), connections.getActiveCells(), connections.getWinnerCells(), connections.getMatchingSegments(), 
+                connections.getMatchingCells(), learn);
+        
+        connections.setActiveCells(result.activeCells());
+        connections.setWinnerCells(result.winnerCells());
+        connections.setPredictiveCells(result.predictiveCells());
+        connections.setSuccessfullyPredictedColumns(result.successfullyPredictedColumns());
+        connections.setActiveSegments(result.activeSegments());
+        connections.setLearningSegments(result.learningSegments());
+        connections.setMatchingSegments(result.matchingSegments());
+        connections.setMatchingCells(result.matchingCells());
+        
+        return result; 
+    }
+    
+    /**
+     * Functional version of {@link #compute(int[], boolean)}. 
+     * This method is stateless and concurrency safe.
+     * 
+     * @param c                             {@link Connections} object containing state of memory members
+     * @param activeColumns                 active {@link Column}s in t
+     * @param prevPredictiveCells           cells predicting in t-1
+     * @param prevActiveSegments            active {@link Segment}s in t-1
+     * @param prevActiveCells               active {@link Cell}s in t-1
+     * @param prevWinnerCells               winner {@link Cell}s in t-1
+     * @param prevMatchingSegments          matching {@link Segment}s in t-1
+     * @param prevMatchingCells             matching cells in t-1 
+     * @param learn                         whether mode is "learning" mode
+     * @return
+     */
+    public ComputeCycle computeFn(Connections c, Set<Column> activeColumns, Set<Cell> prevPredictiveCells, Set<DistalDendrite> prevActiveSegments,
+        Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells, Set<DistalDendrite> prevMatchingSegments, Set<Cell> prevMatchingCells, boolean learn) {
+        
+        ComputeCycle cycle = new ComputeCycle();
+        activateCorrectlyPredictiveCells(c, cycle, prevPredictiveCells, prevMatchingCells, activeColumns);
+        
+        burstColumns(cycle, c, activeColumns, cycle.successfullyPredictedColumns, prevActiveCells, prevWinnerCells);
+        
+        if(learn) {
+            learnOnSegments(c, prevActiveSegments, cycle.learningSegments, prevActiveCells, 
+                cycle.winnerCells, prevWinnerCells, cycle.predictedInactiveCells, prevMatchingSegments);
+        }
+        
+        computePredictiveCells(c, cycle, cycle.activeCells);
+        
+        return cycle;
+    }
+    
     /**
      * Phase 1: Activate the correctly predictive cells
      * 
