@@ -573,4 +573,21 @@ public class NewTemporalMemoryTest {
         learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 0, winnerCells, cn.getRandom()));
         assertEquals(0, learnCells.size());
     }
+    
+    @Test
+    public void testPickCellsToLearnOnAvoidDuplicates() {
+        NewTemporalMemory tm = new NewTemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        dd.createSynapse(cn, cn.getCell(23), 0.6);
+        
+        Set<Cell> winnerCells = new LinkedHashSet<Cell>();
+        winnerCells.add(cn.getCell(23));
+        
+        // Ensure that no additional (duplicate) cells were picked
+        List<Cell> learnCells = new ArrayList<Cell>(dd.pickCellsToLearnOn(cn, 2, winnerCells, cn.getRandom()));
+        assertTrue(learnCells.isEmpty());
+    }
 }
