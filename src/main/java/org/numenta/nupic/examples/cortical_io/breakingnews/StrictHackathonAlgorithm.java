@@ -36,7 +36,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 public class StrictHackathonAlgorithm implements Algorithm {
     private static final Logger LOGGER = LoggerFactory.getLogger(StrictHackathonAlgorithm.class);
     
-    private static final int SDR_WIDTH = 2048;
+    private static final int SDR_WIDTH = 16384;
     private static final double SPARSITY = 0.02;
     
     private RetinaApis retinaApis;
@@ -178,6 +178,7 @@ public class StrictHackathonAlgorithm implements Algorithm {
      * @return
      */
     double getSparsity(int[] sdr) {
+        System.out.println("SDR LEN = " + sdr.length);
         double sparsity = (double)sdr.length / (double)SDR_WIDTH;
         return sparsity;
     }

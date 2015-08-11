@@ -6,11 +6,10 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -85,14 +84,14 @@ public class NewTemporalMemory {
             connections.getActiveSegments(), connections.getActiveCells(), connections.getWinnerCells(), connections.getMatchingSegments(), 
                 connections.getMatchingCells(), learn);
         
-        connections.setActiveCells(result.activeCells());
-        connections.setWinnerCells(result.winnerCells());
-        connections.setPredictiveCells(result.predictiveCells());
-        connections.setSuccessfullyPredictedColumns(result.successfullyPredictedColumns());
-        connections.setActiveSegments(result.activeSegments());
-        connections.setLearningSegments(result.learningSegments());
-        connections.setMatchingSegments(result.matchingSegments());
-        connections.setMatchingCells(result.matchingCells());
+        connections.setActiveCells(result.activeCells);
+        connections.setWinnerCells(result.winnerCells);
+        connections.setPredictiveCells(result.predictiveCells);
+        connections.setSuccessfullyPredictedColumns(result.successfullyPredictedColumns);
+        connections.setActiveSegments(result.activeSegments);
+        connections.setLearningSegments(result.learningSegments);
+        connections.setMatchingSegments(result.matchingSegments);
+        connections.setMatchingCells(result.matchingCells);
         
         return result; 
     }
@@ -148,8 +147,8 @@ public class NewTemporalMemory {
      * @param prevPredictiveCells   predictive {@link Cell}s predictive cells in t-1
      * @param activeColumns         active columns in t
      */
-    public void activateCorrectlyPredictiveCells(Connections cnx,
-        ComputeCycle c, Set<Cell> prevPredictiveCells, Set<Cell> prevMatchingCells, Set<Column> activeColumns) {
+    public void activateCorrectlyPredictiveCells(Connections cnx, ComputeCycle c, 
+        Set<Cell> prevPredictiveCells, Set<Cell> prevMatchingCells, Set<Column> activeColumns) {
         
         for(Cell cell : prevPredictiveCells) {
             Column column = cell.getColumn();
@@ -209,7 +208,9 @@ public class NewTemporalMemory {
                 bestSegment = cellSearch.bestCell.createSegment(c);
             }
             
-            cycle.learningSegments.add(bestSegment);
+            if(bestSegment != null) {
+                cycle.learningSegments.add(bestSegment);
+            }
         }
     }
     
@@ -255,7 +256,7 @@ public class NewTemporalMemory {
             boolean isLearningSegment = learningSegments.contains(dd);
             boolean isFromWinnerCell = winnerCells.contains(dd.getParentCell());
             
-            Set<Synapse> activeSynapses = dd.getConnectedActiveSynapses(c, prevActiveCells);
+            Set<Synapse> activeSynapses = dd.getActiveSynapses(c, prevActiveCells);
             
             if(isLearningSegment || isFromWinnerCell) {
                 dd.adaptSegment(c, activeSynapses, permanenceIncrement, permanenceDecrement);
@@ -275,7 +276,7 @@ public class NewTemporalMemory {
                 boolean isPredictedInactiveCell = predictedInactiveCells.contains(segment.getParentCell());
                 
                 if(isPredictedInactiveCell) {
-                    Set<Synapse> activeSynapses = segment.getConnectedActiveSynapses(c, prevActiveCells);
+                    Set<Synapse> activeSynapses = segment.getActiveSynapses(c, prevActiveCells);
                     segment.adaptSegment(c, activeSynapses, -c.getPredictedSegmentDecrement(), 0.0);
                 }
             }
@@ -303,6 +304,7 @@ public class NewTemporalMemory {
     public void computePredictiveCells(Connections c, ComputeCycle cycle, Set<Cell> activeCells) {
         TObjectIntMap<DistalDendrite> numActiveConnectedSynapsesForSegment = new TObjectIntHashMap<>();
         TObjectIntMap<DistalDendrite> numActiveSynapsesForSegment = new TObjectIntHashMap<>();
+        
         for(Cell cell : activeCells) {
             for(Synapse syn : c.getReceptorSynapses(cell)) {
                 DistalDendrite segment = (DistalDendrite)syn.getSegment();
@@ -329,6 +331,21 @@ public class NewTemporalMemory {
                 }
             }
         }
+    }
+    
+    /**
+     * Called to start the input of a new sequence, and
+     * reset the sequence state of the TM.
+     * 
+     * @param   connections   the Connections state of the temporal memory
+     */
+    public void reset(Connections connections) {
+        connections.getActiveCells().clear();
+        connections.getPredictiveCells().clear();
+        connections.getActiveSegments().clear();
+        connections.getWinnerCells().clear();
+        connections.getMatchingCells().clear();
+        connections.getMatchingSegments().clear();
     }
     
     

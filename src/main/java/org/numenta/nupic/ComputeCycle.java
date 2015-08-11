@@ -20,18 +20,18 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic.research;
+package org.numenta.nupic;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Contains a snapshot of the state attained during one computational
@@ -43,16 +43,17 @@ import org.numenta.nupic.model.Synapse;
  * @author David Ray
  */
 public class ComputeCycle {
-    Set<Cell> activeCells = new LinkedHashSet<>();
-    Set<Cell> winnerCells = new LinkedHashSet<>();
-    Set<Cell> predictiveCells = new LinkedHashSet<>();
-    Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
-    Set<Cell> matchingCells = new LinkedHashSet<>();
-    Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
-    Set<DistalDendrite> activeSegments = new LinkedHashSet<>();
-    Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
-    Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
-    Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<>();
+    public Set<Cell> activeCells = new LinkedHashSet<>();
+    public Set<Cell> winnerCells = new LinkedHashSet<>();
+    public Set<Cell> predictiveCells = new LinkedHashSet<>();
+    public Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
+    public Set<Cell> matchingCells = new LinkedHashSet<>();
+    public Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
+    public Set<DistalDendrite> activeSegments = new LinkedHashSet<>();
+    public Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
+    public Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
+    @Deprecated
+    public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<>();
     
     
     /**
@@ -132,6 +133,7 @@ public class ComputeCycle {
      * Returns the mapping of Segments to active synapses in t-1
      * @return
      */
+    @Deprecated
     public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
         return activeSynapsesForSegment;
     }

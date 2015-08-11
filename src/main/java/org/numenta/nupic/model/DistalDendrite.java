@@ -153,7 +153,7 @@ public class DistalDendrite extends Segment {
      * @param activeCells       the active cells
      * @return  Set of {@link Synapse}s connected to active presynaptic cells.
      */
-    public Set<Synapse> getConnectedActiveSynapses(Connections c, Set<Cell> activeCells) {
+    public Set<Synapse> getActiveSynapses(Connections c, Set<Cell> activeCells) {
         Set<Synapse> synapses = new LinkedHashSet<>();
         
         for(Synapse synapse : c.getSynapses(this)) {

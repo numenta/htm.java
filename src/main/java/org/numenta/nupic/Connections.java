@@ -1273,12 +1273,12 @@ public class Connections {
         }
         
         if(receptorSynapses == null) {
-            receptorSynapses = new LinkedHashMap<Cell, Set<Synapse>>();
+            receptorSynapses = new LinkedHashMap<>();
         }
         
         Set<Synapse> retVal = null;
         if((retVal = receptorSynapses.get(cell)) == null) {
-            receptorSynapses.put(cell, retVal = new LinkedHashSet<Synapse>());
+            receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
         }
         
         return retVal;

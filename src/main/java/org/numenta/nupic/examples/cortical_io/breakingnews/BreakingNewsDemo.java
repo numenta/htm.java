@@ -237,6 +237,8 @@ public class BreakingNewsDemo extends Application {
             // Show fingerprints
             popuplateFingerPrintDisplay(tweet, prediction);
             
+            System.out.println("Finger print display = " + prediction.length);
+            
             // Log Activity to Activity Monitor Display
             logActivity(tweet);
         });

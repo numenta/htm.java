@@ -139,9 +139,8 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         
         initTM();
         
-        int seed = 42;
         finishSetUp(new PatternMachine(
-            ((int[])parameters.getParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS))[0], 23, seed));
+            ((int[])parameters.getParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS))[0], 23));
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
         Integer[] shuffledNums = new Integer[] { 

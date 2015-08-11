@@ -52,6 +52,7 @@ public class Column implements Comparable<Column> {
     private ProximalDendrite proximalDendrite;
 
     private Cell[] cells;
+    private List<Cell> cellList;
 
     /**
      * Constructs a new {@code Column}
@@ -67,6 +68,9 @@ public class Column implements Comparable<Column> {
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
         }
+        
+        cellList = Collections.unmodifiableList(Arrays.asList(cells));
+        
         proximalDendrite = new ProximalDendrite(index);
     }
 
@@ -85,7 +89,7 @@ public class Column implements Comparable<Column> {
      * @return
      */
     public List<Cell> getCells() {
-        return Arrays.asList(cells);
+        return cellList;
     }
 
     /**
@@ -113,11 +117,10 @@ public class Column implements Comparable<Column> {
      * @return
      */
     public Cell getLeastUsedCell(Connections c, Random random) {
-        List<Cell> cells = getCells();
-        List<Cell> leastUsedCells = new ArrayList<Cell>();
+        List<Cell> leastUsedCells = new ArrayList<>();
         int minNumSegments = Integer.MAX_VALUE;
 
-        for(Cell cell : cells) {
+        for(Cell cell : cellList) {
             int numSegments = cell.getSegments(c).size();
 
             if(numSegments < minNumSegments) {

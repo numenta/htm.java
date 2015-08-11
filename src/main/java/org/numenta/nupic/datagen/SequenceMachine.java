@@ -77,6 +77,26 @@ public class SequenceMachine {
     }
     
     /**
+     * Add spatial noise to each pattern in the sequence.
+     * 
+     * @param sequence      List of patterns
+     * @param amount        Amount of spatial noise
+     * @return  Sequence with noise added to each non-empty pattern
+     */
+    public List<Set<Integer>> addSpatialNoise(List<Set<Integer>> sequence, double amount) {
+        List<Set<Integer>> newSequence = new ArrayList<Set<Integer>>();
+        
+        for(Set<Integer> pattern : sequence) {
+            if(!pattern.equals(NONE)) {
+                pattern = patternMachine.addNoise(pattern, amount);
+            }
+            newSequence.add(pattern);
+        }
+        
+        return newSequence;
+    }
+    
+    /**
      * Pretty print a sequence.
      * 
      * @param sequence      the sequence of numbers to print
@@ -99,4 +119,5 @@ public class SequenceMachine {
         }
         return text;
     }
+     
 }
