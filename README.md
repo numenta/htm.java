@@ -7,9 +7,13 @@ htm.java
 
 Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic) python project.
 
-**NOTE: Minimum JavaSE version is 1.8**   
+**NOTE: Minimum JavaSE version is 1.8**  -  Current Version on Maven Central [(0.5.4)] (http://search.maven.org/#search%7Cga%7C1%7Chtm.java)
+
+***
 
 ### In The News...
+* [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
+* [HTM.java Receives new demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
 * [HTM.java Receives two new **Cortical.io** demos!](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io) (07/26/2015)
 * [HTM.java Now versioned and up on Maven Central!](http://search.maven.org/#search%7Cga%7C1%7Chtm.java) (06/12/2015)
 * [HTM.java Recieves New Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html) (06/08/2015)
@@ -34,6 +38,11 @@ See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more in
 For answers to more detailed questions, email the [nupic-discuss](http://lists.numenta.org/mailman/listinfo/nupic_lists.numenta.org) mailing list, or chat with us on Gitter.
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
+
+
+For more detailed discussions regarding HTM.java specifically, come chat with us here: 
+
+[![Gitter](https://img.shields.io/badge/gitter-join_chat-green.svg?style=flat)](https://gitter.im/numenta/htm.java?utm_source=badge)
 
 ***
 
