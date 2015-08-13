@@ -1,5 +1,6 @@
 package org.numenta.nupic.monitor.mixin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -12,11 +13,11 @@ import java.util.List;
  * @author Chetan Surpur
  * @author cogmission
  */
-public abstract class Trace {
+public abstract class Trace<T> {
     protected MonitorMixinBase monitor;
     protected String title;
     
-    protected List<?> data;
+    protected List<T> data;
     
     /**
      * Constructs a new {@code Trace}
@@ -26,6 +27,8 @@ public abstract class Trace {
     public Trace(MonitorMixinBase monitor, String title) {
         this.monitor = monitor;
         this.title = title;
+        
+        data = new ArrayList<>();
     }
     
     /**
@@ -50,4 +53,5 @@ public abstract class Trace {
     public String prettyPrintDatum(Object datum) {
         return datum.toString();
     }
+    
 }

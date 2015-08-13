@@ -21,13 +21,13 @@ import java.util.Map;
  * @author David Ray
  */
 public interface MonitorMixinBase {
-    Map<String, Trace> getTraces();
+    Map<String, Trace<?>> getTraces();
     
     default String mmGetName() {
         return null;
     }
     
-    default <T extends Trace> List<T> mmGetDefaultTraces() {
+    default <T extends Trace<?>> List<T> mmGetDefaultTraces() {
         return Collections.emptyList();
     }
 }

@@ -69,15 +69,4 @@ public class NewAbstractTemporalMemoryTest {
         }
     }
     
-    public static void main(String[] args) {
-        class A implements MonitorMixinBase {};
-        
-        class B implements MonitorMixinBase {};
-        
-        A a = new A(); a.setName("A");
-        B b = new B(); b.setName("B");
-        
-        System.out.println("A name = " + a.getName());
-        System.out.println("B name = " + b.getName());
-    }
 }
