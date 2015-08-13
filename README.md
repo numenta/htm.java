@@ -9,6 +9,8 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 
 **NOTE: Minimum JavaSE version is 1.8**  -  Current Version on Maven Central [(0.5.4)] (http://search.maven.org/#search%7Cga%7C1%7Chtm.java)
 
+***
+
 ### In The News...
 * [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
 * [HTM.java Receives new demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
