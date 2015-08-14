@@ -1,6 +1,6 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png) ![Cortical.io Logo](https://avatars0.githubusercontent.com/u/7721887?v=3&amp;s=200)
 # Example Demos
-_(Illustrating the integration of [NuPIC](https://github.com/numenta/nupic) & [Cortical.io](http://cortical.io))_
+_(Illustrating the integration of [HTM.java](https://github.com/numenta/htm.java) & [Cortical.io](http://cortical.io))_
 
 This directory is the collecting place for programs which demonstrate the use of Cortical.io's Java API together with HTM.java ([NuPIC](https://github.com/numenta/nupic) on Java). 
 
