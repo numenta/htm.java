@@ -13,3 +13,9 @@ This directory is the collecting place for programs which demonstrate the use of
 2. [**Breaking News Demo**](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io/breakingnews) - Java version of the Cortical.io team's 2015 Spring Hackathon project demonstrating Trend Analysis and Tracking of tweets from Twitter. ([Executable Jar](http://cognitionmission.com/breaking-news-demo-1.0.0.jar))
 
 [Get a _FREE_ Cortical.io API KEY](http://www.cortical.io/resources_apikey.html)
+
+***
+
+**NOTE:** To Use the [Cortical.io API](https://github.com/cortical-io/java-client-sdk) in your own projects you must use their API, the above demos **do not** include the API necessary for project usage. 
+
+Go [**HERE**](https://github.com/cortical-io/java-client-sdk) to get the Cortical.io API 
