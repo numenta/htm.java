@@ -13,7 +13,7 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 
 ### In The News...
 * [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
-* [HTM.java Receives new demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
+* [HTM.java Receives new **Cortical.io** demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
 * [HTM.java Receives two new **Cortical.io** demos!](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io) (07/26/2015)
 * [HTM.java Now versioned and up on Maven Central!](http://search.maven.org/#search%7Cga%7C1%7Chtm.java) (06/12/2015)
 * [HTM.java Recieves New Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html) (06/08/2015)
