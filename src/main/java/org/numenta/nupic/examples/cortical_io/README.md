@@ -2,9 +2,13 @@
 # Example Demos
 _(Illustrating the integration of [NuPIC](https://github.com/numenta/nupic) & [Cortical.io](http://cortical.io))_
 
+This directory is the collecting place for programs which demonstrate the use of Cortical.io's Java API together with HTM.java ([NuPIC](https://github.com/numenta/nupic) on Java). 
+
+***
+
 **This just in!** (11/08/2015) - [**See a video of the demos in action!**](https://www.youtube.com/watch?v=Y3p02cbdUas)
 
-This directory is the collecting place for programs which demonstrate the use of Cortical.io's Java API together with HTM.java ([NuPIC](https://github.com/numenta/nupic) on Java). 
+***
 
 > _Usage instructions are located in directories pointed to by the links (demo titles) below._
 
