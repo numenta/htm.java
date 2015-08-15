@@ -16,7 +16,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 - [Issue #260] - Add [synchronous compute call](https://github.com/numenta/htm.java/issues/260) to get an immediate response back in a "blocking way" in the same thread that calls the network. Solved in [PR #263]
 - [PR #265] - Updated Javadocs for #260
-- [Issue #270 (In Progress)] - Sync Up TemporalMemory with current version
+- [Issue #270 (In Progress)] - Sync Up TemporalMemory with current version 
+
+## [0.5.5] - 2015-08-15
+### Added
+- New Hot Gym Demo and README.md landing page
+
+## Fixed
+- All demo jar sizes by taking out unneeded artifacts and files
+
+## [0.5.4] - 2015-08-12
+### Changed
+- pom.xml Added In-Project maven repo as attempt to solve transitive dependency failure (not working)
+
+## [0.5.3] - 2015-08-11
+### Changed
+- pom.xml for demo transitive dependency failure
 
 ## [0.5.2] - 2015-07-26
 ### Added 
