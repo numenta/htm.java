@@ -17,23 +17,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - [Issue #270 (In Progress)] - Sync Up TemporalMemory with current version 
 
 ## [0.5.5] - 2015-08-15
-### Added
+#### Added
 - New Hot Gym Demo and README.md landing page
 
-### Fixed
+#### Fixed
 - All demo jar sizes by taking out unneeded artifacts and files
 
 ## [0.5.4] - 2015-08-12
-### Changed
+#### Changed
 - pom.xml Added In-Project maven repo as attempt to solve transitive dependency failure (not working)
 
 ## [0.5.3] - 2015-08-11
-### Changed
+#### Changed
 - [Issue #260] - Add [synchronous compute call](https://github.com/numenta/htm.java/issues/260) to get an immediate response back in a "blocking way" in the same thread that calls the network. Solved in [PR #263]
 - [PR #265] - Updated Javadocs for #260
 
 ## [0.5.2] - 2015-07-26
-### Added 
+#### Added 
 - This change log 
 - 2 new Cortical.io demos "FoxEatsDemo" & "BreakingNews"
 - Tests for the above demos
