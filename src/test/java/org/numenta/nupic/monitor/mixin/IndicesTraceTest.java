@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,12 +15,8 @@ public class IndicesTraceTest {
     
     @Before
     public void setUp() {
-        trace = new IndicesTrace(new MonitorMixinBase() {
-            @Override
-            public Map<String, Trace<?>> getTraces() {
-                // TODO Auto-generated method stub
-                return null;
-            }}, "active cells");
+        trace = new IndicesTrace(null, "active cells");
+        
         trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(1, 2, 3)));
         trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(4, 5)));
         trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(6)));

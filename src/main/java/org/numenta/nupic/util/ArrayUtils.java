@@ -38,6 +38,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
  * Utilities to match some of the functionality found in Python's Numpy.
@@ -270,6 +274,21 @@ public class ArrayUtils {
 
         return tuples;
     }
+    
+    /**
+     * Returns an array with the same shape and the contents
+     * converted to integers.
+     *
+     * @param doubs an array of doubles.
+     * @return
+     */
+    public static int[] toIntArray(double[] doubs) {
+        int[] retVal = new int[doubs.length];
+        for (int i = 0; i < doubs.length; i++) {
+            retVal[i] = (int)doubs[i];
+        }
+        return retVal;
+    }
 
     /**
      * Returns an array with the same shape and the contents
@@ -325,21 +344,6 @@ public class ArrayUtils {
             a[i] = modulo(a[i], b);
         }
         return a;
-    }
-
-    /**
-     * Returns an array with the same shape and the contents
-     * converted to integers.
-     *
-     * @param doubs an array of doubles.
-     * @return
-     */
-    public static int[] toIntArray(double[] doubs) {
-        int[] retVal = new int[doubs.length];
-        for (int i = 0; i < doubs.length; i++) {
-            retVal[i] = (int)doubs[i];
-        }
-        return retVal;
     }
 
     /**
@@ -1404,6 +1408,54 @@ public class ArrayUtils {
             }
         }
         return index;
+    }
+    
+    /**
+     * Returns a boxed Integer[] from the specified primitive array
+     * @param ints      the primitive int array
+     * @return
+     */
+    public static Integer[] toBoxed(int[] ints) {
+        return IntStream.of(ints).boxed().collect(Collectors.toList()).toArray(new Integer[ints.length]);
+    }
+    
+    /**
+     * Returns a boxed Double[] from the specified primitive array
+     * @param doubles       the primitive double array
+     * @return
+     */
+    public static Double[] toBoxed(double[] doubles) {
+        return DoubleStream.of(doubles).boxed().collect(Collectors.toList()).toArray(new Double[doubles.length]);
+    }
+    
+    /**
+     * Converts an array of Integer objects to an array of its
+     * primitive form.
+     * 
+     * @param doubs
+     * @return
+     */
+    public static int[] toPrimitive(Integer[] ints) {
+        int[] retVal = new int[ints.length];
+        for(int i = 0;i < retVal.length;i++) {
+            retVal[i] = ints[i].intValue();
+        }
+        return retVal;
+    }
+    
+    /**
+     * Converts an array of Double objects to an array of its
+     * primitive form.
+     * 
+     * @param doubs
+     * @return
+     */
+    public static double[] toPrimitive(Double[] doubs) {
+        double[] retVal = new double[doubs.length];
+        for(int i = 0;i < retVal.length;i++) {
+            retVal[i] = doubs[i].doubleValue();
+        }
+        return retVal;
     }
     
     /**

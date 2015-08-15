@@ -3,7 +3,8 @@ package org.numenta.nupic.monitor.mixin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -11,7 +12,8 @@ import java.util.stream.Collectors;
  * 
  * @author cogmission
  */
-public class IndicesTrace extends Trace<Set<Integer>> {
+public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
+    protected List<LinkedHashSet<Integer>> data;
 
     /**
      * Constructs a new {@code IndicesTrace}
@@ -21,6 +23,8 @@ public class IndicesTrace extends Trace<Set<Integer>> {
      */
     public IndicesTrace(MonitorMixinBase monitor, String title) {
         super(monitor, title);
+        
+        data = new ArrayList<>();
     }
     
     /**
