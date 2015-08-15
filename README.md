@@ -12,6 +12,7 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 ***
 
 ### In The News...
+* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
 * [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
 * [HTM.java Receives new **Cortical.io** demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
 * [HTM.java Receives two new **Cortical.io** demos!](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io) (07/26/2015)
