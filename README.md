@@ -22,7 +22,7 @@ Official community-supported Java implementation of [Hierarchal Temporal Memory 
 * [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
 * [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
 * [HTM.java Reaches Functional Completion](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html) (12/2014)
-* 
+
 
 ### View [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Newly Added! 2015-07-27)
 * Change log itemizes the release history.
