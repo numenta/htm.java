@@ -17,6 +17,8 @@ Just type ( from demo dir: htm.java/src/main/java/org/numenta/nupic/examples/nap
 ### Basic Mode
 1 Layer, 1 Region - Everything running in one layer...
 
+Until **Hierarchy**, and **Sensorimotor** functionality are released, this will be the most typical usecase...
+
 ``` Java
 /**
  * Creates a basic {@link Network} with 1 {@link Region} and 1 {@link Layer}. However
