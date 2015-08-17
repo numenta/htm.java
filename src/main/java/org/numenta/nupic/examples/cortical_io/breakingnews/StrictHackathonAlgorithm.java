@@ -36,7 +36,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 public class StrictHackathonAlgorithm implements Algorithm {
     private static final Logger LOGGER = LoggerFactory.getLogger(StrictHackathonAlgorithm.class);
     
-    private static final int SDR_WIDTH = 2048;
+    private static final int SDR_WIDTH = 16384;
     private static final double SPARSITY = 0.02;
     
     private RetinaApis retinaApis;

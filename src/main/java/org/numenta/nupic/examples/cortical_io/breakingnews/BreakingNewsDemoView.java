@@ -236,7 +236,6 @@ public class BreakingNewsDemoView extends GridPane {
         button1.getStyleClass().addAll("first");
         button1.setOnAction(e -> {
             Platform.runLater(() -> {
-                System.out.println("start");
                 if(mode == Mode.MANUAL) {
                     runOneBtn.setDisable(false);
                 }
@@ -247,7 +246,6 @@ public class BreakingNewsDemoView extends GridPane {
         button2.getStyleClass().addAll("last");
         button2.setOnAction(e -> {
             Platform.runLater(() -> {
-                System.out.println("stop");
                 startActionProperty.set(false);
             });
         });
@@ -255,7 +253,6 @@ public class BreakingNewsDemoView extends GridPane {
         button3.getStyleClass().addAll("first");
         button3.setOnAction(e -> {
             Platform.runLater(() -> {
-                System.out.println("Auto");
                 mode = Mode.AUTO;
                 autoModeProperty.set(mode);
             });
@@ -264,7 +261,6 @@ public class BreakingNewsDemoView extends GridPane {
         button4.getStyleClass().addAll("last");
         button4.setOnAction(e -> {
             Platform.runLater(() -> {
-                System.out.println("Manual");
                 mode = Mode.MANUAL;
                 autoModeProperty.set(mode);
             });
@@ -274,7 +270,6 @@ public class BreakingNewsDemoView extends GridPane {
         button5.setDisable(true);
         button5.setOnAction(e -> {
             Platform.runLater(() -> {
-                System.out.println("Run One");
                 runOneProperty.set(runOneProperty.get() + 1);
             });
         });
