@@ -25,13 +25,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.sensor.FileSensor;
-import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.NetworkTestHarness;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.util.MersenneTwister;
 
 
 public class FileSensorTest {
@@ -61,6 +67,36 @@ public class FileSensorTest {
         assertEquals("some name", sp.get("FILE"));
         assertEquals(null, sp.get("NAME"));
         assertEquals(ResourceLocator.path("rec-center-hourly.csv"), sp.get("PATH"));
+    }
+    
+    @SuppressWarnings("unused")
+    @Ignore
+    private void testReadIntegerArray() {
+        Publisher manual = Publisher.builder()
+            .addHeader("sdr_in")
+            .addHeader("int")
+            .addHeader("B")
+            .build();
+        
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, 
+                SensorParams.create(
+                    Keys::obs, new Object[] {"name", manual}));
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        
+        try {
+            Stream<String> s = Files.lines(Paths.get(getClass().getResource("1_100.csv").getPath()));
+            int[] SDR = s.mapToInt(b -> (int)(s.equals("0") ? 0 : 1)).toArray();
+            s.close();
+            System.out.println("len = " + Arrays.toString(SDR));
+            
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
