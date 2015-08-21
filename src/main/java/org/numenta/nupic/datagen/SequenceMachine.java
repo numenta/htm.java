@@ -22,11 +22,18 @@
 
 package org.numenta.nupic.datagen;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Utilities for generating and manipulating sequences, for use in
@@ -54,6 +61,42 @@ public class SequenceMachine {
      */
     public SequenceMachine(PatternMachine pMachine) {
         this.patternMachine = pMachine;
+    }
+    
+    /**
+     * Generates a series of sequences which may optionally contain shared ranges.
+     * 
+     * @param numSequences
+     * @param sequenceLength
+     * @param sharedRange
+     * @return
+     */
+    public List<Integer> generateNumbers(int numSequences, int sequenceLength, Tuple sharedRange) {
+        List<Integer> numbers = new ArrayList<>();
+        
+        TIntList sharedNumbers = null;
+        int sharedStart = 0;
+        int sharedEnd = 0;
+        if(sharedRange != null && sharedRange.size() == 2) {
+            int sharedLength = (sharedEnd = (int)sharedRange.get(1)) - (sharedStart = (int)sharedRange.get(0));
+            sharedNumbers = new TIntArrayList(ArrayUtils.xrange(
+                numSequences * sequenceLength, numSequences * sequenceLength + sharedLength, 1));
+        }
+        
+        for(int i = 0;i < numSequences;i++) {
+            int start = i * sequenceLength;
+            int[] newNumbers = ArrayUtils.xrange(start, start + sequenceLength, 1);
+            ArrayUtils.shuffle(newNumbers);
+            
+            if(sharedRange != null) {
+                ArrayUtils.replace(sharedStart, sharedEnd, newNumbers, sharedNumbers.toArray());
+            }
+            
+            numbers.addAll(Arrays.asList(ArrayUtils.toBoxed(newNumbers)));
+            numbers.add(-1);
+        }
+        
+        return numbers;
     }
     
     /**

@@ -17,23 +17,23 @@ public class IndicesTraceTest {
     public void setUp() {
         trace = new IndicesTrace(null, "active cells");
         
-        trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(1, 2, 3)));
-        trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(4, 5)));
-        trace.data.add(new LinkedHashSet<Integer>(Arrays.asList(6)));
-        trace.data.add(new LinkedHashSet<Integer>());
+        trace.items.add(new LinkedHashSet<Integer>(Arrays.asList(1, 2, 3)));
+        trace.items.add(new LinkedHashSet<Integer>(Arrays.asList(4, 5)));
+        trace.items.add(new LinkedHashSet<Integer>(Arrays.asList(6)));
+        trace.items.add(new LinkedHashSet<Integer>());
     }
     
     @Test
     public void testMakeCountsTrace() {
         CountsTrace countsTrace = trace.makeCountsTrace();
         assertEquals("# active cells", countsTrace.title);
-        assertTrue(countsTrace.data.equals(Arrays.asList(3, 2, 1, 0)));
+        assertTrue(countsTrace.items.equals(Arrays.asList(3, 2, 1, 0)));
     }
     
     @Test
     public void testMakeCumCountsTrace() {
         CountsTrace countsTrace = trace.makeCumCountsTrace();
         assertEquals("# (cumulative) active cells", countsTrace.title);
-        assertTrue(countsTrace.data.equals(Arrays.asList(3, 5, 6, 6)));
+        assertTrue(countsTrace.items.equals(Arrays.asList(3, 5, 6, 6)));
     }
 }

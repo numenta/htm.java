@@ -1,11 +1,17 @@
 package org.numenta.nupic.monitor.mixin;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.Connections;
 
-import com.sun.javafx.font.Metrics;
+import com.bethecoder.table.AsciiTableInstance;
+import com.bethecoder.table.spec.AsciiTable;
+
 
 /**
  * Base class for MonitorMixin. Each subclass will be a mixin for a particular
@@ -36,15 +42,61 @@ public interface MonitorMixinBase {
     
     public void mmClearHistory();
     
-    public <T extends Trace<?>> List<T> mmGetDefaultTraces();
+    public <T extends Trace<?>> List<T> mmGetDefaultTraces(int verbosity);
     
-    public <T extends Trace<?>> List<T> mmGetDefaultMetrics();
+    public List<Metric> mmGetDefaultMetrics(int verbosity);
     
-    public static String mmPrettyPrintTraces(List<Trace<?>> traces, int sigFigs) {
-        return null;
+    default String mmPrettyPrintTraces(List<Trace<?>> traces, BoolsTrace breakOnResets) {
+        String[] header = new String[traces.size() + 1];
+        header[0] = "#";
+        
+        for(int i = 0;i < traces.size();i++) header[i + 1] = traces.get(i).prettyPrintTitle();
+        
+        int len = traces.get(0).items.size();
+        List<String[]> table = new ArrayList<>(len);
+        for(int i = 0;i < len;i++) {
+            if(breakOnResets != null && breakOnResets.items.get(i)) {
+                table.add(Collections.nCopies(header.length + 1, "<reset>").toArray(new String[header.length + 1]));
+            }
+            String[] sa = new String[traces.size() + 1];
+            sa[0] = "" + i;
+            int x = 1;
+            for(Trace<?> t : traces) {
+                sa[x++] = t.prettyPrintDatum(t.items.get(i)); 
+            }
+            table.add(sa);
+        }
+        
+        String retVal = AsciiTableInstance.get().getTable(header, table.toArray(new String[table.size()][]), AsciiTable.ALIGN_CENTER);
+        return retVal;
     }
     
-    public static String mmPrettyPrintMetrics(Metrics metrics, int sigFigs) {
-        return null;
+    default String mmPrettyPrintMetrics(List<Metric> metrics, int sigFigs) {
+        String hashes = "";
+        for(int i = 0;i < Math.max(2, sigFigs);i++) {
+            hashes += "#";
+        }
+        
+        DecimalFormat df = new DecimalFormat("0." + hashes);
+        
+        String[] header = new String[] { "Metric", "mean", "standard deviation", "min", "max", "sum" };
+        
+        String[][] data = new String[metrics.size()][header.length];
+        int i = 0;
+        for(Metric metric : metrics) {
+            for(int j = 0;j < header.length;j++) {
+                if(j == 0) {
+                    data[i][j] = metric.prettyPrintTitle();
+                }else{
+                    double[] stats = metric.getStats(sigFigs);
+                    data[i][j] = ((int)stats[j - 1]) == stats[j - 1] ? 
+                        df.format(stats[j - 1]) + ".0" : df.format(stats[j - 1]);
+                }
+            }
+            i++;
+        }
+        
+        String retVal = AsciiTableInstance.get().getTable(header, data, AsciiTable.ALIGN_CENTER);
+        return retVal;
     }
 }

@@ -4,8 +4,8 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +16,7 @@ import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.monitor.ComputeDecorator;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
@@ -24,7 +25,7 @@ import org.numenta.nupic.util.SparseObjectMatrix;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class NewTemporalMemory {
+public class NewTemporalMemory implements ComputeDecorator {
     /**
      * Constructs a new {@code TemporalMemory}
      */
@@ -52,6 +53,7 @@ public class NewTemporalMemory {
         c.setMemory(matrix);
         
         int numColumns = matrix.getMaxIndex() + 1;
+        c.setNumColumns(numColumns);
         int cellsPerColumn = c.getCellsPerColumn();
         Cell[] cells = new Cell[numColumns * cellsPerColumn];
         
@@ -66,7 +68,7 @@ public class NewTemporalMemory {
             //If columns have not been previously configured
             if(colZero == null) matrix.set(i, column);
         }
-        //Only the TemporalMemory initializes cells so no need to test 
+        //Only the TemporalMemory initializes cells so no need to test for redundancy
         c.setCells(cells);
     }
     
@@ -195,6 +197,7 @@ public class NewTemporalMemory {
         Set<Column> activeColumns, Set<Column> predictedColumns, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells) {
         
         activeColumns.removeAll(predictedColumns); // Now contains unpredicted active columns
+        
         for(Column column : activeColumns) {
             List<Cell> cells = column.getCells();
             cycle.activeCells.addAll(cells);
@@ -249,10 +252,11 @@ public class NewTemporalMemory {
         double permanenceIncrement = c.getPermanenceIncrement();
         double permanenceDecrement = c.getPermanenceDecrement();
             
-        List<DistalDendrite> prevAndLearning = new ArrayList<DistalDendrite>(prevActiveSegments);
+        Set<DistalDendrite> prevAndLearning = new HashSet<DistalDendrite>(prevActiveSegments);
         prevAndLearning.addAll(learningSegments);
         
         for(DistalDendrite dd : prevAndLearning) {
+                
             boolean isLearningSegment = learningSegments.contains(dd);
             boolean isFromWinnerCell = winnerCells.contains(dd.getParentCell());
             
@@ -311,8 +315,7 @@ public class NewTemporalMemory {
                 double permanence = syn.getPermanence();
                 
                 if(permanence >= c.getConnectedPermanence()) {
-                    numActiveConnectedSynapsesForSegment.putIfAbsent(segment, 0);
-                    numActiveConnectedSynapsesForSegment.increment(segment);
+                    numActiveConnectedSynapsesForSegment.adjustOrPutValue(segment, 1, 1);    
                     
                     if(numActiveConnectedSynapsesForSegment.get(segment) >= c.getActivationThreshold()) {
                         cycle.activeSegments.add(segment);
@@ -321,8 +324,7 @@ public class NewTemporalMemory {
                 }
                 
                 if(permanence > 0 && c.getPredictedSegmentDecrement() > 0) {
-                    numActiveSynapsesForSegment.putIfAbsent(segment, 0);
-                    numActiveSynapsesForSegment.increment(segment);
+                    numActiveSynapsesForSegment.adjustOrPutValue(segment, 1, 1);    
                     
                     if(numActiveSynapsesForSegment.get(segment) >= c.getMinThreshold()) {
                         cycle.matchingSegments.add(segment);
@@ -427,7 +429,7 @@ public class NewTemporalMemory {
      * @return
      */
     public Cell getLeastUsedCell(Connections c, List<Cell> columnCells) {
-        Set<Cell> leastUsedCells = new HashSet<>();
+        Set<Cell> leastUsedCells = new LinkedHashSet<>();
         int minNumSegments = Integer.MAX_VALUE;
         
         for(Cell cell : columnCells) {
@@ -444,9 +446,9 @@ public class NewTemporalMemory {
         }
         
         int randomIdx = c.getRandom().nextInt(leastUsedCells.size());
-        Cell[] luc;
-        Arrays.sort(luc = leastUsedCells.toArray(new Cell[leastUsedCells.size()]));
-        return luc[randomIdx];
+        List<Cell> l = new ArrayList<>(leastUsedCells);
+        
+        return l.get(randomIdx);
     }
     
     /**

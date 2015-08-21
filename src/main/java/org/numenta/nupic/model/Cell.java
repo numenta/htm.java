@@ -145,7 +145,7 @@ public class Cell implements Comparable<Cell> {
      * {@inheritDoc}
      */
     public String toString() {
-        return "Cell: col=" + column.getIndex() + ", idx=" + index;
+        return "" + index;
     }
 
     /**
@@ -157,4 +157,5 @@ public class Cell implements Comparable<Cell> {
     public int compareTo(Cell arg0) {
         return boxedIndex.compareTo(arg0.boxedIndex);
     }
+    
 }

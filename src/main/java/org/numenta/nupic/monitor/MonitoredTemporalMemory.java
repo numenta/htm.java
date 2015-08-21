@@ -1,7 +1,6 @@
 package org.numenta.nupic.monitor;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.ComputeCycle;
@@ -10,7 +9,7 @@ import org.numenta.nupic.monitor.mixin.TemporalMemoryMonitorMixin;
 import org.numenta.nupic.monitor.mixin.Trace;
 
 
-public class TemporalMemoryMonitor implements ComputeDecorator, TemporalMemoryMonitorMixin {
+public class MonitoredTemporalMemory implements ComputeDecorator, TemporalMemoryMonitorMixin {
     private ComputeDecorator decorator;
     
     private Connections connections;
@@ -18,12 +17,17 @@ public class TemporalMemoryMonitor implements ComputeDecorator, TemporalMemoryMo
     private Map<String, Trace<?>> mmTraces = new HashMap<>();
     private Map<String, Map<String, ?>> mmData = new HashMap<>();
     
+    private String mmName;
+    
     private boolean mmResetActive;
     private boolean transitionTracesStale = true;
     
-    public TemporalMemoryMonitor(ComputeDecorator decorator) {
+    public MonitoredTemporalMemory(ComputeDecorator decorator, Connections cnx) {
         this.decorator = decorator;
         this.mmResetActive = true;
+        this.connections = cnx;
+        
+        mmClearHistory();
     }
     
     
@@ -102,30 +106,6 @@ public class TemporalMemoryMonitor implements ComputeDecorator, TemporalMemoryMo
 
     @Override
     public String mmGetName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public void mmClearHistory() {
-        // TODO Auto-generated method stub
-        
-    }
-
-
-    @Override
-    public <T extends Trace<?>> List<T> mmGetDefaultTraces() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public <T extends Trace<?>> List<T> mmGetDefaultMetrics() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    
+        return mmName;
+    }    
 }

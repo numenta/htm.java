@@ -628,10 +628,9 @@ public class PatternMachine {
         };
         
         int[] i = { 0 };
-        Arrays.asList(na).stream().forEach((Integer[] a) -> { 
+        Arrays.asList(na).stream().map(ia -> { Arrays.sort(ia); return ia; }).forEach((Integer[] a) -> { 
             patterns.put(i[0]++, new LinkedHashSet<Integer>(Arrays.asList(a))); 
         });
         
-        System.out.println(patterns.get(0) + "\n" + patterns.get(1));
     }
 }

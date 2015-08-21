@@ -14,7 +14,7 @@ public class MetricTest {
     @Before
     public void test() {
         countsTrace = new CountsTrace(null, "# active cells");
-        countsTrace.data = Arrays.asList(new Integer[] { 1, 2, 3, 4, 5, 0 });
+        countsTrace.items = Arrays.asList(new Integer[] { 1, 2, 3, 4, 5, 0 });
     }
     
     @Test
@@ -31,7 +31,7 @@ public class MetricTest {
     @Test
     public void testCreateFromTraceExcludeResets() {
         BoolsTrace resetTrace = new BoolsTrace(null, "resets");
-        resetTrace.data = Arrays.asList(new Boolean[] { true, false, false, true, false, false });
+        resetTrace.items = Arrays.asList(new Boolean[] { true, false, false, true, false, false });
         
         Metric metric = Metric.createFromTrace(countsTrace, resetTrace);
         assertEquals(metric.title, countsTrace.title);

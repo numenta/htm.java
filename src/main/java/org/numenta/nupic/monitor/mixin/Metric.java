@@ -17,15 +17,15 @@ import org.numenta.nupic.util.ArrayUtils;
  * @author cogmission
  */
 public class Metric {
-    MonitorMixinBase monitor;
-    String title;
+    public MonitorMixinBase monitor;
+    public String title;
     
-    double min;
-    double max;
-    double sum;
-    double mean = Double.NaN;
-    double variance;
-    double standardDeviation;
+    public double min;
+    public double max;
+    public double sum;
+    public double mean = Double.NaN;
+    public double variance;
+    public double standardDeviation;
     
     public Metric(MonitorMixinBase monitor, String title, List<? extends Number> l) {
         this.monitor = monitor;
@@ -35,10 +35,10 @@ public class Metric {
     }
     
     public static <T extends Trace<? extends Number>> Metric createFromTrace(T trace, BoolsTrace excludeResets) {
-        List<? extends Number> data = trace.data;
+        List<? extends Number> data = trace.items;
         if(excludeResets != null) {
             int[] i = { 0 };
-            data = trace.data.stream().filter(t -> !excludeResets.data.get(i[0]++)).collect(Collectors.toList());
+            data = trace.items.stream().filter(t -> !excludeResets.items.get(i[0]++)).collect(Collectors.toList());
         }
         return new Metric(trace.monitor, trace.title, data);
     }
@@ -57,7 +57,8 @@ public class Metric {
     }
     
     public String prettyPrintTitle() {
-        return String.format("[%s] %s", monitor.mmGetName(), title);
+        return String.format(monitor.mmGetName() == null ? "%s" : "[%s] %s", 
+            monitor.mmGetName() == null ? new String[] { title } : new String[] { monitor.mmGetName(), title});
     }
     
     public void computeStats(List<? extends Number> l) {

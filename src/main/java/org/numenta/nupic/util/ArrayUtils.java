@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -901,7 +900,61 @@ public class ArrayUtils {
         }
         return doubs.toArray();
     }
-
+    
+    /**
+     * Returns an array which starts from lowerBounds (inclusive) and
+     * ends at the upperBounds (exclusive).
+     *
+     * @param lowerBounds the starting value
+     * @param upperBounds the maximum value (exclusive)
+     * @param interval    the amount by which to increment the values
+     * @return
+     */
+    public static int[] xrange(int lowerBounds, int upperBounds, int interval) {
+        TIntList ints = new TIntArrayList();
+        for (int i = lowerBounds; i < upperBounds; i += interval) {
+            ints.add(i);
+        }
+        return ints.toArray();
+    }
+    
+    /**
+     * Fisher-Yates implementation which shuffles the array contents.
+     * 
+     * @param array     the array of ints to shuffle.
+     * @return shuffled array
+     */
+    public static int[] shuffle(int[] array) {
+        int index;
+        Random random = new Random(42);
+        for (int i = array.length - 1; i > 0; i--) {
+            index = random.nextInt(i + 1);
+            if (index != i) {
+                array[index] ^= array[i];
+                array[i] ^= array[index];
+                array[index] ^= array[i];
+            }
+        }
+        return array;
+    }
+    
+    /**
+     * Replaces the range specified by "start" and "end" of "orig" with the 
+     * array of replacement ints found in "replacement".
+     * 
+     * @param start         start index of "orig" to be replaced
+     * @param end           end index of "orig" to be replaced
+     * @param orig          the array containing entries to be replaced by "replacement"
+     * @param replacement   the array of ints to put in "orig" in the indicated indexes
+     * @return
+     */
+    public static int[] replace(int start, int end, int[] orig, int[] replacement) {
+        for(int i = start, j = 0;i < end;i++, j++) {
+            orig[i] = replacement[j];
+        }
+        return orig;
+    }
+    
     /**
      * Returns a sorted unique array of integers
      *

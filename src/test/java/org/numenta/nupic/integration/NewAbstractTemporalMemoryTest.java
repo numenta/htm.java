@@ -9,24 +9,28 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.PatternMachine;
 import org.numenta.nupic.datagen.SequenceMachine;
-import org.numenta.nupic.monitor.mixin.MonitorMixinBase;
+import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 import org.numenta.nupic.research.NewTemporalMemory;
+import org.numenta.nupic.util.ArrayUtils;
 
 
 public class NewAbstractTemporalMemoryTest {
-    protected NewTemporalMemory tm;
+    protected NewTemporalMemory temporalMemory;
     protected Parameters parameters;
     protected Connections connections;
     protected PatternMachine patternMachine;
     protected SequenceMachine sequenceMachine;
+    
+    protected MonitoredTemporalMemory tm;
     
     public void init(Parameters overrides, PatternMachine pm) {
         this.parameters = createTMParams(overrides);
         this.connections = new Connections();
         parameters.apply(connections);
         
-        tm = new NewTemporalMemory();
-        tm.init(connections);
+        temporalMemory = new NewTemporalMemory();
+        temporalMemory.init(connections);
+        tm = new MonitoredTemporalMemory(temporalMemory, connections);
         
         this.patternMachine = pm;
         this.sequenceMachine = new SequenceMachine(patternMachine);
@@ -54,7 +58,7 @@ public class NewAbstractTemporalMemoryTest {
         return parameters;
     }
     
-    public void feedTM(List<Set<Integer>> sequence, boolean learn, int num) {
+    public void feedTM(List<Set<Integer>> sequence, String label, boolean learn, int num) {
         List<Set<Integer>> repeatedSequence = new ArrayList<Set<Integer>>(sequence);
         if(num > 1) {
             for(int i = 1;i < num;i++) {
@@ -62,10 +66,13 @@ public class NewAbstractTemporalMemoryTest {
             }
         }
         
-        //tm.mmClearHistory();
-        
+        tm.mmClearHistory();
         for(Set<Integer> pattern : repeatedSequence) {
-            
+            if(pattern == SequenceMachine.NONE) {
+                tm.resetSequences(connections);
+            }else{
+                tm.compute(connections, ArrayUtils.toPrimitive(pattern.toArray(new Integer[0])), label, learn);
+            }
         }
     }
     

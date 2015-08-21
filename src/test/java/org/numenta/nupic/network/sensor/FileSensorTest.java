@@ -28,9 +28,6 @@ import java.io.File;
 
 import org.junit.Test;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.sensor.FileSensor;
-import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 
@@ -62,5 +59,4 @@ public class FileSensorTest {
         assertEquals(null, sp.get("NAME"));
         assertEquals(ResourceLocator.path("rec-center-hourly.csv"), sp.get("PATH"));
     }
-
 }

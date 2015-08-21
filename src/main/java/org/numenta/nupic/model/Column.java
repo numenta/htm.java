@@ -189,7 +189,7 @@ public class Column implements Comparable<Column> {
      * {@inheritDoc}
      */
     public String toString() {
-        return "Column: idx=" + index;
+        return "" + index;
     }
 
     /**

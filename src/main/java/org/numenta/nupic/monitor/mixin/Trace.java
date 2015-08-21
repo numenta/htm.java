@@ -17,7 +17,7 @@ public abstract class Trace<T> {
     protected MonitorMixinBase monitor;
     protected String title;
     
-    protected List<T> data;
+    public List<T> items;
     
     /**
      * Constructs a new {@code Trace}
@@ -28,7 +28,7 @@ public abstract class Trace<T> {
         this.monitor = monitor;
         this.title = title;
         
-        data = new ArrayList<>();
+        items = new ArrayList<T>();
     }
     
     /**
@@ -39,8 +39,8 @@ public abstract class Trace<T> {
      */
     public String prettyPrintTitle() {
         return monitor.mmGetName() != null ? 
-            String.format("[%0s] %1s", monitor.mmGetName(), title) :
-                String.format("%0s", title);
+            String.format("[%s] %1s", monitor.mmGetName(), title) :
+                String.format("%s", title);
     }
     
     /**

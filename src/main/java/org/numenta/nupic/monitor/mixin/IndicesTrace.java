@@ -13,9 +13,7 @@ import java.util.stream.Collectors;
  * @author cogmission
  */
 public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
-    protected List<LinkedHashSet<Integer>> data;
-
-    /**
+   /**
      * Constructs a new {@code IndicesTrace}
      * 
      * @param monitor
@@ -23,8 +21,6 @@ public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
      */
     public IndicesTrace(MonitorMixinBase monitor, String title) {
         super(monitor, title);
-        
-        data = new ArrayList<>();
     }
     
     /**
@@ -33,7 +29,7 @@ public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
      */
     public CountsTrace makeCountsTrace() {
         CountsTrace trace = new CountsTrace(monitor, String.format("# %s", title));
-        trace.data = data.stream().map(l -> l.size()).collect(Collectors.toList());
+        trace.items = items.stream().map(l -> l.size()).collect(Collectors.toList());
         return trace;
     }
 
@@ -42,7 +38,7 @@ public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
         Trace<Integer> countsTrace = makeCountsTrace();
         
         int[] accum = { 0 };
-        trace.data = countsTrace.data.stream().map(i -> accum[0] += ((int)i)).collect(Collectors.toList());
+        trace.items = countsTrace.items.stream().map(i -> accum[0] += ((int)i)).collect(Collectors.toList());
         
         return trace;
     }
@@ -53,7 +49,8 @@ public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
      * @return
      */
     public String prettyPrintDatum(Collection<Integer> c) {
-        Collections.sort(new ArrayList<>(c));
-        return c.toString();
+        List<Integer> l = null;
+        Collections.sort(l = new ArrayList<>(c));
+        return l.toString().replace("[", "").replace("]", "").trim();
     }
 }

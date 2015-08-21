@@ -317,6 +317,9 @@ public class NewTemporalMemoryTest {
         
         //Check segment 3
         assertEquals(2, dd3.getAllSynapses(cn).size(), 0);// was 0
+        
+        //Check total synapse count
+        assertEquals(8, cn.getSynapseCount());
     }
     
     @SuppressWarnings("unused")
