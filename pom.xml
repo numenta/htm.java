@@ -20,7 +20,7 @@
 
 	<licenses>
 		<license>
-			<name>The GNU General Public License.</name>
+			<name>The GNU Affero Public License.</name>
 			<url>https://github.com/numenta/htm.java/blob/master/LICENSE.txt</url>
 		</license>
 	</licenses>
