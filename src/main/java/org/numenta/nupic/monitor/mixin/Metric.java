@@ -22,9 +22,9 @@
 package org.numenta.nupic.monitor.mixin;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.numenta.nupic.util.ArrayUtils;
 
@@ -55,15 +55,31 @@ public class Metric {
         computeStats(l);
     }
     
+    /**
+     * Returns a {@code Metric} object created from the specified {@link Trace}
+     * @param trace
+     * @param excludeResets
+     * @return
+     */
+    @SuppressWarnings("unchecked")
     public static <T extends Trace<? extends Number>> Metric createFromTrace(T trace, BoolsTrace excludeResets) {
-        List<? extends Number> data = trace.items;
+        List<Number> data = (List<Number>)trace.items;
         if(excludeResets != null) {
-            int[] i = { 0 };
-            data = trace.items.stream().filter(t -> !excludeResets.items.get(i[0]++)).collect(Collectors.toList());
+            data = new ArrayList<>();
+            for(int k = 0;k < trace.items.size();k++) {
+                if(!excludeResets.items.get(k)) {
+                    Number n = trace.items.get(k);
+                    data.add(n);
+                }
+            }
         }
         return new Metric(trace.monitor, trace.title, data);
     }
     
+    /**
+     * Returns a copy of this {@code Metric}
+     * @return
+     */
     public Metric copy() {
         Metric metric = new Metric(monitor, title, Collections.emptyList());
         
@@ -82,6 +98,10 @@ public class Metric {
             monitor.mmGetName() == null ? new String[] { title } : new String[] { monitor.mmGetName(), title});
     }
     
+    /**
+     * Populates the inner fields of this {@code Metric} with the computed stats.
+     * @param l
+     */
     public void computeStats(List<? extends Number> l) {
         if(l.size() < 1) {
             return;
@@ -106,6 +126,11 @@ public class Metric {
         standardDeviation = s;
     }
     
+    /**
+     * Returns an array of this {@link Metric}'s stats.
+     * @param sigFigs   the number of significant figures to limit the output numbers to.
+     * @return
+     */
     public double[] getStats(int sigFigs) {
         if(Double.isNaN(mean)) {
             return new double[] { 0, 0, 0, 0, 0 };
