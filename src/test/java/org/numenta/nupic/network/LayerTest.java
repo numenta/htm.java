@@ -97,7 +97,7 @@ public class LayerTest {
      * @return
      */
     private boolean isWarmedUp(Layer<Map<String, Object>> l, double anomalyScore) {
-        if(anomalyScore == 0 ) {//&& anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
+        if(anomalyScore >= 0 && anomalyScore <= 0.1) {//&& anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
             ++timesWithinThreshold;
         }else{
             timesWithinThreshold = 0;
@@ -1054,13 +1054,14 @@ public class LayerTest {
                 assertNotNull(i);
                 
                 if(testingAnomaly) {
-                    //System.out.println("tested anomaly = " + i.getAnomalyScore());
                     if(i.getAnomalyScore() > highestAnomaly) highestAnomaly = i.getAnomalyScore();
                 }
-//                System.out.println("prev predicted = " + Arrays.toString(l.getPreviousPredictedColumns()));
-//                System.out.println("current active = " + Arrays.toString(l.getActiveColumns()));
-//                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
-//                System.out.println("----------------------------------------");
+
+                // UNCOMMENT TO WATCH THE RESULTS STABILIZE
+                // System.out.println("prev predicted = " + Arrays.toString(l.getPreviousPredictedColumns()));
+                // System.out.println("current active = " + Arrays.toString(ArrayUtils.where(l.getActiveColumns(), ArrayUtils.WHERE_1)));
+                // System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
+                // System.out.println("----------------------------------------");
             }
         });
         
@@ -1096,15 +1097,14 @@ public class LayerTest {
         }
         
         // Now assert we detected anomaly greater than average and significantly greater than 0 (i.e. 20%)
-        //System.out.println("highestAnomaly = " + highestAnomaly);
         assertTrue(highestAnomaly > 0.2);
         
     }
-    int count = 0;
+    
     @Test
     public void testGetAllPredictions() {
         final int PRIME_COUNT = 35;
-        final int NUM_CYCLES = 200;
+        final int NUM_CYCLES = 199;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
         

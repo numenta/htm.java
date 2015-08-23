@@ -12,14 +12,14 @@ import java.util.stream.IntStream;
 import org.junit.Test;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.research.NewTemporalMemory;
+import org.numenta.nupic.research.TemporalMemory;
 
 
 public class ConnectionsTest {
 
     @Test
     public void testColumnForCell1D() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 2048 });
         cn.setCellsPerColumn(5);
@@ -33,7 +33,7 @@ public class ConnectionsTest {
     
     @Test
     public void testColumnForCell2D() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -47,7 +47,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellIndexes() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -67,7 +67,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsColumnIndexes() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -87,7 +87,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellObjects() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -104,7 +104,7 @@ public class ConnectionsTest {
 
     @Test
     public void testAsColumnObjects() {
-        NewTemporalMemory tm = new NewTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
