@@ -1,4 +1,4 @@
-package org.numenta.nupic.research;
+package org.numenta.nupic.algorithms;
 
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;

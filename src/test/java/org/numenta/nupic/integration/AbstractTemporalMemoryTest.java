@@ -7,10 +7,10 @@ import java.util.Set;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.PatternMachine;
 import org.numenta.nupic.datagen.SequenceMachine;
 import org.numenta.nupic.monitor.MonitoredTemporalMemory;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 
 

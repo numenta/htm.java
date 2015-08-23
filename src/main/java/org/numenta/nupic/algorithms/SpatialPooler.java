@@ -20,7 +20,7 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic.research;
+package org.numenta.nupic.algorithms;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;

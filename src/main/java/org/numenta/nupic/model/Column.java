@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 
 /**
  * Abstraction of both an input bit and a columnal collection of

@@ -1,4 +1,4 @@
-package org.numenta.nupic.research;
+package org.numenta.nupic.algorithms;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,12 +16,13 @@ import java.util.Set;
 import org.junit.Test;
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory.CellSearch;
+import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.research.TemporalMemory.CellSearch;
-import org.numenta.nupic.research.TemporalMemory.SegmentSearch;
 
 /**
  * Basic unit test for {@link TemporalMemory}

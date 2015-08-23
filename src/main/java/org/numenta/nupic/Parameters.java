@@ -31,11 +31,11 @@ import java.util.Random;
 import java.util.Set;
 
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;

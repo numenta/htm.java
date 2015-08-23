@@ -33,6 +33,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -40,8 +42,6 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;

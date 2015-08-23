@@ -26,9 +26,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.research.TemporalMemory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
