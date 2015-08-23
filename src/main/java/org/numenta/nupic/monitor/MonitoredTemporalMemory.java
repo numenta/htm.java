@@ -8,7 +8,15 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.monitor.mixin.TemporalMemoryMonitorMixin;
 import org.numenta.nupic.monitor.mixin.Trace;
 
-
+/**
+ * This class is an example of building a test class for the "MonitorMixin"
+ * framework. This class is referenced as would the original class being tested
+ * would be except that it has "mixins" (traits really) which provide extra
+ * functionality for monitoring behavior and reporting.
+ * 
+ * @author cogmission
+ *
+ */
 public class MonitoredTemporalMemory implements ComputeDecorator, TemporalMemoryMonitorMixin {
     private ComputeDecorator decorator;
     
@@ -22,6 +30,13 @@ public class MonitoredTemporalMemory implements ComputeDecorator, TemporalMemory
     private boolean mmResetActive;
     private boolean transitionTracesStale = true;
     
+    
+    /**
+     * Constructs a new {@code MonitoredTemporalMemory}
+     * 
+     * @param decorator     The decorator class
+     * @param cnx           the {@link Connections} object.
+     */
     public MonitoredTemporalMemory(ComputeDecorator decorator, Connections cnx) {
         this.decorator = decorator;
         this.mmResetActive = true;
@@ -35,32 +50,51 @@ public class MonitoredTemporalMemory implements ComputeDecorator, TemporalMemory
     //         Mixin Virtual Extension Methods                  //
     //////////////////////////////////////////////////////////////
     
+    /**
+     * Returns the original class which is being tested. In this 
+     * case it is the {@link TemporalMemory}
+     */
     @SuppressWarnings("unchecked")
     @Override
     public ComputeDecorator getMonitor() {
         return decorator;
     }
     
+    /**
+     * Returns the {@link Connections} object
+     */
     @Override
     public Connections getConnections() {
         return connections;
     }
 
+    /**
+     * The map of the entire {@link Trace} data for this mixin testing framework.
+     */
     @Override
     public Map<String, Trace<?>> getTraceMap() {
         return mmTraces;
     }
     
+    /**
+     * The map of the {@link Metric} data for this testing framework.
+     */
     @Override
     public Map<String, Map<String, ?>> getDataMap() {
         return mmData;
     }
     
+    /**
+     * Flag which tells the mixin what state we're in.
+     */
     @Override
     public boolean resetActive() {
         return mmResetActive;
     }
     
+    /**
+     * Sets the Flag which indicates to the mixin what state we're in.
+     */
     @Override
     public void setResetActive(boolean b) {
         this.mmResetActive = b;

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 
 import com.bethecoder.table.AsciiTableInstance;
 import com.bethecoder.table.spec.AsciiTable;
@@ -21,9 +22,13 @@ import com.bethecoder.table.spec.AsciiTable;
  * 
  * To make a "Mixin":
  * <OL>
- *      <li>Create an interface (A) containing overridden methods</li>
- *      <li>Create MonitorMixinBase extension mixin type (this does most of the mixin work)</li>
+ *      <li>Create a Decorator interface (A) containing overridden methods</li>
+ *      <li>Create MonitorMixinBase extension mixin type (interface) (this does most of the mixin work) see {@link TemporalMemoryMonitorMixin}</li>
+ *      <li>Create Extension of both {@link MonitorMixinBase} and interface (see {@link MonitoredTemporalMemory})</li>
  *      <li>Create constructor in extension class which takes above interface (A) which is the target class which must implement (A)</li>
+ *      <li>Make the Original class (see {@link TemporalMemory}) to be tested, implement the Decorator interface (A)</li>
+ *      <li>Use the "joining" extension class as you would the original class</li>
+ * </OL>
  *      
  * 
  * @author David Ray

@@ -18,13 +18,23 @@ import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.monitor.ComputeDecorator;
+import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 
 import com.bethecoder.table.AsciiTableInstance;
 import com.bethecoder.table.spec.AsciiTable;
 
-
+/**
+ * Contains methods to create the {@link Trace}s used to gather test results
+ * and create {@link Metric}s from them for analysis and pretty-printing
+ * 
+ * This interface contains "defender" methods or Traits that are used to collect
+ * result data for the {@link TemporalMemory}.
+ * 
+ * @author cogmission
+ *
+ */
 public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
     /**
      * Returns the ComputeDecorator mixin target
@@ -241,13 +251,6 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         text.append("Segments: (format => (#) [(source cell=permanence ...),       ...]\n")
         .append("------------------------------------\n");
         
-//        Segments: (format => (#) [(source cell=permanence ...),       ...]
-//        ------------------------------------
-//        Column   0 / Cell   0:  (23) [(  1=0.80  10=0.80  19=0.80  31=0.80  58=0.80  66=0.80  71=0.80  74=0.80  79=0.80  89=0.80  96=0.80),       ( 13=0.80  14=0.80  19=0.80  25=0.80  27=0.80  34=0.80  42=0.80  47=0.80  49=0.80  50=0.80  73=0.80),       (  2=0.80  11=0.80  29=0.80  38=0.80  42=0.80  51=0.80  56=0.80  59=0.80  65=0.80  77=0.80  82=0.80),       (  6=0.80  12=0.80  26=0.80  29=0.80  30=0.80  60=0.80  76=0.80  85=0.80  91=0.80  94=0.80  97=0.80),       (  2=0.80  25=0.80  33=0.80  45=0.80  53=0.80  60=0.80  65=0.80  76=0.80  79=0.80  90=0.80  91=0.80),       ( 29=0.80  34=0.80  39=0.80  46=0.80  51=0.80  67=0.80  68=0.80  71=0.80  72=0.80  80=0.80  91=0.80),       (  4=0.80  15=0.80  23=0.80  33=0.80  34=0.80  37=0.80  59=0.80  70=0.80  71=0.80  73=0.80  86=0.80),       (  1=0.80  13=0.80  19=0.80  29=0.80  35=0.80  38=0.80  66=0.80  71=0.80  75=0.80  81=0.80  84=0.80),       (  7=0.80  11=0.80  16=0.80  19=0.80  35=0.80  41=0.80  44=0.80  48=0.80  67=0.80  70=0.80  85=0.80),       (  8=0.80  15=0.80  23=0.80  31=0.80  37=0.80  55=0.80  70=0.80  73=0.80  82=0.80  83=0.80  99=0.80),       (  2=0.80   5=0.80  12=0.80  23=0.80  31=0.80  49=0.80  62=0.80  69=0.80  73=0.80  76=0.80  83=0.80),       ( 15=0.80  18=0.80  22=0.80  29=0.80  39=0.80  40=0.80  69=0.80  79=0.80  80=0.80  91=0.80  95=0.80),       (  4=0.80  12=0.80  16=0.80  20=0.80  23=0.80  46=0.80  49=0.80  80=0.80  88=0.80  95=0.80  97=0.80),       ( 12=0.80  20=0.80  21=0.80  31=0.80  34=0.80  38=0.80  46=0.80  47=0.80  51=0.80  57=0.80  75=0.80),       (  3=0.80  15=0.80  21=0.80  47=0.80  48=0.80  60=0.80  62=0.80  72=0.80  94=0.80  95=0.80  98=0.80),       (  4=0.80   6=0.80  15=0.80  19=0.80  23=0.80  30=0.80  58=0.80  68=0.80  75=0.80  93=0.80  96=0.80),       (  0=0.80   4=0.80  11=0.80  44=0.80  47=0.80  61=0.80  66=0.80  74=0.80  75=0.80  80=0.80  90=0.80),       ( 14=0.80  25=0.80  27=0.80  39=0.80  45=0.80  63=0.80  66=0.80  75=0.80  79=0.80  92=0.80  98=0.80),       ( 12=0.80  14=0.80  17=0.80  18=0.80  23=0.80  26=0.80  37=0.80  62=0.80  77=0.80  81=0.80  93=0.80),       (  4=0.80  29=0.80  44=0.80  50=0.80  53=0.80  58=0.80  64=0.80  66=0.80  78=0.80  80=0.80  97=0.80),       (  5=0.80  21=0.80  29=0.80  32=0.80  37=0.80  43=0.80  60=0.80  74=0.80  77=0.80  83=0.80  96=0.80),       (  4=0.80  11=0.80  16=0.80  40=0.80  45=0.80  46=0.80  73=0.80  75=0.80  89=0.80  95=0.80  96=0.80),       (  1=0.80   7=0.80   9=0.80  10=0.80  18=0.80  30=0.80  56=0.80  58=0.80  68=0.80  87=0.80  96=0.80)]
-//
-//        Column   1 / Cell   1:  (25) [(  1=0.80  19=0.80  20=0.80  31=0.80  33=0.80  43=0.80  44=0.80  49=0.80  66=0.80  74=0.80  96=0.80),       ( 12=0.80  19=0.80  20=0.80  24=0.80  56=0.80  63=0.80  68=0.80  71=0.80  75=0.80  78=0.80  89=0.80),       (  3=0.80  17=0.80  27=0.80  36=0.80  40=0.80  63=0.80  79=0.80  83=0.80  85=0.80  90=0.80  95=0.80),       ( 14=0.80  19=0.80  21=0.80  25=0.80  41=0.80  46=0.80  47=0.80  50=0.80  52=0.80  63=0.80  92=0.80),       ( 19=0.80  21=0.80  37=0.80  43=0.80  46=0.80  62=0.80  79=0.80  89=0.80  93=0.80  98=0.80  99=0.80),       (  1=0.80   5=0.80  15=0.80  18=0.80  32=0.80  40=0.80  42=0.80  68=0.80  77=0.80  90=0.80  91=0.80),       (  1=0.80  14=0.80  30=0.80  31=0.80  39=0.80  44=0.80  52=0.80  55=0.80  59=0.80  81=0.80  83=0.80),       ( 16=0.80  18=0.80  22=0.80  29=0.80  31=0.80  33=0.80  53=0.80  61=0.80  62=0.80  72=0.80  91=0.80),       (  5=0.80  12=0.80  15=0.80  18=0.80  40=0.80  49=0.80  51=0.80  63=0.80  81=0.80  91=0.80  93=0.80),       (  4=0.80  11=0.80  16=0.80  35=0.80  36=0.80  37=0.80  39=0.80  72=0.80  84=0.80  98=0.80  99=0.80),       (  4=0.80   6=0.80  19=0.80  21=0.80  27=0.80  41=0.80  43=0.80  55=0.80  58=0.80  78=0.80  92=0.80),       (  2=0.80  12=0.80  30=0.80  40=0.80  46=0.80  47=0.80  50=0.80  51=0.80  73=0.80  86=0.80  95=0.80),       (  1=0.80   3=0.80   4=0.80   8=0.80  22=0.80  25=0.80  36=0.80  49=0.80  53=0.80  56=0.80  93=0.80),       (  1=0.80   9=0.80  24=0.80  48=0.80  52=0.80  54=0.80  62=0.80  67=0.80  75=0.80  78=0.80  81=0.80),       (  2=0.80   5=0.80  16=0.80  41=0.80  49=0.80  56=0.80  62=0.80  69=0.80  73=0.80  76=0.80  83=0.80),       (  8=0.80  14=0.80  23=0.80  26=0.80  33=0.80  35=0.80  43=0.80  61=0.80  68=0.80  80=0.80  98=0.80),       (  6=0.80   7=0.80  17=0.80  18=0.80  25=0.80  30=0.80  33=0.80  76=0.80  84=0.80  91=0.80  95=0.80),       (  1=0.80   9=0.80  13=0.80  24=0.80  29=0.80  35=0.80  65=0.80  67=0.80  72=0.80  86=0.80  87=0.80),       (  7=0.80  12=0.80  25=0.80  26=0.80  27=0.80  39=0.80  40=0.80  66=0.80  75=0.80  92=0.80  98=0.80),       (  2=0.80  19=0.80  25=0.80  38=0.80  46=0.80  52=0.80  56=0.80  72=0.80  77=0.80  88=0.80  98=0.80),       ( 13=0.80  22=0.80  31=0.80  38=0.80  40=0.80  58=0.80  61=0.80  62=0.80  73=0.80  84=0.80  97=0.80),       (  4=0.80  10=0.80  36=0.80  43=0.80  44=0.80  50=0.80  63=0.80  72=0.80  75=0.80  80=0.80  86=0.80),       (  2=0.80   4=0.80  14=0.80  19=0.80  31=0.80  45=0.80  56=0.80  63=0.80  71=0.80  90=0.80  98=0.80),       ( 23=0.80  28=0.80  37=0.80  39=0.80  46=0.80  50=0.80  56=0.80  68=0.80  70=0.80  72=0.80  89=0.80),       (  3=0.80  17=0.80  18=0.80  35=0.80  44=0.80  47=0.80  50=0.80  59=0.80  62=0.80  64=0.80  79=0.80)]
-
-        
         Connections cnx = getConnections();
         
         List<Integer> columns = Arrays.asList(
@@ -462,12 +465,27 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         return cycle;
     }
 
+    /**
+     * Called to delegate a {@link TemporalMemory#reset(Connections)} call and
+     * then set a flag locally which controls remaking of test {@link Trace}s.
+     * 
+     * @param c
+     */
     default void resetSequences(Connections c) {
         getMonitor().reset(c);
         
         setResetActive(true);
     }
     
+    /**
+     * Returns a list of {@link Trace} objects containing data sets used
+     * to analyze the behavior and state of the {@link TemporalMemory} This
+     * method is called from all of the "mmXXX" methods to make sure that
+     * the data represents the most current execution cycle of the TM.
+     * 
+     * @param verbosity     setting which controls how much to print out.
+     * @return List of {@link Trace}s
+     */
     @SuppressWarnings("unchecked")
     default <T extends Trace<?>> List<T> mmGetDefaultTraces(int verbosity) {
         List<T> traces = new ArrayList<>();
@@ -494,6 +512,15 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         return traces;
     }
     
+    /**
+     * Returns a list of {@link Metric} objects containing statistics used
+     * to analyze the behavior and state of the {@link TemporalMemory} This
+     * method is called from all of the "mmXXX" methods to make sure that
+     * the data represents the most current execution cycle of the TM.
+     * 
+     * @param verbosity     setting which controls how much to print out.
+     * @return List of {@link Trace}s
+     */
     @SuppressWarnings("unchecked")
     default List<Metric> mmGetDefaultMetrics(int verbosity) {
         BoolsTrace resetsTrace = mmGetTraceResets();
@@ -512,6 +539,9 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         return metrics;
     }
     
+    /**
+     * Clears the map of all {@link Trace}s
+     */
     default void mmClearHistory() {
         getTraceMap().clear();
         getDataMap().clear();
