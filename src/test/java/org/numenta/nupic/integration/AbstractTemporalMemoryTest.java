@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
  * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
@@ -22,7 +20,6 @@
  * ---------------------------------------------------------------------
  */
 
->>>>>>> master
 package org.numenta.nupic.integration;
 
 import java.util.ArrayList;
