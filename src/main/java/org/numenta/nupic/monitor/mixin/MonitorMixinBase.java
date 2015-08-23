@@ -3,7 +3,6 @@ package org.numenta.nupic.monitor.mixin;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 

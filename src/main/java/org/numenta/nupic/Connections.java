@@ -144,8 +144,6 @@ public class Connections {
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
-    @Deprecated
-    protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
     
     /** Total number of columns */
     protected int[] columnDimensions = new int[] { 2048 };
@@ -233,10 +231,11 @@ public class Connections {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
+        matchingCells.clear();
+        matchingSegments.clear();
         successfullyPredictedColumns.clear();
         activeSegments.clear();
         learningSegments.clear();
-        activeSynapsesForSegment.clear();
     }
     
     /**
@@ -1256,24 +1255,6 @@ public class Connections {
      */
     public void setMatchingSegments(Set<DistalDendrite> segments) {
         this.matchingSegments = segments;
-    }
-    
-    /**
-     * Returns the mapping of Segments to active synapses in t-1
-     * @return
-     */
-    @Deprecated
-    public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
-        return activeSynapsesForSegment;
-    }
-    
-    /**
-     * Sets the mapping of {@link Segment}s to active {@link Synapse}s
-     * @param syns
-     */
-    @Deprecated
-    public void setActiveSynapsesForSegment(Map<DistalDendrite, Set<Synapse>> syns) {
-    	this.activeSynapsesForSegment = syns;
     }
     
     /**

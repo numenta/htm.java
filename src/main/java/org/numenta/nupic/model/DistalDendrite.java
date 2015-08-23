@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -46,8 +45,6 @@ public class DistalDendrite extends Segment {
     
     private Cell cell;
     
-    private static final Set<Synapse> EMPTY_SYNAPSE_SET = Collections.emptySet();
-
     /**
      * Constructs a new {@code Segment} object with the specified owner
      * {@link Cell} and the specified index.
@@ -82,25 +79,6 @@ public class DistalDendrite extends Segment {
      * 
      * @return
      */
-    @Deprecated
-    public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
-        Pool pool = new Pool(1);
-        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index, sourceCell.getIndex());
-        pool.setPermanence(c, s, permanence);
-        return s;
-    }
-    
-    /**
-     * Creates and returns a newly created {@link Synapse} with the specified
-     * source cell, permanence, and index.
-     * 
-     * @param c             the connections state of the temporal memory
-     * @param sourceCell    the source cell which will activate the new {@code Synapse}
-     * @param permanence    the new {@link Synapse}'s initial permanence.
-     * @param index         the new {@link Synapse}'s index.
-     * 
-     * @return
-     */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
         Pool pool = new Pool(1);
         Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapses(), sourceCell.getIndex());
@@ -118,33 +96,6 @@ public class DistalDendrite extends Segment {
         return c.getSynapses(this);
     }
 
-    /**
-     * Returns the synapses on a segment that are active due to lateral input
-     * from active cells.
-     * 
-     * @param activeSynapsesForSegment      Set of this {@link Segment}'s active {@link Synapse}s
-     * @param permanenceThreshold           Threshold at which a {@link Synapse} is considered connected.
-     * @return                              Set of connected Synapses
-     */
-    @Deprecated
-    public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
-        Set<Synapse> connectedSynapses = null;
-
-        if(!activeSynapsesForSegment.containsKey(this)) {
-            return EMPTY_SYNAPSE_SET;
-        }
-
-        for(Synapse s : activeSynapsesForSegment.get(this)) {
-            if(s.getPermanence() >= permanenceThreshold) {
-                if(connectedSynapses == null) {
-                    connectedSynapses = new LinkedHashSet<Synapse>();
-                }
-                connectedSynapses.add(s);
-            }
-        }
-        return connectedSynapses == null ? EMPTY_SYNAPSE_SET : connectedSynapses;
-    }
-    
     /**
      * Returns the synapses on a segment that are active due to lateral input
      * from active cells.

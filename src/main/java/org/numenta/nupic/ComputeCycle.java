@@ -22,7 +22,6 @@
 
 package org.numenta.nupic;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +29,6 @@ import java.util.Set;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.TemporalMemory;
 
 /**
@@ -52,8 +50,6 @@ public class ComputeCycle {
     public Set<DistalDendrite> activeSegments = new LinkedHashSet<>();
     public Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
     public Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
-    @Deprecated
-    public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<>();
     
     
     /**
@@ -75,7 +71,6 @@ public class ComputeCycle {
         this.successfullyPredictedColumns = new LinkedHashSet<>(c.getSuccessfullyPredictedColumns());
         this.activeSegments = new LinkedHashSet<>(c.getActiveSegments());
         this.learningSegments = new LinkedHashSet<>(c.getLearningSegments());
-        this.activeSynapsesForSegment = new LinkedHashMap<>(c.getActiveSynapsesForSegment());
     }
     
     /**
@@ -127,15 +122,6 @@ public class ComputeCycle {
      */
     public Set<DistalDendrite> activeSegments() {
         return activeSegments;
-    }
-    
-    /**
-     * Returns the mapping of Segments to active synapses in t-1
-     * @return
-     */
-    @Deprecated
-    public Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment() {
-        return activeSynapsesForSegment;
     }
     
     /**
