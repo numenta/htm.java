@@ -30,7 +30,6 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.examples.napi.hotgym.NetworkAPIDemo;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
