@@ -40,6 +40,8 @@ public class Cell implements Comparable<Cell> {
     final Integer boxedIndex;
     /** The owning {@link Column} */
     private final Column column;
+    /** Cash this because Cells are immutable */
+    private final int hashcode;
 
 
     /**
@@ -50,7 +52,8 @@ public class Cell implements Comparable<Cell> {
     public Cell(Column column, int colSeq) {
         this.column = column;
         this.index = column.getIndex() * column.getNumCellsPerColumn() + colSeq;
-        this.boxedIndex = new Integer(colSeq);
+        this.boxedIndex = new Integer(index);
+        this.hashcode = hashCode();
     }
 
     /**
@@ -89,6 +92,7 @@ public class Cell implements Comparable<Cell> {
      */
     public void removeReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this).remove(s);
+        c.decrementSynapses();
     }
 
     /**
@@ -125,7 +129,7 @@ public class Cell implements Comparable<Cell> {
      * @return          a newly created {@link DistalDendrite}
      */
     public DistalDendrite createSegment(Connections c) {
-        DistalDendrite dd = new DistalDendrite(this, c.incrementSegment());
+        DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
         c.getSegments(this).add(dd);
 
         return dd;
@@ -156,6 +160,31 @@ public class Cell implements Comparable<Cell> {
     @Override
     public int compareTo(Cell arg0) {
         return boxedIndex.compareTo(arg0.boxedIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        if(hashcode == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + index;
+            return result;
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Cell other = (Cell)obj;
+        if(index != other.index)
+            return false;
+        return true;
     }
     
 }

@@ -501,9 +501,6 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         
         List<?> utilTraces = mmGetDefaultTraces(verbosity);
         for(int i = 0;i < utilTraces.size() - 3;i++) {
-            if(LinkedHashSet.class.isAssignableFrom(utilTraces.get(i).getClass())) {
-                
-            }
             metrics.add(Metric.createFromTrace((Trace<Number>)utilTraces.get(i), resetsTrace));
         }
         for(int i = utilTraces.size() - 3;i < utilTraces.size() - 1;i++) {

@@ -103,7 +103,7 @@ public class DistalDendrite extends Segment {
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
         Pool pool = new Pool(1);
-        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapse(), sourceCell.getIndex());
+        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapses(), sourceCell.getIndex());
         pool.setPermanence(c, s, permanence);
         return s;
     }
@@ -157,7 +157,7 @@ public class DistalDendrite extends Segment {
         Set<Synapse> synapses = new LinkedHashSet<>();
         
         for(Synapse synapse : c.getSynapses(this)) {
-            if(activeCells.contains(synapse.getSourceCell())) {
+            if(activeCells.contains(synapse.getPresynapticCell())) {
                 synapses.add(synapse);
             }
         }
@@ -219,10 +219,10 @@ public class DistalDendrite extends Segment {
      *         {@code Segment}
      */
     public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
-        // Create a list of cells that aren't already synapsed to this segment
+        // Remove cells that are already synapsed on by this segment
         Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
         for(Synapse synapse : c.getSynapses(this)) {
-            Cell sourceCell = synapse.getSourceCell();
+            Cell sourceCell = synapse.getPresynapticCell();
             if(candidates.contains(sourceCell)) {
                 candidates.remove(sourceCell);
             }

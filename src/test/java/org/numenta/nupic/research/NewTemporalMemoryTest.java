@@ -320,6 +320,7 @@ public class NewTemporalMemoryTest {
         
         //Check total synapse count
         assertEquals(8, cn.getSynapseCount());
+        
     }
     
     @SuppressWarnings("unused")

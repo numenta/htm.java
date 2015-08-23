@@ -74,8 +74,8 @@ public class LayerTest {
     private int TOTAL = 0;
     
     private int timesWithinThreshold = 0;
-    private final double THRESHOLD = 7.0E-16; // 
-    private int lastSeqNum = 0;
+//    private final double THRESHOLD = 7.0E-16; // 
+//    private int lastSeqNum = 0;
     
     
     /**
@@ -83,7 +83,7 @@ public class LayerTest {
      */
     private void resetWarmUp() {
         this.timesWithinThreshold = 0;
-        this.lastSeqNum = 0;
+//        this.lastSeqNum = 0;
     }
     
     /**
@@ -97,11 +97,9 @@ public class LayerTest {
      * @return
      */
     private boolean isWarmedUp(Layer<Map<String, Object>> l, double anomalyScore) {
-        if(anomalyScore > 0 && anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
+        if(anomalyScore == 0 ) {//&& anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
             ++timesWithinThreshold;
-            lastSeqNum = l.getRecordNum();
         }else{
-            lastSeqNum = 0;
             timesWithinThreshold = 0;
         }
         
@@ -1102,7 +1100,7 @@ public class LayerTest {
         assertTrue(highestAnomaly > 0.2);
         
     }
-    
+    int count = 0;
     @Test
     public void testGetAllPredictions() {
         final int PRIME_COUNT = 35;

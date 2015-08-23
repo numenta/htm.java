@@ -4,6 +4,7 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -117,6 +118,7 @@ public class NewTemporalMemory implements ComputeDecorator {
         Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells, Set<DistalDendrite> prevMatchingSegments, Set<Cell> prevMatchingCells, boolean learn) {
         
         ComputeCycle cycle = new ComputeCycle();
+        
         activateCorrectlyPredictiveCells(c, cycle, prevPredictiveCells, prevMatchingCells, activeColumns);
         
         burstColumns(cycle, c, activeColumns, cycle.successfullyPredictedColumns, prevActiveCells, prevWinnerCells);
@@ -196,7 +198,8 @@ public class NewTemporalMemory implements ComputeDecorator {
     public void burstColumns(ComputeCycle cycle, Connections c, 
         Set<Column> activeColumns, Set<Column> predictedColumns, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells) {
         
-        activeColumns.removeAll(predictedColumns); // Now contains unpredicted active columns
+        // Now contains only unpredicted columns
+        activeColumns.removeAll(predictedColumns);
         
         for(Column column : activeColumns) {
             List<Cell> cells = column.getCells();
@@ -350,9 +353,9 @@ public class NewTemporalMemory implements ComputeDecorator {
         connections.getMatchingSegments().clear();
     }
     
-    
-    // Helper functions
-    
+    /////////////////////////////////////////////////////////////
+    //                    Helper functions                     //
+    /////////////////////////////////////////////////////////////
     /**
      * Gets the cell with the best matching segment
      * (see `TM.bestMatchingSegment`) that has the largest number of active
@@ -405,7 +408,7 @@ public class NewTemporalMemory implements ComputeDecorator {
         for(DistalDendrite segment : c.getSegments(columnCell)) {
             numActiveSynapses = 0;
             for(Synapse synapse : c.getSynapses(segment)) {
-                if(activeCells.contains(synapse.getSourceCell()) && synapse.getPermanence() > 0) {
+                if(activeCells.contains(synapse.getPresynapticCell()) && synapse.getPermanence() > 0) {
                     ++numActiveSynapses;
                 }
             }
@@ -447,7 +450,7 @@ public class NewTemporalMemory implements ComputeDecorator {
         
         int randomIdx = c.getRandom().nextInt(leastUsedCells.size());
         List<Cell> l = new ArrayList<>(leastUsedCells);
-        
+        Collections.sort(l);
         return l.get(randomIdx);
     }
     

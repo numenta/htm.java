@@ -730,12 +730,4 @@ public class HTMSensor<T> implements Sensor<T> {
         return (MultiEncoder)encoder;
     }
     
-    public static void main(String[] args) {
-        ArrayList<String> ll = new ArrayList<>(5);
-        ll.set(padTo(0, ll), "My");
-        ll.set(padTo(2, ll), "array");
-        ll.set(padTo(1, ll), "ordered");
-        
-        System.out.println(ll + ", size = " + ll.size());
-    }
 }

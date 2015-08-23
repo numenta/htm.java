@@ -53,6 +53,8 @@ public class Column implements Comparable<Column> {
 
     private Cell[] cells;
     private List<Cell> cellList;
+    
+    private final int hashcode;
 
     /**
      * Constructs a new {@code Column}
@@ -64,6 +66,7 @@ public class Column implements Comparable<Column> {
         this.numCells = numCells;
         this.index = index;
         this.boxedIndex = index;
+        this.hashcode = hashCode();
         cells = new Cell[numCells];
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
@@ -200,5 +203,30 @@ public class Column implements Comparable<Column> {
     @Override
     public int compareTo(Column otherColumn) {
         return boxedIndex.compareTo(otherColumn.boxedIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        if(hashcode == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + index;
+            return result;
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Column other = (Column)obj;
+        if(index != other.index)
+            return false;
+        return true;
     }
 }

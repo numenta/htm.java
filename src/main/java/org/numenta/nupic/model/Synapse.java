@@ -52,17 +52,21 @@ public class Synapse {
     private int inputIndex;
     private double permanence;
 
-
+    private final int hashcode;
+    
     /**
      * Constructor used when setting parameters later.
      */
-    public Synapse() {}
+    public Synapse() {
+        hashcode = hashCode();
+    }
 
     /**
      * Constructs a new {@code Synapse}
      * 
      * @param c             the connections state of the temporal memory
-     * @param sourceCell    the {@link Cell} which will activate this {@code Synapse}
+     * @param sourceCell    the {@link Cell} which will activate this {@code Synapse};
+     *                      Null if this Synapse is proximal
      * @param segment       the owning dendritic segment
      * @param pool		    this {@link Pool} of which this synapse is a member
      * @param index         this {@code Synapse}'s index
@@ -74,6 +78,8 @@ public class Synapse {
         this.pool = pool;
         this.synapseIndex = index;
         this.inputIndex = inputIndex;
+        
+        hashcode = hashCode();
 
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
@@ -112,7 +118,9 @@ public class Synapse {
      */
     public void setPermanence(Connections c, double perm) {
         this.permanence = perm;
-        pool.updatePool(c, this, perm);
+        if(sourceCell == null) {
+            pool.updatePool(c, this, perm);
+        }
     }
 
     /**
@@ -127,7 +135,7 @@ public class Synapse {
      * Returns the containing {@link Cell} 
      * @return
      */
-    public Cell getSourceCell() {
+    public Cell getPresynapticCell() {
         return sourceCell;
     }
     
@@ -158,5 +166,36 @@ public class Synapse {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        if(hashcode == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((segment == null) ? 0 : segment.hashCode());
+            result = prime * result + synapseIndex;
+            return result;
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Synapse other = (Synapse)obj;
+        if(segment == null) {
+            if(other.segment != null)
+                return false;
+        } else if(!segment.equals(other.segment))
+            return false;
+        if(synapseIndex != other.synapseIndex)
+            return false;
+        return true;
     }
 }

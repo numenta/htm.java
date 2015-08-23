@@ -251,8 +251,16 @@ public class Connections {
      * Atomically increments and returns the incremented count.
      * @return
      */
-    public int incrementSegment() {
+    public int incrementSegments() {
         return segmentCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented count.
+     * @return
+     */
+    public int decrementSegments() {
+        return segmentCounter.getAndDecrement();
     }
     
     /**
@@ -557,8 +565,17 @@ public class Connections {
      * 
      * @return
      */
-    public int incrementSynapse() {
+    public int incrementSynapses() {
         return this.synapseCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented 
+     * {link Synapse} count
+     * @return
+     */
+    public int decrementSynapses() {
+        return this.synapseCounter.getAndDecrement();
     }
     
     /**
@@ -1124,7 +1141,7 @@ public class Connections {
      * @param cells
      */
     public void setActiveCells(Set<Cell> cells) {
-    	this.activeCells = cells;
+        this.activeCells = cells;
     }
     
     /**

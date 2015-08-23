@@ -184,7 +184,7 @@ public class TemporalMemoryTestMachine {
                 for(DistalDendrite seg : cell.getSegments(connections)) {
                     List<String> synapseList = new ArrayList<String>();
                     for(Synapse synapse : seg.getAllSynapses(connections)) {
-                        synapseList.add("[" + synapse.getSourceCell() + ", " + synapse.getPermanence() + "]");
+                        synapseList.add("[" + synapse.getPresynapticCell() + ", " + synapse.getPermanence() + "]");
                     }
                     segmentDict.put(seg, synapseList);
                 }

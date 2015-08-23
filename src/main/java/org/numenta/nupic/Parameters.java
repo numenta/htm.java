@@ -202,7 +202,7 @@ public class Parameters {
          * Amount by which active permanences of synapses of previously 
          * predicted but inactive segments are decremented.
          */
-        PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 1.0),
+        PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 9.0),
         /** Remove this and add Logging (slf4j) */
         TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
         

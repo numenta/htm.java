@@ -33,6 +33,10 @@ public class IndicesTrace extends Trace<LinkedHashSet<Integer>> {
         return trace;
     }
 
+    /**
+     * Trace made up of cumulative counts of trace indices.
+     * @return
+     */
     public CountsTrace makeCumCountsTrace() {
         CountsTrace trace = new CountsTrace(monitor, String.format("# (cumulative) %s", title));
         Trace<Integer> countsTrace = makeCountsTrace();
