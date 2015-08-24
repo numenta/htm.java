@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -31,7 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -39,8 +42,6 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
@@ -67,6 +68,7 @@ public class Connections {
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
+    private double predictedSegmentDecrement = 0.0;
     private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
@@ -137,10 +139,11 @@ public class Connections {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
+    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
     protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
-    protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
+    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
     
     /** Total number of columns */
     protected int[] columnDimensions = new int[] { 2048 };
@@ -198,9 +201,9 @@ public class Connections {
     protected Map<Segment, List<Synapse>> synapses;
     
     /** Helps index each new Segment */
-    protected int segmentCounter = 0;
+    protected AtomicInteger segmentCounter = new AtomicInteger(0);
     /** Helps index each new Synapse */
-    protected int synapseCounter = 0;
+    protected AtomicInteger synapseCounter = new AtomicInteger(0);
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
@@ -228,26 +231,43 @@ public class Connections {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
+        matchingCells.clear();
+        matchingSegments.clear();
         successfullyPredictedColumns.clear();
         activeSegments.clear();
         learningSegments.clear();
-        activeSynapsesForSegment.clear();
     }
     
     /**
-     * Returns the segment counter
+     * Atomically returns the segment counter
      * @return
      */
     public int getSegmentCount() {
-    	return segmentCounter;
+    	return segmentCounter.get();
     }
     
     /**
-     * Sets the segment counter
+     * Atomically increments and returns the incremented count.
+     * @return
+     */
+    public int incrementSegments() {
+        return segmentCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented count.
+     * @return
+     */
+    public int decrementSegments() {
+        return segmentCounter.getAndDecrement();
+    }
+    
+    /**
+     * Atomically sets the segment counter
      * @param counter
      */
     public void setSegmentCount(int counter) {
-    	this.segmentCounter = counter;
+    	this.segmentCounter.set(counter);
     }
     
     /**
@@ -523,19 +543,38 @@ public class Connections {
     }
     
     /**
-     * Returns the count of {@link Synapse}s
+     * Atomically returns the count of {@link Synapse}s
      * @return
      */
     public int getSynapseCount() {
-    	return synapseCounter;
+    	return synapseCounter.get();
     }
     
     /**
-     * Sets the count of {@link Synapse}s
+     * Atomically sets the count of {@link Synapse}s
      * @param i
      */
     public void setSynapseCount(int i) {
-    	this.synapseCounter = i;
+    	this.synapseCounter.set(i);
+    }
+    
+    /**
+     * Atomically increments and returns the incremented
+     * {@link Synapse} count.
+     * 
+     * @return
+     */
+    public int incrementSynapses() {
+        return this.synapseCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented 
+     * {link Synapse} count
+     * @return
+     */
+    public int decrementSynapses() {
+        return this.synapseCounter.getAndDecrement();
     }
     
     /**
@@ -1101,7 +1140,7 @@ public class Connections {
      * @param cells
      */
     public void setActiveCells(Set<Cell> cells) {
-    	this.activeCells = cells;
+        this.activeCells = cells;
     }
     
     /**
@@ -1135,6 +1174,22 @@ public class Connections {
      */
     public void setPredictiveCells(Set<Cell> cells) {
     	this.predictiveCells = cells;
+    }
+    
+    /**
+     * Returns the Set of matching {@link Cell}s
+     * @return
+     */
+    public Set<Cell> getMatchingCells() {
+        return matchingCells;
+    }
+    
+    /**
+     * Sets the Set of matching {@link Cell}s
+     * @param cells
+     */
+    public void setMatchingCells(Set<Cell> cells) {
+        this.matchingCells = cells;
     }
     
     /**
@@ -1187,19 +1242,19 @@ public class Connections {
     }
     
     /**
-     * Returns the mapping of Segments to active synapses in t-1
+     * Returns the Set of matching {@link DistalDendrite}s
      * @return
      */
-    public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
-        return activeSynapsesForSegment;
+    public Set<DistalDendrite> getMatchingSegments() {
+        return matchingSegments;
     }
     
     /**
-     * Sets the mapping of {@link Segment}s to active {@link Synapse}s
-     * @param syns
+     * Sets the Set of matching {@link DistalDendrite}s
+     * @param segments
      */
-    public void setActiveSynapsesForSegment(Map<DistalDendrite, Set<Synapse>> syns) {
-    	this.activeSynapsesForSegment = syns;
+    public void setMatchingSegments(Set<DistalDendrite> segments) {
+        this.matchingSegments = segments;
     }
     
     /**
@@ -1216,12 +1271,12 @@ public class Connections {
         }
         
         if(receptorSynapses == null) {
-            receptorSynapses = new LinkedHashMap<Cell, Set<Synapse>>();
+            receptorSynapses = new LinkedHashMap<>();
         }
         
         Set<Synapse> retVal = null;
         if((retVal = receptorSynapses.get(cell)) == null) {
-            receptorSynapses.put(cell, retVal = new LinkedHashSet<Synapse>());
+            receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
         }
         
         return retVal;
@@ -1512,6 +1567,22 @@ public class Connections {
      */
     public double getPermanenceDecrement() {
         return this.permanenceDecrement;
+    }
+    
+    /**
+     * Amount by which active permanences of synapses of previously predicted but inactive segments are decremented.
+     * @param predictedSegmentDecrement
+     */
+    public void setPredictedSegmentDecrement(double predictedSegmentDecrement) {
+        this.predictedSegmentDecrement = predictedSegmentDecrement;
+    }
+    
+    /**
+     * Returns the predictedSegmentDecrement amount.
+     * @return
+     */
+    public double getPredictedSegmentDecrement() {
+        return this.predictedSegmentDecrement;
     }
     
     /**

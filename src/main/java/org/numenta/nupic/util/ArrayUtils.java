@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -38,6 +38,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
  * Utilities to match some of the functionality found in Python's Numpy.
@@ -270,6 +273,21 @@ public class ArrayUtils {
 
         return tuples;
     }
+    
+    /**
+     * Returns an array with the same shape and the contents
+     * converted to integers.
+     *
+     * @param doubs an array of doubles.
+     * @return
+     */
+    public static int[] toIntArray(double[] doubs) {
+        int[] retVal = new int[doubs.length];
+        for (int i = 0; i < doubs.length; i++) {
+            retVal[i] = (int)doubs[i];
+        }
+        return retVal;
+    }
 
     /**
      * Returns an array with the same shape and the contents
@@ -325,21 +343,6 @@ public class ArrayUtils {
             a[i] = modulo(a[i], b);
         }
         return a;
-    }
-
-    /**
-     * Returns an array with the same shape and the contents
-     * converted to integers.
-     *
-     * @param doubs an array of doubles.
-     * @return
-     */
-    public static int[] toIntArray(double[] doubs) {
-        int[] retVal = new int[doubs.length];
-        for (int i = 0; i < doubs.length; i++) {
-            retVal[i] = (int)doubs[i];
-        }
-        return retVal;
     }
 
     /**
@@ -897,7 +900,61 @@ public class ArrayUtils {
         }
         return doubs.toArray();
     }
-
+    
+    /**
+     * Returns an array which starts from lowerBounds (inclusive) and
+     * ends at the upperBounds (exclusive).
+     *
+     * @param lowerBounds the starting value
+     * @param upperBounds the maximum value (exclusive)
+     * @param interval    the amount by which to increment the values
+     * @return
+     */
+    public static int[] xrange(int lowerBounds, int upperBounds, int interval) {
+        TIntList ints = new TIntArrayList();
+        for (int i = lowerBounds; i < upperBounds; i += interval) {
+            ints.add(i);
+        }
+        return ints.toArray();
+    }
+    
+    /**
+     * Fisher-Yates implementation which shuffles the array contents.
+     * 
+     * @param array     the array of ints to shuffle.
+     * @return shuffled array
+     */
+    public static int[] shuffle(int[] array) {
+        int index;
+        Random random = new Random(42);
+        for (int i = array.length - 1; i > 0; i--) {
+            index = random.nextInt(i + 1);
+            if (index != i) {
+                array[index] ^= array[i];
+                array[i] ^= array[index];
+                array[index] ^= array[i];
+            }
+        }
+        return array;
+    }
+    
+    /**
+     * Replaces the range specified by "start" and "end" of "orig" with the 
+     * array of replacement ints found in "replacement".
+     * 
+     * @param start         start index of "orig" to be replaced
+     * @param end           end index of "orig" to be replaced
+     * @param orig          the array containing entries to be replaced by "replacement"
+     * @param replacement   the array of ints to put in "orig" in the indicated indexes
+     * @return
+     */
+    public static int[] replace(int start, int end, int[] orig, int[] replacement) {
+        for(int i = start, j = 0;i < end;i++, j++) {
+            orig[i] = replacement[j];
+        }
+        return orig;
+    }
+    
     /**
      * Returns a sorted unique array of integers
      *
@@ -1404,6 +1461,54 @@ public class ArrayUtils {
             }
         }
         return index;
+    }
+    
+    /**
+     * Returns a boxed Integer[] from the specified primitive array
+     * @param ints      the primitive int array
+     * @return
+     */
+    public static Integer[] toBoxed(int[] ints) {
+        return IntStream.of(ints).boxed().collect(Collectors.toList()).toArray(new Integer[ints.length]);
+    }
+    
+    /**
+     * Returns a boxed Double[] from the specified primitive array
+     * @param doubles       the primitive double array
+     * @return
+     */
+    public static Double[] toBoxed(double[] doubles) {
+        return DoubleStream.of(doubles).boxed().collect(Collectors.toList()).toArray(new Double[doubles.length]);
+    }
+    
+    /**
+     * Converts an array of Integer objects to an array of its
+     * primitive form.
+     * 
+     * @param doubs
+     * @return
+     */
+    public static int[] toPrimitive(Integer[] ints) {
+        int[] retVal = new int[ints.length];
+        for(int i = 0;i < retVal.length;i++) {
+            retVal[i] = ints[i].intValue();
+        }
+        return retVal;
+    }
+    
+    /**
+     * Converts an array of Double objects to an array of its
+     * primitive form.
+     * 
+     * @param doubs
+     * @return
+     */
+    public static double[] toPrimitive(Double[] doubs) {
+        double[] retVal = new double[doubs.length];
+        for(int i = 0;i < retVal.length;i++) {
+            retVal[i] = doubs[i].doubleValue();
+        }
+        return retVal;
     }
     
     /**

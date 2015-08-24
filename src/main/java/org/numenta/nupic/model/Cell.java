@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -39,18 +39,21 @@ public class Cell implements Comparable<Cell> {
     /** Remove boxing where necessary */
     final Integer boxedIndex;
     /** The owning {@link Column} */
-    private final Column parentColumn;
+    private final Column column;
+    /** Cash this because Cells are immutable */
+    private final int hashcode;
 
 
     /**
      * Constructs a new {@code Cell} object
-     * @param column    the parent {@link Column}
+     * @param column    the containing {@link Column}
      * @param colSeq    this index of this {@code Cell} within its column
      */
     public Cell(Column column, int colSeq) {
-        this.parentColumn = column;
+        this.column = column;
         this.index = column.getIndex() * column.getNumCellsPerColumn() + colSeq;
-        this.boxedIndex = new Integer(colSeq);
+        this.boxedIndex = new Integer(index);
+        this.hashcode = hashCode();
     }
 
     /**
@@ -65,8 +68,8 @@ public class Cell implements Comparable<Cell> {
      * Returns the column within which this cell resides
      * @return
      */
-    public Column getParentColumn() {
-        return parentColumn;
+    public Column getColumn() {
+        return column;
     }
 
     /**
@@ -74,10 +77,22 @@ public class Cell implements Comparable<Cell> {
      * from this {@code Cell}
      * 
      * @param c     the connections state of the temporal memory
-     * @param s
+     * @param s     the Synapse to add
      */
     public void addReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this).add(s);
+    }
+    
+    /**
+     * Removes a {@link Synapse} which is no longer a receiver of
+     * signals from this {@code Cell}
+     * 
+     * @param c     the connections state of the temporal memory
+     * @param s     the Synapse to remove
+     */
+    public void removeReceptorSynapse(Connections c, Synapse s) {
+        c.getReceptorSynapses(this).remove(s);
+        c.decrementSynapses();
     }
 
     /**
@@ -96,11 +111,10 @@ public class Cell implements Comparable<Cell> {
      * Returns a newly created {@link DistalDendrite}
      * 
      * @param   c       the connections state of the temporal memory
-     * @param index     the index of the new {@link DistalDendrite}
      * @return          a newly created {@link DistalDendrite}
      */
-    public DistalDendrite createSegment(Connections c, int index) {
-        DistalDendrite dd = new DistalDendrite(this, index);
+    public DistalDendrite createSegment(Connections c) {
+        DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
         c.getSegments(this).add(dd);
 
         return dd;
@@ -120,7 +134,7 @@ public class Cell implements Comparable<Cell> {
      * {@inheritDoc}
      */
     public String toString() {
-        return "Cell: col=" + parentColumn.getIndex() + ", idx=" + index;
+        return "" + index;
     }
 
     /**
@@ -132,4 +146,30 @@ public class Cell implements Comparable<Cell> {
     public int compareTo(Cell arg0) {
         return boxedIndex.compareTo(arg0.boxedIndex);
     }
+
+    @Override
+    public int hashCode() {
+        if(hashcode == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + index;
+            return result;
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Cell other = (Cell)obj;
+        if(index != other.index)
+            return false;
+        return true;
+    }
+    
 }

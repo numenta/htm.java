@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -35,6 +35,16 @@ import org.numenta.nupic.Connections;
  * @see ProximalDendrite
  */
 public abstract class Segment {
+    protected int index;
+    
+    /**
+     * Returns this {@link ProximalDendrite}'s index.
+     * @return
+     */
+    public int getIndex() {
+        return index;
+    }
+
     /**
      * Creates and returns a newly created {@link Synapse} with the specified
      * source cell, permanence, and index.
@@ -60,5 +70,27 @@ public abstract class Segment {
         Synapse s = new Synapse(c, sourceCell, this, pool, index, inputIndex);
         syns.add(s);
         return s;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + index;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Segment other = (Segment)obj;
+        if(index != other.index)
+            return false;
+        return true;
     }
 }

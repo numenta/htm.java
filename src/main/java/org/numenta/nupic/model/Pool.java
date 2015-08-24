@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -167,5 +167,29 @@ public class Pool {
             retVal[inputIndex] = 1;
         }
         return retVal;
+    }
+    
+    /**
+     * Destroys any references this {@code Pool} maintains on behalf
+     * of the specified {@link Synapse}
+     * 
+     * @param synapse
+     */
+    public void destroySynapse(Synapse synapse) {
+        synapseConnections.remove(synapse.getInputIndex());
+        synapsesBySourceIndex.remove(synapse.getInputIndex());
+       if(synapse.getSegment() instanceof DistalDendrite) {
+            destroy();
+        }
+    }
+    
+    /**
+     * Clears the state of this {@code Pool}
+     */
+    public void destroy() {
+        synapseConnections.clear();
+        synapsesBySourceIndex.clear();
+        synapseConnections = null;
+        synapsesBySourceIndex = null;
     }
 }

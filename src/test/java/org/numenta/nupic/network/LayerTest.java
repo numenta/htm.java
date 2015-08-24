@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -41,6 +41,8 @@ import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.datagen.ResourceLocator;
@@ -52,8 +54,6 @@ import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
@@ -74,8 +74,8 @@ public class LayerTest {
     private int TOTAL = 0;
     
     private int timesWithinThreshold = 0;
-    private final double THRESHOLD = 7.0E-16; // 
-    private int lastSeqNum = 0;
+//    private final double THRESHOLD = 7.0E-16; // 
+//    private int lastSeqNum = 0;
     
     
     /**
@@ -83,7 +83,7 @@ public class LayerTest {
      */
     private void resetWarmUp() {
         this.timesWithinThreshold = 0;
-        this.lastSeqNum = 0;
+//        this.lastSeqNum = 0;
     }
     
     /**
@@ -97,11 +97,9 @@ public class LayerTest {
      * @return
      */
     private boolean isWarmedUp(Layer<Map<String, Object>> l, double anomalyScore) {
-        if(anomalyScore > 0 && anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
+        if(anomalyScore >= 0 && anomalyScore <= 0.1) {//&& anomalyScore < THRESHOLD && (lastSeqNum == 0 || lastSeqNum == l.getRecordNum() - 1)) {
             ++timesWithinThreshold;
-            lastSeqNum = l.getRecordNum();
         }else{
-            lastSeqNum = 0;
             timesWithinThreshold = 0;
         }
         
@@ -1056,13 +1054,14 @@ public class LayerTest {
                 assertNotNull(i);
                 
                 if(testingAnomaly) {
-                    //System.out.println("tested anomaly = " + i.getAnomalyScore());
                     if(i.getAnomalyScore() > highestAnomaly) highestAnomaly = i.getAnomalyScore();
                 }
-//                System.out.println("prev predicted = " + Arrays.toString(l.getPreviousPredictedColumns()));
-//                System.out.println("current active = " + Arrays.toString(l.getActiveColumns()));
-//                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
-//                System.out.println("----------------------------------------");
+
+                // UNCOMMENT TO WATCH THE RESULTS STABILIZE
+                // System.out.println("prev predicted = " + Arrays.toString(l.getPreviousPredictedColumns()));
+                // System.out.println("current active = " + Arrays.toString(ArrayUtils.where(l.getActiveColumns(), ArrayUtils.WHERE_1)));
+                // System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
+                // System.out.println("----------------------------------------");
             }
         });
         
@@ -1098,7 +1097,6 @@ public class LayerTest {
         }
         
         // Now assert we detected anomaly greater than average and significantly greater than 0 (i.e. 20%)
-        //System.out.println("highestAnomaly = " + highestAnomaly);
         assertTrue(highestAnomaly > 0.2);
         
     }
@@ -1106,7 +1104,7 @@ public class LayerTest {
     @Test
     public void testGetAllPredictions() {
         final int PRIME_COUNT = 35;
-        final int NUM_CYCLES = 200;
+        final int NUM_CYCLES = 199;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
         
