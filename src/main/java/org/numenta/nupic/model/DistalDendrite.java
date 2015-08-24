@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -42,12 +41,10 @@ import org.numenta.nupic.Connections;
  * @author David Ray
  */
 public class DistalDendrite extends Segment {
-
+    private static final double EPSILON = 0.0000001;
+    
     private Cell cell;
-    private int index;
-
-    private static final Set<Synapse> EMPTY_SYNAPSE_SET = Collections.emptySet();
-
+    
     /**
      * Constructs a new {@code Segment} object with the specified owner
      * {@link Cell} and the specified index.
@@ -82,9 +79,9 @@ public class DistalDendrite extends Segment {
      * 
      * @return
      */
-    public Synapse createSynapse(Connections c, Cell sourceCell, double permanence, int index) {
+    public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
         Pool pool = new Pool(1);
-        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, index, sourceCell.getIndex());
+        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapses(), sourceCell.getIndex());
         pool.setPermanence(c, s, permanence);
         return s;
     }
@@ -103,26 +100,20 @@ public class DistalDendrite extends Segment {
      * Returns the synapses on a segment that are active due to lateral input
      * from active cells.
      * 
-     * @param activeSynapsesForSegment      Set of this {@link Segment}'s active {@link Synapse}s
-     * @param permanenceThreshold           Threshold at which a {@link Synapse} is considered connected.
-     * @return                              Set of connected Synapses
+     * @param c                 the layer connectivity
+     * @param activeCells       the active cells
+     * @return  Set of {@link Synapse}s connected to active presynaptic cells.
      */
-    public Set<Synapse> getConnectedActiveSynapses(Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment, double permanenceThreshold) {
-        Set<Synapse> connectedSynapses = null;
-
-        if(!activeSynapsesForSegment.containsKey(this)) {
-            return EMPTY_SYNAPSE_SET;
-        }
-
-        for(Synapse s : activeSynapsesForSegment.get(this)) {
-            if(s.getPermanence() >= permanenceThreshold) {
-                if(connectedSynapses == null) {
-                    connectedSynapses = new LinkedHashSet<Synapse>();
-                }
-                connectedSynapses.add(s);
+    public Set<Synapse> getActiveSynapses(Connections c, Set<Cell> activeCells) {
+        Set<Synapse> synapses = new LinkedHashSet<>();
+        
+        for(Synapse synapse : c.getSynapses(this)) {
+            if(activeCells.contains(synapse.getPresynapticCell())) {
+                synapses.add(synapse);
             }
         }
-        return connectedSynapses == null ? EMPTY_SYNAPSE_SET : connectedSynapses;
+        
+        return synapses;
     }
 
     /**
@@ -137,6 +128,8 @@ public class DistalDendrite extends Segment {
      * @param permanenceDecrement       the increment by which permanences are decreased.
      */
     public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
+        List<Synapse> synapsesToDestroy = null;
+        
         for(Synapse synapse : c.getSynapses(this)) {
             double permanence = synapse.getPermanence();
             if(activeSynapses.contains(synapse)) {
@@ -147,7 +140,20 @@ public class DistalDendrite extends Segment {
 
             permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
 
-            synapse.setPermanence(c, permanence);
+            if(Math.abs(permanence) < EPSILON) {
+                if(synapsesToDestroy == null) {
+                    synapsesToDestroy = new ArrayList<>();
+                }
+                synapsesToDestroy.add(synapse);
+            }else{
+                synapse.setPermanence(c, permanence);
+            }
+        }
+        
+        if(synapsesToDestroy != null) {
+            for(Synapse s : synapsesToDestroy) {
+                s.destroy(c);
+            }
         }
     }
 
@@ -164,10 +170,10 @@ public class DistalDendrite extends Segment {
      *         {@code Segment}
      */
     public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
-        // Create a list of cells that aren't already synapsed to this segment
+        // Remove cells that are already synapsed on by this segment
         Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
         for(Synapse synapse : c.getSynapses(this)) {
-            Cell sourceCell = synapse.getSourceCell();
+            Cell sourceCell = synapse.getPresynapticCell();
             if(candidates.contains(sourceCell)) {
                 candidates.remove(sourceCell);
             }

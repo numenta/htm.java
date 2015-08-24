@@ -25,8 +25,8 @@ import java.util.Map;
 
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.util.NamedTuple;
 
 import rx.functions.Func1;

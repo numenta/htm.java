@@ -98,7 +98,6 @@ public class MultiEncoder extends Encoder<Object> {
             try {
                 encoder.encodeIntoArray(getInputValue(input, name), tempArray);
             }catch(Exception e) {
-                System.out.println("input = " + input + ", name = " + name + ",  inputValue = " + getInputValue(input, name));
                 e.printStackTrace();
                 throw new IllegalStateException(e);
             }

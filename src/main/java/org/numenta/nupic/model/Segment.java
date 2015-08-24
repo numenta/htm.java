@@ -35,6 +35,16 @@ import org.numenta.nupic.Connections;
  * @see ProximalDendrite
  */
 public abstract class Segment {
+    protected int index;
+    
+    /**
+     * Returns this {@link ProximalDendrite}'s index.
+     * @return
+     */
+    public int getIndex() {
+        return index;
+    }
+
     /**
      * Creates and returns a newly created {@link Synapse} with the specified
      * source cell, permanence, and index.
@@ -60,5 +70,27 @@ public abstract class Segment {
         Synapse s = new Synapse(c, sourceCell, this, pool, index, inputIndex);
         syns.add(s);
         return s;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + index;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Segment other = (Segment)obj;
+        if(index != other.index)
+            return false;
+        return true;
     }
 }

@@ -168,4 +168,28 @@ public class Pool {
         }
         return retVal;
     }
+    
+    /**
+     * Destroys any references this {@code Pool} maintains on behalf
+     * of the specified {@link Synapse}
+     * 
+     * @param synapse
+     */
+    public void destroySynapse(Synapse synapse) {
+        synapseConnections.remove(synapse.getInputIndex());
+        synapsesBySourceIndex.remove(synapse.getInputIndex());
+       if(synapse.getSegment() instanceof DistalDendrite) {
+            destroy();
+        }
+    }
+    
+    /**
+     * Clears the state of this {@code Pool}
+     */
+    public void destroy() {
+        synapseConnections.clear();
+        synapsesBySourceIndex.clear();
+        synapseConnections = null;
+        synapsesBySourceIndex = null;
+    }
 }

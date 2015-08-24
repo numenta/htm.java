@@ -295,18 +295,22 @@ public class ArrayUtilsTest {
           Object multiDimArray = createMultiDimensionArray(dimensions);
           ArrayUtils.fillArray(multiDimArray, 1);
           assertEquals(125, ArrayUtils.aggregateArray(multiDimArray));
-          System.out.println(ArrayUtils.intArrayToString(multiDimArray));
-   	}
+    }
 
     private Object createMultiDimensionArray(int[] sizes){
-            System.out.println("Creating array with dimensions / sizes: " +
-                    Arrays.toString(sizes).replaceAll(", ", "]["));
-            return Array.newInstance(int.class, sizes);
-        }
+        return Array.newInstance(int.class, sizes);
+    }
 
 	@Test
 	public void testConcatAll() {
 		assertTrue(Arrays.equals(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
-				ArrayUtils.concatAll(new int[]{1, 2}, new int[]{3, 4, 5, 6, 7}, new int[]{8, 9, 0})));
+			ArrayUtils.concatAll(new int[]{1, 2}, new int[]{3, 4, 5, 6, 7}, new int[]{8, 9, 0})));
+	}
+	
+	@Test
+	public void testReplace() {
+	    assertTrue(Arrays.equals(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+	        ArrayUtils.replace(5, 10, new int[]{1, 2, 3, 4, 5, -1, -1, -1, -1, -1}, new int[] { 6, 7, 8, 9, 0})));
+	        
 	}
 }

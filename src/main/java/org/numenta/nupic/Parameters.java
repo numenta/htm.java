@@ -31,12 +31,11 @@ import java.util.Random;
 import java.util.Set;
 
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.research.ComputeCycle;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
@@ -80,6 +79,7 @@ public class Parameters {
         defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
+        defaultTemporalParams.put(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
         defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
         defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
@@ -198,7 +198,14 @@ public class Parameters {
          * are decremented during learning.
          */
         PERMANENCE_DECREMENT("permanenceDecrement", Double.class, 0.0, 1.0),
+        /**
+         * Amount by which active permanences of synapses of previously 
+         * predicted but inactive segments are decremented.
+         */
+        PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 9.0),
+        /** Remove this and add Logging (slf4j) */
         TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
+        
 
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", int[].class),

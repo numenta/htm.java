@@ -27,7 +27,6 @@ import java.util.List;
 import org.numenta.nupic.Connections;
 
 public class ProximalDendrite extends Segment {
-    private int index;
     private Pool pool;
 
     /**
@@ -57,14 +56,6 @@ public class ProximalDendrite extends Segment {
 
     public void clearSynapses(Connections c) {
         c.getSynapses(this).clear();
-    }
-
-    /**
-     * Returns this {@link ProximalDendrite}'s index.
-     * @return
-     */
-    public int getIndex() {
-        return index;
     }
 
     /**
