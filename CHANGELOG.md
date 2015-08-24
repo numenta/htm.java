@@ -23,6 +23,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 #### Changed
 - [Issue #270] - Sync Up TemporalMemory with current version (evolved into total re-write)
 - Moved the algorithms to the "algorithms" package from the "research package". The research package will be used for additions to research.
+- The TemporalMemory now doesn't create container collections to wrap the paramter arguments to the compute(). This should result in faster executions and less memory consumption.
+- Cells, Columns, Synapses now cache their hashcodes since they are immutable which should save time when using them as indexes to maps and during comparisons.
+- Other small efficiency changes...
 
 ## [0.5.5] - 2015-08-15
 #### Added
