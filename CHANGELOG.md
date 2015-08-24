@@ -26,8 +26,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - The TemporalMemory now doesn't create container collections to wrap the paramter arguments to the compute(). This should result in faster executions and less memory consumption.
 - Cells, Columns, Synapses now cache their hashcodes since they are immutable which should save time when using them as indexes to maps and during comparisons.
 - Re-written unit and integration tests to use MonitorMixinFramework.
+- Extracted all extraneous files and classes to make the demo jars smaller.
 - Other small efficiency changes...
-- 
+
 
 #### Removed
 - BasicTemoralMemoryTest - from old integration test module
