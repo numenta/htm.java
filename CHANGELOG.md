@@ -14,7 +14,15 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
-- [Issue #270 (In Progress)] - Sync Up TemporalMemory with current version 
+
+## [0.6.0] - 2015-08-23
+#### Added
+- **htm.java-examples!!** - Split off Demos/Examples repo which can be seen [here](https://github.com/nument/htm.java-examples)
+- Newly ported MonitorMixinFramework for algorithm monitoring and commandline printing of the internals of the TemporalMemory and can be used for other algorithms.
+
+#### Changed
+- [Issue #270] - Sync Up TemporalMemory with current version (evolved into total re-write)
+- Moved the algorithms to the "algorithms" package from the "research package". The research package will be used for additions to research.
 
 ## [0.5.5] - 2015-08-15
 #### Added
