@@ -10,14 +10,6 @@
 
 	<url>https://github.com/numenta/htm.java</url>
 
-	<repositories>
-		<repository>
-			<id>local</id>
-			<name>In Project Repo</name>
-			<url>file://${project.basedir}/libs</url>
-		</repository>
-	</repositories>
-
 	<licenses>
 		<license>
 			<name>The GNU Affero Public License.</name>
@@ -46,16 +38,6 @@
 	</scm>
 
 	<dependencies>
-		<dependency>
-			<groupId>cortical</groupId>
-			<artifactId>cortical-fxwidgets</artifactId>
-			<version>0.9</version>
-		</dependency>
-		<dependency>
-			<groupId>cortical</groupId>
-			<artifactId>cortical-twitterutils</artifactId>
-			<version>0.9</version>
-		</dependency>
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
