@@ -207,6 +207,8 @@ public class MultiEncoder extends Encoder<Object> {
                 return DateEncoder.builder();
             case "DeltaEncoder":
                 return DeltaEncoder.deltaBuilder();
+            case "SDRPassThroughEncoder" :
+                return SDRPassThroughEncoder.sptBuilder();
             default:
                 throw new IllegalArgumentException("Invalid encoder: " + encoderName);
         }

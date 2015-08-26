@@ -37,16 +37,16 @@ import static java.lang.String.*;
  *
  * @author wilsondy (from Python original)
  */
-public class PassThroughEncoder extends Encoder<int[]> {
+public class PassThroughEncoder<T> extends Encoder<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PassThroughEncoder.class);
+    protected final Logger LOGGER = LoggerFactory.getLogger(PassThroughEncoder.class);
 
     /**
      * This is used to check that there are exactly outputBitsOn in the outgoing bits
      * The Python claims to do more, but I don't think it actually does anything other than throw an error
      * as we do here also. (This is w in the Python code)
      */
-    private Integer outputBitsOnCount;
+    protected Integer outputBitsOnCount;
 
     protected PassThroughEncoder() { }
 
@@ -65,7 +65,7 @@ public class PassThroughEncoder extends Encoder<int[]> {
      *
      * @return a {@code PassThroughEncoder.Builder}
      */
-    public static Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> builder() {
+    public static Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder<int[]>> builder() {
         return new PassThroughEncoder.Builder();
     }
 
@@ -135,7 +135,8 @@ public class PassThroughEncoder extends Encoder<int[]> {
      * @param output
      */
     @Override
-    public void encodeIntoArray(int[] input, int[] output) {
+    public void encodeIntoArray(T t, int[] output) {
+        int[] input = (int[])t;
         if (input.length != output.length)
             throw new IllegalArgumentException(format("Different input (%d) and output (%d) sizes", input.length, output.length));
         if (this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
@@ -171,6 +172,7 @@ public class PassThroughEncoder extends Encoder<int[]> {
         //NOOP
     }
 
+    @SuppressWarnings("hiding")
     @Override
     public <T> List<T> getBucketValues(Class<T> returnType) {
         return null;
@@ -183,14 +185,15 @@ public class PassThroughEncoder extends Encoder<int[]> {
      * initialization can be kept to a minimum for implementing subclasses, while avoiding
      * the mistake-proneness of extremely long argument lists.
      */
-    public static class Builder extends Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder> {
+    public static class Builder extends Encoder.Builder<PassThroughEncoder.Builder, PassThroughEncoder<int[]>> {
         private Builder() { }
 
+        @SuppressWarnings("unchecked")
         @Override
-        public PassThroughEncoder build() {
+        public PassThroughEncoder<int[]> build() {
             //Must be instantiated so that super class can initialize
             //boilerplate variables.
-            encoder = new PassThroughEncoder();
+            encoder = new PassThroughEncoder<int[]>();
 
             //Call super class here
             super.build();
@@ -200,9 +203,9 @@ public class PassThroughEncoder extends Encoder<int[]> {
             //  vars here together with any sanity checking       //
             ////////////////////////////////////////////////////////
 
-            ((PassThroughEncoder) encoder).init();
+            ((PassThroughEncoder<int[]>) encoder).init();
 
-            return (PassThroughEncoder) encoder;
+            return (PassThroughEncoder<int[]>) encoder;
         }
     }
 }

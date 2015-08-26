@@ -22,12 +22,15 @@
 
 package org.numenta.nupic;
 
+import java.util.Arrays;
+
 import org.numenta.nupic.encoders.CoordinateEncoder;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.GeospatialCoordinateEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 
 /**
@@ -43,7 +46,11 @@ public enum FieldMetaType {
 	BOOLEAN("bool"),
 	LIST("list"),
 	COORD("coord"),
-	GEO("geo");
+	GEO("geo"),
+	/** Sparse Array (i.e. 0, 2, 3) */
+	SARR("sarr"),
+	/** Dense Array (i.e. 1, 1, 0, 1) */ 
+	DARR("darr");
 	
 	/**
 	 * String representation to be used when a display
@@ -70,6 +77,8 @@ public enum FieldMetaType {
 	        case GEO : return GeospatialCoordinateEncoder.geobuilder().build();
 	        case INTEGER : 
 	        case FLOAT : return RandomDistributedScalarEncoder.builder().build();
+	        case DARR :
+	        case SARR : return SDRPassThroughEncoder.sptBuilder().build();
 	        default : return null;
 	    }
 	}
@@ -91,6 +100,9 @@ public enum FieldMetaType {
             case GEO : return (T)new double[] { Double.parseDouble(input.split("\\;")[0]), Double.parseDouble(input.split("\\;")[1]) }; 
             case INTEGER : 
             case FLOAT : return (T)new Double(input);
+            case SARR :
+            case DARR: return (T)Arrays.stream(input.replace("[","").replace("]","")
+                .split("[\\s]*\\,[\\s]*")).mapToInt(Integer::parseInt).toArray();
             default : return null;
         }
 	}
@@ -151,6 +163,12 @@ public enum FieldMetaType {
 	        case "coord" : {
                 return COORD;
             }
+	        case "sarr" : {
+	            return SARR;
+	        }
+	        case "darr" : {
+	            return DARR;
+	        }
 	        default : return FLOAT;
 	    }
 	}

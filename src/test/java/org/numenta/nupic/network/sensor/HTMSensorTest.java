@@ -28,8 +28,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +88,18 @@ public class HTMSensorTest {
         if(encoderType != null) inner.put("encoderType", encoderType);
         
         return map;
+    }
+    
+    private Parameters getArrayTestParams() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+                        null,
+                        0, // n
+                        0, // w
+                        0, 0, 0, 0, null, null, null,
+                        "sdr_in", "darr", "SDRPassThroughEncoder");
+        Parameters p = Parameters.empty();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        return p;
     }
     
     private Parameters getTestEncoderParams() {
@@ -590,4 +605,43 @@ public class HTMSensorTest {
         assertFalse(outputStream.hashCode() == outputStream2.hashCode());
         assertFalse(outputStream2.hashCode() == outputStream3.hashCode());
     }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testInputIntegerArray() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+            SensorParams.create(
+                Keys::path, "", ResourceLocator.path("1_100.csv")));
+                    
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        
+        htmSensor.initEncoder(getArrayTestParams());
+        
+        // Ensure that the HTMSensor's output stream can be retrieved more than once.
+        Stream<int[]> outputStream = htmSensor.getOutputStream();
+        System.out.println(outputStream.findFirst().get());
+        
+    }
+    
+    private int[][] getArrayFromFile(String path) {
+        int[][] retVal = null;
+        
+        try {
+            Stream<String> s = Files.lines(Paths.get(getClass().getResource(path).getPath()));
+            
+            @SuppressWarnings("resource")
+            int[][] ia = s.map(l -> l.split("[\\s]*\\,[\\s]*")).map(i -> {
+                return Arrays.stream(i).mapToInt(Integer::parseInt).toArray();
+            }).toArray(int[][]::new);  
+            
+            retVal = ia;
+            
+            s.close();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return retVal;
+    }
+    
 }

@@ -36,7 +36,7 @@ public class PassThroughEncoderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeArray() {
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, null);
 		encoder.setName("foo");
 		int bitmap[] = {0,0,0,1,0,0,0,0,0};
 		int output[] = new int[9];
@@ -48,7 +48,7 @@ public class PassThroughEncoderTest {
 
 	@Test
 	public void testEncodeBitArray(){
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, null);
 		encoder.setName("foo");
 		int bitmap[] = {0,0,0,1,0,1,0,0,0};
 		int[] output = encoder.encode(bitmap);
@@ -87,7 +87,7 @@ public class PassThroughEncoderTest {
 	
 	@Ignore
 	private void testCloseInner(int[] bitmap1, int[] bitmap2, double expectedScore){
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, null);
 		encoder.setName("foo");
 		
 		int[] out1 = encoder.encode(bitmap1);
