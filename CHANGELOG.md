@@ -14,7 +14,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
-- [[Issue #286](https://github.com/numenta/htm.java/issues/286)] - Work on feeding arrays into NAPI
+- [[Issue #286](https://github.com/numenta/htm.java/issues/286)] - Work on feeding arrays into NAPI - can now read binary arrays (as Strings) directly from file or manually using ObservableSensor
+- Fixed PassThroughEncoder and SparsePassThroughEncoder initialization of n and w
+- Generified PassThroughEncoder and SparsePassThroughEncoder for efficient subclassing
+- Added new SDRPassThroughEncoder which more efficiently sends data through to output and handles both dense and sparse inputs
+- Added 2 new FieldMetaType Enums with their decodeType() methods for int[]s as Strings
+- Added new tests in LayerTest, HTMSensorTest, ObservableSensorTest
 
 ## [0.6.1] - 2015-08-23
 #### Changed
