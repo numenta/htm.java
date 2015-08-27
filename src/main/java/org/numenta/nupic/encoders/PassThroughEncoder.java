@@ -41,21 +41,13 @@ public class PassThroughEncoder<T> extends Encoder<T> {
 
     protected final Logger LOGGER = LoggerFactory.getLogger(PassThroughEncoder.class);
 
-    /**
-     * This is used to check that there are exactly outputBitsOn in the outgoing bits
-     * The Python claims to do more, but I don't think it actually does anything other than throw an error
-     * as we do here also. (This is w in the Python code)
-     */
-    protected Integer outputBitsOnCount;
-
     protected PassThroughEncoder() { }
 
-    public PassThroughEncoder(int outputWidth, Integer outputBitsOnCount) {
-        super.setW(outputWidth);
+    public PassThroughEncoder(int outputWidth, int outputBitsOnCount) {
+        super.setW(outputBitsOnCount);
         super.setN(outputWidth);
         super.setForced(false);
-        this.outputBitsOnCount = outputBitsOnCount;
-
+        
         LOGGER.info("Building new PassThroughEncoder instance, outputWidth: {} outputBitsOnCount: {}", outputWidth, outputBitsOnCount);
     }
 
@@ -71,7 +63,6 @@ public class PassThroughEncoder<T> extends Encoder<T> {
 
     public void init() {
         setForced(false);
-        this.outputBitsOnCount = getW() > 0 ? getW() : null;
     }
 
     @Override
@@ -119,7 +110,7 @@ public class PassThroughEncoder<T> extends Encoder<T> {
 
     @Override
     public int getWidth() {
-        return w;
+        return n;
     }
 
     @Override
@@ -139,8 +130,8 @@ public class PassThroughEncoder<T> extends Encoder<T> {
         int[] input = (int[])t;
         if (input.length != output.length)
             throw new IllegalArgumentException(format("Different input (%d) and output (%d) sizes", input.length, output.length));
-        if (this.outputBitsOnCount != null && ArrayUtils.sum(input) != outputBitsOnCount)
-            throw new IllegalArgumentException(format("Input has %d bits but w was set to %d.", ArrayUtils.sum(input), outputBitsOnCount));
+        if (ArrayUtils.sum(input) != w)
+            throw new IllegalArgumentException(format("Input has %d bits but w was set to %d.", ArrayUtils.sum(input), w));
 
         System.arraycopy(input, 0, output, 0, input.length);
         if(LOGGER.isTraceEnabled()) {

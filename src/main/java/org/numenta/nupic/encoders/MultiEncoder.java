@@ -96,7 +96,8 @@ public class MultiEncoder extends Encoder<Object> {
             int[] tempArray = new int[encoder.getWidth()];
 
             try {
-                encoder.encodeIntoArray(getInputValue(input, name), tempArray);
+                Object o = getInputValue(input, name);
+                encoder.encodeIntoArray(o, tempArray);
             }catch(Exception e) {
                 e.printStackTrace();
                 throw new IllegalStateException(e);

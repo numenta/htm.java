@@ -2,15 +2,12 @@ package org.numenta.nupic.encoders;
 
 import java.util.Arrays;
 
-import org.numenta.nupic.FieldMetaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class SDRPassThroughEncoder extends PassThroughEncoder<String> {
+public class SDRPassThroughEncoder extends PassThroughEncoder<int[]> {
     protected final Logger LOGGER = LoggerFactory.getLogger(SDRPassThroughEncoder.class);
-    
-    private FieldMetaType metaType;
     
     protected SDRPassThroughEncoder() { }
 
@@ -31,14 +28,6 @@ public class SDRPassThroughEncoder extends PassThroughEncoder<String> {
     }
     
     /**
-     * Returns either {@link FieldMetaType#SARR} or {@link FieldMetaType#DARR}
-     * @return
-     */
-    public FieldMetaType getMetaType() {
-        return metaType;
-    }
-    
-    /**
      * Check for length the same and copy input into output
      * If outputBitsOnCount (w) set, throw error if not true
      * @param <T>
@@ -47,21 +36,12 @@ public class SDRPassThroughEncoder extends PassThroughEncoder<String> {
      * @param output
      */
     @Override
-    public void encodeIntoArray(String t, int[] output) {
-        if(metaType == null) {
-            metaType = FieldMetaType.fromString(t);
-            
-            if(metaType != FieldMetaType.SARR && metaType != FieldMetaType.DARR) {
-                LOGGER.error("SDRPassThroughEncoder only encodes types: SARR, or DARR");
-                throw new IllegalArgumentException("SDRPassThroughEncoder only encodes types: SARR, or DARR");
-            }
-        }
-        
+    public void encodeIntoArray(int[] input, int[] output) {
         if(LOGGER.isTraceEnabled()) {
-            LOGGER.trace("encodeIntoArray: metaType: {} \nOutput: {} ", metaType, Arrays.toString(output));
+            LOGGER.trace("encodeIntoArray: input: {} \nOutput: {} ", Arrays.toString(input), Arrays.toString(output));
         }
         
-        System.arraycopy(metaType.decodeType(t, this), 0, output, 0, output.length);
+        System.arraycopy(input, 0, output, 0, output.length);
     }
     
     /**
@@ -79,7 +59,8 @@ public class SDRPassThroughEncoder extends PassThroughEncoder<String> {
             //Must be instantiated so that super class can initialize
             //boilerplate variables.
             encoder = new SDRPassThroughEncoder();
-
+            this.w = this.n;
+            
             //Call super class here
             super.build();
 

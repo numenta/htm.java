@@ -32,12 +32,8 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.ResourceLocator;
-import org.numenta.nupic.network.NetworkTestHarness;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
-import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observable;
 
@@ -189,7 +185,7 @@ public class ObservableSensorTest {
     public void testInputIntegerArray() {
         Publisher manual = Publisher.builder()
             .addHeader("sdr_in")
-            .addHeader("S")
+            .addHeader("sarr")
             .addHeader("B")
             .build();
         
@@ -198,34 +194,27 @@ public class ObservableSensorTest {
                 SensorParams.create(
                     Keys::obs, new Object[] {"name", manual}));
         
-        Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
-        
-        int[][] ia = getArrayFromFile("1_100.csv");
-        (new Thread() {
+        Thread t = null;
+        (t = new Thread() {
             int i = 0;
             public void run() {
-                sensor.getInputStream().forEach(l -> { 
-                    assertEquals(885, ((String[])l).length);
-                });
+                assertEquals(2, ((String[])sensor.getInputStream().findFirst().get()).length);
             }
         }).start();
         
-        
+        int[][] ia = getArrayFromFile(ResourceLocator.path("1_100.csv"));
         manual.onNext(Arrays.toString(ia[0]).trim());
-        
+        try { t.join(); }catch(Exception e) { e.printStackTrace(); }
     }
 
     private int[][] getArrayFromFile(String path) {
         int[][] retVal = null;
         
         try {
-            Stream<String> s = Files.lines(Paths.get(getClass().getResource(path).getPath()));
+            Stream<String> s = Files.lines(Paths.get(path));
             
             @SuppressWarnings("resource")
-            int[][] ia = s.map(l -> l.split("[\\s]*\\,[\\s]*")).map(i -> {
+            int[][] ia = s.skip(3).map(l -> l.split("[\\s]*\\,[\\s]*")).map(i -> {
                 return Arrays.stream(i).mapToInt(Integer::parseInt).toArray();
             }).toArray(int[][]::new);  
             

@@ -189,7 +189,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
          */
         @Override 
         public Spliterator<String[]> trySplit() {
-            final SequencingConsumer holder = new SequencingConsumer();
+            final SequencingConsumer holder = csv.isArrayType ? new SequencingArrayConsumer() : new SequencingConsumer();
          
             //This is the line that makes this implementation tricky due to
             //a side effect in the purpose of this method. The try advance
@@ -240,13 +240,23 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
             return characteristics; 
         }
 
-        final class SequencingConsumer implements Consumer<String[]> {
+        class SequencingConsumer implements Consumer<String[]> {
             String[] value;
             @Override public void accept(String[] value) { 
                 csv.isTerminal = true;
                 this.value = new String[value.length + 1];
                 System.arraycopy(value, 0, this.value, 1, value.length);
                 this.value[0] = String.valueOf(sequenceNum);
+            }
+        }
+        
+        final class SequencingArrayConsumer extends SequencingConsumer implements Consumer<String[]> {
+            String[] value;
+            @Override public void accept(String[] value) { 
+                csv.isTerminal = true;
+                this.value = new String[2];
+                this.value[0] = String.valueOf(sequenceNum);
+                this.value[1] = Arrays.toString(value).trim();
             }
         }
     }
@@ -328,9 +338,11 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private int fence;
     private boolean isBatchOp;
     private boolean isTerminal;
+    private boolean isArrayType;
     private BatchedCsvHeader header;
     private Stream<T> delegate;
     private int headerStateTracker = 0;
+
     
     /**
      * Constructs a new {@code BatchedCsvStream}
@@ -362,6 +374,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
             contents.add(h);
         }
         this.header = new BatchedCsvHeader(contents, fence);
+        this.isArrayType = isArrayType();
         
         if(LOGGER.isDebugEnabled()) {
             LOGGER.debug("Created Header:");
@@ -435,11 +448,27 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         
         return StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(
-                parallel ? it : getSequenceIterator(it), // Return a sequencing iterator if not parallel
-                                                         // otherwise the Spliterator handles the sequencing
-                                                         // through the special SequencingConsumer
+                parallel ? it : isArrayType ? getArraySequenceIterator(it) : getSequenceIterator(it), // Return a sequencing iterator if not parallel
+                                                                                                        // otherwise the Spliterator handles the sequencing
+                                                                                                        // through the special SequencingConsumer
                 Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), 
                 parallel);
+    }
+    
+    /**
+     * Returns a flag indicating whether the input field is an array
+     * @return
+     */
+    private boolean isArrayType() {
+        if(getHeader().headerValues.length < 3) {
+            return false;
+        }
+        for(Object o : getHeader().headerValues[1].all()) {
+            if(o.toString().toLowerCase().equals("sarr") || o.toString().toLowerCase().equals("darr")) {
+                return isArrayType = true;
+            }
+        }
+        return false;
     }
     
     /**
@@ -467,6 +496,41 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
                 String[] retVal = new String[value.length + 1];
                 System.arraycopy(value, 0, retVal, 1, value.length);
                 retVal[0] = String.valueOf(seq++);
+                
+                return retVal;
+            }
+            
+        };
+    }
+    
+    /**
+     * Called internally to return a sequencing iterator when this stream
+     * is configured to be non-parallel because it will skip the BatchedSpliterator
+     * code which internally does the sequencing. So we must provide it here when
+     * not parallel.
+     * 
+     * This method differs from {@link #getSequenceIterator(Iterator)} by converting
+     * the parsed String[] to a single string in the 2 index.
+     * 
+     * @param toWrap    the original iterator to wrap
+     * @return
+     */
+    private Iterator<String[]> getArraySequenceIterator(final Iterator<String[]> toWrap) {
+        return new Iterator<String[]>() {
+            private Iterator<String[]> delegate = toWrap;
+            private int seq = 0;
+            @Override
+            public boolean hasNext() {
+                return delegate.hasNext();
+            }
+
+            @Override
+            public String[] next() {
+                isTerminal = true;
+                String[] value = delegate.next();
+                String[] retVal = new String[2];
+                retVal[0] = String.valueOf(seq++);
+                retVal[1] = Arrays.toString(value).trim();
                 
                 return retVal;
             }

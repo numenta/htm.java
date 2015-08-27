@@ -1286,6 +1286,13 @@ public class Layer<T> {
      */
     private Observable<ManualInput> mapEncoderBuckets(Observable<ManualInput> sequence) {
         if(hasSensor()) {
+            if(getSensor().getMetaInfo().getFieldTypes().stream().anyMatch(
+               ft -> { return ft == FieldMetaType.SARR || ft == FieldMetaType.DARR; })) {
+                if(autoCreateClassifiers) {
+                    throw new IllegalStateException("Cannot autoclassify with raw array input... Remove auto classify setting.");
+                }
+               return sequence; 
+            }
             sequence = sequence.map(m -> {
                 doEncoderBucketMapping(m, getSensor().getInputMap());
                 return m; 

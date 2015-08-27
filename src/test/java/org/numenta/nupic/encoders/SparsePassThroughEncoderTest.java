@@ -41,7 +41,7 @@ public class SparsePassThroughEncoderTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testEncodeArray_24outputBits() {
-        SparsePassThroughEncoder encoder = new SparsePassThroughEncoder(24, null);
+        SparsePassThroughEncoder encoder = new SparsePassThroughEncoder(24, 5);
         encoder.setName("foo");
 
         //Send bitmap as array of indices
@@ -56,7 +56,7 @@ public class SparsePassThroughEncoderTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testEncodeArray_12outputBits() {
-        SparsePassThroughEncoder encoder = new SparsePassThroughEncoder(12, null);
+        SparsePassThroughEncoder encoder = new SparsePassThroughEncoder(12, 2);
         encoder.setName("foo2");
 
         //Send bitmap as array of indices
@@ -103,8 +103,8 @@ public class SparsePassThroughEncoderTest {
 
     @Ignore
     private void testCloseInner(int[] bitmap1, int outputWidth1, int[] bitmap2, int outputWidth2, double expectedScore) {
-        SparsePassThroughEncoder encoder1 = new SparsePassThroughEncoder(outputWidth1, null);
-        SparsePassThroughEncoder encoder2 = new SparsePassThroughEncoder(outputWidth2, null);
+        SparsePassThroughEncoder encoder1 = new SparsePassThroughEncoder(outputWidth1, ArrayUtils.where(bitmap1, ArrayUtils.GREATER_OR_EQUAL_0).length);
+        SparsePassThroughEncoder encoder2 = new SparsePassThroughEncoder(outputWidth2, ArrayUtils.where(bitmap2, ArrayUtils.GREATER_OR_EQUAL_0).length);
 
         int[] out1 = encoder1.encode(bitmap1);
         int[] out2 = encoder2.encode(bitmap2);
@@ -115,9 +115,11 @@ public class SparsePassThroughEncoderTest {
 
         encoder1 = SparsePassThroughEncoder.sparseBuilder()
                 .n(outputWidth1)
+                .w(ArrayUtils.where(bitmap1, ArrayUtils.GREATER_OR_EQUAL_0).length)
                 .build();
         encoder2 = SparsePassThroughEncoder.sparseBuilder()
                 .n(outputWidth2)
+                .w(ArrayUtils.where(bitmap2, ArrayUtils.GREATER_OR_EQUAL_0).length)
                 .build();
 
         out1 = encoder1.encode(bitmap1);
