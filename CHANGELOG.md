@@ -16,6 +16,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 - [[Issue #286](https://github.com/numenta/htm.java/issues/286)] - Work on feeding arrays into NAPI
 
+## [0.6.1] - 2015-08-23
+#### Changed
+- Removed nested local repo declarations from pom.xml and build.gradle files to finally fix maven project inclusion
+
 ## [0.6.0] - 2015-08-23
 #### Added
 - **htm.java-examples!!** - Split off Demos/Examples repo which can be seen [here](https://github.com/nument/htm.java-examples)
