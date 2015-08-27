@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.6.0'
+version = '0.6.1'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
@@ -12,7 +12,7 @@ targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.0'
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.1'
     }
 }
 
@@ -24,7 +24,6 @@ repositories {
 }
 
 dependencies {
-    compile files('libs/cortical.io-widgets-0.9.0.jar','libs/cortical.io-twitter-utils-0.9.0.jar')
     compile group: 'joda-time', name: 'joda-time', version: '2.5'
     compile(group: 'com.chaschev', name: 'chutils', version:'1.4') {
         exclude(module: 'mockito-all')
