@@ -87,6 +87,18 @@ public class HTMSensorTest {
         return map;
     }
     
+    private Parameters getArrayTestParams() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+                        null,
+                        884, // n
+                        0, // w
+                        0, 0, 0, 0, null, null, null,
+                        "sdr_in", "darr", "SDRPassThroughEncoder");
+        Parameters p = Parameters.empty();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        return p;
+    }
+    
     private Parameters getTestEncoderParams() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
             null,
@@ -590,4 +602,21 @@ public class HTMSensorTest {
         assertFalse(outputStream.hashCode() == outputStream2.hashCode());
         assertFalse(outputStream2.hashCode() == outputStream3.hashCode());
     }
+    
+    @Test
+    public void testInputIntegerArray() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+            SensorParams.create(
+                Keys::path, "", ResourceLocator.path("1_100.csv")));
+                    
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        
+        htmSensor.initEncoder(getArrayTestParams());
+        
+        // Ensure that the HTMSensor's output stream can be retrieved more than once.
+        Stream<int[]> outputStream = htmSensor.getOutputStream();
+        assertEquals(884, ((int[])outputStream.findFirst().get()).length);
+    }
+   
 }

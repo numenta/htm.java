@@ -96,7 +96,8 @@ public class MultiEncoder extends Encoder<Object> {
             int[] tempArray = new int[encoder.getWidth()];
 
             try {
-                encoder.encodeIntoArray(getInputValue(input, name), tempArray);
+                Object o = getInputValue(input, name);
+                encoder.encodeIntoArray(o, tempArray);
             }catch(Exception e) {
                 e.printStackTrace();
                 throw new IllegalStateException(e);
@@ -207,6 +208,8 @@ public class MultiEncoder extends Encoder<Object> {
                 return DateEncoder.builder();
             case "DeltaEncoder":
                 return DeltaEncoder.deltaBuilder();
+            case "SDRPassThroughEncoder" :
+                return SDRPassThroughEncoder.sptBuilder();
             default:
                 throw new IllegalArgumentException("Invalid encoder: " + encoderName);
         }

@@ -58,6 +58,7 @@ import org.numenta.nupic.encoders.LogEncoder;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.util.Tuple;
 
@@ -186,6 +187,15 @@ public class HTMSensor<T> implements Sensor<T> {
                         indexToEncoderMap.put(i, ge.get());
                     } else {
                         throw new IllegalArgumentException("Coordinate encoder never initialized: " + header.getFieldNames().get(i));
+                    }
+                    break;
+                case SARR:
+                case DARR:
+                    Optional<SDRPassThroughEncoder> spte = getSDRPassThroughEncoder(encoder);
+                    if (spte.isPresent()) {
+                        indexToEncoderMap.put(i, spte.get());
+                    } else {
+                        throw new IllegalArgumentException("SDRPassThroughEncoder encoder never initialized: " + header.getFieldNames().get(i));
                     }
                     break;
                 default:
@@ -462,6 +472,23 @@ public class HTMSensor<T> implements Sensor<T> {
        for(EncoderTuple t : enc.getEncoders(enc)) {
            if(t.getEncoder() instanceof DateEncoder) {
                return Optional.of((DateEncoder)t.getEncoder());
+           }
+       }
+       
+       return Optional.empty();
+    }
+    
+    /**
+     * Searches through the specified {@link MultiEncoder}'s previously configured 
+     * encoders to find and return one that is of type {@link DateEncoder}
+     * 
+     * @param enc   the containing {@code MultiEncoder}
+     * @return
+     */
+    private Optional<SDRPassThroughEncoder> getSDRPassThroughEncoder(MultiEncoder enc) {
+       for(EncoderTuple t : enc.getEncoders(enc)) {
+           if(t.getEncoder() instanceof SDRPassThroughEncoder) {
+               return Optional.of((SDRPassThroughEncoder)t.getEncoder());
            }
        }
        

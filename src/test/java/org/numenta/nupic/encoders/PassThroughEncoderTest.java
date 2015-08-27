@@ -36,19 +36,19 @@ public class PassThroughEncoderTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testEncodeArray() {
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, 1);
 		encoder.setName("foo");
 		int bitmap[] = {0,0,0,1,0,0,0,0,0};
 		int output[] = new int[9];
 		encoder.encodeIntoArray(bitmap, output);
 		assertEquals(ArrayUtils.sum(bitmap), ArrayUtils.sum(output));
 		Tuple decode = encoder.decode(output, null);
-		assertTrue(((HashMap<String, RangeList>) decode.get(0)).containsKey(encoder.getName()));
+		assertTrue(((HashMap<String, RangeList>) decode.get(0)).containsKey(encoder.getName()));// -1 means test doesn't care
 	}
 
 	@Test
 	public void testEncodeBitArray(){
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, 2);
 		encoder.setName("foo");
 		int bitmap[] = {0,0,0,1,0,1,0,0,0};
 		int[] output = encoder.encode(bitmap);
@@ -56,6 +56,7 @@ public class PassThroughEncoderTest {
 		
 		encoder = PassThroughEncoder.builder()
 				.n(9)
+				.w(ArrayUtils.where(output, ArrayUtils.WHERE_1).length)
 				.name("foo")
 				.build();
 		output = encoder.encode(bitmap);
@@ -87,10 +88,12 @@ public class PassThroughEncoderTest {
 	
 	@Ignore
 	private void testCloseInner(int[] bitmap1, int[] bitmap2, double expectedScore){
-		PassThroughEncoder encoder = new PassThroughEncoder(9, null);
+		PassThroughEncoder<int[]> encoder = new PassThroughEncoder<>(9, ArrayUtils.where(bitmap1, ArrayUtils.WHERE_1).length);
 		encoder.setName("foo");
 		
 		int[] out1 = encoder.encode(bitmap1);
+		encoder.setW(ArrayUtils.where(bitmap2, ArrayUtils.WHERE_1).length);
+		System.out.println("n = " + encoder.getN());
 		int[] out2 = encoder.encode(bitmap2);
 
 		TDoubleList result = encoder.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
@@ -99,9 +102,11 @@ public class PassThroughEncoderTest {
 		
 		encoder = PassThroughEncoder.builder()
 				.n(9)
+				.w(ArrayUtils.where(bitmap1, ArrayUtils.WHERE_1).length)
 				.name("foo")
 				.build();
 		out1 = encoder.encode(bitmap1);
+		encoder.setW(ArrayUtils.where(bitmap2, ArrayUtils.WHERE_1).length);
 		out2 = encoder.encode(bitmap2);
 		result = encoder.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);
 		assertTrue(result.size() == 1 );
