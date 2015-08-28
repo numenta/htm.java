@@ -162,6 +162,11 @@
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<configuration>
+							<includes>
+								<include>org/numenta/nupic/**</include>
+							</includes>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
