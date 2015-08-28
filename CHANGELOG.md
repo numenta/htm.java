@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
+- [[PR #294](https://github.com/numenta/htm.java/pull/294)] - Fixes JaCoCo Coverage Reports (by Evgeny Mandrikov)
 - [[Issue #286](https://github.com/numenta/htm.java/issues/286)] - Work on feeding arrays into NAPI - can now read binary arrays (as Strings) directly from file or manually using ObservableSensor
 - Fixed PassThroughEncoder and SparsePassThroughEncoder initialization of n and w
 - Generified PassThroughEncoder and SparsePassThroughEncoder for efficient subclassing
