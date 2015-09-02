@@ -6,4 +6,4 @@ gradle >= 1.7
 Install:
 git clone https://github.com/numenta/htm.java.git
 cd htm.java
-gradle check
+gradle -Pskipbench check
