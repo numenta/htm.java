@@ -79,6 +79,8 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 ```
 **Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
 
+**Linux Gradle Issues?** [see the wiki here.](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
+
 ## Project Integration (New)
 For tips and insights on how to use the Network API to add HTM's into your own applications, see:
 
