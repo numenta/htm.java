@@ -31,12 +31,12 @@ import org.numenta.nupic.util.ArrayUtils;
 
 /**
  * Convenience container for "bound" {@link Synapse} values
- * which can be dereferenced from both a Synapse and the 
+ * which can be dereferenced from both a Synapse and the
  * {@link Connections} object. All Synapses will have a reference
  * to a {@code Pool} to retrieve relevant values. In addition, that
  * same pool can be referenced from the Connections object externally
  * which will update the Synapse's internal reference.
- * 
+ *
  * @author David Ray
  * @see Synapse
  * @see Connections
@@ -46,7 +46,7 @@ public class Pool {
 
     /** Allows fast removal of connected synapse indexes. */
     private TIntHashSet synapseConnections = new TIntHashSet();
-    /** 
+    /**
      * Indexed according to the source Input Vector Bit (for ProximalDendrites),
      * and source cell (for DistalDendrites).
      */
@@ -58,7 +58,7 @@ public class Pool {
 
     /**
      * Returns the permanence value for the {@link Synapse} specified.
-     * 
+     *
      * @param s	the Synapse
      * @return	the permanence
      */
@@ -105,7 +105,7 @@ public class Pool {
     /**
      * Returns the {@link Synapse} connected to the specified input bit
      * index.
-     * 
+     *
      * @param inputIndex	the input vector connection's index.
      * @return
      */
@@ -129,7 +129,7 @@ public class Pool {
 
     /**
      * Returns a dense array representing the potential pool permanences
-     * 
+     *
      * Note: Only called from tests for now...
      * @param c
      * @return
@@ -144,7 +144,7 @@ public class Pool {
     }
 
     /**
-     * Returns an array of input bit indexes indicating the index of the source. 
+     * Returns an array of input bit indexes indicating the index of the source.
      * (input vector bit or lateral cell)
      * @return the sparse array
      */
@@ -155,8 +155,8 @@ public class Pool {
 
     /**
      * Returns a dense array representing the potential pool bits
-     * with the connected bits set to 1. 
-     * 
+     * with the connected bits set to 1.
+     *
      * Note: Only called from tests for now...
      * @param c
      * @return
@@ -168,28 +168,20 @@ public class Pool {
         }
         return retVal;
     }
-    
+
     /**
      * Destroys any references this {@code Pool} maintains on behalf
      * of the specified {@link Synapse}
-     * 
+     *
      * @param synapse
      */
     public void destroySynapse(Synapse synapse) {
-        synapseConnections.remove(synapse.getInputIndex());
-        synapsesBySourceIndex.remove(synapse.getInputIndex());
-       if(synapse.getSegment() instanceof DistalDendrite) {
-            destroy();
+        if(synapse.getSegment() instanceof DistalDendrite) {
+            synapseConnections.clear();
+            synapsesBySourceIndex.clear();
+        } else {
+            synapseConnections.remove(synapse.getInputIndex());
+            synapsesBySourceIndex.remove(synapse.getInputIndex());
         }
-    }
-    
-    /**
-     * Clears the state of this {@code Pool}
-     */
-    public void destroy() {
-        synapseConnections.clear();
-        synapsesBySourceIndex.clear();
-        synapseConnections = null;
-        synapsesBySourceIndex = null;
     }
 }
