@@ -14,6 +14,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
+- Fixed "isLearn" programmatic setting propagation through the network, added test in RegionTest
+- Fixed default anomaly score in Layer.java's Anomaly Func (was 0.0, now 1.0)
 - Changed ExtensiveTemporalMemoryTest to include fixes for test "H10" (Orphan Decay)
 - [[Issue #308](https://github.com/numenta/htm.java/issues/308)] - Added ability to specify "isLearn" programmatically, instead of just through the stream input
 - [[Issue #305](https://github.com/numenta/htm.java/issues/305)] - Fixed Synapses not completely removed
