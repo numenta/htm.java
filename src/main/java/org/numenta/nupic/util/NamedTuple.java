@@ -23,7 +23,10 @@
 package org.numenta.nupic.util;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Immutable tuple which adds associative lookup functionality.
@@ -74,6 +77,18 @@ public class NamedTuple extends Tuple {
         if(keys == null || keys.length < 1) return EMPTY_KEYS;
         
         return Arrays.copyOf(keys, keys.length);
+    }
+    
+    /**
+     * Returns a Collection view of the values of this {@code NamedTuple}
+     * @return
+     */
+    public Collection<Object> values() {
+        List<Object> retVal = new ArrayList<>();
+        for(int i = 1;i < all().size();i+=2) {
+            retVal.add(all().get(i));
+        }
+        return retVal;
     }
     
     /**
