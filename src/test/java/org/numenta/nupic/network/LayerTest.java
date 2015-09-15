@@ -637,36 +637,36 @@ public class LayerTest {
             { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}
         };
 
-        l.start();
-
         ///////////////////////////////////////////////////////
         //              Test with 2 subscribers              //
         ///////////////////////////////////////////////////////
-        l.subscribe(new Observer<Inference>() {
+        l.observe().subscribe(new Observer<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-//                System.out.println("  seq = " + seq + ",  expected = " + Arrays.toString(expected[seq]));
-//                System.out.println("  seq = " + seq + ",    output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq]));
+//                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
                 if(seq == output.getRecordNum())
                 assertTrue(Arrays.equals(expected[seq], output.getSDR()));
                 seq++;
             }
         });
 
-        l.subscribe(new Observer<Inference>() {
+        l.observe().subscribe(new Observer<Inference>() {
             int seq2 = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-//                System.out.println("2 seq = " + seq2 + ",  expected = " + Arrays.toString(expected[seq2]));
-//                System.out.println("2 seq = " + seq2 + ",    output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq2]));
+//                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
                 if(seq2 == output.getRecordNum())
                 assertTrue(Arrays.equals(expected[seq2], output.getSDR()));
                 seq2++;
             }
         });
+        
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -739,8 +739,7 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor).add(new SpatialPooler());
-        l.start();
-
+        
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
         final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
         l.subscribe(new Observer<Inference>() {
@@ -750,15 +749,17 @@ public class LayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference spatialPoolerOutput) {
-                if(test == 0 && spatialPoolerOutput.getRecordNum() == 0) {
+                if(test == 0) {
                     assertTrue(Arrays.equals(expected0, spatialPoolerOutput.getSDR()));
                 }
-                if(test == 1 && spatialPoolerOutput.getRecordNum() == 1) {
+                if(test == 1) {
                     assertTrue(Arrays.equals(expected1, spatialPoolerOutput.getSDR()));
                 }
                 ++test; 
             }
         });
+        
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -816,7 +817,7 @@ public class LayerTest {
             }
         });
 
-        // Now push some fake data through so that "onNext" is called above
+        // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
             for(int i = 0;i < inputs.length;i++) {
                 l.compute(inputs[i]);
@@ -1164,7 +1165,6 @@ public class LayerTest {
                     multiInput.put("dayOfWeek", j+=0.5);
                     l.compute(multiInput);
                     exit = true;
-                    //break;
                 }else{
                     multiInput.put("dayOfWeek", j);
                     l.compute(multiInput);
@@ -1173,8 +1173,8 @@ public class LayerTest {
             
         }
 
-        // Now assert we detected anomaly greater than average and significantly greater than 0 (i.e. 20%)
-        System.out.println("highestAnomaly = " + highestAnomaly);
+        // Now assert we detected anomaly greater than average and significantly greater than 0 (i.e. 18% - from 0.n x 10^16)
+        //System.out.println("highestAnomaly = " + highestAnomaly);
         assertTrue(highestAnomaly > 0.18);
 
     }

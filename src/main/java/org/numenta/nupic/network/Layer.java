@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -202,6 +203,7 @@ public class Layer<T> {
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
     private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
+    private Set<Observer<Inference>> canonicalObservers = new HashSet<>();
     
     /** Retains the order of added items - for use with interposed {@link Observable} */
     private List<Object> addedItems = new ArrayList<>();
