@@ -14,19 +14,26 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
-- Fixed "isLearn" programmatic setting propagation through the network, added test in RegionTest
-- Fixed default anomaly score in Layer.java's Anomaly Func (was 0.0, now 1.0)
-- Changed ExtensiveTemporalMemoryTest to include fixes for test "H10" (Orphan Decay)
+
+## [v0.6.2-alpha] - 2015-09-15
+#### Added
 - [[Issue #308](https://github.com/numenta/htm.java/issues/308)] - Added ability to specify "isLearn" programmatically, instead of just through the stream input
-- [[Issue #305](https://github.com/numenta/htm.java/issues/305)] - Fixed Synapses not completely removed
-- [[Issue #300] Added wiki help for Linux Gradle Issue](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
-- [[PR #294](https://github.com/numenta/htm.java/pull/294)] - Fixes JaCoCo Coverage Reports (by Evgeny Mandrikov)
 - [[Issue #286](https://github.com/numenta/htm.java/issues/286)] - Work on feeding arrays into NAPI - can now read binary arrays (as Strings) directly from file or manually using ObservableSensor
-- Fixed PassThroughEncoder and SparsePassThroughEncoder initialization of n and w
-- Generified PassThroughEncoder and SparsePassThroughEncoder for efficient subclassing
 - Added new SDRPassThroughEncoder which more efficiently sends data through to output and handles both dense and sparse inputs
 - Added 2 new FieldMetaType Enums with their decodeType() methods for int[]s as Strings
 - Added new tests in LayerTest, HTMSensorTest, ObservableSensorTest
+- [[Issue #300] Added wiki help for Linux Gradle Issue](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
+
+#### Changed
+- Changed ExtensiveTemporalMemoryTest to include fixes for test "H10" (Orphan Decay)
+- Fixed PassThroughEncoder and SparsePassThroughEncoder initialization of n and w
+- Generified PassThroughEncoder and SparsePassThroughEncoder for efficient subclassing
+
+#### Fixed
+- Fixed "isLearn" programmatic setting propagation through the network, added test in RegionTest
+- Fixed default anomaly score in Layer.java's Anomaly Func (was 0.0, now 1.0)
+- [[Issue #305](https://github.com/numenta/htm.java/issues/305)] - Fixed Synapses not completely removed
+- [[PR #294](https://github.com/numenta/htm.java/pull/294)] - Fixes JaCoCo Coverage Reports (by Evgeny Mandrikov)
 
 ## [0.6.1] - 2015-08-23
 #### Changed
