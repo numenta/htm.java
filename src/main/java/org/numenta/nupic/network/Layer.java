@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.ComputeCycle;
@@ -194,12 +195,13 @@ public class Layer<T> {
     
     private boolean isClosed;
     private boolean isHalted;
+    private boolean isLearn = true;
     
     private Layer<Inference> next;
     private Layer<Inference> previous;
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
+    private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
     
     /** Retains the order of added items - for use with interposed {@link Observable} */
     private List<Object> addedItems = new ArrayList<>();
@@ -775,6 +777,22 @@ public class Layer<T> {
     }
     
     /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
+    }
+    
+    /**
      * Completes the dispatch chain of algorithm {@link Observable}s with
      * specialized {@link Transformer}s for each algorithm contained within
      * this Layer. This method then starts the output stream processing of
@@ -1236,7 +1254,7 @@ public class Layer<T> {
         sequence = fillInSequence(sequence);
         
         // All subscribers and observers are notified from a single delegate.
-        subscribers.add(0,getDelegateObserver());
+        subscribers.add(getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
         
         // The map of input types to transformers is no longer needed.
@@ -1562,7 +1580,7 @@ public class Layer<T> {
         }
         spatialPooler.compute(
             connections, input, activeColumns, 
-                sensor == null || sensor.getMetaInfo().isLearn(), true);
+                sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
         return activeColumns;
     }
 
@@ -1581,7 +1599,7 @@ public class Layer<T> {
             
             cc = temporalMemory.compute(connections, input, sensor.getMetaInfo().isLearn());
         } else {
-            cc = temporalMemory.compute(connections, input, true);
+            cc = temporalMemory.compute(connections, input, isLearn);
         }
         
         previousPrediction = currentPrediction;
@@ -1832,7 +1850,7 @@ public class Layer<T> {
                         
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
                         ClassifierResult<Object> result = c.compute(
-                            recordNum, inputMap, t1.getSDR(), true, true);
+                            recordNum, inputMap, t1.getSDR(), isLearn, true);
 
                         t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
@@ -1847,7 +1865,7 @@ public class Layer<T> {
                 @Override
                 public ManualInput call(ManualInput t1) {
                     if(t1.getSparseActives() == null || t1.getPreviousPrediction() == null) {
-                        return t1.anomalyScore(0.0);
+                        return t1.anomalyScore(1.0);
                     }
                     return t1.anomalyScore(
                         anomalyComputer.compute(

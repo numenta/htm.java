@@ -22,7 +22,15 @@
 
 package org.numenta.nupic.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -204,5 +212,18 @@ public class NamedTupleTest {
         }catch(Exception e) {
             assertEquals(NullPointerException.class, e.getClass());
         }
+    }
+    
+    @Test
+    public void testGetValues() {
+        Set<Integer> set = new LinkedHashSet<>();
+        set.add(1);
+        set.add(2);
+        set.add(3);
+        
+        NamedTuple nt = new NamedTuple(new String[] { "one", "two", "three" }, set.toArray());
+        Collection<?> values = nt.values();
+        assertTrue(values.size() == 3);
+        assertTrue(set.containsAll(values) && values.containsAll(set));
     }
 }

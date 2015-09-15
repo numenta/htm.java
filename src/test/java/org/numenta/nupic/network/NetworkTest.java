@@ -186,7 +186,7 @@ public class NetworkTest {
     
     String onCompleteStr = null;
     @Test
-    public void testBasicNetwork() {
+    public void testBasicNetworkHaltGetsOnComplete() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -244,6 +244,69 @@ public class NetworkTest {
         
         assertEquals("On completed reached!", onCompleteStr);
     }
+    
+    @Test
+    public void testBasicNetworkRunAWhileThenHalt() {
+        onCompleteStr = null;
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        // Create a Network
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
+        
+        final List<String> lines = new ArrayList<>();
+        
+        // Listen to network emissions
+        network.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {
+                onCompleteStr = "On completed reached!";
+            }
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+//                System.out.println(Arrays.toString(i.getSDR()));
+//                System.out.println(i.getRecordNum() + "," + 
+//                    i.getClassifierInput().get("consumption").get("inputValue") + "," + i.getAnomalyScore());
+                lines.add(i.getRecordNum() + "," + 
+                    i.getClassifierInput().get("consumption").get("inputValue") + "," + i.getAnomalyScore());
+                
+                if(i.getRecordNum() == 1000) {
+                    network.halt();
+                }
+            }
+        });
+        
+        // Start the network
+        network.start();
+        
+        // Test network output
+        try {
+            Region r1 = network.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        assertEquals(1001, lines.size());
+        int i = 0;
+        for(String l : lines) {
+            String[] sa = l.split("[\\s]*\\,[\\s]*");
+            assertEquals(3, sa.length);
+            assertEquals(i++, Integer.parseInt(sa[0]));
+        }
+        
+        assertEquals("On completed reached!", onCompleteStr);
+    }
+    
     
     ManualInput netInference = null;
     ManualInput topInference = null;
@@ -426,6 +489,7 @@ public class NetworkTest {
                 multiInput.put("dayOfWeek", j);
                 r1.compute(multiInput);
             }
+            n.reset();
         }
         
         // Test that we get proper output after prediction stabilization

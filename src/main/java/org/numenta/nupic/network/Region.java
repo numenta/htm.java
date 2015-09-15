@@ -78,6 +78,9 @@ public class Region {
     /** Marker flag to indicate that assembly is finished and Region initialized */
     private boolean assemblyClosed;
     
+    /** stores the learn setting */
+    private boolean isLearn = true;
+    
     /** Temporary variables used to determine endpoints of observable chain */
     private HashSet<Layer<Inference>> sources;
     private HashSet<Layer<Inference>> sinks;
@@ -159,6 +162,27 @@ public class Region {
      */
     public boolean isClosed() {
         return assemblyClosed;
+    }
+    
+    /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+        Layer<?> l = tail;
+        while(l != null) {
+            l.setLearn(isLearn);
+            l = l.getNext();
+        }
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
     }
     
     /**

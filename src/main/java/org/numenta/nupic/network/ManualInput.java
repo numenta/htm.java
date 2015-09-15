@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,9 +71,10 @@ public class ManualInput implements Inference {
     private int[] sparseActives;
     private int[] previousPrediction;
     private int[] currentPrediction;
-    private Map<String,ClassifierResult<Object>> classification;
+    private Map<String, ClassifierResult<Object>> classification;
     private double anomalyScore;
     private Object customObject;
+    
     
     
     /**
@@ -251,17 +253,23 @@ public class ManualInput implements Inference {
     /**
      * Convenience method to provide an isolated copy of 
      * this {@link Inference}
-     * 
+     *  
      * @return
      */
     ManualInput copy() {
         ManualInput retVal = new ManualInput();
         retVal.classifierInput = new HashMap<String, NamedTuple>(this.classifierInput);
-        retVal.classifiers = this.classifiers;
+        retVal.classifiers = new NamedTuple(this.classifiers.keys(), this.classifiers.values().toArray());
         retVal.layerInput = this.layerInput;
-        retVal.sdr = this.sdr;
-        retVal.classification = this.classification;
+        retVal.sdr = Arrays.copyOf(this.sdr, this.sdr.length);
+        retVal.encoding = Arrays.copyOf(this.encoding, this.encoding.length);
+        retVal.activeColumns = Arrays.copyOf(this.activeColumns, this.activeColumns.length);
+        retVal.sparseActives = Arrays.copyOf(this.sparseActives, this.sparseActives.length);
+        retVal.previousPrediction = Arrays.copyOf(this.previousPrediction, this.previousPrediction.length);
+        retVal.currentPrediction = Arrays.copyOf(this.currentPrediction, this.currentPrediction.length);
+        retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
+        retVal.customObject = this.customObject;
         
         return retVal;
     }
