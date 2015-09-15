@@ -170,9 +170,10 @@ public class Region {
      */
     public void setLearn(boolean isLearn) {
         this.isLearn = isLearn;
-        Layer<?> l = head;
-        while((l = l.getNext()) != null) {
+        Layer<?> l = tail;
+        while(l != null) {
             l.setLearn(isLearn);
+            l = l.getNext();
         }
     }
     

@@ -1850,7 +1850,7 @@ public class Layer<T> {
                         
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
                         ClassifierResult<Object> result = c.compute(
-                            recordNum, inputMap, t1.getSDR(), true, true);
+                            recordNum, inputMap, t1.getSDR(), isLearn, true);
 
                         t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
@@ -1865,7 +1865,7 @@ public class Layer<T> {
                 @Override
                 public ManualInput call(ManualInput t1) {
                     if(t1.getSparseActives() == null || t1.getPreviousPrediction() == null) {
-                        return t1.anomalyScore(0.0);
+                        return t1.anomalyScore(1.0);
                     }
                     return t1.anomalyScore(
                         anomalyComputer.compute(
