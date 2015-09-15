@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.ComputeCycle;
@@ -199,7 +200,7 @@ public class Layer<T> {
     private Layer<Inference> previous;
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
+    private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
     
     /** Retains the order of added items - for use with interposed {@link Observable} */
     private List<Object> addedItems = new ArrayList<>();
@@ -1236,7 +1237,7 @@ public class Layer<T> {
         sequence = fillInSequence(sequence);
         
         // All subscribers and observers are notified from a single delegate.
-        subscribers.add(0,getDelegateObserver());
+        subscribers.add(getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
         
         // The map of input types to transformers is no longer needed.

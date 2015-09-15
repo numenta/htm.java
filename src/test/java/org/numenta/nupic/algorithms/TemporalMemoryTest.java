@@ -515,6 +515,34 @@ public class TemporalMemoryTest {
     }
     
     @Test
+    public void testSegmentSynapseDeletion() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        tm.init(cn);
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(23), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        assertTrue(cn.getSynapses(dd).contains(s0));
+        s0.destroy(cn);
+        assertFalse(cn.getSynapses(dd).contains(s0));
+        assertEquals(2, cn.getSynapseCount());
+        assertEquals(2, cn.getSynapses(dd).size());
+        
+        s1.destroy(cn);
+        assertFalse(cn.getSynapses(dd).contains(s1));
+        assertEquals(1, cn.getSynapseCount());
+        assertEquals(1, cn.getSynapses(dd).size());
+        
+        s2.destroy(cn);
+        assertFalse(cn.getSynapses(dd).contains(s2));
+        assertEquals(0, cn.getSynapseCount());
+        assertEquals(0, cn.getSynapses(dd).size());
+    }
+    
+    @Test
     public void testAdaptSegmentToMax() {
         TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();

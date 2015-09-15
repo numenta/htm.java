@@ -178,7 +178,7 @@ public class Pool {
     public void destroySynapse(Synapse synapse) {
         synapseConnections.remove(synapse.getInputIndex());
         synapsesBySourceIndex.remove(synapse.getInputIndex());
-       if(synapse.getSegment() instanceof DistalDendrite) {
+        if(synapse.getSegment() instanceof DistalDendrite) {
             destroy();
         }
     }

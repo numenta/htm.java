@@ -52,14 +52,11 @@ public class Synapse {
     private int inputIndex;
     private double permanence;
 
-    private final int hashcode;
     
     /**
      * Constructor used when setting parameters later.
      */
-    public Synapse() {
-        hashcode = hashCode();
-    }
+    public Synapse() {}
 
     /**
      * Constructs a new {@code Synapse}
@@ -79,8 +76,6 @@ public class Synapse {
         this.synapseIndex = index;
         this.inputIndex = inputIndex;
         
-        hashcode = hashCode();
-
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
             sourceCell.addReceptorSynapse(c, this);
@@ -166,36 +161,5 @@ public class Synapse {
         }
         sb.append(" ]");
         return sb.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        if(hashcode == 0) {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((segment == null) ? 0 : segment.hashCode());
-            result = prime * result + synapseIndex;
-            return result;
-        }
-        return hashcode;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(this == obj)
-            return true;
-        if(obj == null)
-            return false;
-        if(getClass() != obj.getClass())
-            return false;
-        Synapse other = (Synapse)obj;
-        if(segment == null) {
-            if(other.segment != null)
-                return false;
-        } else if(!segment.equals(other.segment))
-            return false;
-        if(synapseIndex != other.synapseIndex)
-            return false;
-        return true;
     }
 }
