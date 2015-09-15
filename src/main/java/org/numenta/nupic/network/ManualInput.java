@@ -75,6 +75,7 @@ public class ManualInput implements Inference {
     private Object customObject;
     
     
+    
     /**
      * Constructs a new {@code ManualInput}
      */

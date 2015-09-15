@@ -921,8 +921,15 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         assertTrue(predictedInactiveColumnsMetric.mean < 3);
     }
     
+    /**
+     * Orphan Decay mechanism reduce predicted inactive cells (extra predictions).
+     * Test feeds in noisy sequences (X = 0.05) to TM with and without orphan decay.
+     * TM with orphan decay should has many fewer predicted inactive columns.
+     * Parameters the same as B11, and sequences like H9.
+     */
     @Test
     public void testH10() {
+        // train TM on noisy sequences with orphan decay turned off
         Parameters p = Parameters.empty();
         p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
         p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
@@ -944,9 +951,9 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
             sequenceNoisy.add(sequenceMachine.addSpatialNoise(sequence, 0.05));
             feedTM(sequenceNoisy.get(i), "", true, 1);
         }
-        System.out.println("A  " + sequence);
+        
         testTM(sequence, "");
-        System.out.println("B  " + sequence);
+        
         IndicesTrace predictedInactiveTrace = tm.mmGetTracePredictedInactiveColumns();
         Metric predictedInactiveColumnsMetric = tm.mmGetMetricFromTrace(predictedInactiveTrace);
         double predictedInactiveColumnsMean1 = predictedInactiveColumnsMetric.mean;
@@ -954,13 +961,12 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         p = Parameters.empty();
         p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
         p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
-        p.setParameterByKey(KEY.PREDICTED_SEGMENT_DECREMENT, 0.999);//0.004); //LEAVING THIS UNTIL PYTHON IS FIXED
+        p.setParameterByKey(KEY.PREDICTED_SEGMENT_DECREMENT, 0.04);
         init(p, PATTERN_MACHINE);
         
-        //assertTrue(tm.getConnections().getPredictedSegmentDecrement() == 0.004);
+        assertTrue(tm.getConnections().getPredictedSegmentDecrement() == 0.04);
         
         for(int i = 0;i < 10;i++) {
-            //feedTM(noisySequence, "", true, 1);
             feedTM(sequenceNoisy.get(0), "", true, 1);
         }
         

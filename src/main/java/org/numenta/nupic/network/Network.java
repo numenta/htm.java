@@ -164,6 +164,8 @@ public class Network {
     private Region tail;
     private Region sensorRegion;
     
+    private boolean isLearn = true;
+    
     private List<Region> regions = new ArrayList<>();
 
     /**
@@ -268,6 +270,25 @@ public class Network {
      */
     public void pause() {
         throw new UnsupportedOperationException("Pausing is not (yet) supported.");
+    }
+    
+    /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+        for(Region r : regions) {
+            r.setLearn(isLearn);
+        }
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
     }
 
     /**

@@ -475,9 +475,9 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
-                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
-                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
+//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
+//                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+//                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });
        

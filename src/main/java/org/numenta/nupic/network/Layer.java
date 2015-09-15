@@ -195,6 +195,7 @@ public class Layer<T> {
     
     private boolean isClosed;
     private boolean isHalted;
+    private boolean isLearn = true;
     
     private Layer<Inference> next;
     private Layer<Inference> previous;
@@ -773,6 +774,22 @@ public class Layer<T> {
      */
     public boolean isHalted() {
         return isHalted;
+    }
+    
+    /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
     }
     
     /**
@@ -1563,7 +1580,7 @@ public class Layer<T> {
         }
         spatialPooler.compute(
             connections, input, activeColumns, 
-                sensor == null || sensor.getMetaInfo().isLearn(), true);
+                sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
         return activeColumns;
     }
 
@@ -1582,7 +1599,7 @@ public class Layer<T> {
             
             cc = temporalMemory.compute(connections, input, sensor.getMetaInfo().isLearn());
         } else {
-            cc = temporalMemory.compute(connections, input, true);
+            cc = temporalMemory.compute(connections, input, isLearn);
         }
         
         previousPrediction = currentPrediction;
