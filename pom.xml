@@ -4,7 +4,7 @@
 
 	<groupId>org.numenta</groupId>
 	<artifactId>htm.java</artifactId>
-	<version>0.6.2-SNAPSHOT</version>
+	<version>0.6.2</version>
 	<name>htm.java</name>
 	<description>The Java version of Numenta's HTM technology</description>
 
