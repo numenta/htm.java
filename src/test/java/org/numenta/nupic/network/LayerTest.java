@@ -247,9 +247,7 @@ public class LayerTest {
                 isHalted = true;
             }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference output) {
-                System.out.println("output = " + Arrays.toString(output.getSDR()));
-            }
+            @Override public void onNext(Inference output) {}
         });
 
         try {
@@ -266,9 +264,9 @@ public class LayerTest {
     @Test
     public void testReset() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-4reset.csv")));
+            FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-4reset.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
@@ -306,9 +304,9 @@ public class LayerTest {
     @Test
     public void testSequenceChangeReset() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-4seqReset.csv")));
+            FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-4seqReset.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
@@ -345,15 +343,15 @@ public class LayerTest {
     @Test
     public void testLayerWithObservableInput() {
         Publisher manual = Publisher.builder()
-                        .addHeader("timestamp,consumption")
-                        .addHeader("datetime,float")
-                        .addHeader("B")
-                        .build();
+            .addHeader("timestamp,consumption")
+            .addHeader("datetime,float")
+            .addHeader("B")
+            .build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-                        ObservableSensor::create, 
-                        SensorParams.create(
-                                        Keys::obs, new Object[] {"name", manual}));
+            ObservableSensor::create, 
+            SensorParams.create(
+                Keys::obs, new Object[] {"name", manual}));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
@@ -387,9 +385,9 @@ public class LayerTest {
 
         try {
             String[] entries = { 
-                            "7/2/10 0:00,21.2",
-                            "7/2/10 1:00,34.0",
-                            "7/2/10 2:00,40.4",
+                "7/2/10 0:00,21.2",
+                "7/2/10 1:00,34.0",
+                "7/2/10 2:00,40.4",
             };
 
             // Send inputs through the observable
@@ -407,15 +405,15 @@ public class LayerTest {
     @Test
     public void testLayerWithObservableInputIntegerArray() {
         Publisher manual = Publisher.builder()
-                        .addHeader("sdr_in")
-                        .addHeader("darr")
-                        .addHeader("B")
-                        .build();
+            .addHeader("sdr_in")
+            .addHeader("darr")
+            .addHeader("B")
+            .build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-                        ObservableSensor::create, 
-                        SensorParams.create(
-                                        Keys::obs, new Object[] {"name", manual}));
+            ObservableSensor::create, 
+                SensorParams.create(
+                    Keys::obs, new Object[] {"name", manual}));
 
         Parameters p = Parameters.getAllDefaultParameters();
         p = p.union(getArrayTestParams());
@@ -498,10 +496,10 @@ public class LayerTest {
         };
 
         Network n = Network.create("Generic Test", p)
-                        .add(Network.createRegion("R1")
-                                        .add(Network.createLayer("L1", p)
-                                                        .add(addedFunc)
-                                                        .add(new SpatialPooler())));
+            .add(Network.createRegion("R1")
+                .add(Network.createLayer("L1", p)
+                    .add(addedFunc)
+                    .add(new SpatialPooler())));
 
         @SuppressWarnings("unchecked")
         Layer<int[]> l = (Layer<int[]>)n.lookup("R1").lookup("L1");
@@ -647,7 +645,6 @@ public class LayerTest {
             @Override public void onNext(Inference output) {
 //                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq]));
 //                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
-                if(seq == output.getRecordNum())
                 assertTrue(Arrays.equals(expected[seq], output.getSDR()));
                 seq++;
             }
@@ -660,7 +657,6 @@ public class LayerTest {
             @Override public void onNext(Inference output) {
 //                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq2]));
 //                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
-                if(seq2 == output.getRecordNum())
                 assertTrue(Arrays.equals(expected[seq2], output.getSDR()));
                 seq2++;
             }
@@ -725,9 +721,9 @@ public class LayerTest {
     @Test
     public void testBasicSetup_SpatialPooler_AUTO_MODE() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("days-of-week.csv")));
+            FileSensor::create, 
+            SensorParams.create(
+                Keys::path, "", ResourceLocator.path("days-of-week.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -1117,8 +1113,8 @@ public class LayerTest {
         params.put(KEY_USE_MOVING_AVG, true);
         Anomaly anomalyComputer = Anomaly.create(params);
 
-        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), 
-                        Boolean.TRUE, anomalyComputer);
+        final Layer<Map<String, Object>> l = new Layer<>(
+            p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, anomalyComputer);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -1312,14 +1308,14 @@ public class LayerTest {
         Anomaly anomalyComputer = Anomaly.create(params);
 
         Layer<?> l = Network.createLayer("TestLayer", p)
-                        .alterParameter(KEY.AUTO_CLASSIFY, true)
-                        .add(anomalyComputer)
-                        .add(new TemporalMemory())
-                        .add(new SpatialPooler())
-                        .add(Sensor.create(
-                                        FileSensor::create, 
-                                        SensorParams.create(
-                                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
+            .alterParameter(KEY.AUTO_CLASSIFY, true)
+            .add(anomalyComputer)
+            .add(new TemporalMemory())
+            .add(new SpatialPooler())
+            .add(Sensor.create(
+                FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
 
         l.getConnections().printParameters();
 
@@ -1330,10 +1326,9 @@ public class LayerTest {
             public void onNext(Inference i) {
                 if(flowReceived) return; // No need to set this value multiple times
 
-                System.out.println("classifier size = " + i.getClassifiers().size());
                 flowReceived = i.getClassifiers().size() == 4 &&
-                                i.getClassifiers().get("timestamp") != null &&
-                                i.getClassifiers().get("consumption") != null;
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
             }
         });
 
@@ -1349,11 +1344,11 @@ public class LayerTest {
 
     private Parameters getArrayTestParams() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
-                        null,
-                        884, // n
-                        0, // w
-                        0, 0, 0, 0, null, null, null,
-                        "sdr_in", "darr", "SDRPassThroughEncoder");
+            null,
+            884, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "sdr_in", "darr", "SDRPassThroughEncoder");
         Parameters p = Parameters.empty();
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         return p;
