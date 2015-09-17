@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.6.2'
+version = '0.6.3-SNAPSHOT'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
@@ -12,7 +12,7 @@ targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.2'
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.3-SNAPSHOT'
     }
 }
 
