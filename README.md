@@ -14,6 +14,7 @@ For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](http
 ***
 
 ### Recent News Items...
+* **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
 * [HTM.java Splits off Demo repository](https://github.com/numenta/htm.java-examples) (08/19/2015)
 * [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
