@@ -1,19 +1,20 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
-htm.java
-========
+# htm.java
+
+
+#### Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
 * Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
 * Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master)
 
-Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing](https://github.com/numenta/nupic) python project.
-
 For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](https://github.com/numenta/htm.java-examples)
 
-**NOTE: Minimum JavaSE version is 1.8**  -  Current Version on Maven Central [(0.6.1)] (http://search.maven.org/#search%7Cga%7C1%7Chtm.java)
+**NOTE: Minimum JavaSE version is 1.8**  -  Current Version on Maven Central [(0.6.2)] (http://search.maven.org/#search%7Cga%7C1%7Chtm.java)
 
 ***
 
 ### Recent News Items...
+* **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
 * [HTM.java Splits off Demo repository](https://github.com/numenta/htm.java-examples) (08/19/2015)
 * [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
