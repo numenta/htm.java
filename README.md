@@ -1,6 +1,5 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 # htm.java
-#### Why _install_ NuPIC when you can just use it?
 ========
 
 * Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
