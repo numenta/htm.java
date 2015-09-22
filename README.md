@@ -1,5 +1,6 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 # htm.java
+
 ========
 
 * Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
