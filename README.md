@@ -1,6 +1,7 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 # htm.java
 
+
 * Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
 * Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master)
 
