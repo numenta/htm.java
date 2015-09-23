@@ -67,7 +67,7 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 ## Usage
 **NOTE:** The Java version of NuPIC requires no installation - just **use** it!
 
-Please refer to the [Network API Quick Start Guide]([Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+Please refer to the [Network API Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
 
 ## Development Environment Installation
 
