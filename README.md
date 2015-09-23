@@ -54,7 +54,7 @@ For more detailed discussions regarding HTM.java specifically, come chat with us
 
 ***
 
-### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html)
+### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html) <a name="id"></a>
 
 ## Goals
 
