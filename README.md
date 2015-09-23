@@ -53,8 +53,8 @@ For more detailed discussions regarding HTM.java specifically, come chat with us
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-green.svg?style=flat)](https://gitter.im/numenta/htm.java?utm_source=badge)
 
 ***
-
-### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html) <a name="id"></a>
+<a name="callToArms"></a>
+### Call to Arms: [HTM.java needs you!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2014-November/002819.html)
 
 ## Goals
 
