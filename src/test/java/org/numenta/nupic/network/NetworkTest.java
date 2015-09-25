@@ -554,4 +554,86 @@ public class NetworkTest {
         assertTrue(gotResult);
     }
     
+    @Test
+    public void testThreadedStartFlagging() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build()))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        
+        assertFalse(n.isThreadedOperation());
+        n.start();
+        assertFalse(n.isThreadedOperation());
+        
+        //////////////////////////////////////////////////////
+        // Add a Sensor which should allow Network to start //
+        //////////////////////////////////////////////////////
+        p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")))))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        assertFalse(n.isThreadedOperation());
+        n.start();
+        assertTrue(n.isThreadedOperation());
+        
+        try {
+            p = NetworkTestHarness.getParameters();
+            p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+            n = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                    .add(Network.createLayer("1", p)
+                        .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                        .add(new TemporalMemory())
+                        .add(new SpatialPooler())
+                        .add(Sensor.create(FileSensor::create, SensorParams.create(
+                            Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
+            
+            n.start();
+            
+            n.computeImmediate(new HashMap<String, Object>());
+            
+            // SHOULD FAIL HERE WITH EXPECTED EXCEPTION
+            fail();
+        }catch(Exception e) {
+            assertEquals("Cannot call computeImmediate() when Network has been started.", e.getMessage());
+        }
+    }
+    
 }

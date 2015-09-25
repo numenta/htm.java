@@ -165,6 +165,7 @@ public class Network {
     private Region sensorRegion;
     
     private boolean isLearn = true;
+    private boolean isThreadRunning;
     
     private List<Region> regions = new ArrayList<>();
 
@@ -247,7 +248,18 @@ public class Network {
             tail = upstream;
         }
 
-        tail.start();
+        // Record thread start
+        this.isThreadRunning = tail.start();
+    }
+    
+    /**
+     * Returns a flag indicating that the {@code Network} has an {@link Observable}
+     * running on a thread.
+     * 
+     * @return  a flag indicating if threaded.
+     */
+    public boolean isThreadedOperation() {
+        return this.isThreadRunning;
     }
 
     /**
@@ -400,6 +412,10 @@ public class Network {
      * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     public <T> Inference computeImmediate(T input) {
+        if(isThreadRunning) {
+            throw new IllegalStateException("Cannot call computeImmediate() when Network has been started.");
+        }
+        
         if(tail == null && regions.size() == 1) {
             this.tail = regions.get(0);
         }
