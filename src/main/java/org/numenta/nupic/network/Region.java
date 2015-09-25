@@ -273,8 +273,10 @@ public class Region {
      * Calls {@link Layer#start()} on this Region's input {@link Layer} if 
      * that layer contains a {@link Sensor}. If not, this method has no 
      * effect.
+     * 
+     * @return flag indicating that thread was started
      */
-    public void start() {
+    public boolean start() {
         if(!assemblyClosed) {
             close();
         }
@@ -282,9 +284,12 @@ public class Region {
         if(tail.hasSensor()) {
             LOGGER.info("Starting Region [" + getName() + "] input Layer thread.");
             tail.start();
+            return true;
         }else{
             LOGGER.warn("Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
         }
+        
+        return false;
     }
     
     /**
