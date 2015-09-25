@@ -14,6 +14,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
+* [Issue #319] - Added feedback for Network thread start detection
+* [Issue #319] - (same issue) Added Thread Start detection for computeImmediate() synchronous call failure.
+* [Issue #319] - (same issue) Added new tests in NetworkTest.java to ensure above functionality
 
 ## [v0.6.2-alpha] - 2015-09-15
 #### Added
