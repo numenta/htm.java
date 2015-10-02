@@ -22,22 +22,24 @@
 
 package org.numenta.nupic.research;
 
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TIntHashSet;
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Pool;
-import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.SparseMatrix;
-import org.numenta.nupic.util.SparseObjectMatrix;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import org.numenta.nupic.Connections;
+import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.Pool;
+import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
+import org.numenta.nupic.util.LowMemorySparseBinaryMatrix;
+import org.numenta.nupic.util.SparseMatrix;
+import org.numenta.nupic.util.SparseObjectMatrix;
+
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 
 /**
@@ -436,7 +438,7 @@ public class SpatialPooler {
     	Arrays.fill(permChanges, -1 * c.getSynPermInactiveDec());
     	ArrayUtils.setIndexesTo(permChanges, inputIndices, c.getSynPermActiveInc());
     	for(int i = 0;i < activeColumns.length;i++) {
-    		Pool pool = c.getPotentialPools().getObject(activeColumns[i]);
+    		Pool pool = c.getPotentialPools().get(activeColumns[i]);
     		double[] perm = pool.getDensePermanences(c);
     		int[] indexes = pool.getSparseConnections();
     		ArrayUtils.raiseValuesBy(permChanges, perm);
@@ -461,7 +463,7 @@ public class SpatialPooler {
     	});
     	
     	for(int i = 0;i < weakColumns.length;i++) {
-    		Pool pool = c.getPotentialPools().getObject(weakColumns[i]);
+    		Pool pool = c.getPotentialPools().get(weakColumns[i]);
     		double[] perm = pool.getSparsePermanences();
     		ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
     		int[] indexes = pool.getSparseConnections();

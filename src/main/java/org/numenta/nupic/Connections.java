@@ -41,8 +41,9 @@ import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.SparseBinaryMatrixSupport;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
@@ -102,7 +103,7 @@ public class Connections {
      * class, to reduce memory footprint and computation time of algorithms that
      * require iterating over the data structure.
      */
-    private SparseObjectMatrix<Pool> potentialPools;
+    private FlatMatrix<Pool> potentialPools;
     /**
      * Initialize a tiny random tie breaker. This is used to determine winning
      * columns where the overlaps are identical.
@@ -114,7 +115,7 @@ public class Connections {
      * information is readily available from 'connectedSynapses', it is
      * stored separately for efficiency purposes.
      */
-    private SparseBinaryMatrix connectedCounts;
+    private SparseBinaryMatrixSupport connectedCounts;
     /**
      * The inhibition radius determines the size of a column's local
      * neighborhood. of a column. A cortical column must overcome the overlap
@@ -542,7 +543,7 @@ public class Connections {
      * Returns the indexed count of connected synapses per column.
      * @return
      */
-    public SparseBinaryMatrix getConnectedCounts() {
+    public SparseBinaryMatrixSupport getConnectedCounts() {
         return connectedCounts;
     }
     
@@ -566,11 +567,11 @@ public class Connections {
     }
     
     /**
-     * Sets the connected count {@link SparseBinaryMatrix}
+     * Sets the connected count {@link SparseBinaryMatrixSupport}
      * @param columnIndex
      * @param count
      */
-    public void setConnectedMatrix(SparseBinaryMatrix matrix) {
+    public void setConnectedMatrix(SparseBinaryMatrixSupport matrix) {
     	this.connectedCounts = matrix;
     }
     
@@ -936,7 +937,7 @@ public class Connections {
      * of column indexes to their lists of potential inputs.
      * @return	the potential pools
      */
-    public SparseObjectMatrix<Pool> getPotentialPools() {
+    public FlatMatrix<Pool> getPotentialPools() {
         return this.potentialPools;
     }
     

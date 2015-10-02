@@ -37,7 +37,7 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public class SparseObjectMatrix<T> extends SparseMatrix<T> {
+public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
     
     /**
@@ -63,11 +63,10 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
      * @param index     the index the object will occupy
      * @param object    the object to be indexed.
      */
-    @SuppressWarnings("unchecked")
     @Override
-    public <S extends SparseMatrix<T>> S set(int index, T object) {
+    public SparseObjectMatrix<T> set(int index, T object) {
         sparseMap.put(index, (T)object);
-        return (S)this;
+        return this;
     }
     
     /**
@@ -76,11 +75,10 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
      * @param object        the object to be indexed.
      * @param coordinates   the row major coordinates [outer --> ,...,..., inner]
      */
-    @SuppressWarnings("unchecked")
     @Override
-    public <S extends SparseMatrix<T>> S set(int[] coordinates, T object) {
+    public SparseObjectMatrix<T> set(int[] coordinates, T object) {
         set(computeIndex(coordinates), object);
-        return (S)this;
+        return this;
     }
     
     /**
@@ -128,6 +126,12 @@ public class SparseObjectMatrix<T> extends SparseMatrix<T> {
      */
     @Override
     public String toString() {
-    	return Arrays.toString(dimensions);
+    	return Arrays.toString(getDimensions());
     }
+
+	@Override
+	public T get(int index) {
+		return this.sparseMap.get(index);
+	}
+
 }

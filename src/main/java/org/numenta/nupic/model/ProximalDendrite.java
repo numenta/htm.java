@@ -127,7 +127,7 @@ public class ProximalDendrite extends Segment {
      * @return
      */
     public int[] getConnectedSynapsesDense(Connections c) {
-        return c.getPotentialPools().getObject(index).getDenseConnections(c);
+        return c.getPotentialPools().get(index).getDenseConnections(c);
     }
 
     /**
@@ -136,6 +136,6 @@ public class ProximalDendrite extends Segment {
      * @return
      */
     public int[] getConnectedSynapsesSparse(Connections c) {
-        return c.getPotentialPools().getObject(index).getSparseConnections();
+        return c.getPotentialPools().get(index).getSparseConnections();
     }
 }

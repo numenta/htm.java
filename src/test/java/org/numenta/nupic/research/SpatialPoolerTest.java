@@ -24,8 +24,6 @@ package org.numenta.nupic.research;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Arrays;
 
@@ -34,13 +32,16 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.model.Pool;
-import org.numenta.nupic.research.SpatialPooler;
+import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.SparseBinaryMatrix;
+import org.numenta.nupic.util.SparseBinaryMatrixSupport;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 public class SpatialPoolerTest {
     private Parameters parameters;
@@ -153,7 +154,7 @@ public class SpatialPoolerTest {
     	
     	for(int i = 0;i < mem.getNumColumns();i++) {
     		System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
-    		System.out.println(Arrays.toString(mem.getPotentialPools().getObject(i).getDensePermanences(mem)));
+    		System.out.println(Arrays.toString(mem.getPotentialPools().get(i).getDensePermanences(mem)));
     		assertTrue(Arrays.equals(inputVector, ((int[])mem.getConnectedCounts().getSlice(i))));
     	}
     }
@@ -198,7 +199,7 @@ public class SpatialPoolerTest {
      	for(int i = 0;i < mem.getNumColumns();i++) {
 //     		System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
 //     		System.out.println(Arrays.toString(mem.getPotentialPools().getObject(i).getDensePermanences(mem)));
-     		int[] permanences = ArrayUtils.toIntArray(mem.getPotentialPools().getObject(i).getDensePermanences(mem));
+     		int[] permanences = ArrayUtils.toIntArray(mem.getPotentialPools().get(i).getDensePermanences(mem));
      		int[] potential = (int[])mem.getConnectedCounts().getSlice(i);
      		assertTrue(Arrays.equals(permanences, potential));
      	}
@@ -812,7 +813,7 @@ public class SpatialPoolerTest {
     	sp.bumpUpWeakColumns(mem);
     	
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
+    		double[] perms = mem.getPotentialPools().get(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
@@ -1065,7 +1066,7 @@ public class SpatialPoolerTest {
     	sp.adaptSynapses(mem, inputVector, activeColumns);
     	
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
+    		double[] perms = mem.getPotentialPools().get(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
@@ -1103,7 +1104,7 @@ public class SpatialPoolerTest {
     	sp.adaptSynapses(mem, inputVector, activeColumns);
     	
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perms = mem.getPotentialPools().getObject(i).getDensePermanences(mem);
+    		double[] perms = mem.getPotentialPools().get(i).getDensePermanences(mem);
     		for(int j = 0;j < truePermanences[i].length;j++) {
     			assertEquals(truePermanences[i][j], perms[j], 0.01);
     		}
@@ -1306,7 +1307,7 @@ public class SpatialPoolerTest {
         parameters.setColumnDimensions(dimensions);
         parameters.setInputDimensions(dimensions);
         initSP();
-        SparseBinaryMatrix sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        SparseBinaryMatrixSupport sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
         radius = 1;
         columnIndex = 3;
@@ -1322,7 +1323,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 3;
@@ -1338,7 +1339,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 0;
@@ -1354,7 +1355,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
         radius = 20;
         columnIndex = 6;
@@ -1371,7 +1372,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         int[][] input = new int[][] { {0, 0, 0, 0, 0},
                                   {0, 0, 0, 0, 0},
                                   {0, 1, 1, 1, 0},
@@ -1399,7 +1400,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         input = new int[][] { {0, 0, 0, 0, 0},
                               {1, 1, 1, 1, 1},
                               {1, 1, 1, 1, 1},
@@ -1427,7 +1428,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         input = new int[][] { {1, 1, 1, 1, 1},
                               {1, 1, 1, 1, 1},
                               {1, 1, 1, 1, 1},
@@ -1455,7 +1456,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrix)mem.getInputMatrix();
+        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
         input = new int[][] { {1, 0, 0, 1, 1},
                               {0, 0, 0, 0, 0},
                               {0, 0, 0, 0, 0},
@@ -1523,7 +1524,7 @@ public class SpatialPoolerTest {
     	//FORGOT TO SET PERMANENCES ABOVE - DON'T USE mem.setPermanences() 
     	int[] indices = mem.getMemory().getSparseIndices();
     	for(int i = 0;i < mem.getNumColumns();i++) {
-    		double[] perm = mem.getPotentialPools().getObject(i).getSparsePermanences();
+    		double[] perm = mem.getPotentialPools().get(i).getSparsePermanences();
     		sp.raisePermanenceToThreshold(mem, perm, indices);
     		
     		for(int j = 0;j < perm.length;j++) {
@@ -1593,7 +1594,7 @@ public class SpatialPoolerTest {
 		    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
 		    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
 		    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
-    	SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+    	SparseBinaryMatrixSupport sm = new SparseBinaryMatrix(dimensions);
 		for(int i = 0;i < sm.getDimensions()[0];i++) {
 			for(int j = 0;j < sm.getDimensions()[1];j++) {
 				sm.set(connectedSynapses[i][j], i, j);
