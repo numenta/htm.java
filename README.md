@@ -11,9 +11,6 @@ For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](http
 
 **NOTE: Minimum JavaSE version is 1.8**  -  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java)
 
-
-Current Version on Maven Central [(0.6.2)] (http://search.maven.org/#search%7Cga%7C1%7Chtm.java)
-
 ***
 
 ### Recent News Items...
