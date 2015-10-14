@@ -307,11 +307,15 @@ public class HTMSensor<T> implements Sensor<T> {
                     }
                 }
               
+                // NOTE: The "inputMap" here is a special local implementation
+                //       of the "Map" interface, overridden so that we can access
+                //       the keys directly (without hashing). This map is only used
+                //       for this use case so it is ok to use this optimization as
+                //       a convenience.
                 if(inputMap == null) {
                     inputMap = new InputMap();
                     inputMap.fTypes = fieldTypes;
                 }
-                
                 
                 final boolean isParallel = delegate.getInputStream().isParallel();
                 
@@ -620,6 +624,10 @@ public class HTMSensor<T> implements Sensor<T> {
                     // Extract date specific mappings out of the map so that we can
                     // pre-configure the DateEncoder with its needed directives.
                     configureDateBuilder(encoderSettings, (DateEncoder.Builder)builder);
+                }else if(encoderType.equals("GeospatialCoordinateEncoder")) {
+                    // Extract Geo specific mappings out of the map so that we can
+                    // pre-configure the GeospatialCoordinateEncoder with its needed directives.
+                    configureGeoBuilder(encoderSettings, (GeospatialCoordinateEncoder.Builder) builder);
                 }else{
                     for (String param : params.keySet()) {
                         if (!param.equals("fieldName") && !param.equals("encoderType") &&
@@ -640,7 +648,7 @@ public class HTMSensor<T> implements Sensor<T> {
      * @param encoderSettings
      */
     private void configureDateBuilder(Map<String, Map<String, Object>> encoderSettings, DateEncoder.Builder b) {
-        Map<String, Object> dateEncoderSettings = getDateEncoderMap(encoderSettings);
+        Map<String, Object> dateEncoderSettings = getEncoderMap(encoderSettings, "DateEncoder");
         if(dateEncoderSettings == null) {
             throw new IllegalStateException("Input requires missing DateEncoder settings mapping.");
         }
@@ -667,25 +675,25 @@ public class HTMSensor<T> implements Sensor<T> {
             }
         }
     }
-    
+
     /**
-     * Extract the date encoder settings out of the main map so that we can do
-     * special initialization on any {@link DateEncoder} which may exist.
+     * Extract the encoder settings out of the main map so that we can do
+     * special initialization on it
      * @param encoderSettings
-     * @return the {@link DateEncoder} settings map
+     * @return the settings map
      */
-    private Map<String, Object> getDateEncoderMap(Map<String, Map<String, Object>> encoderSettings) {
+    private Map<String, Object> getEncoderMap(Map<String, Map<String, Object>> encoderSettings, String encoderType) {
         for(String key : encoderSettings.keySet()) {
             String keyType = null;
-            if((keyType = (String)encoderSettings.get(key).get("encoderType")) != null && 
-                keyType.equals("DateEncoder")) {
+            if((keyType = (String)encoderSettings.get(key).get("encoderType")) != null &&
+                    keyType.equals(encoderType)) {
                 // Remove the key from the specified map (extraction)
                 return (Map<String, Object>)encoderSettings.get(key);
             }
         }
         return null;
     }
-    
+
     /**
      * Initializes the {@link DateEncoder.Builder} specified
      * @param b         the builder on which to set the mapping.
@@ -756,5 +764,50 @@ public class HTMSensor<T> implements Sensor<T> {
     public <K> MultiEncoder getEncoder() {
         return (MultiEncoder)encoder;
     }
-    
+
+    /**
+     * Specific configuration for GeospatialCoordinateEncoder builder
+     * @param encoderSettings
+     * @param builder
+     */
+    private void configureGeoBuilder(Map<String, Map<String, Object>> encoderSettings, GeospatialCoordinateEncoder.Builder builder) {
+        Map<String, Object> geoEncoderSettings = getEncoderMap(encoderSettings, "GeospatialCoordinateEncoder");
+        if(geoEncoderSettings == null) {
+            throw new IllegalStateException("Input requires missing GeospatialCoordinateEncoder settings mapping.");
+        }
+
+        for(String key : geoEncoderSettings.keySet()) {
+            if(!key.equals("fieldName") && !key.equals("encoderType") &&
+                    !key.equals("fieldType") && !key.equals("fieldEncodings")) {
+
+                if(!key.equals("scale") && !key.equals("timestep")) {
+                    ((MultiEncoder)encoder).setValue(builder, key, geoEncoderSettings.get(key));
+                } else {
+                    setGeoFieldBits(builder, geoEncoderSettings, key);
+                }
+            }
+        }
+    }
+
+    /**
+     * Initializes the {@link GeospatialCoordinateEncoder.Builder} specified
+     * @param b         the builder on which to set the mapping.
+     * @param m         the map containing the values
+     * @param key       the key to be set.
+     */
+    private void setGeoFieldBits(GeospatialCoordinateEncoder.Builder b, Map<String, Object> m, String key) {
+        String t = (String)m.get(key);
+        switch(key) {
+            case "scale" : {
+                b.scale(Integer.parseInt(t));
+                break;
+            }
+            case "timestep" : {
+                b.timestep(Integer.parseInt(t));
+                break;
+            }
+            default: break;
+        }
+    }
 }
+

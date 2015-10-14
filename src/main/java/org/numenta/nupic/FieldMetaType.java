@@ -32,6 +32,7 @@ import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Public values for the field data types
@@ -97,7 +98,10 @@ public enum FieldMetaType {
             case DATETIME : return (T)((DateEncoder)enc).parse(input);
             case BOOLEAN : return (T)(Boolean.valueOf(input) == true ? new Integer(1) : new Integer(0));
             case COORD : 
-            case GEO : return (T)new double[] { Double.parseDouble(input.split("\\;")[0]), Double.parseDouble(input.split("\\;")[1]) }; 
+            case GEO :  {
+            	String[] parts = input.split("[\\s]*\\;[\\s]*");
+            	return (T)new Tuple(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]));
+            }
             case INTEGER : 
             case FLOAT : return (T)new Double(input);
             case SARR :
