@@ -307,11 +307,15 @@ public class HTMSensor<T> implements Sensor<T> {
                     }
                 }
               
+                // NOTE: The "inputMap" here is a special local implementation
+                //       of the "Map" interface, overridden so that we can access
+                //       the keys directly (without hashing). This map is only used
+                //       for this use case so it is ok to use this optimization as
+                //       a convenience.
                 if(inputMap == null) {
                     inputMap = new InputMap();
                     inputMap.fTypes = fieldTypes;
                 }
-                
                 
                 final boolean isParallel = delegate.getInputStream().isParallel();
                 
@@ -791,7 +795,6 @@ public class HTMSensor<T> implements Sensor<T> {
      * @param m         the map containing the values
      * @param key       the key to be set.
      */
-    @SuppressWarnings("unchecked")
     private void setGeoFieldBits(GeospatialCoordinateEncoder.Builder b, Map<String, Object> m, String key) {
         String t = (String)m.get(key);
         switch(key) {
