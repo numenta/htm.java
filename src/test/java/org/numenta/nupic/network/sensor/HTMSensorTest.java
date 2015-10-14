@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
@@ -696,7 +697,12 @@ public class HTMSensorTest {
         
         Sensor<ObservableSensor<String[]>> finalSensor = sensor;
         
-        manual.onNext("7/12/10 13:10,35.3,40.6457;-73.7962;5"); //5 = meters per second
+        (new Thread() {
+        	public void run() {
+        		manual.onNext("7/12/10 13:10,35.3,40.6457;-73.7962;5"); //5 = meters per second
+        	}
+        }).start();
+        
         
         int[] output = ((HTMSensor<ObservableSensor<String[]>>)finalSensor).getOutputStream().findFirst().get();
         
