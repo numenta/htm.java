@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -29,15 +29,15 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.examples.network.NetworkAPIDemo;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 
 import rx.Observable;
+import rx.Subscriber;
 
 /**
  * <p>
@@ -112,7 +112,7 @@ import rx.Observable;
  *      }
  * });
  * </pre>
- * </p>
+ * 
  * <p>
  * Likewise, each Region within a Network may be "observed" and/or subscribed to; and each
  * Layer may be observed and subscribed to as well - for those instances where you would like 
@@ -143,7 +143,7 @@ import rx.Observable;
  * }
  * </pre>
  * 
- * In addition there are many usage examples to be found in the {@link org.numenta.nupic.examples.network} package
+ * In addition there are many usage examples to be found in the {@link org.numenta.nupic.examples.napi.hotgym} package
  * where there are tests which may be examined for details, and the {@link NetworkAPIDemo}
  * 
  * @author David Ray
@@ -163,7 +163,10 @@ public class Network {
     private Region head;
     private Region tail;
     private Region sensorRegion;
-
+    
+    private boolean isLearn = true;
+    private boolean isThreadRunning;
+    
     private List<Region> regions = new ArrayList<>();
 
     /**
@@ -245,7 +248,18 @@ public class Network {
             tail = upstream;
         }
 
-        tail.start();
+        // Record thread start
+        this.isThreadRunning = tail.start();
+    }
+    
+    /**
+     * Returns a flag indicating that the {@code Network} has an {@link Observable}
+     * running on a thread.
+     * 
+     * @return  a flag indicating if threaded.
+     */
+    public boolean isThreadedOperation() {
+        return this.isThreadRunning;
     }
 
     /**
@@ -268,6 +282,25 @@ public class Network {
      */
     public void pause() {
         throw new UnsupportedOperationException("Pausing is not (yet) supported.");
+    }
+    
+    /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+        for(Region r : regions) {
+            r.setLearn(isLearn);
+        }
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
     }
 
     /**
@@ -359,11 +392,53 @@ public class Network {
      * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     public <T> void compute(T input) {
-        if(regions.size() == 1) {
+        if(tail == null && regions.size() == 1) {
             this.tail = regions.get(0);
         }
         
+        if(head == null) {
+            addDummySubscriber();
+        }
+        
         tail.compute(input);
+    }
+    
+    /**
+     * Used to manually input data into a {@link Network} in a synchronous way, the other way 
+     * being the call to {@link Network#start()} for a Network that contains a
+     * Region that contains a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
+     * subscribing a receiving Region to this Region's output Observable.
+     * 
+     * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
+     */
+    public <T> Inference computeImmediate(T input) {
+        if(isThreadRunning) {
+            throw new IllegalStateException("Cannot call computeImmediate() when Network has been started.");
+        }
+        
+        if(tail == null && regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        
+        if(head == null) {
+            addDummySubscriber();
+        }
+        
+        tail.compute(input);
+        return head.getHead().getInference();
+    }
+    
+    /**
+     * Added when a synchronous call is made and there is no subscriber. No
+     * Subscriber leads to the observable chain not being constructed, therefore
+     * we must always have at least one subscriber.
+     */
+    private void addDummySubscriber() {
+        observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {}
+        });
     }
 
     /**

@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -29,8 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.joda.time.DateTime;
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
@@ -38,6 +40,8 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
@@ -45,9 +49,6 @@ import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.research.ComputeCycle;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 import org.slf4j.Logger;
@@ -194,12 +195,13 @@ public class Layer<T> {
     
     private boolean isClosed;
     private boolean isHalted;
+    private boolean isLearn = true;
     
     private Layer<Inference> next;
     private Layer<Inference> previous;
     
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private List<Observer<Inference>> subscribers = Collections.synchronizedList(new ArrayList<Observer<Inference>>());
+    private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
     
     /** Retains the order of added items - for use with interposed {@link Observable} */
     private List<Object> addedItems = new ArrayList<>();
@@ -775,6 +777,22 @@ public class Layer<T> {
     }
     
     /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
+    }
+    
+    /**
      * Completes the dispatch chain of algorithm {@link Observable}s with
      * specialized {@link Transformer}s for each algorithm contained within
      * this Layer. This method then starts the output stream processing of
@@ -978,7 +996,6 @@ public class Layer<T> {
     
     /**
      * Resets the {@link TemporalMemory} if it exists.
-     * @return
      */
     public void reset() {
         if(temporalMemory == null) {
@@ -1237,7 +1254,7 @@ public class Layer<T> {
         sequence = fillInSequence(sequence);
         
         // All subscribers and observers are notified from a single delegate.
-        subscribers.add(0,getDelegateObserver());
+        subscribers.add(getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
         
         // The map of input types to transformers is no longer needed.
@@ -1287,6 +1304,13 @@ public class Layer<T> {
      */
     private Observable<ManualInput> mapEncoderBuckets(Observable<ManualInput> sequence) {
         if(hasSensor()) {
+            if(getSensor().getMetaInfo().getFieldTypes().stream().anyMatch(
+               ft -> { return ft == FieldMetaType.SARR || ft == FieldMetaType.DARR; })) {
+                if(autoCreateClassifiers) {
+                    throw new IllegalStateException("Cannot autoclassify with raw array input... Remove auto classify setting.");
+                }
+               return sequence; 
+            }
             sequence = sequence.map(m -> {
                 doEncoderBucketMapping(m, getSensor().getInputMap());
                 return m; 
@@ -1556,7 +1580,7 @@ public class Layer<T> {
         }
         spatialPooler.compute(
             connections, input, activeColumns, 
-                sensor == null || sensor.getMetaInfo().isLearn(), true);
+                sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
         return activeColumns;
     }
 
@@ -1575,7 +1599,7 @@ public class Layer<T> {
             
             cc = temporalMemory.compute(connections, input, sensor.getMetaInfo().isLearn());
         } else {
-            cc = temporalMemory.compute(connections, input, true);
+            cc = temporalMemory.compute(connections, input, isLearn);
         }
         
         previousPrediction = currentPrediction;
@@ -1826,7 +1850,7 @@ public class Layer<T> {
                         
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
                         ClassifierResult<Object> result = c.compute(
-                            recordNum, inputMap, t1.getSDR(), true, true);
+                            recordNum, inputMap, t1.getSDR(), isLearn, true);
 
                         t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
@@ -1841,7 +1865,7 @@ public class Layer<T> {
                 @Override
                 public ManualInput call(ManualInput t1) {
                     if(t1.getSparseActives() == null || t1.getPreviousPrediction() == null) {
-                        return t1.anomalyScore(0.0);
+                        return t1.anomalyScore(1.0);
                     }
                     return t1.anomalyScore(
                         anomalyComputer.compute(

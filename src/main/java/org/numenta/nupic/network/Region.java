@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import rx.Subscriber;
  
 
 /**
+ * <p>
  * Regions are collections of {@link Layer}s, which are in turn collections
  * of algorithmic components. Regions can be connected to each other to establish
  * a hierarchy of processing. To connect one Region to another, typically one 
@@ -75,6 +77,9 @@ public class Region {
     
     /** Marker flag to indicate that assembly is finished and Region initialized */
     private boolean assemblyClosed;
+    
+    /** stores the learn setting */
+    private boolean isLearn = true;
     
     /** Temporary variables used to determine endpoints of observable chain */
     private HashSet<Layer<Inference>> sources;
@@ -160,12 +165,33 @@ public class Region {
     }
     
     /**
+     * Sets the learning mode.
+     * @param isLearn
+     */
+    public void setLearn(boolean isLearn) {
+        this.isLearn = isLearn;
+        Layer<?> l = tail;
+        while(l != null) {
+            l.setLearn(isLearn);
+            l = l.getNext();
+        }
+    }
+    
+    /**
+     * Returns the learning mode setting.
+     * @return
+     */
+    public boolean isLearn() {
+        return isLearn;
+    }
+    
+    /**
      * Used to manually input data into a {@link Region}, the other way 
      * being the call to {@link Region#start()} for a Region that contains
      * a {@link Layer} which in turn contains a {@link Sensor} <em>-OR-</em>
      * subscribing a receiving Region to this Region's output Observable.
      * 
-     * @param input One of (int[], String[], {@link ManualInput}, or Map<String, Object>)
+     * @param input One of (int[], String[], {@link ManualInput}, or Map&lt;String, Object&gt;)
      */
     @SuppressWarnings("unchecked")
     public <T> void compute(T input) {
@@ -247,8 +273,10 @@ public class Region {
      * Calls {@link Layer#start()} on this Region's input {@link Layer} if 
      * that layer contains a {@link Sensor}. If not, this method has no 
      * effect.
+     * 
+     * @return flag indicating that thread was started
      */
-    public void start() {
+    public boolean start() {
         if(!assemblyClosed) {
             close();
         }
@@ -256,9 +284,12 @@ public class Region {
         if(tail.hasSensor()) {
             LOGGER.info("Starting Region [" + getName() + "] input Layer thread.");
             tail.start();
+            return true;
         }else{
             LOGGER.warn("Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
         }
+        
+        return false;
     }
     
     /**

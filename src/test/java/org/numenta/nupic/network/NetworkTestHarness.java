@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -247,5 +247,35 @@ public class NetworkTestHarness {
         return parameters;
     }
     
+    /**
+     * Parameters and meta information for the "Geospatial Test" encoder
+     * @return
+     */
+    public static Map<String, Map<String, Object>> getGeospatialFieldEncodingMap() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(null, 0, 0, 0.0D, 0.0D, 0.0D, 0.0D, (Boolean)null, (Boolean)null, (Boolean)null, "timestamp", "datetime", "DateEncoder");
+        fieldEncodings = setupMap(fieldEncodings, 50, 21, 0.0D, 100.0D, 0.0D, 0.1D, (Boolean)null, Boolean.TRUE, (Boolean)null, "consumption", "float", "ScalarEncoder");
+        fieldEncodings = setupMap(fieldEncodings, 999, 25, 0.0D, 100.0D, 0.0D, 0.1D, (Boolean)null, Boolean.TRUE, (Boolean)null, "location", "geo", "GeospatialCoordinateEncoder");
+        
+        fieldEncodings.get("timestamp").put(Parameters.KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(new Object[]{Integer.valueOf(21), Double.valueOf(9.5D)}));
+        fieldEncodings.get("timestamp").put(Parameters.KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        fieldEncodings.get("location").put("timestep", "60");
+        fieldEncodings.get("location").put("scale", "30");
+        
+        return fieldEncodings;
+    }
+    
+    /**
+     * Parameters and meta information for the "Geospatial Test" encoder
+     * @return
+     */
+    public static Parameters getGeospatialTestEncoderParams() {
+    	Map<String, Map<String, Object>> fieldEncodings = getGeospatialFieldEncodingMap();
+    	
+    	Parameters p = Parameters.getEncoderDefaultParameters();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+
+        return p;
+    }
     
 }

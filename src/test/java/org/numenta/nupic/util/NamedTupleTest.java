@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -22,7 +22,15 @@
 
 package org.numenta.nupic.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -204,5 +212,18 @@ public class NamedTupleTest {
         }catch(Exception e) {
             assertEquals(NullPointerException.class, e.getClass());
         }
+    }
+    
+    @Test
+    public void testGetValues() {
+        Set<Integer> set = new LinkedHashSet<>();
+        set.add(1);
+        set.add(2);
+        set.add(3);
+        
+        NamedTuple nt = new NamedTuple(new String[] { "one", "two", "three" }, set.toArray());
+        Collection<?> values = nt.values();
+        assertTrue(values.size() == 3);
+        assertTrue(set.containsAll(values) && values.containsAll(set));
     }
 }

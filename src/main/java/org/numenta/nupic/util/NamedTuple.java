@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -23,7 +23,10 @@
 package org.numenta.nupic.util;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Immutable tuple which adds associative lookup functionality.
@@ -74,6 +77,18 @@ public class NamedTuple extends Tuple {
         if(keys == null || keys.length < 1) return EMPTY_KEYS;
         
         return Arrays.copyOf(keys, keys.length);
+    }
+    
+    /**
+     * Returns a Collection view of the values of this {@code NamedTuple}
+     * @return
+     */
+    public Collection<Object> values() {
+        List<Object> retVal = new ArrayList<>();
+        for(int i = 1;i < all().size();i+=2) {
+            retVal.add(all().get(i));
+        }
+        return retVal;
     }
     
     /**

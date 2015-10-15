@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -21,13 +21,14 @@
  */
 package org.numenta.nupic.network;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.research.SpatialPooler;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
@@ -70,9 +71,10 @@ public class ManualInput implements Inference {
     private int[] sparseActives;
     private int[] previousPrediction;
     private int[] currentPrediction;
-    private Map<String,ClassifierResult<Object>> classification;
+    private Map<String, ClassifierResult<Object>> classification;
     private double anomalyScore;
     private Object customObject;
+    
     
     
     /**
@@ -251,17 +253,23 @@ public class ManualInput implements Inference {
     /**
      * Convenience method to provide an isolated copy of 
      * this {@link Inference}
-     * 
+     *  
      * @return
      */
     ManualInput copy() {
         ManualInput retVal = new ManualInput();
         retVal.classifierInput = new HashMap<String, NamedTuple>(this.classifierInput);
-        retVal.classifiers = this.classifiers;
+        retVal.classifiers = new NamedTuple(this.classifiers.keys(), this.classifiers.values().toArray());
         retVal.layerInput = this.layerInput;
-        retVal.sdr = this.sdr;
-        retVal.classification = this.classification;
+        retVal.sdr = Arrays.copyOf(this.sdr, this.sdr.length);
+        retVal.encoding = Arrays.copyOf(this.encoding, this.encoding.length);
+        retVal.activeColumns = Arrays.copyOf(this.activeColumns, this.activeColumns.length);
+        retVal.sparseActives = Arrays.copyOf(this.sparseActives, this.sparseActives.length);
+        retVal.previousPrediction = Arrays.copyOf(this.previousPrediction, this.previousPrediction.length);
+        retVal.currentPrediction = Arrays.copyOf(this.currentPrediction, this.currentPrediction.length);
+        retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
+        retVal.customObject = this.customObject;
         
         return retVal;
     }

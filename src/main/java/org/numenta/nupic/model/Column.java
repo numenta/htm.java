@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 
 /**
  * Abstraction of both an input bit and a columnal collection of
@@ -41,15 +41,20 @@ import org.numenta.nupic.research.TemporalMemory;
  * @author David Ray
  *
  */
-public class Column {
+public class Column implements Comparable<Column> {
     /** The flat non-topological index of this column */
     private final int index;
+    /** Stored boxed form to eliminate need for boxing on the fly */
+    private final Integer boxedIndex;
     /** Configuration of cell count */
     private final int numCells;
     /** Connects {@link SpatialPooler} input pools */
     private ProximalDendrite proximalDendrite;
 
     private Cell[] cells;
+    private List<Cell> cellList;
+    
+    private final int hashcode;
 
     /**
      * Constructs a new {@code Column}
@@ -60,10 +65,15 @@ public class Column {
     public Column(int numCells, int index) {
         this.numCells = numCells;
         this.index = index;
+        this.boxedIndex = index;
+        this.hashcode = hashCode();
         cells = new Cell[numCells];
         for(int i = 0;i < numCells;i++) {
             cells[i] = new Cell(this, i);
         }
+        
+        cellList = Collections.unmodifiableList(Arrays.asList(cells));
+        
         proximalDendrite = new ProximalDendrite(index);
     }
 
@@ -82,7 +92,7 @@ public class Column {
      * @return
      */
     public List<Cell> getCells() {
-        return Arrays.asList(cells);
+        return cellList;
     }
 
     /**
@@ -110,11 +120,10 @@ public class Column {
      * @return
      */
     public Cell getLeastUsedCell(Connections c, Random random) {
-        List<Cell> cells = getCells();
-        List<Cell> leastUsedCells = new ArrayList<Cell>();
+        List<Cell> leastUsedCells = new ArrayList<>();
         int minNumSegments = Integer.MAX_VALUE;
 
-        for(Cell cell : cells) {
+        for(Cell cell : cellList) {
             int numSegments = cell.getSegments(c).size();
 
             if(numSegments < minNumSegments) {
@@ -183,6 +192,41 @@ public class Column {
      * {@inheritDoc}
      */
     public String toString() {
-        return "Column: idx=" + index;
+        return "" + index;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @param otherColumn     the {@code Column} to compare to
+     * @return
+     */
+    @Override
+    public int compareTo(Column otherColumn) {
+        return boxedIndex.compareTo(otherColumn.boxedIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        if(hashcode == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + index;
+            return result;
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Column other = (Column)obj;
+        if(index != other.index)
+            return false;
+        return true;
     }
 }

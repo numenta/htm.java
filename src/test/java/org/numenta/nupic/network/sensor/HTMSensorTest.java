@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
@@ -46,7 +47,9 @@ import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.network.NetworkTestHarness;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -85,6 +88,18 @@ public class HTMSensorTest {
         if(encoderType != null) inner.put("encoderType", encoderType);
         
         return map;
+    }
+    
+    private Parameters getArrayTestParams() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+                        null,
+                        884, // n
+                        0, // w
+                        0, 0, 0, 0, null, null, null,
+                        "sdr_in", "darr", "SDRPassThroughEncoder");
+        Parameters p = Parameters.empty();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        return p;
     }
     
     private Parameters getTestEncoderParams() {
@@ -280,6 +295,190 @@ public class HTMSensorTest {
     }
     
     /**
+     * Tests that a meaningful exception is thrown when no list category encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testListCategoryEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("list")
+            .addHeader("C")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no string category encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testStringCategoryEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("string")
+            .addHeader("C")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no date encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testDateEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("datetime")
+            .addHeader("T")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null, 
+            25, 
+            3, 
+            0, 0, 0, 0.1, null, null, null, 
+            "consumption", "float", "RandomDistributedScalarEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no geo encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testGeoEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("geo")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no coordinate encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testCoordinateEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("coord")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no int number encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testIntNumberEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("int")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no float number encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testFloatNumberEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("float")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
+     * Tests that a meaningful exception is thrown when no boolean encoder configuration was provided
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testBoolEncoderNotInitialized() {
+        Publisher manual = Publisher.builder()
+            .addHeader("foo")
+            .addHeader("bool")
+            .addHeader("")
+            .build();
+        Sensor<File> sensor = Sensor.create(ObservableSensor::create, SensorParams.create(
+            Keys::obs, "", manual));
+        Map<String, Map<String, Object>> fieldEncodings = setupMap( null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        Parameters params = Parameters.getEncoderDefaultParameters();
+        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
+        htmSensor.initEncoder(params);
+    }
+    
+    /**
      * Tests the auto-creation of Encoders from Sensor meta data.
      */
     @Test
@@ -406,4 +605,146 @@ public class HTMSensorTest {
         assertFalse(outputStream.hashCode() == outputStream2.hashCode());
         assertFalse(outputStream2.hashCode() == outputStream3.hashCode());
     }
+    
+    @Test
+    public void testInputIntegerArray() {
+        Sensor<File> sensor = Sensor.create(
+            FileSensor::create, 
+            SensorParams.create(
+                Keys::path, "", ResourceLocator.path("1_100.csv")));
+                    
+        HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
+        
+        htmSensor.initEncoder(getArrayTestParams());
+        
+        // Ensure that the HTMSensor's output stream can be retrieved more than once.
+        Stream<int[]> outputStream = htmSensor.getOutputStream();
+        assertEquals(884, ((int[])outputStream.findFirst().get()).length);
+    }
+    
+    @Test
+    public void testWithGeospatialEncoder() {
+    	Publisher manual = Publisher.builder()
+    		.addHeader("timestamp,consumption,location")
+    		.addHeader("datetime,float,geo")
+    		.addHeader("T,,").build();
+    	
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, "", manual));
+        
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getGeospatialTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        
+        HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+        
+        
+        //////////////////////////////////////////////////////////////
+        //                 Test Header Configuration                //
+        //////////////////////////////////////////////////////////////
+        
+        // Cast the ValueList to the more complex type (Header)
+        Header meta = (Header)htmSensor.getMetaInfo();
+        assertTrue(meta.getFieldTypes().stream().allMatch(
+            l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT) || l.equals(FieldMetaType.GEO)));
+        
+        // Negative test (Make sure "GEO" is configured and expected
+        assertFalse(meta.getFieldTypes().stream().allMatch(
+            l -> l.equals(FieldMetaType.DATETIME) || l.equals(FieldMetaType.FLOAT)));
+        
+        
+        assertTrue(meta.getFieldNames().stream().allMatch(
+            l -> l.equals("timestamp") || l.equals("consumption") || l.equals("location")));
+        assertTrue(meta.getFlags().stream().allMatch(
+            l -> l.equals(SensorFlags.T) || l.equals(SensorFlags.B)));
+        
+        Encoder<Object> multiEncoder = htmSensor.getEncoder();
+        assertNotNull(multiEncoder);
+        assertTrue(multiEncoder instanceof MultiEncoder);
+        
+        
+		//////////////////////////////////////////////////////////////
+		//                 Test Encoder Composition                 //
+		//////////////////////////////////////////////////////////////
+        
+        List<EncoderTuple> encoders = null;
+        
+        // NEGATIVE TEST: first so that we can reuse the sensor below - APPLY WRONG PARAMS
+        try {
+        	htmSensor.initEncoder(getTestEncoderParams()); // <--- WRONG PARAMS
+        	// Should fail here
+        	fail();
+        	encoders = multiEncoder.getEncoders(multiEncoder);
+        	assertEquals(2, encoders.size());
+        }catch(IllegalArgumentException e) {
+        	assertEquals("Coordinate encoder never initialized: location", e.getMessage());
+        }
+        
+        /////////////////////////////////////
+        
+        // Recreate Sensor for POSITIVE TEST. Set the Local parameters on the Sensor
+        sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, "", manual));
+        htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+        htmSensor.initEncoder(p);
+        
+        multiEncoder = htmSensor.getEncoder();
+        assertNotNull(multiEncoder);
+        assertTrue(multiEncoder instanceof MultiEncoder);
+        encoders = multiEncoder.getEncoders(multiEncoder);
+        assertEquals(3, encoders.size());
+        
+        Sensor<ObservableSensor<String[]>> finalSensor = sensor;
+        
+        (new Thread() {
+        	public void run() {
+        		manual.onNext("7/12/10 13:10,35.3,40.6457;-73.7962;5"); //5 = meters per second
+        	}
+        }).start();
+        
+        
+        int[] output = ((HTMSensor<ObservableSensor<String[]>>)finalSensor).getOutputStream().findFirst().get();
+        
+        int[] expected =  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+        					1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        					0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+        					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+        					1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        
+        assertTrue(Arrays.equals(expected, output));
+    }
+   
 }

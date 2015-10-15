@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -31,7 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -39,10 +42,9 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseBinaryMatrixSupport;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
@@ -68,6 +70,7 @@ public class Connections {
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
     private double minPctActiveDutyCycles = 0.001;
+    private double predictedSegmentDecrement = 0.0;
     private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
     private int spVerbosity = 0;
@@ -138,10 +141,11 @@ public class Connections {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
+    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
     protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
-    protected Map<DistalDendrite, Set<Synapse>> activeSynapsesForSegment = new LinkedHashMap<DistalDendrite, Set<Synapse>>();
+    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
     
     /** Total number of columns */
     protected int[] columnDimensions = new int[] { 2048 };
@@ -199,9 +203,9 @@ public class Connections {
     protected Map<Segment, List<Synapse>> synapses;
     
     /** Helps index each new Segment */
-    protected int segmentCounter = 0;
+    protected AtomicInteger segmentCounter = new AtomicInteger(0);
     /** Helps index each new Synapse */
-    protected int synapseCounter = 0;
+    protected AtomicInteger synapseCounter = new AtomicInteger(0);
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
@@ -229,26 +233,43 @@ public class Connections {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
+        matchingCells.clear();
+        matchingSegments.clear();
         successfullyPredictedColumns.clear();
         activeSegments.clear();
         learningSegments.clear();
-        activeSynapsesForSegment.clear();
     }
     
     /**
-     * Returns the segment counter
+     * Atomically returns the segment counter
      * @return
      */
     public int getSegmentCount() {
-    	return segmentCounter;
+    	return segmentCounter.get();
     }
     
     /**
-     * Sets the segment counter
+     * Atomically increments and returns the incremented count.
+     * @return
+     */
+    public int incrementSegments() {
+        return segmentCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented count.
+     * @return
+     */
+    public int decrementSegments() {
+        return segmentCounter.getAndDecrement();
+    }
+    
+    /**
+     * Atomically sets the segment counter
      * @param counter
      */
     public void setSegmentCount(int counter) {
-    	this.segmentCounter = counter;
+    	this.segmentCounter.set(counter);
     }
     
     /**
@@ -476,7 +497,7 @@ public class Connections {
     /**
      * Returns the configured potential radius
      * @return  the configured potential radius
-     * @see {@link #setPotentialRadius(int)}
+     * @see setPotentialRadius
      */
     public int getPotentialRadius() {
         return Math.min(numInputs, potentialRadius);
@@ -504,7 +525,7 @@ public class Connections {
      * Returns the configured potential pct
      * 
      * @return the configured potential pct
-     * @see {@link #setPotentialPct(double)}
+     * @see setPotentialPct
      */
     public double getPotentialPct() {
         return potentialPct;
@@ -524,19 +545,38 @@ public class Connections {
     }
     
     /**
-     * Returns the count of {@link Synapse}s
+     * Atomically returns the count of {@link Synapse}s
      * @return
      */
     public int getSynapseCount() {
-    	return synapseCounter;
+    	return synapseCounter.get();
     }
     
     /**
-     * Sets the count of {@link Synapse}s
+     * Atomically sets the count of {@link Synapse}s
      * @param i
      */
     public void setSynapseCount(int i) {
-    	this.synapseCounter = i;
+    	this.synapseCounter.set(i);
+    }
+    
+    /**
+     * Atomically increments and returns the incremented
+     * {@link Synapse} count.
+     * 
+     * @return
+     */
+    public int incrementSynapses() {
+        return this.synapseCounter.getAndIncrement();
+    }
+    
+    /**
+     * Atomically decrements and returns the decremented 
+     * {link Synapse} count
+     * @return
+     */
+    public int decrementSynapses() {
+        return this.synapseCounter.getAndDecrement();
     }
     
     /**
@@ -567,9 +607,14 @@ public class Connections {
     }
     
     /**
+<<<<<<< HEAD
      * Sets the connected count {@link SparseBinaryMatrixSupport}
      * @param columnIndex
      * @param count
+=======
+     * Sets the connected count {@link SparseBinaryMatrix}
+     * @param matrix
+>>>>>>> upstream/master
      */
     public void setConnectedMatrix(SparseBinaryMatrixSupport matrix) {
     	this.connectedCounts = matrix;
@@ -611,7 +656,8 @@ public class Connections {
     /**
      * Returns the configured global inhibition flag
      * @return  the configured global inhibition flag
-     * @see {@link #setGlobalInhibition(boolean)}
+     * 
+     * @see setGlobalInhibition
      */
     public boolean getGlobalInhibition() {
         return globalInhibition;
@@ -637,7 +683,7 @@ public class Connections {
     /**
      * Returns the configured local area density
      * @return  the configured local area density
-     * @see {@link #setLocalAreaDensity(double)}
+     * @see setLocalAreaDensity
      */
     public double getLocalAreaDensity() {
         return localAreaDensity;
@@ -672,7 +718,7 @@ public class Connections {
      * inhibition area.
      * @return  the configured number of active columns per
      * inhibition area.
-     * @see {@link #setNumActiveColumnsPerInhArea(double)}
+     * @see setNumActiveColumnsPerInhArea
      */
     public double getNumActiveColumnsPerInhArea() {
         return numActiveColumnsPerInhArea;
@@ -694,7 +740,7 @@ public class Connections {
     /**
      * Returns the stimulus threshold
      * @return  the stimulus threshold
-     * @see {@link #setStimulusThreshold(double)}
+     * @see setStimulusThreshold
      */
     public double getStimulusThreshold() {
         return stimulusThreshold;
@@ -714,7 +760,7 @@ public class Connections {
     /**
      * Returns the synaptic permanence inactive decrement.
      * @return  the synaptic permanence inactive decrement.
-     * @see {@link #setSynPermInactiveDec(double)}
+     * @see setSynPermInactiveDec
      */
     public double getSynPermInactiveDec() {
         return synPermInactiveDec;
@@ -734,7 +780,7 @@ public class Connections {
     /**
      * Returns the configured active permanence increment
      * @return the configured active permanence increment
-     * @see {@link #setSynPermActiveInc(double)}
+     * @see setSynPermActiveInc
      */
     public double getSynPermActiveInc() {
         return synPermActiveInc;
@@ -746,7 +792,7 @@ public class Connections {
      * a "connected synapse", meaning it can contribute to
      * the cell's firing.
      * 
-     * @param minPctOverlapDutyCycle
+     * @param synPermConnected
      */
     public void setSynPermConnected(double synPermConnected) {
         this.synPermConnected = synPermConnected;
@@ -755,7 +801,7 @@ public class Connections {
     /**
      * Returns the synapse permanence connected threshold
      * @return the synapse permanence connected threshold
-     * @see {@link #setSynPermConnected(double)}
+     * @see setSynPermConnected
      */
     public double getSynPermConnected() {
         return synPermConnected;
@@ -806,7 +852,7 @@ public class Connections {
     }
     
     /**
-     * {@see #setMinPctOverlapDutyCycles(double)}
+     * see {@link #setMinPctOverlapDutyCycles(double)}
      * @return
      */
     public double getMinPctOverlapDutyCycles() {
@@ -834,8 +880,8 @@ public class Connections {
     
     /**
      * Returns the minPctActiveDutyCycle
+     * see {@link #setMinPctActiveDutyCycles(double)}
      * @return  the minPctActiveDutyCycle
-     * @see {@link #setMinPctActiveDutyCycle(double)}
      */
     public double getMinPctActiveDutyCycles() {
         return minPctActiveDutyCycles;
@@ -855,8 +901,8 @@ public class Connections {
     
     /**
      * Returns the configured duty cycle period
+     * see {@link #setDutyCyclePeriod(double)}
      * @return  the configured duty cycle period
-     * @see {@link #setDutyCyclePeriod(double)}
      */
     public int getDutyCyclePeriod() {
         return dutyCyclePeriod;
@@ -868,7 +914,7 @@ public class Connections {
      * before it gets considered for inhibition.
      * The actual boost factor for a column is number
      * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
+     * used if the duty cycle is &gt;= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
      * 2 end points.
@@ -881,8 +927,8 @@ public class Connections {
     
     /**
      * Returns the max boost
+     * see {@link #setMaxBoost(double)}
      * @return  the max boost
-     * @see {@link #setMaxBoost(double)}
      */
     public double getMaxBoost() {
         return maxBoost;
@@ -899,8 +945,8 @@ public class Connections {
     
     /**
      * Returns the verbosity setting.
+     * see {@link #setSpVerbosity(int)}
      * @return  the verbosity setting.
-     * @see {@link #setSpVerbosity(int)}
      */
     public int getSpVerbosity() {
         return spVerbosity;
@@ -1102,7 +1148,7 @@ public class Connections {
      * @param cells
      */
     public void setActiveCells(Set<Cell> cells) {
-    	this.activeCells = cells;
+        this.activeCells = cells;
     }
     
     /**
@@ -1115,7 +1161,7 @@ public class Connections {
     }
     
     /**
-     * Sets the current {@link Set} of winner {@link Cells}s
+     * Sets the current {@link Set} of winner {@link Cell}s
      * @param cells
      */
     public void setWinnerCells(Set<Cell> cells) {
@@ -1136,6 +1182,22 @@ public class Connections {
      */
     public void setPredictiveCells(Set<Cell> cells) {
     	this.predictiveCells = cells;
+    }
+    
+    /**
+     * Returns the Set of matching {@link Cell}s
+     * @return
+     */
+    public Set<Cell> getMatchingCells() {
+        return matchingCells;
+    }
+    
+    /**
+     * Sets the Set of matching {@link Cell}s
+     * @param cells
+     */
+    public void setMatchingCells(Set<Cell> cells) {
+        this.matchingCells = cells;
     }
     
     /**
@@ -1188,19 +1250,19 @@ public class Connections {
     }
     
     /**
-     * Returns the mapping of Segments to active synapses in t-1
+     * Returns the Set of matching {@link DistalDendrite}s
      * @return
      */
-    public Map<DistalDendrite, Set<Synapse>> getActiveSynapsesForSegment() {
-        return activeSynapsesForSegment;
+    public Set<DistalDendrite> getMatchingSegments() {
+        return matchingSegments;
     }
     
     /**
-     * Sets the mapping of {@link Segment}s to active {@link Synapse}s
-     * @param syns
+     * Sets the Set of matching {@link DistalDendrite}s
+     * @param segments
      */
-    public void setActiveSynapsesForSegment(Map<DistalDendrite, Set<Synapse>> syns) {
-    	this.activeSynapsesForSegment = syns;
+    public void setMatchingSegments(Set<DistalDendrite> segments) {
+        this.matchingSegments = segments;
     }
     
     /**
@@ -1217,12 +1279,12 @@ public class Connections {
         }
         
         if(receptorSynapses == null) {
-            receptorSynapses = new LinkedHashMap<Cell, Set<Synapse>>();
+            receptorSynapses = new LinkedHashMap<>();
         }
         
         Set<Synapse> retVal = null;
         if((retVal = receptorSynapses.get(cell)) == null) {
-            receptorSynapses.put(cell, retVal = new LinkedHashSet<Synapse>());
+            receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
         }
         
         return retVal;
@@ -1340,9 +1402,8 @@ public class Connections {
     
     /**
      * Returns the configured input dimensions
-     *
+     * see {@link #setInputDimensions(int[])}
      * @return the configured input dimensions
-     * @see {@link #setInputDimensions(int[])}
      */
     public int[] getInputDimensions() {
         return inputDimensions;
@@ -1357,7 +1418,7 @@ public class Connections {
     }
     
     /**
-     * Gets the number of {@link Cells} per {@link Column}.
+     * Gets the number of {@link Cell}s per {@link Column}.
      * 
      * @return cellsPerColumn
      */
@@ -1444,7 +1505,7 @@ public class Connections {
     /** 
      * Initial permanence of a new synapse 
      * 
-     * @param   
+     * @param   initialPermanence
      */
     public void setInitialPermanence(double initialPermanence) {
         this.initialPermanence = initialPermanence;
@@ -1493,8 +1554,6 @@ public class Connections {
     /** 
      * Amount by which permanences of synapses
      * are incremented during learning.
-     * 
-     * @param   permanenceIncrement
      */
     public double getPermanenceIncrement() {
         return this.permanenceIncrement;
@@ -1513,11 +1572,25 @@ public class Connections {
     /** 
      * Amount by which permanences of synapses
      * are decremented during learning.
-     * 
-     * @param   permanenceDecrement
      */
     public double getPermanenceDecrement() {
         return this.permanenceDecrement;
+    }
+    
+    /**
+     * Amount by which active permanences of synapses of previously predicted but inactive segments are decremented.
+     * @param predictedSegmentDecrement
+     */
+    public void setPredictedSegmentDecrement(double predictedSegmentDecrement) {
+        this.predictedSegmentDecrement = predictedSegmentDecrement;
+    }
+    
+    /**
+     * Returns the predictedSegmentDecrement amount.
+     * @return
+     */
+    public double getPredictedSegmentDecrement() {
+        return this.predictedSegmentDecrement;
     }
     
     /**
@@ -1537,7 +1610,7 @@ public class Connections {
     }
     
     /**
-     * Converts a {@link Collection} of {@link Columns}s to a list
+     * Converts a {@link Collection} of {@link Column}s to a list
      * of column indexes.
      * 
      * @param columns
@@ -1588,7 +1661,7 @@ public class Connections {
     public LinkedHashSet<Column> getColumnSet(int[] indexes) {
     	LinkedHashSet<Column> retVal = new LinkedHashSet<Column>();
     	for(int i = 0;i < indexes.length;i++) {
-    		retVal.add(memory.getObject(indexes[i]));
+    	    retVal.add(memory.getObject(indexes[i]));
     	}
     	return retVal;
     }

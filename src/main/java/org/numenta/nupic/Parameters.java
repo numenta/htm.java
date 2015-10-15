@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -31,12 +31,11 @@ import java.util.Random;
 import java.util.Set;
 
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.research.ComputeCycle;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
@@ -80,6 +79,7 @@ public class Parameters {
         defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
+        defaultTemporalParams.put(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
         defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
         defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
@@ -198,7 +198,14 @@ public class Parameters {
          * are decremented during learning.
          */
         PERMANENCE_DECREMENT("permanenceDecrement", Double.class, 0.0, 1.0),
+        /**
+         * Amount by which active permanences of synapses of previously 
+         * predicted but inactive segments are decremented.
+         */
+        PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 9.0),
+        /** Remove this and add Logging (slf4j) */
         TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
+        
 
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", int[].class),
@@ -225,7 +232,7 @@ public class Parameters {
         SP_PRIMER_DELAY("sp_primer_delay", Integer.class),
         
         ///////////// Encoder Parameters //////////////
-        /** number of bits in the representation (must be >= w) */
+        /** number of bits in the representation (must be &gt;= w) */
         N("n", Integer.class),
         /** 
          * The number of bits that are set to encode a single value - the
@@ -256,7 +263,7 @@ public class Parameters {
         CLIP_INPUT("clipInput", Boolean.class),
         /** 
          * If true, skip some safety checks (for compatibility reasons), default false 
-         * Mostly having to do with being able to set the window size < 21 
+         * Mostly having to do with being able to set the window size &lt; 21 
          */
         FORCED("forced", Boolean.class),
         /** Name of the field being encoded */
@@ -389,6 +396,14 @@ public class Parameters {
     private final Map<Parameters.KEY, Object> paramMap = Collections.synchronizedMap(new ParametersMap());
 
     //TODO apply from container to parameters
+    
+    /**
+     * Returns the size of the internal parameter storage.
+     * @return
+     */
+    public int size() {
+        return paramMap.size();
+    }
 
     /**
      * Factory method. Return global {@link Parameters} object with default values
@@ -593,8 +608,9 @@ public class Parameters {
     }
 
     /**
+     * <p>
      * Sets the activation threshold.
-     * <p/>
+     * </p>
      * If the number of active connected synapses on a segment
      * is at least this threshold, the segment is said to be active.
      *
@@ -646,7 +662,7 @@ public class Parameters {
     /**
      * Initial permanence of a new synapse
      *
-     * @param
+     * @param   initialPermanence
      */
     public void setInitialPermanence(double initialPermanence) {
         paramMap.put(KEY.INITIAL_PERMANENCE, initialPermanence);
@@ -929,7 +945,7 @@ public class Parameters {
      * before it gets considered for inhibition.
      * The actual boost factor for a column is number
      * between 1.0 and maxBoost. A boost factor of 1.0 is
-     * used if the duty cycle is >= minOverlapDutyCycle,
+     * used if the duty cycle is &gt;= minOverlapDutyCycle,
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
      * 2 end points.

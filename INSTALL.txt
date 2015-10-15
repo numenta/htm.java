@@ -1,0 +1,9 @@
+======INSTALL=====
+Dependencies:
+java >= 1.8
+gradle >= 1.7
+
+Install:
+git clone https://github.com/numenta/htm.java.git
+cd htm.java
+gradle check  (Use "gradle -Pskipbench check" for quicker sanity check)

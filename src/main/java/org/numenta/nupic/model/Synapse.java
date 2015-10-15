@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -23,7 +23,6 @@
 package org.numenta.nupic.model;
 
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.research.TemporalMemory;
 
 /**
  * Represents a connection with varying strength which when above 
@@ -31,7 +30,7 @@ import org.numenta.nupic.research.TemporalMemory;
  * 
  * IMPORTANT: 	For DistalDendrites, there is only one synapse per pool, so the
  * 				synapse's index doesn't really matter (in terms of tracking its
- * 				order within the pool. In that case, the index is a global counter
+ * 				order within the pool). In that case, the index is a global counter
  * 				of all distal dendrite synapses.
  * 
  * 				For ProximalDendrites, there are many synapses within a pool, and in
@@ -43,7 +42,7 @@ import org.numenta.nupic.research.TemporalMemory;
  * @author David Ray
  * 
  * @see DistalDendrite
- * @see TemporalMemory.Connections
+ * @see Connections
  */
 public class Synapse {
     private Cell sourceCell;
@@ -53,7 +52,7 @@ public class Synapse {
     private int inputIndex;
     private double permanence;
 
-
+    
     /**
      * Constructor used when setting parameters later.
      */
@@ -63,7 +62,8 @@ public class Synapse {
      * Constructs a new {@code Synapse}
      * 
      * @param c             the connections state of the temporal memory
-     * @param sourceCell    the {@link Cell} which will activate this {@code Synapse}
+     * @param sourceCell    the {@link Cell} which will activate this {@code Synapse};
+     *                      Null if this Synapse is proximal
      * @param segment       the owning dendritic segment
      * @param pool		    this {@link Pool} of which this synapse is a member
      * @param index         this {@code Synapse}'s index
@@ -75,7 +75,7 @@ public class Synapse {
         this.pool = pool;
         this.synapseIndex = index;
         this.inputIndex = inputIndex;
-
+        
         // If this isn't a synapse on a proximal dendrite
         if(sourceCell != null) {
             sourceCell.addReceptorSynapse(c, this);
@@ -113,7 +113,9 @@ public class Synapse {
      */
     public void setPermanence(Connections c, double perm) {
         this.permanence = perm;
-        pool.updatePool(c, this, perm);
+        if(sourceCell == null) {
+            pool.updatePool(c, this, perm);
+        }
     }
 
     /**
@@ -128,14 +130,36 @@ public class Synapse {
      * Returns the containing {@link Cell} 
      * @return
      */
-    public Cell getSourceCell() {
+    public Cell getPresynapticCell() {
         return sourceCell;
+    }
+    
+    /**
+     * Removes the references to this Synapse in its associated
+     * {@link Pool} and its upstream presynapticCell's reference.
+     * 
+     * @param c
+     */
+    public void destroy(Connections c) {
+        this.pool.destroySynapse(this);
+        if(sourceCell != null) {
+            c.getSynapses((DistalDendrite)segment).remove(this);
+            sourceCell.removeReceptorSynapse(c, this);
+        }else{
+            c.getSynapses((ProximalDendrite)segment).remove(this);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public String toString() {
-        return "" + synapseIndex;
+        StringBuilder sb = new StringBuilder("synapse: [ synIdx=").append(synapseIndex).append(", inIdx=")
+            .append(inputIndex).append(", sgmtIdx=").append(segment.getIndex());
+        if(sourceCell != null) {
+            sb.append(", srcCellIdx=").append(sourceCell.getIndex());
+        }
+        sb.append(" ]");
+        return sb.toString();
     }
 }

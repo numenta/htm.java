@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -22,13 +22,17 @@
 
 package org.numenta.nupic;
 
+import java.util.Arrays;
+
 import org.numenta.nupic.encoders.CoordinateEncoder;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.GeospatialCoordinateEncoder;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
+import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Public values for the field data types
@@ -43,7 +47,11 @@ public enum FieldMetaType {
 	BOOLEAN("bool"),
 	LIST("list"),
 	COORD("coord"),
-	GEO("geo");
+	GEO("geo"),
+	/** Sparse Array (i.e. 0, 2, 3) */
+	SARR("sarr"),
+	/** Dense Array (i.e. 1, 1, 0, 1) */ 
+	DARR("darr");
 	
 	/**
 	 * String representation to be used when a display
@@ -70,6 +78,8 @@ public enum FieldMetaType {
 	        case GEO : return GeospatialCoordinateEncoder.geobuilder().build();
 	        case INTEGER : 
 	        case FLOAT : return RandomDistributedScalarEncoder.builder().build();
+	        case DARR :
+	        case SARR : return SDRPassThroughEncoder.sptBuilder().build();
 	        default : return null;
 	    }
 	}
@@ -88,9 +98,15 @@ public enum FieldMetaType {
             case DATETIME : return (T)((DateEncoder)enc).parse(input);
             case BOOLEAN : return (T)(Boolean.valueOf(input) == true ? new Integer(1) : new Integer(0));
             case COORD : 
-            case GEO : return (T)new double[] { Double.parseDouble(input.split("\\;")[0]), Double.parseDouble(input.split("\\;")[1]) }; 
+            case GEO :  {
+            	String[] parts = input.split("[\\s]*\\;[\\s]*");
+            	return (T)new Tuple(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]));
+            }
             case INTEGER : 
             case FLOAT : return (T)new Double(input);
+            case SARR :
+            case DARR: return (T)Arrays.stream(input.replace("[","").replace("]","")
+                .split("[\\s]*\\,[\\s]*")).mapToInt(Integer::parseInt).toArray();
             default : return null;
         }
 	}
@@ -151,6 +167,12 @@ public enum FieldMetaType {
 	        case "coord" : {
                 return COORD;
             }
+	        case "sarr" : {
+	            return SARR;
+	        }
+	        case "darr" : {
+	            return DARR;
+	        }
 	        default : return FLOAT;
 	    }
 	}

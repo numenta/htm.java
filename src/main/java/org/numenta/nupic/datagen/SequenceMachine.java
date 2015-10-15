@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -22,11 +22,18 @@
 
 package org.numenta.nupic.datagen;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Utilities for generating and manipulating sequences, for use in
@@ -57,6 +64,42 @@ public class SequenceMachine {
     }
     
     /**
+     * Generates a series of sequences which may optionally contain shared ranges.
+     * 
+     * @param numSequences
+     * @param sequenceLength
+     * @param sharedRange
+     * @return
+     */
+    public List<Integer> generateNumbers(int numSequences, int sequenceLength, Tuple sharedRange) {
+        List<Integer> numbers = new ArrayList<>();
+        
+        TIntList sharedNumbers = null;
+        int sharedStart = 0;
+        int sharedEnd = 0;
+        if(sharedRange != null && sharedRange.size() == 2) {
+            int sharedLength = (sharedEnd = (int)sharedRange.get(1)) - (sharedStart = (int)sharedRange.get(0));
+            sharedNumbers = new TIntArrayList(ArrayUtils.xrange(
+                numSequences * sequenceLength, numSequences * sequenceLength + sharedLength, 1));
+        }
+        
+        for(int i = 0;i < numSequences;i++) {
+            int start = i * sequenceLength;
+            int[] newNumbers = ArrayUtils.xrange(start, start + sequenceLength, 1);
+            ArrayUtils.shuffle(newNumbers);
+            
+            if(sharedRange != null) {
+                ArrayUtils.replace(sharedStart, sharedEnd, newNumbers, sharedNumbers.toArray());
+            }
+            
+            numbers.addAll(Arrays.asList(ArrayUtils.toBoxed(newNumbers)));
+            numbers.add(-1);
+        }
+        
+        return numbers;
+    }
+    
+    /**
      * Generate a sequence from a list of numbers.
      * 
      * @param numbers
@@ -74,6 +117,26 @@ public class SequenceMachine {
         }
         
         return sequence;
+    }
+    
+    /**
+     * Add spatial noise to each pattern in the sequence.
+     * 
+     * @param sequence      List of patterns
+     * @param amount        Amount of spatial noise
+     * @return  Sequence with noise added to each non-empty pattern
+     */
+    public List<Set<Integer>> addSpatialNoise(List<Set<Integer>> sequence, double amount) {
+        List<Set<Integer>> newSequence = new ArrayList<Set<Integer>>();
+        
+        for(Set<Integer> pattern : sequence) {
+            if(!pattern.equals(NONE)) {
+                pattern = patternMachine.addNoise(pattern, amount);
+            }
+            newSequence.add(pattern);
+        }
+        
+        return newSequence;
     }
     
     /**
@@ -99,4 +162,5 @@ public class SequenceMachine {
         }
         return text;
     }
+     
 }

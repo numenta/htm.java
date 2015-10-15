@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -40,6 +40,8 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
@@ -47,8 +49,6 @@ import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
-import org.numenta.nupic.research.SpatialPooler;
-import org.numenta.nupic.research.TemporalMemory;
 import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observer;
@@ -186,7 +186,7 @@ public class NetworkTest {
     
     String onCompleteStr = null;
     @Test
-    public void testBasicNetwork() {
+    public void testBasicNetworkHaltGetsOnComplete() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -245,6 +245,69 @@ public class NetworkTest {
         assertEquals("On completed reached!", onCompleteStr);
     }
     
+    @Test
+    public void testBasicNetworkRunAWhileThenHalt() {
+        onCompleteStr = null;
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        // Create a Network
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
+        
+        final List<String> lines = new ArrayList<>();
+        
+        // Listen to network emissions
+        network.observe().subscribe(new Subscriber<Inference>() {
+            @Override public void onCompleted() {
+                onCompleteStr = "On completed reached!";
+            }
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+//                System.out.println(Arrays.toString(i.getSDR()));
+//                System.out.println(i.getRecordNum() + "," + 
+//                    i.getClassifierInput().get("consumption").get("inputValue") + "," + i.getAnomalyScore());
+                lines.add(i.getRecordNum() + "," + 
+                    i.getClassifierInput().get("consumption").get("inputValue") + "," + i.getAnomalyScore());
+                
+                if(i.getRecordNum() == 1000) {
+                    network.halt();
+                }
+            }
+        });
+        
+        // Start the network
+        network.start();
+        
+        // Test network output
+        try {
+            Region r1 = network.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        assertEquals(1001, lines.size());
+        int i = 0;
+        for(String l : lines) {
+            String[] sa = l.split("[\\s]*\\,[\\s]*");
+            assertEquals(3, sa.length);
+            assertEquals(i++, Integer.parseInt(sa[0]));
+        }
+        
+        assertEquals("On completed reached!", onCompleteStr);
+    }
+    
+    
     ManualInput netInference = null;
     ManualInput topInference = null;
     ManualInput bottomInference = null;
@@ -277,9 +340,7 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                System.out.println("rec # = " + i.getRecordNum());
                 if(netInference.getPredictedColumns().length > 15) {
-                    
                     network.halt();
                 }
             }
@@ -300,7 +361,7 @@ public class NetworkTest {
             }
         });
         
-        r2.start();
+        network.start();
         
         // Let run for 5 secs.
         try {
@@ -310,7 +371,6 @@ public class NetworkTest {
             assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
                 bottomInference.getPredictedColumns()));
             assertTrue(topInference.getPredictedColumns().length > 0);
-            System.out.println("length = " + topInference.getPredictedColumns().length);
             assertTrue(bottomInference.getPredictedColumns().length > 0);
         }catch(Exception e) {
             e.printStackTrace();
@@ -429,6 +489,7 @@ public class NetworkTest {
                 multiInput.put("dayOfWeek", j);
                 r1.compute(multiInput);
             }
+            n.reset();
         }
         
         // Test that we get proper output after prediction stabilization
@@ -444,5 +505,135 @@ public class NetworkTest {
         multiInput.put("dayOfWeek", 5.0);
         n.compute(multiInput);
     }
-
+    
+    @Test
+    public void testSynchronousBlockingComputeCall() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build())));
+        
+        boolean gotResult = false;
+        final int NUM_CYCLES = 400;
+        final int INPUT_GROUP_COUNT = 7; // Days of Week
+        Map<String, Object> multiInput = new HashMap<>();
+        for(int i = 0;i < NUM_CYCLES;i++) {
+            for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
+                multiInput.put("dayOfWeek", j);
+                Inference inf = n.computeImmediate(multiInput);
+                if(inf.getPredictedColumns().length > 6) {
+                    assertTrue(inf.getPredictedColumns() != null);
+                    // Make sure we've gotten all the responses
+                    assertEquals((i * 7) + (int)j, inf.getRecordNum());
+                    gotResult = true;
+                    break;
+                }
+            }
+            if(gotResult) {
+                break;
+            }
+        }
+         
+        assertTrue(gotResult);
+    }
+    
+    @Test
+    public void testThreadedStartFlagging() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
+        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(MultiEncoder.builder().name("").build()))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        
+        assertFalse(n.isThreadedOperation());
+        n.start();
+        assertFalse(n.isThreadedOperation());
+        
+        //////////////////////////////////////////////////////
+        // Add a Sensor which should allow Network to start //
+        //////////////////////////////////////////////////////
+        p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create(params)))
+                .add(Network.createLayer("3", p)
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("4", p)
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv")))))
+                .connect("1", "2")
+                .connect("2", "3")
+                .connect("3", "4"));
+        assertFalse(n.isThreadedOperation());
+        n.start();
+        assertTrue(n.isThreadedOperation());
+        
+        try {
+            p = NetworkTestHarness.getParameters();
+            p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+            n = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                    .add(Network.createLayer("1", p)
+                        .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                        .add(new TemporalMemory())
+                        .add(new SpatialPooler())
+                        .add(Sensor.create(FileSensor::create, SensorParams.create(
+                            Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
+            
+            n.start();
+            
+            n.computeImmediate(new HashMap<String, Object>());
+            
+            // SHOULD FAIL HERE WITH EXPECTED EXCEPTION
+            fail();
+        }catch(Exception e) {
+            assertEquals("Cannot call computeImmediate() when Network has been started.", e.getMessage());
+        }
+    }
+    
 }

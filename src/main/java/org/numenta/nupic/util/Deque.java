@@ -5,15 +5,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Affero Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * See the GNU Affero Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Affero Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -29,7 +29,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Double ended queue implementation which has a restricted capacity.
  * Operations may be conducted on both ends and when capacity is reached,
  * the next addition to either end will result in a removal on the opposite
- * end, thus always maintaining a size <= initial size.
+ * end, thus always maintaining a size &lt;= initial size.
  * 
  * This behavior differs from the {@link LinkedBlockingDeque} implementation
  * of the Java Collections Framework, and is the reason for the development of this
