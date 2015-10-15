@@ -607,14 +607,9 @@ public class Connections {
     }
     
     /**
-<<<<<<< HEAD
      * Sets the connected count {@link SparseBinaryMatrixSupport}
      * @param columnIndex
      * @param count
-=======
-     * Sets the connected count {@link SparseBinaryMatrix}
-     * @param matrix
->>>>>>> upstream/master
      */
     public void setConnectedMatrix(SparseBinaryMatrixSupport matrix) {
     	this.connectedCounts = matrix;
