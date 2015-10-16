@@ -22,48 +22,51 @@
 
 package org.numenta.nupic.util;
 
-import java.util.BitSet;
+import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
- * {@link FlatMatrix} implementation that store booleans in a {@link BitSet}.
+ * Generic test for Matrix hirearchy.
  * 
  * @author Jose Luis Martin
  */
-public class BitSetMatrix extends FlatMatrixSupport<Boolean> {
-
-	private BitSet data;
+public class MatrixTest {
 	
-	/**
-	 * @param dimensions
-	 */
-	public BitSetMatrix(int[] dimensions) {
-		this(dimensions, false);
-	}
-
-	public BitSetMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-		this.data = new BitSet(getSize());
-	}
+	private int[] dimensions =  { 5, 2 };
+	private int[] indexes = { 0, 4, 6, 7, 8 };
 	
-	@Override
-	public Boolean get(int... coordinates) {
-		return get(computeIndex(coordinates));
+	@Test
+	public void testBitSetMatrixSet() {
+		Boolean[] expected = {true, false, false, false, true, false, true, true, true, false }; 
+		BitSetMatrix bsm = new BitSetMatrix(this.dimensions);
+		
+		for (int index : this.indexes) {
+			bsm.set(index, true);
+		}
+		
+		assertArrayEquals(expected, asDense(bsm));
 	}
 	
-	@Override
-	public Boolean get(int index) {
-		return this.data.get(index);
+	@Test
+	public void testFlatArrayMatrixSet() {
+		Integer[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
+		FlatArrayMatrix<Integer> fam = new FlatArrayMatrix<Integer>(this.dimensions);
+		fam.fill(0);
+		
+		for (int index : this.indexes) {
+			fam.set(index, 1);
+		}
+		
+		assertArrayEquals(expected, asDense(fam));
 	}
-
-	@Override
-	public Matrix<Boolean> set(int[] coordinates, Boolean value) {
-		this.data.set(computeIndex(coordinates), value);
-		return this;
-	}
-
-	@Override
-	public FlatMatrix<Boolean> set(int index, Boolean value) {
-		this.data.set(index, value);
-		return this;
+	
+	private Object[] asDense(FlatMatrix<?> matrix) {
+		Object[] dense = new Object[matrix.getMaxIndex() + 1];
+		
+		for (int i = 0; i < matrix.getMaxIndex() + 1; i++) {
+			dense[i] = matrix.get(i);
+		}
+		
+		return dense;
 	}
 }

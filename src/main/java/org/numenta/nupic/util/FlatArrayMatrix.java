@@ -22,6 +22,9 @@
 
 package org.numenta.nupic.util;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 /**
  * {@link FlatMatrix} implementation that store objects in a flat object array.
  * 
@@ -31,8 +34,14 @@ public class FlatArrayMatrix<T> extends FlatMatrixSupport<T> {
 	
 	private T[] data;
 	
+	public FlatArrayMatrix(int[] dimensions) {
+		this(dimensions, false);
+	}
+	
+	@SuppressWarnings("unchecked")
 	public FlatArrayMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
 		super(dimensions, useColumnMajorOrdering);
+		this.data = (T[]) new Object[getSize()];
 	}
 
 	@Override
@@ -55,6 +64,14 @@ public class FlatArrayMatrix<T> extends FlatMatrixSupport<T> {
 	public FlatArrayMatrix<T> set(int index, T value) {
 		this.data[index] = value;
 		return this;
+	}
+	
+	/**
+	 * Fill array with value
+	 * @param value
+	 */
+	public void fill(T value) {
+		Arrays.fill(this.data, value);
 	}
 	
 }
