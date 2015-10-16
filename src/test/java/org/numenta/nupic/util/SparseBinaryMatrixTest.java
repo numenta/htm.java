@@ -224,6 +224,7 @@ public class SparseBinaryMatrixTest {
     	
     	SparseBinaryMatrix sbm = new SparseBinaryMatrix(dimensions);
     	sbm.set(indexes, values);
+    	
     	int[] dense = new int[sbm.getMaxIndex() + 1];
     	
     	for (int i = 0; i < sbm.getMaxIndex() + 1; i++) {

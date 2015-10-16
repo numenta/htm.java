@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -146,6 +147,29 @@ public class SparseObjectMatrixTest {
         assertEquals(2, coordinates[1]);
         assertEquals(1, coordinates[2]);
     }
+    
+    @Test 
+    public void testSetAndGet() {
+    	int[] dimensions =  { 5, 2 };
+    	TestObject[][] values = new TestObject[dimensions[0]][dimensions[1]];
+    	
+    	for (int i = 0; i < dimensions[0]; i ++)
+    		for (int j = 0; j < dimensions[1]; j++)
+    			values[i][j] = new TestObject(i, j);
+    	
+    	SparseObjectMatrix<TestObject> som = new SparseObjectMatrix<TestObject>(dimensions);
+    	
+    	for (int i = 0; i < dimensions[0]; i ++)
+    		for (int j = 0; j < dimensions[1]; j++)
+    			som.set(new int[] {i, j} , values[i][j]);
+    	
+    	for (int i = 0; i < dimensions[0]; i ++) {
+    		for (int j = 0; j < dimensions[1]; j++) {
+    			int[] indexes = { i, j };
+    			assertArrayEquals(indexes, som.get(indexes).getArgs());
+    		}
+    	}
+    }
 
     /**
      * Test object for instantiation tests
@@ -159,5 +183,6 @@ public class SparseObjectMatrixTest {
         }
         public int getArg0() { return arg0; }
         public int getArg1() { return arg1; }
+        public int[] getArgs() { return new int[] {arg0, arg1}; }
     }
 }
