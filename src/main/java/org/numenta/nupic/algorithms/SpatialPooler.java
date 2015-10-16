@@ -30,10 +30,9 @@ import java.util.Random;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
-import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.LowMemorySparseBinaryMatrix;
+import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 

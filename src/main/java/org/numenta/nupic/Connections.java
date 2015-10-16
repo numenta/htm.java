@@ -44,7 +44,6 @@ import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseBinaryMatrixSupport;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;

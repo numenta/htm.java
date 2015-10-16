@@ -88,7 +88,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     @SuppressWarnings("unchecked")
 	@Override
     protected T[] values() {
-    	return (T[])sparseMap.values();
+    	return (T[]) this.sparseMap.values();
     }
     
     /**
@@ -99,7 +99,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
      */
     @Override
     public T getObject(int index) {
-        return sparseMap.get(index);
+        return get(index);
     }
     
     /**
@@ -109,8 +109,19 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
      */
     @Override
     public T get(int... coordinates) {
-        return sparseMap.get(computeIndex(coordinates));
+        return get(computeIndex(coordinates));
     }
+    
+    /**
+     * Returns the T at the specified index.
+     * 
+     * @param index     the index of the T to return
+     * @return  the T at the specified index.
+     */
+    @Override
+	public T get(int index) {
+		return this.sparseMap.get(index);
+	}
     
     /**
      * Returns a sorted array of occupied indexes.
@@ -128,10 +139,5 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public String toString() {
     	return Arrays.toString(getDimensions());
     }
-
-	@Override
-	public T get(int index) {
-		return this.sparseMap.get(index);
-	}
 
 }

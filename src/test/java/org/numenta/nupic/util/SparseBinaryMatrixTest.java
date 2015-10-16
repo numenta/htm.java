@@ -22,14 +22,15 @@
 
 package org.numenta.nupic.util;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 public class SparseBinaryMatrixTest {
 
@@ -214,5 +215,22 @@ public class SparseBinaryMatrixTest {
 
     }
 
-
+    @Test 
+    public void testArraySet() {
+    	int[] dimensions =  { 5, 2 };
+    	int[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
+    	int[] values = { 1, 1, 1, 1, 1 };
+    	int[] indexes = { 0, 4, 6, 7, 8 };
+    	
+    	SparseBinaryMatrix sbm = new SparseBinaryMatrix(dimensions);
+    	sbm.set(indexes, values);
+    	int[] dense = new int[sbm.getMaxIndex() + 1];
+    	
+    	for (int i = 0; i < sbm.getMaxIndex() + 1; i++) {
+    		dense[i] = sbm.getIntValue(i);
+    	}
+    	
+    	assertArrayEquals(expected, dense);
+    	
+    }
 }
