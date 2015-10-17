@@ -33,17 +33,23 @@ import java.util.Random;
 import org.junit.Test;
 
 public class SparseBinaryMatrixTest {
+    
+	private int[] dimensions = new int[]{5, 10};
 
-    @Test
-    public void testBackingStoreAndSliceAccess() {
-        int[] dimensions = new int[]{5, 10};
+	@Test 
+	public void testBackingStoreAndSliceAccess() {
+		doTestBackingStoreAndSliceAccess(new SparseBinaryMatrix(this.dimensions));
+		doTestBackingStoreAndSliceAccess(new LowMemorySparseBinaryMatrix(this.dimensions));
+	}
+	
+    private void doTestBackingStoreAndSliceAccess(SparseBinaryMatrixSupport sm) {
         int[][] connectedSynapses = new int[][]{
                 {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
                 {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
                 {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
                 {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
                 {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-        SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+
         for (int i = 0; i < sm.getDimensions()[0]; i++) {
             for (int j = 0; j < sm.getDimensions()[1]; j++) {
                 sm.set(connectedSynapses[i][j], i, j);
@@ -74,6 +80,11 @@ public class SparseBinaryMatrixTest {
 
     @Test
     public void testRightVecSumAtNZFast() {
+    	doTestRightVecSumAtNZFast(new SparseBinaryMatrix(this.dimensions));
+    	doTestRightVecSumAtNZFast(new LowMemorySparseBinaryMatrix(this.dimensions));
+    }
+    
+    private void doTestRightVecSumAtNZFast(SparseBinaryMatrixSupport sm) {
         int[] dimensions = new int[]{5, 10};
         int[][] connectedSynapses = new int[][]{
                 {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
@@ -81,7 +92,7 @@ public class SparseBinaryMatrixTest {
                 {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
                 {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
                 {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-        SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+       
         for (int i = 0; i < sm.getDimensions()[0]; i++) {
             for (int j = 0; j < sm.getDimensions()[1]; j++) {
                 sm.set(connectedSynapses[i][j], i, j);
@@ -136,14 +147,18 @@ public class SparseBinaryMatrixTest {
 
     @Test
     public void testSetTrueCount() {
-        int[] dimensions = new int[]{5, 10};
+    	doTestSetTrueCount(new SparseBinaryMatrix(this.dimensions));
+    	doTestSetTrueCount(new LowMemorySparseBinaryMatrix(this.dimensions));
+    }
+    
+    private void doTestSetTrueCount(SparseBinaryMatrixSupport sm) {
         int[][] connectedSynapses = new int[][]{
                 {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
                 {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
                 {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
                 {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
                 {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-        SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+        
         for (int i = 0; i < sm.getDimensions()[0]; i++) {
             for (int j = 0; j < sm.getDimensions()[1]; j++) {
                 sm.set(connectedSynapses[i][j], i, j);
@@ -171,12 +186,15 @@ public class SparseBinaryMatrixTest {
             }
     }
 
-
     @Test
     public void testBackingStoreAndSliceAccessManyDimensions() {
-          /*Create 3 dimensional matrix*/
+    	  /*Create 3 dimensional matrix*/
         int[] dimensions = {5, 5, 5};
-        SparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+        doTestBackingStoreAndSliceAccessManyDimensions(new SparseBinaryMatrix(dimensions));
+        doTestBackingStoreAndSliceAccessManyDimensions(new LowMemorySparseBinaryMatrix(dimensions));
+    }
+    
+    private void doTestBackingStoreAndSliceAccessManyDimensions(SparseBinaryMatrixSupport sm) {
          /*set diagonal element to true*/
         sm.set(1, 0, 0, 0);
         sm.set(1, 1, 1, 1);
@@ -214,21 +232,23 @@ public class SparseBinaryMatrixTest {
         assertEquals(0, sm.getTrueCounts()[1]);
 
     }
-
-    @Test 
+    
+    @Test
     public void testArraySet() {
     	int[] dimensions =  { 5, 2 };
+    	doTestArraySet(new SparseBinaryMatrix(dimensions));
+    	doTestArraySet(new LowMemorySparseBinaryMatrix(dimensions));
+    }
+    
+    private void doTestArraySet(SparseBinaryMatrixSupport sm) {
     	int[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
     	int[] values = { 1, 1, 1, 1, 1 };
     	int[] indexes = { 0, 4, 6, 7, 8 };
+    	sm.set(indexes, values);
+    	int[] dense = new int[sm.getMaxIndex() + 1];
     	
-    	SparseBinaryMatrix sbm = new SparseBinaryMatrix(dimensions);
-    	sbm.set(indexes, values);
-    	
-    	int[] dense = new int[sbm.getMaxIndex() + 1];
-    	
-    	for (int i = 0; i < sbm.getMaxIndex() + 1; i++) {
-    		dense[i] = sbm.getIntValue(i);
+    	for (int i = 0; i < sm.getMaxIndex() + 1; i++) {
+    		dense[i] = sm.getIntValue(i);
     	}
     	
     	assertArrayEquals(expected, dense);

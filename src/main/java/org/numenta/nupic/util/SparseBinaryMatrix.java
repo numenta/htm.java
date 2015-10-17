@@ -63,18 +63,16 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      public Object getSlice(int... coordinates) {
 		Object slice = backingArray;
 		for(int i = 0;i < coordinates.length;i++) {
-			slice = Array.get(slice, coordinates[i]);;
+			slice = Array.get(slice, coordinates[i]);
 		}
 		//Ensure return value is of type Array
 		if(!slice.getClass().isArray()) {
-			throw new IllegalArgumentException(
-				"This method only returns the array holding the specified index: " + 
-					Arrays.toString(coordinates));
+			sliceError(coordinates);
 		}
 		
 		return slice;
 	}
-    
+
     /**
      * Fills the specified results array with the result of the 
      * matrix vector multiplication.

@@ -45,19 +45,8 @@ public class FlatArrayMatrix<T> extends FlatMatrixSupport<T> {
 	}
 
 	@Override
-	public T get(int... indexes) {
-		return get(computeIndex(indexes));
-	}
-	
-	@Override
 	public T get(int index) {
-		return data[index];
-	}
-
-	@Override
-	public FlatArrayMatrix<T> set(int[] indexes, T value) {
-		set(computeIndex(indexes), value); 
-		return this;
+		return this.data[index];
 	}
 
 	@Override

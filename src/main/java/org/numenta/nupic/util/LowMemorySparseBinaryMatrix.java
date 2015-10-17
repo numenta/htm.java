@@ -22,10 +22,11 @@
 
 package org.numenta.nupic.util;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
- * Low Memory implementation of {@link SparseBinaryMatrixSupport} without 
+ * Low Memory implementation of {@link SparseBinaryMatrix} without 
  * a backing array.
  * 
  * @author Jose Luis Martin
@@ -43,17 +44,34 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 	@Override
 	public Object getSlice(int... coordinates) {
 		int[] dimensions = getDimensions();
-		int[] slice = new int[dimensions[1]];
-		for(int j = 0; j < dimensions[1]; j++) {
-			slice[j] = get(coordinates[0], j);
+		// check for valid coordinates
+		if (coordinates.length >= dimensions.length)
+			sliceError(coordinates);
+		
+		int sliceDimensionsLength = dimensions.length - coordinates.length;
+		int[] sliceDimensions = (int[]) Array.newInstance(int.class, sliceDimensionsLength);
+		
+		for (int i = coordinates.length ; i < dimensions.length; i++) 
+			sliceDimensions[i - coordinates.length] = dimensions[i];
+		
+		int[] elementCoordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
+		Object slice = Array.newInstance(int.class, sliceDimensions);
+		
+		if (coordinates.length + 1 == dimensions.length) {
+			// last slice 
+		
+			for (int i = 0; i < dimensions[coordinates.length]; i++) {
+				elementCoordinates[coordinates.length] = i;
+				Array.set(slice,  i, get(elementCoordinates));
+			}
 		}
-		//Ensure return value is of type Array
-		if(!slice.getClass().isArray()) {
-			throw new IllegalArgumentException(
-					"This method only returns the array holding the specified index: " + 
-							Arrays.toString(coordinates));
+		else {
+			for (int i = 0; i < dimensions[sliceDimensionsLength]; i++) {
+				elementCoordinates[coordinates.length] = i;
+				Array.set(slice, i, getSlice(elementCoordinates));
+			}
 		}
-
+		
 		return slice;
 	}
 
@@ -79,10 +97,8 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
 	@Override
 	public LowMemorySparseBinaryMatrix set(int value, int... coordinates) {
-		if (value > 0) {
-			super.set(value, coordinates);
-			updateTrueCounts(coordinates);
-		}
+		super.set(value, coordinates);
+		updateTrueCounts(coordinates);
 		
 		return this;
 	}
@@ -96,26 +112,15 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 		return this;
 	}
 
+	/**
+	 * Update the true counts for a coordinates.
+	 * @param coordinates
+	 */
 	private void updateTrueCounts(int... coordinates) {
-		int sum = 0;
-
-		for (int j = 0; j < dimensions[1]; j++) {
-			sum += getIntValue(coordinates[0], j);
-		}
-
+		Object slice = getSlice(coordinates[0]);
+		int sum = ArrayUtils.aggregateArray(slice);
 		setTrueCount(coordinates[0],sum);
 	}
-
-	@Override
-	protected int[] values() {
-		int[] dense = new int[getMaxIndex()];
-		for (int i = 0; i <= getMaxIndex(); i++) {
-			dense[i] = get(i);
-		}
-		
-		return dense;
-	}
-
 
 	@Override
 	public LowMemorySparseBinaryMatrix set(int index, Object value) {

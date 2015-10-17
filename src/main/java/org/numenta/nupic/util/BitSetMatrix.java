@@ -46,23 +46,12 @@ public class BitSetMatrix extends FlatMatrixSupport<Boolean> {
 	}
 	
 	@Override
-	public Boolean get(int... coordinates) {
-		return get(computeIndex(coordinates));
-	}
-	
-	@Override
 	public Boolean get(int index) {
 		return this.data.get(index);
 	}
 
 	@Override
-	public Matrix<Boolean> set(int[] coordinates, Boolean value) {
-		this.data.set(computeIndex(coordinates), value);
-		return this;
-	}
-
-	@Override
-	public FlatMatrix<Boolean> set(int index, Boolean value) {
+	public BitSetMatrix set(int index, Boolean value) {
 		this.data.set(index, value);
 		return this;
 	}

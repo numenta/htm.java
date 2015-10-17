@@ -22,8 +22,12 @@
 
 package org.numenta.nupic.util;
 
-import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+
+import org.junit.Test;
 
 /**
  * Generic test for Matrix hirearchy.
@@ -45,6 +49,7 @@ public class MatrixTest {
 		}
 		
 		assertArrayEquals(expected, asDense(bsm));
+		assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(bsm)));
 	}
 	
 	@Test
@@ -56,8 +61,9 @@ public class MatrixTest {
 		for (int index : this.indexes) {
 			fam.set(index, 1);
 		}
-		
+	
 		assertArrayEquals(expected, asDense(fam));
+		assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(fam)));
 	}
 	
 	private Object[] asDense(FlatMatrix<?> matrix) {
@@ -66,6 +72,8 @@ public class MatrixTest {
 		for (int i = 0; i < matrix.getMaxIndex() + 1; i++) {
 			dense[i] = matrix.get(i);
 		}
+		
+		
 		
 		return dense;
 	}

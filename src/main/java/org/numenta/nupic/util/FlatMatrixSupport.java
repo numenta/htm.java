@@ -23,8 +23,6 @@
 package org.numenta.nupic.util;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 
 /**
@@ -184,6 +182,23 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         return "[]";
     }
     
+	@Override
+	public abstract T get(int index);
+	
+	@Override 
+	public abstract FlatMatrixSupport<T> set(int index, T value);
+	
+	@Override
+	public T get(int... indexes) {
+		return get(computeIndex(indexes));
+	}
+	
+	@Override
+	public FlatMatrixSupport<T> set(int[] indexes, T value) {
+		set(computeIndex(indexes), value); 
+		return this;
+	}
+	
     public int getSize() {
     	return Arrays.stream(this.dimensions).reduce((n,i) -> n*i).getAsInt();
     }
@@ -211,4 +226,5 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
 	public int[] getDimensionMultiples() {
 		return this.dimensionMultiples;
 	}
+
 }

@@ -56,7 +56,18 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * 			an actual value instead of the array holding it.
      */
      public abstract Object getSlice(int... coordinates);
-    
+     
+     /**
+ 	 * Launch getSlice error, to share it with subclass {@link #getSlice(int...)}
+ 	 * implementations.
+ 	 * @param coordinates
+ 	 */
+ 	protected void sliceError(int... coordinates) {
+ 		throw new IllegalArgumentException(
+ 			"This method only returns the array holding the specified index: " + 
+ 				Arrays.toString(coordinates));
+ 	}
+     
     /**
      * Fills the specified results array with the result of the 
      * matrix vector multiplication.

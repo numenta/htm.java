@@ -27,8 +27,9 @@ import org.junit.Test;
 import org.junit.Assert;
 
 /**
+ * Test for {@link LowMemorySparseBinaryMatrix}
+ *  
  * @author Jose Luis Martin
- *
  */
 public class LowMemorySparseBinaryMatrixTest {
 	
