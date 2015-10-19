@@ -846,10 +846,6 @@ public class Layer<T> {
                     
                     Layer.this.compute((T)intArray);
                     
-                    if(Thread.currentThread().isInterrupted()) {
-                        notifyError(new RuntimeException("Unknown Exception during compute"));
-                    }
-                    
                     // Notify all downstream observers that the stream is closed
                     if(!sensor.hasNext()) {
                         notifyComplete();
@@ -1207,6 +1203,11 @@ public class Layer<T> {
         publisher.onCompleted();
     }
     
+    /**
+     * Called internally to propagate the specified {@link Exception}
+     * up the network hierarchy
+     * @param e the exception to notify users of
+     */
     void notifyError(Exception e) {
         for(Observer<Inference> o : subscribers) {
             o.onError(e);
