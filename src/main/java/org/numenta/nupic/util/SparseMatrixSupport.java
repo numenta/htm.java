@@ -40,16 +40,16 @@ import gnu.trove.list.array.TIntArrayList;
  * @param <T>
  */
 public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implements SparseMatrix<T> {
-    
+
     public SparseMatrixSupport(int[] dimensions) {
         this(dimensions, false);
     }
-    
-    
+
+
     public SparseMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
     }
-    
+
     /**
      * Sets the object to occupy the specified index.
      * 
@@ -59,7 +59,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return this {@code SparseMatrix} implementation
      */
     protected <S extends SparseMatrixSupport<T>> S set(int index, int value) { return null; }
-    
+
     /**
      * Sets the object to occupy the specified index.
      * 
@@ -69,7 +69,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return this {@code SparseMatrix} implementation
      */
     protected <S extends SparseMatrixSupport<T>> S set(int index, double value) { return null; }
-    
+
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
@@ -80,7 +80,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      */
     @Override
     public SparseMatrixSupport<T> set(int[] coordinates, T object) { return null; }
-    
+
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
@@ -90,7 +90,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return this {@code SparseMatrix} implementation
      */
     protected <S extends SparseMatrixSupport<T>> S set(int value, int... coordinates) { return null; }
-    
+
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
@@ -100,7 +100,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return this {@code SparseMatrix} implementation
      */
     protected <S extends SparseMatrixSupport<T>> S set(double value, int... coordinates) { return null; }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -108,7 +108,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return  the T at the specified index.
      */
     protected T getObject(int index) { return null; }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -116,7 +116,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return  the T at the specified index.
      */
     protected int getIntValue(int index) { return -1; }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -124,46 +124,46 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return  the T at the specified index.
      */
     protected double getDoubleValue(int index) { return -1.0; }
-    
+
     /**
      * Returns an outer array of T values.
      * @return
      */
     protected abstract <V> V values();
-    
+
     /**
      * Returns the T at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
     public T get(int... coordinates) { return null; }
-    
+
     /**
      * Returns the int value at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
     protected int getIntValue(int... coordinates) { return -1; }
-    
+
     /**
      * Returns the double value at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
     protected double getDoubleValue(int... coordinates) { return -1.0; }
-    
+
     @Override
-	public int[] getSparseIndices() { 
-    	return null;
+    public int[] getSparseIndices() { 
+        return null;
     }
-    
+
     @Override
-	public int[] get1DIndexes() {
+    public int[] get1DIndexes() {
         TIntList results = new TIntArrayList(getMaxIndex() + 1);
         visit(getDimensions(), 0, new int[getNumDimensions()], results);
         return results.toArray();
     }
-    
+
     /**
      * Recursively loops through the matrix dimensions to fill the results
      * array with flattened computed array indexes.
@@ -182,17 +182,17 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
             else visit(bounds, currentDimension + 1, p, results);
         }
     }
-    
+
     @Override
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public T[] asDense(TypeFactory<T> factory) {
-    	int[] dimensions = getDimensions();
+        int[] dimensions = getDimensions();
         T[] retVal = (T[])Array.newInstance(factory.typeClass(), dimensions);
         fill(factory, 0, dimensions, dimensions[0], retVal);
-        
+
         return retVal;
     }
-    
+
     /**
      * Uses reflection to create and fill a dynamically created multidimensional array.
      * 
@@ -220,5 +220,5 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
             return arr;
         }
     }
-    
+
 }

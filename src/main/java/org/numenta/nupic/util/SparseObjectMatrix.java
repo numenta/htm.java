@@ -39,7 +39,7 @@ import java.util.Arrays;
  */
 public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
-    
+
     /**
      * Constructs a new {@code SparseObjectMatrix}
      * @param dimensions	the dimensions of this array
@@ -47,7 +47,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public SparseObjectMatrix(int[] dimensions) {
         super(dimensions, false);
     }
-    
+
     /**
      * Constructs a new {@code SparseObjectMatrix}
      * @param dimensions					the dimensions of this array
@@ -56,7 +56,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public SparseObjectMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
     }
-    
+
     /**
      * Sets the object to occupy the specified index.
      * 
@@ -68,7 +68,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
         sparseMap.put(index, (T)object);
         return this;
     }
-    
+
     /**
      * Sets the specified object to be indexed at the index
      * computed from the specified coordinates.
@@ -80,17 +80,17 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
         set(computeIndex(coordinates), object);
         return this;
     }
-    
+
     /**
      * Returns an outer array of T values.
      * @return
      */
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     protected T[] values() {
-    	return (T[]) this.sparseMap.values();
+        return (T[]) this.sparseMap.values();
     }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -101,7 +101,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public T getObject(int index) {
         return get(index);
     }
-    
+
     /**
      * Returns the T at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
@@ -111,7 +111,7 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public T get(int... coordinates) {
         return get(computeIndex(coordinates));
     }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -119,10 +119,10 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
      * @return  the T at the specified index.
      */
     @Override
-	public T get(int index) {
-		return this.sparseMap.get(index);
-	}
-    
+    public T get(int index) {
+        return this.sparseMap.get(index);
+    }
+
     /**
      * Returns a sorted array of occupied indexes.
      * @return  a sorted array of occupied indexes.
@@ -131,13 +131,13 @@ public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
     public int[] getSparseIndices() {
         return reverse(sparseMap.keys());
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-    	return Arrays.toString(getDimensions());
+        return Arrays.toString(getDimensions());
     }
 
 }

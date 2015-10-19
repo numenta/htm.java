@@ -35,21 +35,21 @@ import java.util.Arrays;
  */
 public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
 
-	protected int[] dimensions;
-	protected int[] dimensionMultiples;
-	protected boolean isColumnMajor;
-	protected int numDimensions;
-	
-	/**
+    protected int[] dimensions;
+    protected int[] dimensionMultiples;
+    protected boolean isColumnMajor;
+    protected int numDimensions;
+
+    /**
      * Constructs a new {@link FlatMatrixSupport} object to be configured with specified
      * dimensions and major ordering.
      * @param dimensions  the dimensions of this matrix	
      */
-	public FlatMatrixSupport(int[] dimensions) {
-		this(dimensions, false);
-	}
-	
-	/**
+    public FlatMatrixSupport(int[] dimensions) {
+        this(dimensions, false);
+    }
+
+    /**
      * Constructs a new {@link FlatMatrixSupport} object to be configured with specified
      * dimensions and major ordering.
      * 
@@ -59,26 +59,26 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
      * 									major ordering will be used. If true, then column major
      * 									ordering will be used.
      */
-	public FlatMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
-		this.dimensions = dimensions;
+    public FlatMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
+        this.dimensions = dimensions;
         this.numDimensions = dimensions.length;
         this.dimensionMultiples = initDimensionMultiples(
-            useColumnMajorOrdering ? reverse(dimensions) : dimensions);
+                useColumnMajorOrdering ? reverse(dimensions) : dimensions);
         isColumnMajor = useColumnMajorOrdering;
-	}
+    }
 
-	/**
-	 * Compute the flat index of a multidimensonal array.
-	 * @param indexes multidimensional indexes
-	 * @return the flat array index;
-	 */
-	public int computeIndex(int[] indexes) {
-		return computeIndex(indexes, true);
-	}
-	 
-	public int computeIndex(int[] coordinates, boolean doCheck) {
+    /**
+     * Compute the flat index of a multidimensonal array.
+     * @param indexes multidimensional indexes
+     * @return the flat array index;
+     */
+    public int computeIndex(int[] indexes) {
+        return computeIndex(indexes, true);
+    }
+
+    public int computeIndex(int[] coordinates, boolean doCheck) {
         if(doCheck) checkDims(coordinates);
-        
+
         int[] localMults = isColumnMajor ? reverse(dimensionMultiples) : dimensionMultiples;
         int base = 0;
         for(int i = 0;i < coordinates.length;i++) {
@@ -86,39 +86,39 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         }
         return base;
     }
-	
-	/**
+
+    /**
      * Checks the indexes specified to see whether they are within the
      * configured bounds and size parameters of this array configuration.
      * 
      * @param index the array dimensions to check
      */
     protected void checkDims(int[] index) {
-    	if(index.length != numDimensions) {
+        if(index.length != numDimensions) {
             throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
-               "input dimensions: " + index.length + " > number of configured dimensions: " + numDimensions);
+                    "input dimensions: " + index.length + " > number of configured dimensions: " + numDimensions);
         }
         for(int i = 0;i < index.length - 1;i++) {
-        	if(index[i] >= dimensions[i]) {
-        		throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
-                    print1DArray(index) + " > " + print1DArray(dimensions));
+            if(index[i] >= dimensions[i]) {
+                throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
+                        print1DArray(index) + " > " + print1DArray(dimensions));
             }
         }
     }
-	
-	@Override
-	public int[] computeCoordinates(int index) {
-		int[] returnVal = new int[getNumDimensions()];
-		int base = index;
-		for(int i = 0;i < dimensionMultiples.length; i++) {
-			int quotient = base / dimensionMultiples[i];
-			base %= dimensionMultiples[i];
-			returnVal[i] = quotient;
-		}
-		return isColumnMajor ? reverse(returnVal) : returnVal;
-	}
-	
-	/**
+
+    @Override
+    public int[] computeCoordinates(int index) {
+        int[] returnVal = new int[getNumDimensions()];
+        int base = index;
+        for(int i = 0;i < dimensionMultiples.length; i++) {
+            int quotient = base / dimensionMultiples[i];
+            base %= dimensionMultiples[i];
+            returnVal[i] = quotient;
+        }
+        return isColumnMajor ? reverse(returnVal) : returnVal;
+    }
+
+    /**
      * Initializes internal helper array which is used for multidimensional
      * index computation.
      * @param dimensions matrix dimensions
@@ -134,7 +134,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         }
         return dimensionMultiples;
     }
-    
+
     /**
      * Utility method to shrink a single dimension array by one index.
      * @param array the array to shrink
@@ -142,12 +142,12 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
      */
     protected int[] copyInnerArray(int[] array) {
         if(array.length == 1) return array;
-        
+
         int[] retVal = new int[array.length - 1];
         System.arraycopy(array, 1, retVal, 0, array.length - 1);
         return retVal;
     }
-    
+
     /**
      * Reverses the specified array.
      * @param input
@@ -160,7 +160,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         }
         return retVal;
     }
-    
+
     /**
      * Prints the specified array to a returned String.
      * 
@@ -181,50 +181,50 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         }
         return "[]";
     }
-    
-	@Override
-	public abstract T get(int index);
-	
-	@Override 
-	public abstract FlatMatrixSupport<T> set(int index, T value);
-	
-	@Override
-	public T get(int... indexes) {
-		return get(computeIndex(indexes));
-	}
-	
-	@Override
-	public FlatMatrixSupport<T> set(int[] indexes, T value) {
-		set(computeIndex(indexes), value); 
-		return this;
-	}
-	
-    public int getSize() {
-    	return Arrays.stream(this.dimensions).reduce((n,i) -> n*i).getAsInt();
-    }
-    
+
     @Override
-   	public int getMaxIndex() {
-           return getDimensions()[0] * Math.max(1, getDimensionMultiples()[0]) - 1;
-    }
-    
+    public abstract T get(int index);
+
+    @Override 
+    public abstract FlatMatrixSupport<T> set(int index, T value);
+
     @Override
-	public int[] getDimensions() {
-		return this.dimensions;
-	}
-    
-    public void setDimensions(int[] dimensions) {
-    	this.dimensions = dimensions;
+    public T get(int... indexes) {
+        return get(computeIndex(indexes));
     }
 
-	@Override
-	public int getNumDimensions() {
-		return this.dimensions.length;
-	}
-	
-	@Override
-	public int[] getDimensionMultiples() {
-		return this.dimensionMultiples;
-	}
+    @Override
+    public FlatMatrixSupport<T> set(int[] indexes, T value) {
+        set(computeIndex(indexes), value); 
+        return this;
+    }
+
+    public int getSize() {
+        return Arrays.stream(this.dimensions).reduce((n,i) -> n*i).getAsInt();
+    }
+
+    @Override
+    public int getMaxIndex() {
+        return getDimensions()[0] * Math.max(1, getDimensionMultiples()[0]) - 1;
+    }
+
+    @Override
+    public int[] getDimensions() {
+        return this.dimensions;
+    }
+
+    public void setDimensions(int[] dimensions) {
+        this.dimensions = dimensions;
+    }
+
+    @Override
+    public int getNumDimensions() {
+        return this.dimensions.length;
+    }
+
+    @Override
+    public int[] getDimensionMultiples() {
+        return this.dimensionMultiples;
+    }
 
 }

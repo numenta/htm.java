@@ -33,99 +33,99 @@ import java.util.Arrays;
  */
 public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
-	public LowMemorySparseBinaryMatrix(int[] dimensions) {
-		this(dimensions, false);
-	}
+    public LowMemorySparseBinaryMatrix(int[] dimensions) {
+        this(dimensions, false);
+    }
 
-	public LowMemorySparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-	}
-	
-	@Override
-	public Object getSlice(int... coordinates) {
-		int[] dimensions = getDimensions();
-		// check for valid coordinates
-		if (coordinates.length >= dimensions.length)
-			sliceError(coordinates);
-		
-		int sliceDimensionsLength = dimensions.length - coordinates.length;
-		int[] sliceDimensions = (int[]) Array.newInstance(int.class, sliceDimensionsLength);
-		
-		for (int i = coordinates.length ; i < dimensions.length; i++) 
-			sliceDimensions[i - coordinates.length] = dimensions[i];
-		
-		int[] elementCoordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
-		Object slice = Array.newInstance(int.class, sliceDimensions);
-		
-		if (coordinates.length + 1 == dimensions.length) {
-			// last slice 
-			for (int i = 0; i < dimensions[coordinates.length]; i++) {
-				elementCoordinates[coordinates.length] = i;
-				Array.set(slice,  i, get(elementCoordinates));
-			}
-		}
-		else {
-			for (int i = 0; i < dimensions[sliceDimensionsLength]; i++) {
-				elementCoordinates[coordinates.length] = i;
-				Array.set(slice, i, getSlice(elementCoordinates));
-			}
-		}
-		
-		return slice;
-	}
+    public LowMemorySparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+        super(dimensions, useColumnMajorOrdering);
+    }
 
-	@Override
-	public void rightVecSumAtNZ(int[] inputVector, int[] results) {
-		if (this.dimensions.length > 1) {
-			for(int i = 0; i < this.dimensions[0]; i++) {
-				for(int j = 0;  j < this.dimensions[1] ; j++) {
-					results[i] += (inputVector[j] * (int) get(i, j));
-				}
-			}
-		}
-		else {
-			for(int i = 0; i < this.dimensions[0]; i++) {
-				results[0] += (inputVector[i] * (int) get(i));
-			}
-			
-			for (int i = 0; i < this.dimensions[0]; i++) {
-				results[i] = results[0];
-			}
-		}
-	}
+    @Override
+    public Object getSlice(int... coordinates) {
+        int[] dimensions = getDimensions();
+        // check for valid coordinates
+        if (coordinates.length >= dimensions.length)
+            sliceError(coordinates);
 
-	@Override
-	public LowMemorySparseBinaryMatrix set(int value, int... coordinates) {
-		super.set(value, coordinates);
-		updateTrueCounts(coordinates);
-		
-		return this;
-	}
+        int sliceDimensionsLength = dimensions.length - coordinates.length;
+        int[] sliceDimensions = (int[]) Array.newInstance(int.class, sliceDimensionsLength);
 
-	@Override
-	public LowMemorySparseBinaryMatrix setForTest(int index, int value) {
-		if (value > 1) {
-			super.setForTest(index, value);
-		}
-		
-		return this;
-	}
+        for (int i = coordinates.length ; i < dimensions.length; i++) 
+            sliceDimensions[i - coordinates.length] = dimensions[i];
 
-	/**
-	 * Update the true counts for a coordinates.
-	 * @param coordinates
-	 */
-	private void updateTrueCounts(int... coordinates) {
-		Object slice = getSlice(coordinates[0]);
-		int sum = ArrayUtils.aggregateArray(slice);
-		setTrueCount(coordinates[0],sum);
-	}
+        int[] elementCoordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
+        Object slice = Array.newInstance(int.class, sliceDimensions);
 
-	@Override
-	public LowMemorySparseBinaryMatrix set(int index, Object value) {
-		super.set(index, ((Integer) value).intValue());
-		return this;
-	}
+        if (coordinates.length + 1 == dimensions.length) {
+            // last slice 
+            for (int i = 0; i < dimensions[coordinates.length]; i++) {
+                elementCoordinates[coordinates.length] = i;
+                Array.set(slice,  i, get(elementCoordinates));
+            }
+        }
+        else {
+            for (int i = 0; i < dimensions[sliceDimensionsLength]; i++) {
+                elementCoordinates[coordinates.length] = i;
+                Array.set(slice, i, getSlice(elementCoordinates));
+            }
+        }
+
+        return slice;
+    }
+
+    @Override
+    public void rightVecSumAtNZ(int[] inputVector, int[] results) {
+        if (this.dimensions.length > 1) {
+            for(int i = 0; i < this.dimensions[0]; i++) {
+                for(int j = 0;  j < this.dimensions[1] ; j++) {
+                    results[i] += (inputVector[j] * (int) get(i, j));
+                }
+            }
+        }
+        else {
+            for(int i = 0; i < this.dimensions[0]; i++) {
+                results[0] += (inputVector[i] * (int) get(i));
+            }
+
+            for (int i = 0; i < this.dimensions[0]; i++) {
+                results[i] = results[0];
+            }
+        }
+    }
+
+    @Override
+    public LowMemorySparseBinaryMatrix set(int value, int... coordinates) {
+        super.set(value, coordinates);
+        updateTrueCounts(coordinates);
+
+        return this;
+    }
+
+    @Override
+    public LowMemorySparseBinaryMatrix setForTest(int index, int value) {
+        if (value > 1) {
+            super.setForTest(index, value);
+        }
+
+        return this;
+    }
+
+    /**
+     * Update the true counts for a coordinates.
+     * @param coordinates
+     */
+    private void updateTrueCounts(int... coordinates) {
+        Object slice = getSlice(coordinates[0]);
+        int sum = ArrayUtils.aggregateArray(slice);
+        setTrueCount(coordinates[0],sum);
+    }
+
+    @Override
+    public LowMemorySparseBinaryMatrix set(int index, Object value) {
+        super.set(index, ((Integer) value).intValue());
+        return this;
+    }
 
 
 }

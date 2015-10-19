@@ -63,7 +63,7 @@ public class SpatialPooler {
      * Constructs a new {@code SpatialPooler}
      */
     public SpatialPooler() {}
-    
+
     /**
      * Initializes the specified {@link Connections} object which contains
      * the memory and structural anatomy this spatial pooler uses to implement
@@ -72,10 +72,10 @@ public class SpatialPooler {
      * @param c		a {@link Connections} object
      */
     public void init(Connections c) {
-    	initMatrices(c);
-    	connectAndConfigureInputs(c);
+        initMatrices(c);
+        connectAndConfigureInputs(c);
     }
-    
+
     /**
      * Called to initialize the structural anatomy with configured values and prepare
      * the anatomical entities for activation.
@@ -83,30 +83,30 @@ public class SpatialPooler {
      * @param c
      */
     public void initMatrices(final Connections c) {
-    	SparseObjectMatrix<Column> mem = c.getMemory();
-    	c.setMemory(mem == null ? 
-    		mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
+        SparseObjectMatrix<Column> mem = c.getMemory();
+        c.setMemory(mem == null ? 
+                mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
-        
+
         //Calculate numInputs and numColumns
         int numInputs = c.getInputMatrix().getMaxIndex() + 1;
         int numColumns = c.getMemory().getMaxIndex() + 1;
         c.setNumInputs(numInputs);
         c.setNumColumns(numColumns);
-        
+
         //Fill the sparse matrix with column objects
         for(int i = 0;i < numColumns;i++) { mem.set(i, new Column(c.getCellsPerColumn(), i)); }
-        
+
         c.setPotentialPools(new SparseObjectMatrix<Pool>(c.getMemory().getDimensions()));
-        
+
         c.setConnectedMatrix(new SparseBinaryMatrix(new int[] { numColumns, numInputs }));
-        
+
         double[] tieBreaker = new double[numColumns];
         for(int i = 0;i < numColumns;i++) {
             tieBreaker[i] = 0.01 * c.getRandom().nextDouble();
         }
         c.setTieBreaker(tieBreaker);
-        
+
         //Initialize state meta-management statistics
         c.setOverlapDutyCycles(new double[numColumns]);
         c.setActiveDutyCycles(new double[numColumns]);
@@ -115,7 +115,7 @@ public class SpatialPooler {
         c.setBoostFactors(new double[numColumns]);
         Arrays.fill(c.getBoostFactors(), 1);
     }
-    
+
     /**
      * Step two of pooler initialization kept separate from initialization
      * of static members so that they may be set at a different point in 
@@ -127,10 +127,10 @@ public class SpatialPooler {
      * @param c		the {@link Connections} memory
      */
     public void connectAndConfigureInputs(Connections c) {
-    	// Initialize the set of permanence values for each column. Ensure that
+        // Initialize the set of permanence values for each column. Ensure that
         // each column is connected to enough input bits to allow it to be
         // activated.
-    	int numColumns = c.getNumColumns();
+        int numColumns = c.getNumColumns();
         for(int i = 0;i < numColumns;i++) {
             int[] potential = mapPotential(c, i, true);
             Column column = c.getColumn(i);
@@ -138,10 +138,10 @@ public class SpatialPooler {
             double[] perm = initPermanence(c, potential, i, c.getInitConnectedPct());
             updatePermanencesForColumn(c, perm, column, potential, true);
         }
-        
+
         updateInhibitionRadius(c);
     }
-    
+
     /**
      * This is the primary public method of the SpatialPooler class. This
      * function takes a input vector and outputs the indices of the active columns.
@@ -170,41 +170,41 @@ public class SpatialPooler {
     public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
             throw new IllegalArgumentException(
-                "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
+                    "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
                     ", From Input Vector: " + inputVector.length);
         }
-        
+
         updateBookeepingVars(c, learn);
         int[] overlaps = calculateOverlap(c, inputVector);
-        
+
         double[] boostedOverlaps;
         if(learn) {
-        	boostedOverlaps = ArrayUtils.multiply(c.getBoostFactors(), overlaps);
+            boostedOverlaps = ArrayUtils.multiply(c.getBoostFactors(), overlaps);
         }else{
-        	boostedOverlaps = ArrayUtils.toDoubleArray(overlaps);
+            boostedOverlaps = ArrayUtils.toDoubleArray(overlaps);
         }
-        
+
         int[] activeColumns = inhibitColumns(c, boostedOverlaps);
-        
+
         if(learn) {
-        	adaptSynapses(c, inputVector, activeColumns);
-        	updateDutyCycles(c, overlaps, activeColumns);
-        	bumpUpWeakColumns(c);
-        	updateBoostFactors(c);
-        	if(isUpdateRound(c)) {
-        		updateInhibitionRadius(c);
-        		updateMinDutyCycles(c);
-        	}
+            adaptSynapses(c, inputVector, activeColumns);
+            updateDutyCycles(c, overlaps, activeColumns);
+            bumpUpWeakColumns(c);
+            updateBoostFactors(c);
+            if(isUpdateRound(c)) {
+                updateInhibitionRadius(c);
+                updateMinDutyCycles(c);
+            }
         }else if(stripNeverLearned){
-        	activeColumns = stripUnlearnedColumns(c, activeColumns).toArray();
+            activeColumns = stripUnlearnedColumns(c, activeColumns).toArray();
         }
-        
+
         Arrays.fill(activeArray, 0);
         if(activeColumns.length > 0) {
-        	ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
+            ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
         }
     }
-    
+
     /**
      * Removes the set of columns who have never been active from the set of
      * active columns selected in the inhibition round. Such columns cannot
@@ -216,21 +216,21 @@ public class SpatialPooler {
      * @return	a list of columns with a chance of activation
      */
     public TIntArrayList stripUnlearnedColumns(Connections c, int[] activeColumns) {
-    	TIntHashSet active = new TIntHashSet(activeColumns);
-    	TIntHashSet aboveZero = new TIntHashSet();
-    	int numCols = c.getNumColumns();
-    	double[] colDutyCycles = c.getActiveDutyCycles();
-    	for(int i = 0;i < numCols;i++) {
-    		if(colDutyCycles[i] <= 0) {
-    			aboveZero.add(i);
-    		}
-    	}
-    	active.removeAll(aboveZero);
-    	TIntArrayList l = new TIntArrayList(active);
-    	l.sort();
-    	return l;
+        TIntHashSet active = new TIntHashSet(activeColumns);
+        TIntHashSet aboveZero = new TIntHashSet();
+        int numCols = c.getNumColumns();
+        double[] colDutyCycles = c.getActiveDutyCycles();
+        for(int i = 0;i < numCols;i++) {
+            if(colDutyCycles[i] <= 0) {
+                aboveZero.add(i);
+            }
+        }
+        active.removeAll(aboveZero);
+        TIntArrayList l = new TIntArrayList(active);
+        l.sort();
+        return l;
     }
-    
+
     /**
      * Updates the minimum duty cycles defining normal activity for a column. A
      * column with activity duty cycle below this minimum threshold is boosted.
@@ -238,13 +238,13 @@ public class SpatialPooler {
      * @param c
      */
     public void updateMinDutyCycles(Connections c) {
-    	if(c.getGlobalInhibition() || c.getInhibitionRadius() > c.getNumInputs()) {
-    		updateMinDutyCyclesGlobal(c);
-    	}else{
-    		updateMinDutyCyclesLocal(c);
-    	}
+        if(c.getGlobalInhibition() || c.getInhibitionRadius() > c.getNumInputs()) {
+            updateMinDutyCyclesGlobal(c);
+        }else{
+            updateMinDutyCyclesLocal(c);
+        }
     }
-    
+
     /**
      * Updates the minimum duty cycles in a global fashion. Sets the minimum duty
      * cycles for the overlap and activation of all columns to be a percent of the
@@ -256,12 +256,12 @@ public class SpatialPooler {
      * @param c
      */
     public void updateMinDutyCyclesGlobal(Connections c) {
-    	Arrays.fill(c.getMinOverlapDutyCycles(), 
-    		c.getMinPctOverlapDutyCycles() * ArrayUtils.max(c.getOverlapDutyCycles()));
-    	Arrays.fill(c.getMinActiveDutyCycles(), 
-    		c.getMinPctActiveDutyCycles() * ArrayUtils.max(c.getActiveDutyCycles()));
+        Arrays.fill(c.getMinOverlapDutyCycles(), 
+                c.getMinPctOverlapDutyCycles() * ArrayUtils.max(c.getOverlapDutyCycles()));
+        Arrays.fill(c.getMinActiveDutyCycles(), 
+                c.getMinPctActiveDutyCycles() * ArrayUtils.max(c.getActiveDutyCycles()));
     }
-    
+
     /**
      * Updates the minimum duty cycles. The minimum duty cycles are determined
      * locally. Each column's minimum duty cycles are set to be a percent of the
@@ -272,18 +272,18 @@ public class SpatialPooler {
      * @param c
      */
     public void updateMinDutyCyclesLocal(Connections c) {
-    	int len = c.getNumColumns();
-    	for(int i = 0;i < len;i++) {
-    		int[] maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), true).toArray();
-    		c.getMinOverlapDutyCycles()[i] = ArrayUtils.max(
-    			ArrayUtils.sub(c.getOverlapDutyCycles(), maskNeighbors)) *
-    				c.getMinPctOverlapDutyCycles();
-    		c.getMinActiveDutyCycles()[i] = ArrayUtils.max(
-    			ArrayUtils.sub(c.getActiveDutyCycles(), maskNeighbors)) *
-    				c.getMinPctActiveDutyCycles();
-    	}
+        int len = c.getNumColumns();
+        for(int i = 0;i < len;i++) {
+            int[] maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), true).toArray();
+            c.getMinOverlapDutyCycles()[i] = ArrayUtils.max(
+                    ArrayUtils.sub(c.getOverlapDutyCycles(), maskNeighbors)) *
+                    c.getMinPctOverlapDutyCycles();
+            c.getMinActiveDutyCycles()[i] = ArrayUtils.max(
+                    ArrayUtils.sub(c.getActiveDutyCycles(), maskNeighbors)) *
+                    c.getMinPctActiveDutyCycles();
+        }
     }
-    
+
     /**
      * Updates the duty cycles for each column. The OVERLAP duty cycle is a moving
      * average of the number of inputs which overlapped with each column. The
@@ -299,25 +299,25 @@ public class SpatialPooler {
      *              			the sparse set of columns which survived inhibition
      */
     public void updateDutyCycles(Connections c, int[] overlaps, int[] activeColumns) {
-    	double[] overlapArray = new double[c.getNumColumns()];
-    	double[] activeArray = new double[c.getNumColumns()];
-    	ArrayUtils.greaterThanXThanSetToY(overlaps, 0, 1);
-    	if(activeColumns.length > 0) {
-    		ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
-    	}
-    	
-    	int period = c.getDutyCyclePeriod();
-    	if(period > c.getIterationNum()) {
-    		period  = c.getIterationNum();
-    	}
-    	
-    	c.setOverlapDutyCycles(
-    		updateDutyCyclesHelper(c, c.getOverlapDutyCycles(), overlapArray, period));
-    	
-    	c.setActiveDutyCycles(
-        	updateDutyCyclesHelper(c, c.getActiveDutyCycles(), activeArray, period));
+        double[] overlapArray = new double[c.getNumColumns()];
+        double[] activeArray = new double[c.getNumColumns()];
+        ArrayUtils.greaterThanXThanSetToY(overlaps, 0, 1);
+        if(activeColumns.length > 0) {
+            ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
+        }
+
+        int period = c.getDutyCyclePeriod();
+        if(period > c.getIterationNum()) {
+            period  = c.getIterationNum();
+        }
+
+        c.setOverlapDutyCycles(
+                updateDutyCyclesHelper(c, c.getOverlapDutyCycles(), overlapArray, period));
+
+        c.setActiveDutyCycles(
+                updateDutyCyclesHelper(c, c.getActiveDutyCycles(), activeArray, period));
     }
-   
+
     /**
      * Updates a duty cycle estimate with a new value. This is a helper
      * function that is used to update several duty cycle variables in
@@ -330,7 +330,7 @@ public class SpatialPooler {
      *            	  (period - 1)*dutyCycle + newValue
      *	dutyCycle := ----------------------------------
      *                        period
-	 *
+     *
      * @param c				the {@link Connections} (spatial pooler memory)
      * @param dutyCycles	An array containing one or more duty cycle values that need
      *              		to be updated
@@ -339,9 +339,9 @@ public class SpatialPooler {
      * @return
      */
     public double[] updateDutyCyclesHelper(Connections c, double[] dutyCycles, double[] newInput, double period) {
-    	return ArrayUtils.divide(ArrayUtils.d_add(ArrayUtils.multiply(dutyCycles, period - 1), newInput), period);
+        return ArrayUtils.divide(ArrayUtils.d_add(ArrayUtils.multiply(dutyCycles, period - 1), newInput), period);
     }
-    
+
     /**
      * The range of connectedSynapses per column, averaged for each dimension.
      * This value is used to calculate the inhibition radius. This variation of
@@ -355,7 +355,7 @@ public class SpatialPooler {
         int[] dimensions = c.getInputDimensions();
         int[] connected = c.getColumn(columnIndex).getProximalDendrite().getConnectedSynapsesSparse(c);
         if(connected == null || connected.length == 0) return 0;
-        
+
         int[] maxCoord = new int[c.getInputDimensions().length];
         int[] minCoord = new int[c.getInputDimensions().length];
         Arrays.fill(maxCoord, -1);
@@ -367,7 +367,7 @@ public class SpatialPooler {
         }
         return ArrayUtils.average(ArrayUtils.add(ArrayUtils.subtract(maxCoord, minCoord), 1));
     }
-    
+
     /**
      * Update the inhibition radius. The inhibition radius is a measure of the
      * square (or hypersquare) of columns that each a column is "connected to"
@@ -385,7 +385,7 @@ public class SpatialPooler {
             c.setInhibitionRadius(ArrayUtils.max(c.getColumnDimensions()));
             return;
         }
-        
+
         TDoubleArrayList avgCollected = new TDoubleArrayList();
         int len = c.getNumColumns();
         for(int i = 0;i < len;i++) {
@@ -397,7 +397,7 @@ public class SpatialPooler {
         radius = Math.max(1, radius);
         c.setInhibitionRadius((int)Math.round(radius));
     }
-    
+
     /**
      * The average number of columns per input, taking into account the topology
      * of the inputs and columns. This value is used to calculate the inhibition
@@ -412,10 +412,10 @@ public class SpatialPooler {
         int[] colDim = Arrays.copyOf(c.getColumnDimensions(), c.getColumnDimensions().length);
         int[] inputDim = Arrays.copyOf(c.getInputDimensions(), c.getInputDimensions().length);
         double[] columnsPerInput = ArrayUtils.divide(
-            ArrayUtils.toDoubleArray(colDim), ArrayUtils.toDoubleArray(inputDim), 0, 0);
+                ArrayUtils.toDoubleArray(colDim), ArrayUtils.toDoubleArray(inputDim), 0, 0);
         return ArrayUtils.average(columnsPerInput);
     }
-    
+
     /**
      * The primary method in charge of learning. Adapts the permanence values of
      * the synapses based on the input vector, and the chosen columns after
@@ -431,21 +431,21 @@ public class SpatialPooler {
      *              			survived inhibition.
      */
     public void adaptSynapses(Connections c, int[] inputVector, int[] activeColumns) {
-    	int[] inputIndices = ArrayUtils.where(inputVector, ArrayUtils.INT_GREATER_THAN_0);
-    	
-    	double[] permChanges = new double[c.getNumInputs()];
-    	Arrays.fill(permChanges, -1 * c.getSynPermInactiveDec());
-    	ArrayUtils.setIndexesTo(permChanges, inputIndices, c.getSynPermActiveInc());
-    	for(int i = 0;i < activeColumns.length;i++) {
-    		Pool pool = c.getPotentialPools().get(activeColumns[i]);
-    		double[] perm = pool.getDensePermanences(c);
-    		int[] indexes = pool.getSparseConnections();
-    		ArrayUtils.raiseValuesBy(permChanges, perm);
-    		Column col = c.getColumn(activeColumns[i]);
-    		updatePermanencesForColumn(c, perm, col, indexes, true);
-    	}
+        int[] inputIndices = ArrayUtils.where(inputVector, ArrayUtils.INT_GREATER_THAN_0);
+
+        double[] permChanges = new double[c.getNumInputs()];
+        Arrays.fill(permChanges, -1 * c.getSynPermInactiveDec());
+        ArrayUtils.setIndexesTo(permChanges, inputIndices, c.getSynPermActiveInc());
+        for(int i = 0;i < activeColumns.length;i++) {
+            Pool pool = c.getPotentialPools().get(activeColumns[i]);
+            double[] perm = pool.getDensePermanences(c);
+            int[] indexes = pool.getSparseConnections();
+            ArrayUtils.raiseValuesBy(permChanges, perm);
+            Column col = c.getColumn(activeColumns[i]);
+            updatePermanencesForColumn(c, perm, col, indexes, true);
+        }
     }
-    
+
     /**
      * This method increases the permanence values of synapses of columns whose
      * activity level has been too low. Such columns are identified by having an
@@ -455,22 +455,22 @@ public class SpatialPooler {
      * @param c
      */
     public void bumpUpWeakColumns(final Connections c) {
-    	int[] weakColumns = ArrayUtils.where(c.getMemory().get1DIndexes(), new Condition.Adapter<Integer>() {
-    		@Override public boolean eval(int i) {
-    			return c.getOverlapDutyCycles()[i] < c.getMinOverlapDutyCycles()[i];
-    		}
-    	});
-    	
-    	for(int i = 0;i < weakColumns.length;i++) {
-    		Pool pool = c.getPotentialPools().get(weakColumns[i]);
-    		double[] perm = pool.getSparsePermanences();
-    		ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
-    		int[] indexes = pool.getSparseConnections();
-    		Column col = c.getColumn(weakColumns[i]);
-    		updatePermanencesForColumnSparse(c, perm, col, indexes, true);
-    	}
+        int[] weakColumns = ArrayUtils.where(c.getMemory().get1DIndexes(), new Condition.Adapter<Integer>() {
+            @Override public boolean eval(int i) {
+                return c.getOverlapDutyCycles()[i] < c.getMinOverlapDutyCycles()[i];
+            }
+        });
+
+        for(int i = 0;i < weakColumns.length;i++) {
+            Pool pool = c.getPotentialPools().get(weakColumns[i]);
+            double[] perm = pool.getSparsePermanences();
+            ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
+            int[] indexes = pool.getSparseConnections();
+            Column col = c.getColumn(weakColumns[i]);
+            updatePermanencesForColumnSparse(c, perm, col, indexes, true);
+        }
     }
-    
+
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
@@ -494,7 +494,7 @@ public class SpatialPooler {
             ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm, maskPotential);
         }
     }
-    
+
     /**
      * This method ensures that each column has enough connections to input bits
      * to allow it to become active. Since a column must have at least
@@ -517,7 +517,7 @@ public class SpatialPooler {
             ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
         }
     }
-    
+
     /**
      * This method updates the permanence matrix with a column's new permanence
      * values. The column is identified by its index, which reflects the row in
@@ -541,15 +541,15 @@ public class SpatialPooler {
      * @param raisePerm         a boolean value indicating whether the permanence values
      */
     public void updatePermanencesForColumn(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
-    	if(raisePerm) {
+        if(raisePerm) {
             raisePermanenceToThreshold(c, perm, maskPotential);
         }
-        
+
         ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         column.setProximalPermanences(c, perm);
     }
-    
+
     /**
      * This method updates the permanence matrix with a column's new permanence
      * values. The column is identified by its index, which reflects the row in
@@ -568,15 +568,15 @@ public class SpatialPooler {
      * @param raisePerm         a boolean value indicating whether the permanence values
      */
     public void updatePermanencesForColumnSparse(Connections c, double[] perm, Column column, int[] maskPotential, boolean raisePerm) {
-    	if(raisePerm) {
+        if(raisePerm) {
             raisePermanenceToThresholdSparse(c, perm);
         }
-        
+
         ArrayUtils.lessThanOrEqualXThanSetToY(perm, c.getSynPermTrimThreshold(), 0);
         ArrayUtils.clip(perm, c.getSynPermMin(), c.getSynPermMax());
         column.setProximalPermanencesSparse(c, perm, maskPotential);
     }
-    
+
     /**
      * Returns a randomly generated permanence value for a synapse that is
      * initialized in a connected state. The basic idea here is to initialize
@@ -590,7 +590,7 @@ public class SpatialPooler {
      */
     public static double initPermConnected(Connections c) {
         double p = c.getSynPermConnected() + c.getRandom().nextDouble() * c.getSynPermActiveInc() / 4.0;
-        
+
         // Note from Python implementation on conditioning below:
         // Ensure we don't have too much unnecessary precision. A full 64 bits of
         // precision causes numerical stability issues across platforms and across
@@ -598,7 +598,7 @@ public class SpatialPooler {
         p = ((int)(p * 100000)) / 100000.0d;
         return p;
     }
-    
+
     /**
      * Returns a randomly generated permanence value for a synapses that is to be
      * initialized in a non-connected state.
@@ -607,7 +607,7 @@ public class SpatialPooler {
      */
     public static double initPermNonConnected(Connections c) {
         double p = c.getSynPermConnected() * c.getRandom().nextDouble();
-        
+
         // Note from Python implementation on conditioning below:
         // Ensure we don't have too much unnecessary precision. A full 64 bits of
         // precision causes numerical stability issues across platforms and across
@@ -633,28 +633,28 @@ public class SpatialPooler {
      * @return
      */
     public double[] initPermanence(Connections c, int[] potentialPool, int index, double connectedPct) {
-    	int count = (int)Math.round((double)potentialPool.length * connectedPct);
+        int count = (int)Math.round((double)potentialPool.length * connectedPct);
         TIntHashSet pick = new TIntHashSet();
         Random random = c.getRandom();
         while(pick.size() < count) {
-        	int randIdx = random.nextInt(potentialPool.length);
-        	pick.add(potentialPool[randIdx]);
+            int randIdx = random.nextInt(potentialPool.length);
+            pick.add(potentialPool[randIdx]);
         }
-        
+
         double[] perm = new double[c.getNumInputs()];
         for(int idx : potentialPool) {
-        	if(pick.contains(idx)) {
+            if(pick.contains(idx)) {
                 perm[idx] = initPermConnected(c);
             }else{
                 perm[idx] = initPermNonConnected(c);
             }
-        	
-        	perm[idx] = perm[idx] < c.getSynPermTrimThreshold() ? 0 : perm[idx];
+
+            perm[idx] = perm[idx] < c.getSynPermTrimThreshold() ? 0 : perm[idx];
         }
         c.getColumn(index).setProximalPermanences(c, perm);
         return perm;
     }
-    
+
     /**
      * Maps a column to its respective input index, keeping to the topology of
      * the region. It takes the index of the column as an argument and determines
@@ -678,17 +678,17 @@ public class SpatialPooler {
         int[] columnCoords = c.getMemory().computeCoordinates(columnIndex);
         double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
         double[] ratios = ArrayUtils.divide(
-            colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
+                colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
         double[] inputCoords = ArrayUtils.multiply(
-            ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
+                ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
         inputCoords = ArrayUtils.d_add(inputCoords, 
-        	ArrayUtils.multiply(ArrayUtils.divide(
-        		ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
-        			0.5));
+                ArrayUtils.multiply(ArrayUtils.divide(
+                        ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
+                        0.5));
         int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
         return c.getInputMatrix().computeIndex(inputCoordInts);
     }
-    
+
     /**
      * Maps a column to its input bits. This method encapsulates the topology of
      * the region. It takes the index of the column as an argument and determines
@@ -718,12 +718,12 @@ public class SpatialPooler {
      */
     public int[] mapPotential(Connections c, int columnIndex, boolean wrapAround) {
         int inputIndex = mapColumn(c, columnIndex);
-        
+
         TIntArrayList indices = getNeighborsND(c, inputIndex, c.getInputMatrix(), c.getPotentialRadius(), wrapAround);
         indices.add(inputIndex);
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
-        
+
         return ArrayUtils.sample((int)Math.round(indices.size() * c.getPotentialPct()), indices, c.getRandom());
     }
 
@@ -758,11 +758,11 @@ public class SpatialPooler {
         final int[] dimensions = topology.getDimensions();
         int[] columnCoords = topology.computeCoordinates(columnIndex);
         List<int[]> dimensionCoords = new ArrayList<>();
-        
+
         for(int i = 0;i < dimensions.length;i++) {
             int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
             int[] curRange = new int[range.length];
-            
+
             if(wrapAround) {
                 for(int j = 0;j < curRange.length;j++) {
                     curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], dimensions[i]);
@@ -770,27 +770,27 @@ public class SpatialPooler {
             }else{
                 final int idx = i;
                 curRange = ArrayUtils.retainLogicalAnd(range, 
-                    new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
-                        new Condition.Adapter<Integer>() {
+                        new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
+                                new Condition.Adapter<Integer>() {
                             @Override public boolean eval(int n) { return n < dimensions[idx]; }
                         }
-                    }
-                );
+                }
+                        );
             }
             dimensionCoords.add(ArrayUtils.unique(curRange));
         }
-        
+
         List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
         TIntArrayList neighbors = new TIntArrayList(neighborList.size());
         int size = neighborList.size();
         for(int i = 0;i < size;i++) {
-        	int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i), false);
+            int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i), false);
             if(flatIndex == columnIndex) continue;
             neighbors.add(flatIndex);
         }
         return neighbors;
     }
-    
+
     /**
      * Returns true if enough rounds have passed to warrant updates of
      * duty cycles
@@ -799,9 +799,9 @@ public class SpatialPooler {
      * @return
      */
     public boolean isUpdateRound(Connections c) {
-    	return c.getIterationNum() % c.getUpdatePeriod() == 0;
+        return c.getIterationNum() % c.getUpdatePeriod() == 0;
     }
-    
+
     /**
      * Updates counter instance variables each cycle.
      *  
@@ -816,7 +816,7 @@ public class SpatialPooler {
         c.iterationNum += 1;
         if(learn) c.iterationLearnNum += 1;
     }
-    
+
     /**
      * This function determines each column's overlap with the current input
      * vector. The overlap of a column is the number of synapses for that column
@@ -836,7 +836,7 @@ public class SpatialPooler {
         ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
         return overlaps;
     }
-    
+
     /**
      * Return the overlap to connected counts ratio for a given column
      * @param c
@@ -844,9 +844,9 @@ public class SpatialPooler {
      * @return
      */
     public double[] calculateOverlapPct(Connections c, int[] overlaps) {
-    	return ArrayUtils.divide(overlaps, c.getConnectedCounts().getTrueCounts());
+        return ArrayUtils.divide(overlaps, c.getConnectedCounts().getTrueCounts());
     }
-    
+
     /**
      * Performs inhibition. This method calculates the necessary values needed to
      * actually perform inhibition and then delegates the task of picking the
@@ -860,27 +860,27 @@ public class SpatialPooler {
      * @return
      */
     public int[] inhibitColumns(Connections c, double[] overlaps) {
-    	overlaps = Arrays.copyOf(overlaps, overlaps.length);
-    	
-    	double density;
-    	double inhibitionArea;
-    	if((density = c.getLocalAreaDensity()) <= 0) {
-    		inhibitionArea = Math.pow(2 * c.getInhibitionRadius() + 1, c.getColumnDimensions().length);
-    		inhibitionArea = Math.min(c.getNumColumns(), inhibitionArea);
-    		density = c.getNumActiveColumnsPerInhArea() / inhibitionArea;
-    		density = Math.min(density, 0.5);
-    	}
-    	
-    	//Add our fixed little bit of random noise to the scores to help break ties.
-    	ArrayUtils.d_add(overlaps, c.getTieBreaker());
-    	
-    	if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
-    		return inhibitColumnsGlobal(c, overlaps, density);
-    	}
-    	
-    	return inhibitColumnsLocal(c, overlaps, density);
+        overlaps = Arrays.copyOf(overlaps, overlaps.length);
+
+        double density;
+        double inhibitionArea;
+        if((density = c.getLocalAreaDensity()) <= 0) {
+            inhibitionArea = Math.pow(2 * c.getInhibitionRadius() + 1, c.getColumnDimensions().length);
+            inhibitionArea = Math.min(c.getNumColumns(), inhibitionArea);
+            density = c.getNumActiveColumnsPerInhArea() / inhibitionArea;
+            density = Math.min(density, 0.5);
+        }
+
+        //Add our fixed little bit of random noise to the scores to help break ties.
+        ArrayUtils.d_add(overlaps, c.getTieBreaker());
+
+        if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
+            return inhibitColumnsGlobal(c, overlaps, density);
+        }
+
+        return inhibitColumnsLocal(c, overlaps, density);
     }
-    
+
     /**
      * Perform global inhibition. Performing global inhibition entails picking the
      * top 'numActive' columns with the highest overlap score in the entire
@@ -897,13 +897,13 @@ public class SpatialPooler {
      * @return
      */
     public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
-    	int numCols = c.getNumColumns();
-    	int numActive = (int)(density * numCols);
-    	int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
-    	Arrays.sort(winners);
-    	return winners;
+        int numCols = c.getNumColumns();
+        int numActive = (int)(density * numCols);
+        int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
+        Arrays.sort(winners);
+        return winners;
     }
-    
+
     /**
      * Performs inhibition. This method calculates the necessary values needed to
      * actually perform inhibition and then delegates the task of picking the
@@ -917,22 +917,22 @@ public class SpatialPooler {
      * @return
      */
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
-    	int numCols = c.getNumColumns();
-    	int[] activeColumns = new int[numCols];
-    	double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
-    	for(int i = 0;i < numCols;i++) {
-    		TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
-    		double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
-    		int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
-    		int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
-    		if(numBigger < numActive) {
-    			activeColumns[i] = 1;
-    			overlaps[i] += addToWinners;
-    		}
-    	}
-    	return ArrayUtils.where(activeColumns, ArrayUtils.INT_GREATER_THAN_0);
+        int numCols = c.getNumColumns();
+        int[] activeColumns = new int[numCols];
+        double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
+        for(int i = 0;i < numCols;i++) {
+            TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
+            double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
+            int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
+            int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
+            if(numBigger < numActive) {
+                activeColumns[i] = 1;
+                overlaps[i] += addToWinners;
+            }
+        }
+        return ArrayUtils.where(activeColumns, ArrayUtils.INT_GREATER_THAN_0);
     }
-    
+
     /**
      * Update the boost factors for all columns. The boost factors are used to
      * increase the overlap of inactive columns to improve their chances of
@@ -945,7 +945,7 @@ public class SpatialPooler {
      * have been active. The more infrequent, the more they are boosted. The exact
      * boost factor is linearly interpolated between the points (dutyCycle:0,
      * boost:maxFiringBoost) and (dutyCycle:minDuty, boost:1.0).
-	 * 
+     * 
      *         boostFactor
      *             ^
      * maxBoost _  |
@@ -958,28 +958,28 @@ public class SpatialPooler {
      *         minActiveDutyCycle
      */
     public void updateBoostFactors(Connections c) {
-    	double[] activeDutyCycles = c.getActiveDutyCycles();
-    	double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
-    	
-    	//Indexes of values > 0
-    	int[] mask = ArrayUtils.where(minActiveDutyCycles, ArrayUtils.GREATER_THAN_0);
- 
-    	double[] boostInterim;
-    	if(mask.length < 1) {
-    		boostInterim = c.getBoostFactors();
-    	}else{
-	    	double[] numerator = new double[c.getNumColumns()];
-	    	Arrays.fill(numerator, 1 - c.getMaxBoost());
-	    	boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
-	    	boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
-	    	boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
-	    }
-    	
-    	ArrayUtils.setIndexesTo(boostInterim, ArrayUtils.where(activeDutyCycles, new Condition.Adapter<Object>() {
-    		int i = 0;
-    		@Override public boolean eval(double d) { return d > minActiveDutyCycles[i++]; }
-    	}), 1.0d);
-    	
-    	c.setBoostFactors(boostInterim);
+        double[] activeDutyCycles = c.getActiveDutyCycles();
+        double[] minActiveDutyCycles = c.getMinActiveDutyCycles();
+
+        //Indexes of values > 0
+        int[] mask = ArrayUtils.where(minActiveDutyCycles, ArrayUtils.GREATER_THAN_0);
+
+        double[] boostInterim;
+        if(mask.length < 1) {
+            boostInterim = c.getBoostFactors();
+        }else{
+            double[] numerator = new double[c.getNumColumns()];
+            Arrays.fill(numerator, 1 - c.getMaxBoost());
+            boostInterim = ArrayUtils.divide(numerator, minActiveDutyCycles, 0, 0);
+            boostInterim = ArrayUtils.multiply(boostInterim, activeDutyCycles, 0, 0);
+            boostInterim = ArrayUtils.d_add(boostInterim, c.getMaxBoost());
+        }
+
+        ArrayUtils.setIndexesTo(boostInterim, ArrayUtils.where(activeDutyCycles, new Condition.Adapter<Object>() {
+            int i = 0;
+            @Override public boolean eval(double d) { return d > minActiveDutyCycles[i++]; }
+        }), 1.0d);
+
+        c.setBoostFactors(boostInterim);
     }
 }

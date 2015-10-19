@@ -31,36 +31,36 @@ import java.util.Arrays;
  * @author Jose Luis Martin
  */
 public class FlatArrayMatrix<T> extends FlatMatrixSupport<T> {
-	
-	private T[] data;
-	
-	public FlatArrayMatrix(int[] dimensions) {
-		this(dimensions, false);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public FlatArrayMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-		this.data = (T[]) new Object[getSize()];
-	}
 
-	@Override
-	public T get(int index) {
-		return this.data[index];
-	}
+    private T[] data;
 
-	@Override
-	public FlatArrayMatrix<T> set(int index, T value) {
-		this.data[index] = value;
-		return this;
-	}
-	
-	/**
-	 * Fill array with value
-	 * @param value
-	 */
-	public void fill(T value) {
-		Arrays.fill(this.data, value);
-	}
-	
+    public FlatArrayMatrix(int[] dimensions) {
+        this(dimensions, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public FlatArrayMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+        super(dimensions, useColumnMajorOrdering);
+        this.data = (T[]) new Object[getSize()];
+    }
+
+    @Override
+    public T get(int index) {
+        return this.data[index];
+    }
+
+    @Override
+    public FlatArrayMatrix<T> set(int index, T value) {
+        this.data[index] = value;
+        return this;
+    }
+
+    /**
+     * Fill array with value
+     * @param value
+     */
+    public void fill(T value) {
+        Arrays.fill(this.data, value);
+    }
+
 }

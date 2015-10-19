@@ -31,28 +31,28 @@ import java.util.BitSet;
  */
 public class BitSetMatrix extends FlatMatrixSupport<Boolean> {
 
-	private BitSet data;
-	
-	/**
-	 * @param dimensions
-	 */
-	public BitSetMatrix(int[] dimensions) {
-		this(dimensions, false);
-	}
+    private BitSet data;
 
-	public BitSetMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-		this.data = new BitSet(getSize());
-	}
-	
-	@Override
-	public Boolean get(int index) {
-		return this.data.get(index);
-	}
+    /**
+     * @param dimensions
+     */
+    public BitSetMatrix(int[] dimensions) {
+        this(dimensions, false);
+    }
 
-	@Override
-	public BitSetMatrix set(int index, Boolean value) {
-		this.data.set(index, value);
-		return this;
-	}
+    public BitSetMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+        super(dimensions, useColumnMajorOrdering);
+        this.data = new BitSet(getSize());
+    }
+
+    @Override
+    public Boolean get(int index) {
+        return this.data.get(index);
+    }
+
+    @Override
+    public BitSetMatrix set(int index, Boolean value) {
+        this.data.set(index, value);
+        return this;
+    }
 }

@@ -31,29 +31,29 @@ package org.numenta.nupic.util;
  */
 public interface Matrix<T> {
 
-	/**
-	 * Returns the array describing the dimensionality of the configured array.
-	 * @return  the array describing the dimensionality of the configured array.
-	 */
-	int[] getDimensions();
+    /**
+     * Returns the array describing the dimensionality of the configured array.
+     * @return  the array describing the dimensionality of the configured array.
+     */
+    int[] getDimensions();
 
-	/**
-	 * Returns the configured number of dimensions.
-	 * @return  the configured number of dimensions.
-	 */
-	int getNumDimensions();
+    /**
+     * Returns the configured number of dimensions.
+     * @return  the configured number of dimensions.
+     */
+    int getNumDimensions();
 
-	/**
-	 * Gets element at supplied index.
-	 * @param index index to retrieve.
-	 * @return element at index.
-	 */
-	T get(int... index);
-	
-	/**
-	 * Puts an element to supplied index.
-	 * @param index index to put on.
-	 * @param value value element.
-	 */
-	Matrix<T> set(int[] index, T value);
+    /**
+     * Gets element at supplied index.
+     * @param index index to retrieve.
+     * @return element at index.
+     */
+    T get(int... index);
+
+    /**
+     * Puts an element to supplied index.
+     * @param index index to put on.
+     * @param value value element.
+     */
+    Matrix<T> set(int[] index, T value);
 }

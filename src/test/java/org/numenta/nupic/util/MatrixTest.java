@@ -35,46 +35,46 @@ import org.junit.Test;
  * @author Jose Luis Martin
  */
 public class MatrixTest {
-	
-	private int[] dimensions =  { 5, 2 };
-	private int[] indexes = { 0, 4, 6, 7, 8 };
-	
-	@Test
-	public void testBitSetMatrixSet() {
-		Boolean[] expected = {true, false, false, false, true, false, true, true, true, false }; 
-		BitSetMatrix bsm = new BitSetMatrix(this.dimensions);
-		
-		for (int index : this.indexes) {
-			bsm.set(index, true);
-		}
-		
-		assertArrayEquals(expected, asDense(bsm));
-		assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(bsm)));
-	}
-	
-	@Test
-	public void testFlatArrayMatrixSet() {
-		Integer[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
-		FlatArrayMatrix<Integer> fam = new FlatArrayMatrix<Integer>(this.dimensions);
-		fam.fill(0);
-		
-		for (int index : this.indexes) {
-			fam.set(index, 1);
-		}
-	
-		assertArrayEquals(expected, asDense(fam));
-		assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(fam)));
-	}
-	
-	private Object[] asDense(FlatMatrix<?> matrix) {
-		Object[] dense = new Object[matrix.getMaxIndex() + 1];
-		
-		for (int i = 0; i < matrix.getMaxIndex() + 1; i++) {
-			dense[i] = matrix.get(i);
-		}
-		
-		
-		
-		return dense;
-	}
+
+    private int[] dimensions =  { 5, 2 };
+    private int[] indexes = { 0, 4, 6, 7, 8 };
+
+    @Test
+    public void testBitSetMatrixSet() {
+        Boolean[] expected = {true, false, false, false, true, false, true, true, true, false }; 
+        BitSetMatrix bsm = new BitSetMatrix(this.dimensions);
+
+        for (int index : this.indexes) {
+            bsm.set(index, true);
+        }
+
+        assertArrayEquals(expected, asDense(bsm));
+        assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(bsm)));
+    }
+
+    @Test
+    public void testFlatArrayMatrixSet() {
+        Integer[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
+        FlatArrayMatrix<Integer> fam = new FlatArrayMatrix<Integer>(this.dimensions);
+        fam.fill(0);
+
+        for (int index : this.indexes) {
+            fam.set(index, 1);
+        }
+
+        assertArrayEquals(expected, asDense(fam));
+        assertEquals(Arrays.toString(expected), FlatArrayMatrix.print1DArray(asDense(fam)));
+    }
+
+    private Object[] asDense(FlatMatrix<?> matrix) {
+        Object[] dense = new Object[matrix.getMaxIndex() + 1];
+
+        for (int i = 0; i < matrix.getMaxIndex() + 1; i++) {
+            dense[i] = matrix.get(i);
+        }
+
+
+
+        return dense;
+    }
 }

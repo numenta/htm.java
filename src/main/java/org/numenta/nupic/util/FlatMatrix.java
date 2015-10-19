@@ -29,27 +29,27 @@ package org.numenta.nupic.util;
  */
 public interface FlatMatrix<T> extends Matrix<T> {
 
-	T get(int index);
-	
-	FlatMatrix<T> set(int index, T value);
-	
-	int computeIndex(int[] coordinates);
-	
-	/**
-	 * Returns the maximum accessible flat index.
-	 * @return  the maximum accessible flat index.
-	 */
-	int getMaxIndex();
-	
-	public int computeIndex(int[] coordinates, boolean doCheck);
-	
-	/**
-	 * Returns an integer array representing the coordinates of the specified index
-	 * in terms of the configuration of this {@code SparseMatrix}.
-	 * @param index the flat index to be returned as coordinates
-	 * @return  coordinates
-	 */
-	int[] computeCoordinates(int index);
-	
-	int[] getDimensionMultiples();
+    T get(int index);
+
+    FlatMatrix<T> set(int index, T value);
+
+    int computeIndex(int[] coordinates);
+
+    /**
+     * Returns the maximum accessible flat index.
+     * @return  the maximum accessible flat index.
+     */
+    int getMaxIndex();
+
+    public int computeIndex(int[] coordinates, boolean doCheck);
+
+    /**
+     * Returns an integer array representing the coordinates of the specified index
+     * in terms of the configuration of this {@code SparseMatrix}.
+     * @param index the flat index to be returned as coordinates
+     * @return  coordinates
+     */
+    int[] computeCoordinates(int index);
+
+    int[] getDimensionMultiples();
 }

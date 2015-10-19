@@ -32,27 +32,27 @@ import org.junit.Assert;
  * @author Jose Luis Martin
  */
 public class LowMemorySparseBinaryMatrixTest {
-	
-	@Test
-	public void testTrueCount() {
-		int[] expected = {4, 3, 2, 1, 0};
-		int dense[][] = {
-				{0, 1, 1, 1, 1},
-				{0, 0, 1, 1, 1},
-				{0, 0, 0, 1, 1},
-				{0, 0, 0, 0, 1},
-				{0, 0, 0, 0, 0}
-		};
-		
-		LowMemorySparseBinaryMatrix sp = new LowMemorySparseBinaryMatrix(new int[] {5, 5});
-		
-		for (int i = 0; i < 5; i++) {
-			for (int j = 0; j < 5; j++) {
-				sp.set(dense[i][j], i, j);
-			}
-		}
-		
-		Assert.assertArrayEquals(expected, sp.getTrueCounts());
-	}
+
+    @Test
+    public void testTrueCount() {
+        int[] expected = {4, 3, 2, 1, 0};
+        int dense[][] = {
+                {0, 1, 1, 1, 1},
+                {0, 0, 1, 1, 1},
+                {0, 0, 0, 1, 1},
+                {0, 0, 0, 0, 1},
+                {0, 0, 0, 0, 0}
+        };
+
+        LowMemorySparseBinaryMatrix sp = new LowMemorySparseBinaryMatrix(new int[] {5, 5});
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                sp.set(dense[i][j], i, j);
+            }
+        }
+
+        Assert.assertArrayEquals(expected, sp.getTrueCounts());
+    }
 
 }

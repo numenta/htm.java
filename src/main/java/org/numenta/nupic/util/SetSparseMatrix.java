@@ -10,39 +10,39 @@ import java.util.TreeSet;
  * @author Jose Luis Martin
  */
 public class SetSparseMatrix extends SparseMatrixSupport<Integer> {
-	
-	private SortedSet<Integer> indexes = new TreeSet<>();
 
-	public SetSparseMatrix(int[] dimensions) {
-		this(dimensions, false);
-	}
-	
-	public SetSparseMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
-		super(dimensions, useColumnMajorOrdering);
-	}
+    private SortedSet<Integer> indexes = new TreeSet<>();
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected int[] values() {
-		return this.indexes.stream().mapToInt(i -> i).toArray();
-	}
+    public SetSparseMatrix(int[] dimensions) {
+        this(dimensions, false);
+    }
 
-	@Override
-	public SetSparseMatrix set(int[] coordinates, Integer value) {
-		return set(computeIndex(coordinates), value);
-			
-	}
-	
-	@Override
-	public Integer get(int index) {
-		return this.indexes.contains(index) ? 0 : 1;
-	}
+    public SetSparseMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
+        super(dimensions, useColumnMajorOrdering);
+    }
 
-	@Override
-	public SetSparseMatrix set(int index, Integer value) {
-		if (value > 0) 
-			this.indexes.add(index);
-		
-		return this;
-	}	
+    @Override
+    @SuppressWarnings("unchecked")
+    protected int[] values() {
+        return this.indexes.stream().mapToInt(i -> i).toArray();
+    }
+
+    @Override
+    public SetSparseMatrix set(int[] coordinates, Integer value) {
+        return set(computeIndex(coordinates), value);
+
+    }
+
+    @Override
+    public Integer get(int index) {
+        return this.indexes.contains(index) ? 0 : 1;
+    }
+
+    @Override
+    public SetSparseMatrix set(int index, Integer value) {
+        if (value > 0) 
+            this.indexes.add(index);
+
+        return this;
+    }	
 }

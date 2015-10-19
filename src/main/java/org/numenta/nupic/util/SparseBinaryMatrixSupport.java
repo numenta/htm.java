@@ -34,17 +34,17 @@ import gnu.trove.map.hash.TIntIntHashMap;
 public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     private TIntIntMap sparseMap = new TIntIntHashMap();
     private int[] trueCounts;
- 
-    
+
+
     public SparseBinaryMatrixSupport(int[] dimensions) {
         this(dimensions, false);
     }
-    
+
     public SparseBinaryMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
         this.trueCounts = new int[dimensions[0]];
     }
-    
+
     /**
      * Returns the slice specified by the passed in coordinates.
      * The array is returned as an object, therefore it is the caller's
@@ -55,19 +55,19 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @throws	IllegalArgumentException if the specified coordinates address
      * 			an actual value instead of the array holding it.
      */
-     public abstract Object getSlice(int... coordinates);
-     
-     /**
- 	 * Launch getSlice error, to share it with subclass {@link #getSlice(int...)}
- 	 * implementations.
- 	 * @param coordinates
- 	 */
- 	protected void sliceError(int... coordinates) {
- 		throw new IllegalArgumentException(
- 			"This method only returns the array holding the specified index: " + 
- 				Arrays.toString(coordinates));
- 	}
-     
+    public abstract Object getSlice(int... coordinates);
+
+    /**
+     * Launch getSlice error, to share it with subclass {@link #getSlice(int...)}
+     * implementations.
+     * @param coordinates
+     */
+    protected void sliceError(int... coordinates) {
+        throw new IllegalArgumentException(
+                "This method only returns the array holding the specified index: " + 
+                        Arrays.toString(coordinates));
+    }
+
     /**
      * Fills the specified results array with the result of the 
      * matrix vector multiplication.
@@ -76,7 +76,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param results			the results array
      */
     public abstract void rightVecSumAtNZ(int[] inputVector, int[] results);
-    
+
     /**
      * Sets the value at the specified index.
      * 
@@ -85,10 +85,10 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     @Override
     public SparseBinaryMatrixSupport set(int index, int value) {
-    	int[] coordinates = computeCoordinates(index);
+        int[] coordinates = computeCoordinates(index);
         return set(value, coordinates);
     }
-    
+
     /**
      * Sets the value to be indexed at the index
      * computed from the specified coordinates.
@@ -100,7 +100,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         this.sparseMap.put(computeIndex(coordinates), value);
         return this;
     }
-    
+
     /**
      * Sets the specified values at the specified indexes.
      * 
@@ -115,16 +115,16 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         }
         return this;
     }
-    
-   
-	public Integer get(int... coordinates) {
-		return get(computeIndex(coordinates));
-	}
 
-	public Integer get(int index) {
-		return this.sparseMap.get(index);
-	}
-	/**
+
+    public Integer get(int... coordinates) {
+        return get(computeIndex(coordinates));
+    }
+
+    public Integer get(int index) {
+        return this.sparseMap.get(index);
+    }
+    /**
      * Sets the value at the specified index skipping the automatic
      * truth statistic tallying of the real method.
      * 
@@ -135,7 +135,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         sparseMap.put(index, value);         
         return this;
     }
-    
+
     /**
      * Call This for TEST METHODS ONLY
      * Sets the specified values at the specified indexes.
@@ -147,12 +147,12 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     public SparseBinaryMatrixSupport set(int[] indexes, int[] values, boolean isTest) { 
         for(int i = 0;i < indexes.length;i++) {
-        	if(isTest) setForTest(indexes[i], values[i]);
-        	else set(indexes[i], values[i]);
+            if(isTest) setForTest(indexes[i], values[i]);
+            else set(indexes[i], values[i]);
         }
         return this;
     }
-    
+
     /**
      * Returns the count of 1's set on the specified row.
      * @param index
@@ -161,7 +161,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public int getTrueCount(int index) {
         return trueCounts[index];
     }
-    
+
     /**
      * Sets the count of 1's on the specified row.
      * @param index
@@ -170,7 +170,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public void setTrueCount(int index, int count) {
         this.trueCounts[index] = count;
     }
-    
+
     /**
      * Get the true counts for all outer indexes.
      * @return
@@ -178,33 +178,33 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public int[] getTrueCounts() {
         return trueCounts;
     }
-    
+
     /**
      * Clears the true counts prior to a cycle where they're
      * being set
      */
     public void clearStatistics(int row) {
-    	trueCounts[row] = 0;
+        trueCounts[row] = 0;
     }
-    
+
     /**
      * Returns an outer array of T values.
      * @return
      */
     @Override
     protected int[] values() {
-    	return sparseMap.values();
+        return sparseMap.values();
     }
-    
+
     /**
      * Returns the int value at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object
      */
     public int getIntValue(int... coordinates) {
-    	return sparseMap.get(computeIndex(coordinates));
+        return sparseMap.get(computeIndex(coordinates));
     }
-    
+
     /**
      * Returns the T at the specified index.
      * 
@@ -215,7 +215,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public int getIntValue(int index) {
         return sparseMap.get(index);
     }
-    
+
     /**
      * Returns a sorted array of occupied indexes.
      * @return  a sorted array of occupied indexes.
@@ -224,7 +224,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public int[] getSparseIndices() {
         return reverse(sparseMap.keys());
     }
-    
+
     /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
      * the inputMatrix with the contents of this matrix; returning this matrix
@@ -239,7 +239,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         Arrays.fill(ones, 1);
         return set(mask, ones);
     }
-    
+
     /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
      * the sparse list with the contents of this matrix; returning this matrix
@@ -253,7 +253,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         Arrays.fill(ones, 1);
         return set(onBitIndexes.toArray(), ones);
     }
-    
+
     /**
      * This {@code SparseBinaryMatrix} will contain the operation of or-ing
      * the sparse array with the contents of this matrix; returning this matrix
@@ -267,7 +267,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         Arrays.fill(ones, 1);
         return set(onBitIndexes, ones);
     }
-    
+
     /**
      * Returns true if the on bits of the specified matrix are
      * matched by the on bits of this matrix. It is allowed that 
@@ -279,7 +279,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public boolean all(SparseBinaryMatrixSupport matrix) {
         return sparseMap.keySet().containsAll(matrix.sparseMap.keys());
     }
-    
+
     /**
      * Returns true if the on bits of the specified list are
      * matched by the on bits of this matrix. It is allowed that 
@@ -291,7 +291,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public boolean all(TIntCollection onBits) {
         return sparseMap.keySet().containsAll(onBits);
     }
-    
+
     /**
      * Returns true if the on bits of the specified array are
      * matched by the on bits of this matrix. It is allowed that 
@@ -303,7 +303,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     public boolean all(int[] onBits) {
         return sparseMap.keySet().containsAll(onBits);
     }
-    
+
     /**
      * Returns true if any of the on bits of the specified matrix are
      * matched by the on bits of this matrix. It is allowed that 
@@ -318,7 +318,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         }
         return false;
     }
-    
+
     /**
      * Returns true if any of the on bit indexes of the specified collection are
      * matched by the on bits of this matrix. It is allowed that 
@@ -333,7 +333,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
         }
         return false;
     }
-    
+
     /**
      * Returns true if any of the on bit indexes of the specified matrix are
      * matched by the on bits of this matrix. It is allowed that 

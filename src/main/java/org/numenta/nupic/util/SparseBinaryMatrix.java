@@ -27,16 +27,16 @@ import java.util.Arrays;
 
 public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
     private Object backingArray;
-    
+
     public SparseBinaryMatrix(int[] dimensions) {
         this(dimensions, false);
     }
-    
+
     public SparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
         this.backingArray = Array.newInstance(int.class, dimensions);
     }
-    
+
     /**
      * Called during mutation operations to simultaneously set the value
      * on the backing array dynamically.
@@ -44,11 +44,11 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * @param coordinates
      */
     private void back(int val, int... coordinates) {
-		ArrayUtils.setValue(this.backingArray, val, coordinates);
+        ArrayUtils.setValue(this.backingArray, val, coordinates);
         //update true counts
-		setTrueCount(coordinates[0], ArrayUtils.aggregateArray(((Object[])this.backingArray)[coordinates[0]]));
-	}
-    
+        setTrueCount(coordinates[0], ArrayUtils.aggregateArray(((Object[])this.backingArray)[coordinates[0]]));
+    }
+
     /**
      * Returns the slice specified by the passed in coordinates.
      * The array is returned as an object, therefore it is the caller's
@@ -59,19 +59,19 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * @throws	IllegalArgumentException if the specified coordinates address
      * 			an actual value instead of the array holding it.
      */
-     @Override
-     public Object getSlice(int... coordinates) {
-		Object slice = backingArray;
-		for(int i = 0;i < coordinates.length;i++) {
-			slice = Array.get(slice, coordinates[i]);
-		}
-		//Ensure return value is of type Array
-		if(!slice.getClass().isArray()) {
-			sliceError(coordinates);
-		}
-		
-		return slice;
-	}
+    @Override
+    public Object getSlice(int... coordinates) {
+        Object slice = backingArray;
+        for(int i = 0;i < coordinates.length;i++) {
+            slice = Array.get(slice, coordinates[i]);
+        }
+        //Ensure return value is of type Array
+        if(!slice.getClass().isArray()) {
+            sliceError(coordinates);
+        }
+
+        return slice;
+    }
 
     /**
      * Fills the specified results array with the result of the 
@@ -81,14 +81,14 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * @param results			the results array
      */
     public void rightVecSumAtNZ(int[] inputVector, int[] results) {
-    	for(int i = 0;i < dimensions[0];i++) {
-    		int[] slice = (int[])(dimensions.length > 1 ? getSlice(i) : backingArray);
-    		for(int j = 0;j < slice.length;j++) {
-    			results[i] += (inputVector[j] * slice[j]);
-    		}
-    	}
+        for(int i = 0;i < dimensions[0];i++) {
+            int[] slice = (int[])(dimensions.length > 1 ? getSlice(i) : backingArray);
+            for(int j = 0;j < slice.length;j++) {
+                results[i] += (inputVector[j] * slice[j]);
+            }
+        }
     }
-    
+
     /**
      * Sets the value at the specified index.
      * 
@@ -97,10 +97,10 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      */
     @Override
     public SparseBinaryMatrixSupport set(int index, int value) {
-    	int[] coordinates = computeCoordinates(index);
+        int[] coordinates = computeCoordinates(index);
         return set(value, coordinates);
     }
-    
+
     /**
      * Sets the value to be indexed at the index
      * computed from the specified coordinates.
@@ -109,11 +109,11 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      */
     @Override
     public SparseBinaryMatrixSupport set(int value, int... coordinates) {
-    	super.set(value, coordinates);
+        super.set(value, coordinates);
         back(value, coordinates);
         return this;
     }
-    
+
     /**
      * Sets the specified values at the specified indexes.
      * 
@@ -128,26 +128,26 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
         }
         return this;
     }
-   
+
     /**
      * Clears the true counts prior to a cycle where they're
      * being set
      */
     public void clearStatistics(int row) {
-    	super.clearStatistics(row);
-    	int[] slice = (int[])Array.get(backingArray, row);
-    	Arrays.fill(slice, 0);
+        super.clearStatistics(row);
+        int[] slice = (int[])Array.get(backingArray, row);
+        Arrays.fill(slice, 0);
 
-    
+
     }
 
-	/* (non-Javadoc)
-	 * @see org.numenta.nupic.util.FlatMatrix#set(int, java.lang.Object)
-	 */
-	@Override
-	public SparseBinaryMatrixSupport set(int index, Object value) {
-		set(index, ((Integer) value).intValue());
-		return this;
-	}
-    
+    /* (non-Javadoc)
+     * @see org.numenta.nupic.util.FlatMatrix#set(int, java.lang.Object)
+     */
+    @Override
+    public SparseBinaryMatrixSupport set(int index, Object value) {
+        set(index, ((Integer) value).intValue());
+        return this;
+    }
+
 }
