@@ -401,7 +401,7 @@ public class LayerTest {
             fail();
         }
     }
-
+    
     @Test
     public void testLayerWithObservableInputIntegerArray() {
         Publisher manual = Publisher.builder()
@@ -784,15 +784,15 @@ public class LayerTest {
         int[] expected1 = { 1, 5, 11, 12, 13 };
         int[] expected2 = { 2, 3, 11, 12, 13, 14 };
         int[] expected3 = { 2, 3, 8, 9, 12, 17, 18 };
-        int[] expected4 = { 2, 3, 8, 12, 17, 18 };
-        int[] expected5 = { 2, 7, 8, 9, 17, 18, 19 };
-        int[] expected6 = { 1, 7, 8, 9, 17, 18 };
-        int[] expected7 = { 1, 5, 7, 11, 12, 16 };
+        int[] expected4 = { 2, 3, 7, 8, 9, 12, 17, 18, 19 };
+        int[] expected5 = { 1, 2, 3, 7, 8, 9, 12, 17, 18, 19 };
+        int[] expected6 = { 1, 5, 7, 8, 9, 11, 12, 16, 17, 18, 19 };
+        int[] expected7 = { 1, 5, 7, 8, 9, 11, 12, 16, 17, 18 };
         final int[][] expecteds = { expected1, expected2, expected3, expected4, expected5, expected6, expected7 };
 
         Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, null);
 
-        int timeUntilStable = 400;
+        int timeUntilStable = 600;
 
         l.subscribe(new Observer<Inference>() {
             int test = 0;
@@ -803,7 +803,8 @@ public class LayerTest {
             @Override
             public void onNext(Inference output) {
                 if(seq / 7 >= timeUntilStable) {
-                    //System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()));
+//                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
+//                                    "\t\t\t\t\t exp = " + Arrays.toString(expecteds[test]));
                     assertTrue(Arrays.equals(expecteds[test], output.getSDR()));
                 }
 
