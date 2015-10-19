@@ -14,6 +14,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased
+
+***
+
+## [v0.6.3-alpha] - 2015-10-19
+#### Added
+* [PR #329](https://github.com/numenta/htm.java/pull/329)] - Added low memory implementation of SparseMatrix classes and including tests
 * [[Issue #323 PR #324](https://github.com/numenta/htm.java/pull/324)] - Added / Fixed ability to input Coordinate data into the NAPI sensors.
 * [Issue #319] - Added feedback for Network thread start detection
 * [Issue #319] - (same issue) Added Thread Start detection for computeImmediate() synchronous call failure.
