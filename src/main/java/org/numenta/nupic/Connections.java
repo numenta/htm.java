@@ -963,17 +963,17 @@ public class Connections {
     }
     
     /**
-     * Sets the {@link SparseObjectMatrix} which holds the mapping
+     * Sets the {@link FlatMatrix} which holds the mapping
      * of column indexes to their lists of potential inputs. 
      * 
-     * @param pools		{@link SparseObjectMatrix} which holds the pools.
+     * @param pools		{@link FlatMatrix} which holds the pools.
      */
     public void setPotentialPools(FlatMatrix<Pool> pools) {
     	this.potentialPools = pools;
     }
     
     /**
-     * Returns the {@link SparseObjectMatrix} which holds the mapping
+     * Returns the {@link FlatMatrix} which holds the mapping
      * of column indexes to their lists of potential inputs.
      * @return	the potential pools
      */
