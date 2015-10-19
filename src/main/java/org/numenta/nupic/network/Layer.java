@@ -816,7 +816,11 @@ public class Layer<T> {
         
         this.encoder = encoder == null ? sensor.getEncoder() : encoder;
         
-        completeDispatch((T)new int[] {});
+        try {
+            completeDispatch((T)new int[] {});
+        }catch(Exception e) {
+            notifyError(e);
+        }
         
         (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
             public void run() {
@@ -832,10 +836,19 @@ public class Layer<T> {
                         return false;
                     }
                     
+                    if(Thread.currentThread().isInterrupted()) {
+                        notifyError(new RuntimeException("Unknown Exception while filtering input"));
+                    }
+                    
                     return true;
                 }).forEach(intArray -> {
                     ((ManualInput)Layer.this.factory.inference).encoding(intArray);
+                    
                     Layer.this.compute((T)intArray);
+                    
+                    if(Thread.currentThread().isInterrupted()) {
+                        notifyError(new RuntimeException("Unknown Exception during compute"));
+                    }
                     
                     // Notify all downstream observers that the stream is closed
                     if(!sensor.hasNext()) {
@@ -1194,6 +1207,16 @@ public class Layer<T> {
         publisher.onCompleted();
     }
     
+    void notifyError(Exception e) {
+        for(Observer<Inference> o : subscribers) {
+            o.onError(e);
+        }
+        for(Observer<Inference> o : observers) {
+            o.onError(e);
+        }
+        publisher.onError(e);
+    }
+    
     /**
      * <p>
      * Returns the content mask used to indicate what algorithm
@@ -1305,9 +1328,13 @@ public class Layer<T> {
     private Observable<ManualInput> mapEncoderBuckets(Observable<ManualInput> sequence) {
         if(hasSensor()) {
             if(getSensor().getMetaInfo().getFieldTypes().stream().anyMatch(
-               ft -> { return ft == FieldMetaType.SARR || ft == FieldMetaType.DARR; })) {
+               ft -> { return ft == FieldMetaType.SARR || 
+                       ft == FieldMetaType.DARR || 
+                       ft == FieldMetaType.COORD || 
+                       ft == FieldMetaType.GEO; })) {
                 if(autoCreateClassifiers) {
-                    throw new IllegalStateException("Cannot autoclassify with raw array input... Remove auto classify setting.");
+                    throw new IllegalStateException("Cannot autoclassify with raw array input or " +
+                        " Coordinate based encoders... Remove auto classify setting.");
                 }
                return sequence; 
             }
@@ -1680,7 +1707,7 @@ public class Layer<T> {
                             sdr[i] = Integer.parseInt(t1[i]);
                         }
 
-                        return inference.sdr(sdr).layerInput(sdr);
+                        return inference.recordNum(getRecordNum()).sdr(sdr).layerInput(sdr);
                     }
                 });
             }
@@ -1718,7 +1745,7 @@ public class Layer<T> {
                         
                         doEncoderBucketMapping(inference, t1);
 
-                        return inference.layerInput(t1);
+                        return inference.recordNum(getRecordNum()).layerInput(t1);
                     }
                 });
             }
@@ -1740,7 +1767,7 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(int[] t1) {
                         // Indicates a value that skips the encoding step
-                        return inference.sdr(t1).layerInput(t1);
+                        return inference.recordNum(getRecordNum()).sdr(t1).layerInput(t1);
                     }
                 });
             }
@@ -1767,7 +1794,7 @@ public class Layer<T> {
                             swapped = true;
                         }
                         // Indicates a value that skips the encoding step
-                        return inference.sdr(t1.getSDR()).recordNum(t1.getRecordNum()).layerInput(t1);
+                        return inference.recordNum(getRecordNum()).sdr(t1.getSDR()).recordNum(t1.getRecordNum()).layerInput(t1);
                     }
                 });
             }

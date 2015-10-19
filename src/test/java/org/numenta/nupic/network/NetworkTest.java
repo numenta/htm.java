@@ -46,6 +46,9 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
+import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.ObservableSensor;
+import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
@@ -635,5 +638,130 @@ public class NetworkTest {
             assertEquals("Cannot call computeImmediate() when Network has been started.", e.getMessage());
         }
     }
+    
+    double anomaly = 1;
+    boolean completed = false;
+    @Test
+    public void testObservableWithCoordinateEncoder() {
+        Publisher manual = Publisher.builder()
+            .addHeader("timestamp,consumption,location")
+            .addHeader("datetime,float,geo")
+            .addHeader("T,,").build();
+
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, "", manual));
+                    
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getGeospatialTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(htmSensor)));
+
+        network.start();
+
+        network.observe().subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {
+                assertEquals(0, anomaly, 0);
+                completed = true;
+            }
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference output) {
+                 //System.out.println(output.getRecordNum() + ":  input = " + Arrays.toString(output.getEncoding()));//output = " + Arrays.toString(output.getSDR()) + ", " + output.getAnomalyScore());
+                if(output.getAnomalyScore() < anomaly) {
+                    anomaly = output.getAnomalyScore();
+                    System.out.println("anomaly = " + anomaly);
+                }
+            }
+        });
+        
+        int x = 0;
+        for(int i = 0;i < 100;i++) {
+            x = i % 10;
+            manual.onNext("7/12/10 13:10,35.3,40.6457;-73.7" + x + "692;" + x); //5 = meters per second
+        }
+        
+        manual.onComplete();
+        
+        Layer<?> l = network.lookup("r1").lookup("1");
+        try {
+            l.getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        assertTrue(completed);
+        
+    }
+    
+    String errorMessage = null;
+    @Test
+    public void testObservableWithCoordinateEncoder_NEGATIVE() {
+        Publisher manual = Publisher.builder()
+            .addHeader("timestamp,consumption,location")
+            .addHeader("datetime,float,geo")
+            .addHeader("T,,").build();
+
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, "", manual));
+                    
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getGeospatialTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
+
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(htmSensor)));
+
+        network.observe().subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {
+                //Should never happen here.
+                assertEquals(0, anomaly, 0);
+                completed = true;
+            }
+            @Override public void onError(Throwable e) { 
+                errorMessage = e.getMessage();
+                network.halt();
+            }
+            @Override public void onNext(Inference output) {}
+        });
+        
+        network.start();
+        
+        int x = 0;
+        for(int i = 0;i < 100;i++) {
+            x = i % 10;
+            manual.onNext("7/12/10 13:10,35.3,40.6457;-73.7" + x + "692;" + x); //1st "x" is attempt to vary coords, 2nd "x" = meters per second
+        }
+        
+        manual.onComplete();
+        
+        Layer<?> l = network.lookup("r1").lookup("1");
+        try {
+            l.getLayerThread().join();
+        }catch(Exception e) {
+            assertEquals(InterruptedException.class, e.getClass());
+        }
+        
+        // Assert onNext condition never gets set
+        assertFalse(completed);
+        assertEquals("Cannot autoclassify with raw array input or  " +
+            "Coordinate based encoders... Remove auto classify setting.", errorMessage);
+    }
+
     
 }
