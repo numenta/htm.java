@@ -59,7 +59,6 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 		
 		if (coordinates.length + 1 == dimensions.length) {
 			// last slice 
-		
 			for (int i = 0; i < dimensions[coordinates.length]; i++) {
 				elementCoordinates[coordinates.length] = i;
 				Array.set(slice,  i, get(elementCoordinates));

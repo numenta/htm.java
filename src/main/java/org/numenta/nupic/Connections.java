@@ -968,7 +968,7 @@ public class Connections {
      * 
      * @param pools		{@link SparseObjectMatrix} which holds the pools.
      */
-    public void setPotentialPools(SparseObjectMatrix<Pool> pools) {
+    public void setPotentialPools(FlatMatrix<Pool> pools) {
     	this.potentialPools = pools;
     }
     
