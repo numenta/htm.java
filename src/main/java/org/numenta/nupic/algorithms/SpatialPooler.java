@@ -784,7 +784,7 @@ public class SpatialPooler {
         TIntArrayList neighbors = new TIntArrayList(neighborList.size());
         int size = neighborList.size();
         for(int i = 0;i < size;i++) {
-            int flatIndex = c.getInputMatrix().computeIndex(neighborList.get(i), false);
+            int flatIndex = topology.computeIndex(neighborList.get(i), false);
             if(flatIndex == columnIndex) continue;
             neighbors.add(flatIndex);
         }
