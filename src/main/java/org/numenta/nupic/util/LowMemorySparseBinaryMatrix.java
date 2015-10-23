@@ -77,10 +77,9 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
     @Override
     public void rightVecSumAtNZ(int[] inputVector, int[] results) {
         if (this.dimensions.length > 1) {
-            for(int i = 0; i < this.dimensions[0]; i++) {
-                for(int j = 0;  j < this.dimensions[1] ; j++) {
-                    results[i] += (inputVector[j] * (int) get(i, j));
-                }
+            for (int value : getSparseIndices()) {
+                int[] coordinates = computeCoordinates(value);
+                results[coordinates[0]] += inputVector[coordinates[1]] * get(value);
             }
         }
         else {
