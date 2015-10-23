@@ -339,12 +339,17 @@ public class NetworkTest {
         Region r2 = network.lookup("r2");
         
         network.observe().subscribe(new Subscriber<Inference>() {
+            int iterCount = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                if(netInference.getPredictedColumns().length > 15) {
+                ++iterCount;
+                if(true) { //netInference.getPredictiveCells().size() > 15) {
+                    System.out.println("iterCount = " + iterCount);
                     network.halt();
+                    System.out.println("r1 = " + r1.getHead().getInference().getActiveCells());
+                    System.out.println("r2 = " + r2.getHead().getInference().getActiveCells());
                 }
             }
         });
@@ -369,12 +374,17 @@ public class NetworkTest {
         // Let run for 5 secs.
         try {
             r2.lookup("1").getLayerThread().join();//5000);
-            assertTrue(!Arrays.equals(topInference.getSparseActives(), 
-                bottomInference.getSparseActives()));
-            assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
-                bottomInference.getPredictedColumns()));
-            assertTrue(topInference.getPredictedColumns().length > 0);
-            assertTrue(bottomInference.getPredictedColumns().length > 0);
+            System.out.println("top ff = " + Arrays.toString(topInference.getFeedForwardSparseActives()));
+            System.out.println("bot ff = " + Arrays.toString(bottomInference.getFeedForwardSparseActives()));
+            System.out.println("top pred = " + topInference.getPredictiveCells());
+            System.out.println("bot pred = " + bottomInference.getPredictiveCells());
+            System.out.println("top active = " + topInference.getActiveCells());
+            System.out.println("bot active = " + bottomInference.getActiveCells());
+            assertTrue(!Arrays.equals(topInference.getFeedForwardSparseActives(), 
+                bottomInference.getFeedForwardSparseActives()));
+            assertTrue(!topInference.getPredictiveCells().equals(bottomInference.getPredictiveCells()));
+            assertTrue(topInference.getPredictiveCells().size() > 0);
+            assertTrue(bottomInference.getPredictiveCells().size() > 0);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -541,8 +551,8 @@ public class NetworkTest {
             for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
                 multiInput.put("dayOfWeek", j);
                 Inference inf = n.computeImmediate(multiInput);
-                if(inf.getPredictedColumns().length > 6) {
-                    assertTrue(inf.getPredictedColumns() != null);
+                if(inf.getPredictiveCells().size() > 6) {
+                    assertTrue(inf.getPredictiveCells() != null);
                     // Make sure we've gotten all the responses
                     assertEquals((i * 7) + (int)j, inf.getRecordNum());
                     gotResult = true;

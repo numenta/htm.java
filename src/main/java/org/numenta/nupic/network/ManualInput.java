@@ -23,12 +23,17 @@ package org.numenta.nupic.network;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
@@ -67,20 +72,30 @@ public class ManualInput implements Inference {
     private Object layerInput;
     private int[] sdr;
     private int[] encoding;
-    private int[] activeColumns;
-    private int[] sparseActives;
-    private int[] previousPrediction;
-    private int[] currentPrediction;
+    /** Active columns in the {@link SpatialPooler} at time "t" */
+    private int[] feedForwardActiveColumns;
+    /** Active column indexes from the {@link SpatialPooler} at time "t" */
+    private int[] feedForwardSparseActives;
+    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t - 1" */
+    private Set<Cell> previousPredictiveCells;
+    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t" */
+    private Set<Cell> predictiveCells;
+    /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
+    private Set<Cell> activeCells;
+    
     private Map<String, ClassifierResult<Object>> classification;
     private double anomalyScore;
     private Object customObject;
     
+    ComputeCycle computeCycle;
     
     
     /**
      * Constructs a new {@code ManualInput}
      */
-    public ManualInput() {}
+    public ManualInput() {
+        System.out.println("watching this");
+    }
     
     /**
      * Sets the current record num associated with this {@code ManualInput}
@@ -106,12 +121,31 @@ public class ManualInput implements Inference {
     }
     
     /**
+     * Sets the {@link ComputeCycle} from the TemporalMemory
+     * @param computeCycle
+     */
+    public ManualInput computeCycle(ComputeCycle computeCycle) {
+        this.computeCycle = computeCycle;
+        return this;
+    }
+    
+    /**
+     * Returns the {@link ComputeCycle}
+     * @return
+     */
+    @Override
+    public ComputeCycle getComputeCycle() {
+        return computeCycle;
+    }
+    
+    /**
      * Returns a custom Object during sequence processing where one or more 
      * {@link Func1}(s) were added to a {@link Layer} in between algorithmic
      * components.
      *  
      * @return  the custom object set during processing
      */
+    @Override
     public Object getCustomObject() {
         return customObject;
     }
@@ -180,6 +214,7 @@ public class ManualInput implements Inference {
      * names, whose values are the {@link CLAClassifier} used 
      * to track the classification of a particular field
      */
+    @Override
     public NamedTuple getClassifiers() {
         return classifiers;
     }
@@ -263,10 +298,10 @@ public class ManualInput implements Inference {
         retVal.layerInput = this.layerInput;
         retVal.sdr = Arrays.copyOf(this.sdr, this.sdr.length);
         retVal.encoding = Arrays.copyOf(this.encoding, this.encoding.length);
-        retVal.activeColumns = Arrays.copyOf(this.activeColumns, this.activeColumns.length);
-        retVal.sparseActives = Arrays.copyOf(this.sparseActives, this.sparseActives.length);
-        retVal.previousPrediction = Arrays.copyOf(this.previousPrediction, this.previousPrediction.length);
-        retVal.currentPrediction = Arrays.copyOf(this.currentPrediction, this.currentPrediction.length);
+        retVal.feedForwardActiveColumns = Arrays.copyOf(this.feedForwardActiveColumns, this.feedForwardActiveColumns.length);
+        retVal.feedForwardSparseActives = Arrays.copyOf(this.feedForwardSparseActives, this.feedForwardSparseActives.length);
+        retVal.previousPredictiveCells = new LinkedHashSet<Cell>(this.previousPredictiveCells);
+        retVal.predictiveCells = new LinkedHashSet<Cell>(this.predictiveCells);
         retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
         retVal.customObject = this.customObject;
@@ -327,8 +362,8 @@ public class ManualInput implements Inference {
      * @return
      */
     @Override
-    public int[] getActiveColumns() {
-        return activeColumns;
+    public int[] getFeedForwardActiveColumns() {
+        return feedForwardActiveColumns;
     }
     
     /**
@@ -336,8 +371,27 @@ public class ManualInput implements Inference {
      * @param cols
      * @return
      */
-    public ManualInput activeColumns(int[] cols) {
-        this.activeColumns = cols;
+    public ManualInput feedForwardActiveColumns(int[] cols) {
+        this.feedForwardActiveColumns = cols;
+        return this;
+    }
+    
+    /**
+     * Returns the column activation from a {@link TemporalMemory}
+     * @return
+     */
+    @Override
+    public Set<Cell> getActiveCells() {
+        return activeCells;
+    }
+    
+    /**
+     * Sets the column activation from a {@link TemporalMemory}
+     * @param cells
+     * @return
+     */
+    public ManualInput activeCells(Set<Cell> cells) {
+        this.activeCells = cells;
         return this;
     }
     
@@ -346,11 +400,11 @@ public class ManualInput implements Inference {
      * @return
      */
     @Override
-    public int[] getSparseActives() {
-        if(sparseActives == null && activeColumns != null) {
-            sparseActives = ArrayUtils.where(activeColumns, ArrayUtils.WHERE_1);
+    public int[] getFeedForwardSparseActives() {
+        if(feedForwardSparseActives == null && feedForwardActiveColumns != null) {
+            feedForwardSparseActives = ArrayUtils.where(feedForwardActiveColumns, ArrayUtils.WHERE_1);
         }
-        return sparseActives;
+        return feedForwardSparseActives;
     }
 
     /**
@@ -358,8 +412,8 @@ public class ManualInput implements Inference {
      * @param cols
      * @return
      */
-    public ManualInput sparseActives(int[] cols) {
-        this.sparseActives = cols;
+    public ManualInput feedForwardSparseActives(int[] cols) {
+        this.feedForwardSparseActives = cols;
         return this;
     }
     
@@ -368,17 +422,17 @@ public class ManualInput implements Inference {
      * @return
      */
     @Override
-    public int[] getPreviousPrediction() {
-        return previousPrediction;
+    public Set<Cell> getPreviousPredictiveCells() {
+        return previousPredictiveCells;
     }
     
     /**
      * Sets the previous predicted columns.
-     * @param cols
+     * @param cells
      * @return
      */
-    public ManualInput previousPrediction(int[] cols) {
-        this.previousPrediction = cols;
+    public ManualInput previousPredictiveCells(Set<Cell> cells) {
+        this.previousPredictiveCells = cells;
         return this;
     }
     
@@ -387,18 +441,18 @@ public class ManualInput implements Inference {
      * @return
      */
     @Override
-    public int[] getPredictedColumns() {
-        return currentPrediction;
+    public Set<Cell> getPredictiveCells() {
+        return predictiveCells;
     }
     
     /**
      * Sets the currently predicted columns
-     * @param cols
+     * @param cells
      * @return
      */
-    public ManualInput predictedColumns(int[] cols) {
-        previousPrediction = currentPrediction;
-        this.currentPrediction = cols;
+    public ManualInput predictiveCells(Set<Cell> cells) {
+        previousPredictiveCells = predictiveCells;
+        this.predictiveCells = cells;
         return this;
     }
 }

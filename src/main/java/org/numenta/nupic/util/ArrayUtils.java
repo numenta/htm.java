@@ -1307,8 +1307,11 @@ public class ArrayUtils {
      * @return
      */
     public static boolean isSparse(int[] ia) {
-        for(int i = ia.length - 1;i >= 0;i--) {
+        if(ia == null || ia.length < 3) return false;
+        int end = ia[ia.length - 1];
+        for(int i = ia.length - 1, j = 0;i >= 0;i--, j++) {
             if(ia[i] > 1) return true;
+            else if(j > 0 && ia[i] == end) return false;
         }
         return false;
     }

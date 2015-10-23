@@ -22,11 +22,15 @@
 package org.numenta.nupic.network;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.util.NamedTuple;
 
 import rx.functions.Func1;
@@ -48,6 +52,11 @@ public interface Inference {
      * @return
      */
     public int getRecordNum();
+    /**
+     * Returns the {@link ComputeCycle}
+     * @return
+     */
+    public ComputeCycle getComputeCycle();
     /**
      * Returns a custom Object during sequence processing where one or more 
      * {@link Func1}(s) were added to a {@link Layer} in between algorithmic
@@ -108,20 +117,25 @@ public interface Inference {
      * Returns the column activation from a {@link SpatialPooler}
      * @return
      */
-    public int[] getActiveColumns();
+    public int[] getFeedForwardActiveColumns();
     /**
      * Returns the column activations in sparse form
      * @return
      */
-    public int[] getSparseActives();
+    public int[] getFeedForwardSparseActives();
+    /**
+     * Returns the column activation from a {@link TemporalMemory}
+     * @return
+     */
+    public Set<Cell> getActiveCells();
     /**
      * Returns the predicted output from the last inference cycle.
      * @return
      */
-    public int[] getPreviousPrediction();
+    public Set<Cell> getPreviousPredictiveCells();
     /**
      * Returns the currently predicted columns.
      * @return
      */
-    public int[] getPredictedColumns();
+    public Set<Cell> getPredictiveCells();
 }
