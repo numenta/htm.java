@@ -1710,7 +1710,7 @@ public class Layer<T> {
             return input;
         }
         spatialPooler.compute(connections, input, feedForwardActiveColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
-//        
+      
         return feedForwardActiveColumns;
     }
 
@@ -1740,7 +1740,6 @@ public class Layer<T> {
         mi.predictiveCells(predictiveCells = cc.predictiveCells);
         // Store activeCells
         mi.activeCells(activeCells = cc.activeCells());
-        System.out.println(Layer.this.name + ":   " + mi + "      " + activeCells);
         // Store the Compute Cycle
         mi.computeCycle = cc;
         return SDR.asCellIndices(activeCells = cc.activeCells());

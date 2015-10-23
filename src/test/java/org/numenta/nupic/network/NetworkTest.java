@@ -94,7 +94,7 @@ public class NetworkTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                System.out.println("output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("output = " + Arrays.toString(output.getSDR()));
             }
         });
         
@@ -339,17 +339,13 @@ public class NetworkTest {
         Region r2 = network.lookup("r2");
         
         network.observe().subscribe(new Subscriber<Inference>() {
-            int iterCount = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                ++iterCount;
-                if(true) { //netInference.getPredictiveCells().size() > 15) {
-                    System.out.println("iterCount = " + iterCount);
+                if(r1.getHead().getInference().getPredictiveCells().size() > 0 && 
+                    r2.getHead().getInference().getPredictiveCells().size() > 0) {
                     network.halt();
-                    System.out.println("r1 = " + r1.getHead().getInference().getActiveCells());
-                    System.out.println("r2 = " + r2.getHead().getInference().getActiveCells());
                 }
             }
         });
@@ -374,14 +370,12 @@ public class NetworkTest {
         // Let run for 5 secs.
         try {
             r2.lookup("1").getLayerThread().join();//5000);
-            System.out.println("top ff = " + Arrays.toString(topInference.getFeedForwardSparseActives()));
-            System.out.println("bot ff = " + Arrays.toString(bottomInference.getFeedForwardSparseActives()));
-            System.out.println("top pred = " + topInference.getPredictiveCells());
-            System.out.println("bot pred = " + bottomInference.getPredictiveCells());
-            System.out.println("top active = " + topInference.getActiveCells());
-            System.out.println("bot active = " + bottomInference.getActiveCells());
-            assertTrue(!Arrays.equals(topInference.getFeedForwardSparseActives(), 
-                bottomInference.getFeedForwardSparseActives()));
+//            System.out.println("top ff = " + Arrays.toString(topInference.getFeedForwardSparseActives()));
+//            System.out.println("bot ff = " + Arrays.toString(bottomInference.getFeedForwardSparseActives()));
+//            System.out.println("top pred = " + topInference.getPredictiveCells());
+//            System.out.println("bot pred = " + bottomInference.getPredictiveCells());
+//            System.out.println("top active = " + topInference.getActiveCells());
+//            System.out.println("bot active = " + bottomInference.getActiveCells());
             assertTrue(!topInference.getPredictiveCells().equals(bottomInference.getPredictiveCells()));
             assertTrue(topInference.getPredictiveCells().size() > 0);
             assertTrue(bottomInference.getPredictiveCells().size() > 0);
@@ -687,7 +681,7 @@ public class NetworkTest {
                  //System.out.println(output.getRecordNum() + ":  input = " + Arrays.toString(output.getEncoding()));//output = " + Arrays.toString(output.getSDR()) + ", " + output.getAnomalyScore());
                 if(output.getAnomalyScore() < anomaly) {
                     anomaly = output.getAnomalyScore();
-                    System.out.println("anomaly = " + anomaly);
+//                    System.out.println("anomaly = " + anomaly);
                 }
             }
         });

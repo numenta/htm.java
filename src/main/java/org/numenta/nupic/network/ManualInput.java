@@ -93,9 +93,7 @@ public class ManualInput implements Inference {
     /**
      * Constructs a new {@code ManualInput}
      */
-    public ManualInput() {
-        System.out.println("watching this");
-    }
+    public ManualInput() {}
     
     /**
      * Sets the current record num associated with this {@code ManualInput}

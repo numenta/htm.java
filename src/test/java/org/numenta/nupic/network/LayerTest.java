@@ -209,7 +209,7 @@ public class LayerTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                System.out.println("output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("output = " + Arrays.toString(output.getSDR()));
             }
         });
 
@@ -1125,15 +1125,15 @@ public class LayerTest {
                 }
 
                 // UNCOMMENT TO WATCH THE RESULTS STABILIZE
-                System.out.println("current ho active = " + i.getActiveCells());
-                System.out.println("current ho sorted = " + Arrays.toString(i.getSDR()));
-                if(i.getPreviousPredictiveCells() != null) {
-                    System.out.println("curr pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPredictiveCells(), l.getConnections().getCellsPerColumn())));
-                    System.out.println("prev pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPreviousPredictiveCells(), l.getConnections().getCellsPerColumn())));
-                }
-                System.out.println("current ff active = " + Arrays.toString(i.getFeedForwardSparseActives()));
-                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
-                System.out.println("----------------------------------------");
+//                System.out.println("current ho active = " + i.getActiveCells());
+//                System.out.println("current ho sorted = " + Arrays.toString(i.getSDR()));
+//                if(i.getPreviousPredictiveCells() != null) {
+//                    System.out.println("curr pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPredictiveCells(), l.getConnections().getCellsPerColumn())));
+//                    System.out.println("prev pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPreviousPredictiveCells(), l.getConnections().getCellsPerColumn())));
+//                }
+//                System.out.println("current ff active = " + Arrays.toString(i.getFeedForwardSparseActives()));
+//                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
+//                System.out.println("----------------------------------------");
             }
         });
 
@@ -1303,7 +1303,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
         p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
 
-        System.out.println(p);
+//        System.out.println(p);
 
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);

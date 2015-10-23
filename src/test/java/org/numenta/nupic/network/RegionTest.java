@@ -201,7 +201,7 @@ public class RegionTest {
         r1.observe().subscribe(new Subscriber<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {
-                System.out.println("onCompleted() called");
+//                System.out.println("onCompleted() called");
             }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
@@ -209,7 +209,7 @@ public class RegionTest {
                     isHalted = true;
                 }
                 seq++;
-                System.out.println("output: " + i.getSDR());
+//                System.out.println("output: " + i.getSDR());
             }
         });
         
