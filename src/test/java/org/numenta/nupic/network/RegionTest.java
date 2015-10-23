@@ -201,7 +201,7 @@ public class RegionTest {
         r1.observe().subscribe(new Subscriber<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {
-                System.out.println("onCompleted() called");
+//                System.out.println("onCompleted() called");
             }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
@@ -209,7 +209,7 @@ public class RegionTest {
                     isHalted = true;
                 }
                 seq++;
-                System.out.println("output: " + i.getSDR());
+//                System.out.println("output: " + i.getSDR());
             }
         });
         
@@ -327,8 +327,8 @@ public class RegionTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
-                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+                System.out.println("Day: " + r1.getInput() + " - predictive cells: " + i.getPreviousPredictiveCells() +
+                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
                     ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });

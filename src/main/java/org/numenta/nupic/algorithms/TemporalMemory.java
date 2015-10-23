@@ -311,13 +311,14 @@ public class TemporalMemory implements ComputeDecorator {
     public void computePredictiveCells(Connections c, ComputeCycle cycle, Set<Cell> activeCells) {
         TObjectIntMap<DistalDendrite> numActiveConnectedSynapsesForSegment = new TObjectIntHashMap<>();
         TObjectIntMap<DistalDendrite> numActiveSynapsesForSegment = new TObjectIntHashMap<>();
+        double connectedPermanence = c.getConnectedPermanence();
         
         for(Cell cell : activeCells) {
             for(Synapse syn : c.getReceptorSynapses(cell)) {
                 DistalDendrite segment = (DistalDendrite)syn.getSegment();
                 double permanence = syn.getPermanence();
                 
-                if(permanence >= c.getConnectedPermanence()) {
+                if(permanence >= connectedPermanence) {
                     numActiveConnectedSynapsesForSegment.adjustOrPutValue(segment, 1, 1);    
                     
                     if(numActiveConnectedSynapsesForSegment.get(segment) >= c.getActivationThreshold()) {
@@ -452,22 +453,6 @@ public class TemporalMemory implements ComputeDecorator {
         List<Cell> l = new ArrayList<>(leastUsedCells);
         Collections.sort(l);
         return l.get(randomIdx);
-    }
-    
-    /**
-     * Used locally to return results of column Burst
-     */
-    class BurstResult {
-        Set<Cell> activeCells;
-        Set<Cell> winnerCells;
-        Set<DistalDendrite> learningSegments;
-        
-        public BurstResult(Set<Cell> activeCells, Set<Cell> winnerCells, Set<DistalDendrite> learningSegments) {
-            super();
-            this.activeCells = activeCells;
-            this.winnerCells = winnerCells;
-            this.learningSegments = learningSegments;
-        }
     }
     
     /**
