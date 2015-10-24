@@ -10,7 +10,7 @@
 
 <br>
 
-**NOTE: Minimum JavaSE version is 1.8**  
+_**NOTE: Minimum JavaSE version is 1.8**_
 
 ***
 
