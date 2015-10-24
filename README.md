@@ -18,7 +18,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 
 ***
 
-#### Demos & Examples: [HTM.java-examples](https://github.com/numenta/htm.java-examples)Repository
+#### Demos & Examples: [HTM.java-examples](https://github.com/numenta/htm.java-examples) Repository
 
 ***
 
