@@ -15,11 +15,15 @@ Community-supported & ported from the [Numenta Platform for Intelligent Computin
 
 _**NOTE: Minimum JavaSE version is 1.8**_
 
+<br>
+
 ***
 
 #### Demos & Examples: [HTM.java-examples Repository](https://github.com/numenta/htm.java-examples)
 
 ***
+
+<br>
 
 ### Recent News Items...
 * **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
