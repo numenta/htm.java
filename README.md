@@ -8,7 +8,7 @@
 
 <br>
 
-### Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
+## Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
 <br>
 
