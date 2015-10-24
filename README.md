@@ -11,8 +11,6 @@
 
 Community-supported & ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
-<br>
-
 _**NOTE: Minimum JavaSE version is 1.8**_
 
 <br>
