@@ -64,6 +64,8 @@ For more detailed discussions regarding HTM.java specifically, come chat with us
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-green.svg?style=flat)](https://gitter.im/numenta/htm.java?utm_source=badge)
 
+See the blog: [Join the Cogmission](http://www.cogmission.ai)
+
 ***
 <a name="callToArms"></a>
 ### Call to Arms: [HTM.java needs you!](https://github.com/numenta/htm.java/wiki/Call-To-Arms)
