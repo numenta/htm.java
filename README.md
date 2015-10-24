@@ -11,7 +11,7 @@
 
 ***
 
-#### For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](https://github.com/numenta/htm.java-examples)
+#### Demos & Examples: [HTM.java-examples Repository](https://github.com/numenta/htm.java-examples)
 
 ***
 
