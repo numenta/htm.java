@@ -7,7 +7,7 @@
 
 <br>
 
-## Official **Java&trade;** version of:
+#### Official **Java&trade;** version of...
 ## _[Hierarchical Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html)_
 
 **Community-supported & ported from the** [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
