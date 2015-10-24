@@ -1,19 +1,16 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 # htm.java
 
-[![htm.java awesomeness](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](http://cogmission.ai)
+[![htm.java awesomeness](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](http://cogmission.ai) [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java) [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java)
 
 #### Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
-* Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
-* Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master)
+
+
 
 For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](https://github.com/numenta/htm.java-examples)
 
 **NOTE: Minimum JavaSE version is 1.8**  
-
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java)
-
 
 ***
 
