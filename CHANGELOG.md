@@ -13,8 +13,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased
-* Nothing yet... 
+## Unreleased [0.6.5-SNAPSHOT]
+* Removed .classpath from .gitignore
+* Added .classpath file back into repo with correct classpath (includes dependencies)
 
 ***
 
