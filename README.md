@@ -29,7 +29,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 * **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
 * [HTM.java Splits off Demo repository](https://github.com/numenta/htm.java-examples) (08/19/2015)
-* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
+* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java-examples/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
 
 ### News Archives...
 * [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
