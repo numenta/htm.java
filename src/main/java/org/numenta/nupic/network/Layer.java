@@ -1734,8 +1734,9 @@ public class Layer<T> {
         } else {
             cc = temporalMemory.compute(connections, input, isLearn);
         }
-
+        
         previousPredictiveCells = predictiveCells;
+        
         // Store the predictive columns
         mi.predictiveCells(predictiveCells = cc.predictiveCells);
         // Store activeCells
@@ -2012,7 +2013,8 @@ public class Layer<T> {
                     if(t1.getFeedForwardSparseActives() == null || t1.getPreviousPredictiveCells() == null) {
                         return t1.anomalyScore(1.0);
                     }
-                    return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));
+                    return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), 
+                        SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));
                 }
             };
         }

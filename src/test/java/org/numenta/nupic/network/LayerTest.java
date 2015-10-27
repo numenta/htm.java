@@ -1129,10 +1129,11 @@ public class LayerTest {
 //                System.out.println("current ho sorted = " + Arrays.toString(i.getSDR()));
 //                if(i.getPreviousPredictiveCells() != null) {
 //                    System.out.println("curr pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPredictiveCells(), l.getConnections().getCellsPerColumn())));
+//                    System.out.println("curr actv cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getActiveCells(), l.getConnections().getCellsPerColumn())));
 //                    System.out.println("prev pred cell cols = " + Arrays.toString(SDR.cellsAsColumnIndices(i.getPreviousPredictiveCells(), l.getConnections().getCellsPerColumn())));
 //                }
-//                System.out.println("current ff active = " + Arrays.toString(i.getFeedForwardSparseActives()));
-//                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference());                
+//                System.out.println("  current ff active = " + Arrays.toString(i.getFeedForwardSparseActives()));
+//                System.out.println("rec# " + i.getRecordNum() + ",  input " + i.getLayerInput() + ",  anomaly = " + i.getAnomalyScore() + ",  inference = " + l.getInference().getClassification("dayOfWeek").getMostProbableValue(1));                
 //                System.out.println("----------------------------------------");
             }
         });
@@ -1177,7 +1178,7 @@ public class LayerTest {
     @Test
     public void testGetAllPredictions() {
         final int PRIME_COUNT = 35;
-        final int NUM_CYCLES = 99;
+        final int NUM_CYCLES = 120;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         TOTAL = 0;
 
@@ -1187,7 +1188,7 @@ public class LayerTest {
 
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
-        int cellsPerColumn = (int)p.getParameterByKey(KEY.CELLS_PER_COLUMN);
+        final int cellsPerColumn = (int)p.getParameterByKey(KEY.CELLS_PER_COLUMN);
         assertTrue(cellsPerColumn > 0);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -1200,9 +1201,13 @@ public class LayerTest {
             public void onNext(Inference i) {
                 assertNotNull(i);
                 TOTAL++;
-                 //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-//                 System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + Arrays.toString(ArrayUtils.where(l.getActiveColumns(), ArrayUtils.WHERE_1)) +
-//                 "   -   " + Arrays.toString(l.getPreviousPredictedColumns()));
+                
+                if(l.getPreviousPredictiveCells() != null) {
+                    //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
+                    System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + 
+                       Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
+                         "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
+                }
             }
         });
 
@@ -1235,6 +1240,12 @@ public class LayerTest {
 
         assertEquals(highestIdx, l.getMostProbableBucketIndex("dayOfWeek", 1));
         assertEquals(7, l.getAllPredictions("dayOfWeek", 1).length);
+        
+        System.out.println("recordNum: " + l.getInference().getRecordNum() + "  Day: " + ((Map<String, Object>)l.getInference().getLayerInput()).get("dayOfWeek") + "  -  " + 
+            Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
+              "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
+        
+        
         assertTrue(Arrays.equals(
             ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1),
                 SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
