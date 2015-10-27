@@ -40,6 +40,7 @@ public class SparseBinaryMatrixTest {
     public void testBackingStoreAndSliceAccess() {
         doTestBackingStoreAndSliceAccess(new SparseBinaryMatrix(this.dimensions));
         doTestBackingStoreAndSliceAccess(new LowMemorySparseBinaryMatrix(this.dimensions));
+        doTestBackingStoreAndSliceAccess(new FastConnectionsMatrix(this.dimensions));
     }
 
     private void doTestBackingStoreAndSliceAccess(SparseBinaryMatrixSupport sm) {
@@ -82,6 +83,7 @@ public class SparseBinaryMatrixTest {
     public void testRightVecSumAtNZFast() {
         doTestRightVecSumAtNZFast(new SparseBinaryMatrix(this.dimensions));
         doTestRightVecSumAtNZFast(new LowMemorySparseBinaryMatrix(this.dimensions));
+        doTestRightVecSumAtNZFast(new FastConnectionsMatrix(this.dimensions));
     }
 
     private void doTestRightVecSumAtNZFast(SparseBinaryMatrixSupport sm) {
@@ -149,6 +151,7 @@ public class SparseBinaryMatrixTest {
     public void testSetTrueCount() {
         doTestSetTrueCount(new SparseBinaryMatrix(this.dimensions));
         doTestSetTrueCount(new LowMemorySparseBinaryMatrix(this.dimensions));
+        doTestSetTrueCount(new FastConnectionsMatrix(this.dimensions));
     }
 
     private void doTestSetTrueCount(SparseBinaryMatrixSupport sm) {
@@ -238,6 +241,7 @@ public class SparseBinaryMatrixTest {
         int[] dimensions =  { 5, 2 };
         doTestArraySet(new SparseBinaryMatrix(dimensions));
         doTestArraySet(new LowMemorySparseBinaryMatrix(dimensions));
+        doTestArraySet(new FastConnectionsMatrix(dimensions));
     }
 
     private void doTestArraySet(SparseBinaryMatrixSupport sm) {
@@ -252,6 +256,30 @@ public class SparseBinaryMatrixTest {
         }
 
         assertArrayEquals(expected, dense);
+    }
+    
+    @Test
+    public void testGetSparseIndices() {
+        doTestGetSparseIndices(new SparseBinaryMatrix(this.dimensions));
+        doTestGetSparseIndices(new LowMemorySparseBinaryMatrix(this.dimensions));
+    }
+    
+    private void doTestGetSparseIndices(SparseBinaryMatrixSupport sm) {
+        int[] expected = {0, 5, 11, 16, 22, 27, 33, 38, 44, 49};
+        int[][] values = new int[][]{
+            {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+            {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+            {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
 
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 10; j++) {
+                sm.set(values[i][j], new int[] {i, j});
+            }
+        }
+        
+        int[] sdr = sm.getSparseIndices();
+        assertArrayEquals(expected, sdr);
     }
 }

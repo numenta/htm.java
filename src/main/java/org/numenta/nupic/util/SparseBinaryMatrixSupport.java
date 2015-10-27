@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import gnu.trove.TIntCollection;
@@ -67,6 +68,44 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
                 "This method only returns the array holding the specified index: " + 
                         Arrays.toString(coordinates));
     }
+    
+    /**
+     * Calculate the flat indexes of an slice
+     * @return the flat indexes array
+     */
+    protected int[] getSliceIndexes(int[] coordinates) {
+        int[] dimensions = getDimensions();
+        // check for valid coordinates
+        if (coordinates.length >= dimensions.length)
+            sliceError(coordinates);
+
+        int sliceDimensionsLength = dimensions.length - coordinates.length;
+        int[] sliceDimensions = (int[]) Array.newInstance(int.class, sliceDimensionsLength);
+
+        for (int i = coordinates.length ; i < dimensions.length; i++) 
+            sliceDimensions[i - coordinates.length] = dimensions[i];
+
+        int[] elementCoordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
+        int sliceSize = Arrays.stream(sliceDimensions).reduce((n,i) -> n*i).getAsInt();
+        int[] slice = new int[sliceSize];
+
+        if (coordinates.length + 1 == dimensions.length) {
+            // last slice 
+            for (int i = 0; i < dimensions[coordinates.length]; i++) {
+                elementCoordinates[coordinates.length] = i;
+                Array.set(slice,  i, computeIndex(elementCoordinates));
+            }
+        }
+        else {
+            for (int i = 0; i < dimensions[sliceDimensionsLength]; i++) {
+                elementCoordinates[coordinates.length] = i;
+                int[] indexes = getSliceIndexes(elementCoordinates);
+                System.arraycopy(indexes, 0, slice, i*indexes.length, indexes.length);
+            }
+        }
+
+        return slice;
+    }
 
     /**
      * Fills the specified results array with the result of the 
@@ -97,7 +136,14 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     @Override
     public SparseBinaryMatrixSupport set(int value, int... coordinates) {
-        this.sparseMap.put(computeIndex(coordinates), value);
+        int index = computeIndex(coordinates);
+        if (value == 0) {
+            this.sparseMap.remove(index);
+        }
+        else {
+            this.sparseMap.put(index, value);
+        }
+        
         return this;
     }
 
@@ -185,6 +231,11 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     public void clearStatistics(int row) {
         trueCounts[row] = 0;
+        int[] coordinates = new int[1];
+        coordinates[0] = row;
+        
+        for (int i : getSliceIndexes(coordinates))
+            this.sparseMap.remove(i);
     }
 
     /**
@@ -202,7 +253,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @return  the indexed object
      */
     public int getIntValue(int... coordinates) {
-        return sparseMap.get(computeIndex(coordinates));
+        return get(computeIndex(coordinates));
     }
 
     /**
@@ -213,7 +264,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     @Override
     public int getIntValue(int index) {
-        return sparseMap.get(index);
+        return get(index);
     }
 
     /**
@@ -222,7 +273,10 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     @Override
     public int[] getSparseIndices() {
-        return reverse(sparseMap.keys());
+        int [] sparse = sparseMap.keys();
+        Arrays.sort(sparse);
+        
+        return sparse;
     }
 
     /**

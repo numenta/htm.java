@@ -137,13 +137,8 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
         super.clearStatistics(row);
         int[] slice = (int[])Array.get(backingArray, row);
         Arrays.fill(slice, 0);
-
-
     }
 
-    /* (non-Javadoc)
-     * @see org.numenta.nupic.util.FlatMatrix#set(int, java.lang.Object)
-     */
     @Override
     public SparseBinaryMatrixSupport set(int index, Object value) {
         set(index, ((Integer) value).intValue());

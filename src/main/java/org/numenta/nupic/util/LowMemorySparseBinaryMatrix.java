@@ -73,7 +73,7 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
         return slice;
     }
-
+    
     @Override
     public void rightVecSumAtNZ(int[] inputVector, int[] results) {
         if (this.dimensions.length > 1) {
