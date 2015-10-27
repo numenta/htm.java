@@ -99,10 +99,6 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsAsColumnIndices(Set<Cell> cells, int cellsPerColumn) {
-        if(cells == null) {
-            System.out.println("was null");
-            System.exit(1);
-        }
         return cells.stream().mapToInt(c -> c.getIndex())
                    .sorted().map(cellIdx -> cellIdx / cellsPerColumn).distinct().toArray();
     }
