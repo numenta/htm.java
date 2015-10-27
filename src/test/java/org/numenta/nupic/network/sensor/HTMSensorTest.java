@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
