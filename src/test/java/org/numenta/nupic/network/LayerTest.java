@@ -1204,9 +1204,9 @@ public class LayerTest {
                 
                 if(l.getPreviousPredictiveCells() != null) {
                     //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                    System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + 
-                       Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
-                         "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
+//                    System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + 
+//                       Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
+//                         "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
                 }
             }
         });
@@ -1240,11 +1240,6 @@ public class LayerTest {
 
         assertEquals(highestIdx, l.getMostProbableBucketIndex("dayOfWeek", 1));
         assertEquals(7, l.getAllPredictions("dayOfWeek", 1).length);
-        
-        System.out.println("recordNum: " + l.getInference().getRecordNum() + "  Day: " + ((Map<String, Object>)l.getInference().getLayerInput()).get("dayOfWeek") + "  -  " + 
-            Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
-              "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
-        
         
         assertTrue(Arrays.equals(
             ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1),
