@@ -24,7 +24,7 @@ package org.numenta.nupic.util;
 
 import org.numenta.nupic.Connections;
 
-import gnu.trove.map.hash.TIntByteHashMap;
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * Fast implementation of {@link SparseBinaryMatrix} for use as ConnectedMatrix in  
@@ -34,7 +34,7 @@ import gnu.trove.map.hash.TIntByteHashMap;
  */
 public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     
-    private TIntByteHashMap[] columns;
+    private TIntHashSet[] columns;
    
     /**
      * @param dimensions
@@ -49,7 +49,7 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
      */
     public FastConnectionsMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
-        this.columns = new TIntByteHashMap[dimensions[0]];
+        this.columns = new TIntHashSet[dimensions[0]];
     }
 
     @Override
@@ -59,7 +59,7 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
         
         int[] slice = new int[this.dimensions[1]];
         for (int i = 0; i < this.dimensions[1]; i++)
-            slice[i] = this.columns[coordinates[0]].get(i);
+            slice[i] = this.columns[coordinates[0]].contains(i) ? 1 : 0;
         
         return slice;
     }
@@ -67,7 +67,7 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     @Override
     public void rightVecSumAtNZ(int[] inputVector, int[] results) {
         for (int i = 0; i < dimensions[0]; i++) {
-            for (int index : getMap(i).keys()) {
+            for (int index : getColumnInput(i).toArray()) {
                 if (inputVector[index] != 0)
                     results[i] += 1;
             }
@@ -82,12 +82,12 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     
     @Override
     public SparseBinaryMatrixSupport set(int value, int... coordinates) {
-        TIntByteHashMap map = getMap(coordinates[0]);
+        TIntHashSet input = getColumnInput(coordinates[0]);
         if (value == 0) {
-            map.remove(coordinates[1]);
+            input.remove(coordinates[1]);
         }
         else {
-            map.put(coordinates[1], (byte) value);
+            input.add(coordinates[1]);
         }
         
         return this;
@@ -98,15 +98,15 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     @Override
     public Integer get(int index) {
         int[] coordinates = computeCoordinates(index);
-        return (int) getMap(coordinates[0]).get(coordinates[1]);
+        return  getColumnInput(coordinates[0]).contains(coordinates[1]) ? 1 : 0;
     }
 
     /**
      * @param i
      */
-    private TIntByteHashMap getMap(int i) {
+    private TIntHashSet getColumnInput(int i) {
         if (this.columns[i] == null)
-            this.columns[i] = new TIntByteHashMap();
+            this.columns[i] = new TIntHashSet();
         
         return this.columns[i];
         
@@ -114,12 +114,12 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
 
     @Override
     public void clearStatistics(int row) {
-        getMap(row).clear();
+        getColumnInput(row).clear();
     }
 
     @Override
     public int getTrueCount(int index) {
-        return getMap(index).size();
+        return getColumnInput(index).size();
     }
 
     @Override
