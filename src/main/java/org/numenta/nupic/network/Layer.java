@@ -171,11 +171,11 @@ public class Layer<T> {
     private Region parentRegion;
 
     private Parameters params;
-    private Connections connections;
+    protected Connections connections;
     private HTMSensor<?> sensor;
     private MultiEncoder encoder;
-    private SpatialPooler spatialPooler;
-    private TemporalMemory temporalMemory;
+    protected SpatialPooler spatialPooler;
+    protected TemporalMemory temporalMemory;
     private Boolean autoCreateClassifiers;
     private Anomaly anomalyComputer;
 
@@ -1702,7 +1702,7 @@ public class Layer<T> {
      * @param input
      * @return
      */
-    private int[] spatialInput(int[] input) {
+    protected int[] spatialInput(int[] input) {
         if(input == null) {
             LOGGER.info("Layer ".concat(getName()).concat(" received null input"));
         } else if(input.length < 1) {
@@ -1723,7 +1723,7 @@ public class Layer<T> {
      *            the current input inference container
      * @return
      */
-    private int[] temporalInput(int[] input, ManualInput mi) {
+    protected int[] temporalInput(int[] input, ManualInput mi) {
         ComputeCycle cc = null;
         if(sensor != null) {
             if(sensor.getMetaInfo().isReset()) {
