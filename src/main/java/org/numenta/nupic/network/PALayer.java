@@ -49,6 +49,7 @@ import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.encoders.MultiEncoder;
 
 import rx.Observable;
 import rx.Observable.Transformer;
@@ -66,7 +67,7 @@ import rx.subjects.PublishSubject;
  */
 public class PALayer<T> extends Layer<T> {
 
-    public int paDepolarize = 2;
+    public double paDepolarize = 2.0;
 
     public PALayer(Network n) {
 	super(n);
@@ -77,7 +78,16 @@ public class PALayer<T> extends Layer<T> {
     public PALayer(String name, Network n, Parameters p) {
         super(name, n, p);
     }
+    public PALayer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
+        super(params, e, sp, tm, autoCreateClassifiers, a);
+    }
 
+    public double getPADepolarize() {
+        return paDepolarize;
+    }
+    public void setPADepolarize(double pa) {
+        paDepolarize = pa;
+    }
     /**
      * Called internally to invoke the {@link TemporalMemory}
      * 
@@ -95,7 +105,7 @@ public class PALayer<T> extends Layer<T> {
             int[] polarization = new int[connections.getNumColumns()];
             for(Cell cell : cc.predictiveCells) {
                 Column column = cell.getColumn();
-                polarization[column.getIndex()] += paDepolarize;
+                polarization[column.getIndex()] += (int)paDepolarize;
             }
             paSP.setPAOverlaps(polarization);
         }
