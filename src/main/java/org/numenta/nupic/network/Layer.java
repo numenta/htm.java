@@ -476,7 +476,7 @@ public class Layer<T> {
      * 
      * @return  the length of the input vector
      */
-    private int calculateInputWidth() {
+    int calculateInputWidth() {
         // If no previous Layer, check upstream region for its output layer's output.
         if(previous == null) {
             if(parentRegion.getUpstreamRegion() != null) {
@@ -493,17 +493,23 @@ public class Layer<T> {
                 return new SparseBinaryMatrix(parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions()).getMaxIndex() + 1;
             }
             // No previous Layer, and no upstream region
+            // layer contains a TM so compute by cells;
+            if((algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
+                return getConnections().getCellsPerColumn() * (getConnections().getMemory().getMaxIndex() + 1); 
+            }
+            // layer only contains a SP
             return connections.getInputMatrix().getMaxIndex() + 1;
         }else{
             // There is a previous Layer and that layer contains a TM so compute by cells;
             if((previous.algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
-                return previous.getConnections().getCellsPerColumn() * (previous.getConnections().getMemory().getMaxIndex() + 1); 
+                SparseBinaryMatrix matrix = new SparseBinaryMatrix(previous.getConnections().getColumnDimensions());
+                return previous.getConnections().getCellsPerColumn() * (matrix.getMaxIndex() + 1); 
             }
             // Previous Layer but it has no TM so use the previous' column output (from SP)
             return new SparseBinaryMatrix(previous.getConnections().getColumnDimensions()).getMaxIndex() + 1;
         }
     }
-
+    
     /**
      * Given an input field width and Spatial Pooler dimensionality; this method
      * will return an array of dimension sizes whose number is equal to the
