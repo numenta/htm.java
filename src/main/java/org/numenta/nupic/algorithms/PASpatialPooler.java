@@ -38,30 +38,12 @@ import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
  * Subclasses {@link SpatialPooler} to perform Prediction-Assisted CLA
- * 
+ *
  * @author David Ray
  * @author Fergal Byrne
  *
  */
 public class PASpatialPooler extends SpatialPooler {
-
-	protected int[] paOverlaps;
-    /**
-     * Initialise paOverlaps
-     */
-    public void connectAndConfigureInputs(Connections c) {
-        paOverlaps = new int[c.getNumColumns()];
-        super.connectAndConfigureInputs(c);
-    }
-
-    public void setPAOverlaps(int[] overlaps) {
-        paOverlaps = overlaps;
-    }
-
-    public int[] getPAOverlaps() {
-        return paOverlaps;
-    }
-
     /**
      * This function determines each column's overlap with the current input
      * vector. The overlap of a column is the number of synapses for that column
@@ -69,7 +51,7 @@ public class PASpatialPooler extends SpatialPooler {
      * to input bits which are turned on. Overlap values that are lower than
      * the 'stimulusThreshold' are ignored. The implementation takes advantage of
      * the SpraseBinaryMatrix class to perform this calculation efficiently.
-     *  
+     *
      * @param c				the {@link Connections} memory encapsulation
      * @param inputVector   an input array of 0's and 1's that comprises the input to
      *                      the spatial pooler.
@@ -78,7 +60,7 @@ public class PASpatialPooler extends SpatialPooler {
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
         c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
-        overlaps = ArrayUtils.i_add(paOverlaps, overlaps);
+        overlaps = ArrayUtils.i_add(c.getPAOverlaps(), overlaps);
         ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
         return overlaps;
     }

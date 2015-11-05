@@ -61,7 +61,7 @@ import rx.subjects.PublishSubject;
 
 /**
  * Extension to Prediction-Assisted CLA
- * 
+ *
  * @author David Ray
  * @author Fergal Byrne
  */
@@ -70,7 +70,7 @@ public class PALayer<T> extends Layer<T> {
     public double paDepolarize = 2.0;
 
     public PALayer(Network n) {
-	super(n);
+	      super(n);
     }
     public PALayer(Network n, Parameters p) {
         super(n, p);
@@ -81,16 +81,25 @@ public class PALayer<T> extends Layer<T> {
     public PALayer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
         super(params, e, sp, tm, autoCreateClassifiers, a);
     }
-
+    /**
+     * Returns paDepolarize (predictive assist per cell) for this {@link PALayer}
+     *
+     * @return
+     */
     public double getPADepolarize() {
         return paDepolarize;
     }
+    /**
+     * Sets paDepolarize {@code PALayer}
+     *
+     * @param pa
+     */
     public void setPADepolarize(double pa) {
         paDepolarize = pa;
     }
     /**
      * Called internally to invoke the {@link TemporalMemory}
-     * 
+     *
      * @param input
      *            the current input vector
      * @param mi
@@ -107,7 +116,7 @@ public class PALayer<T> extends Layer<T> {
                 Column column = cell.getColumn();
                 polarization[column.getIndex()] += (int)paDepolarize;
             }
-            paSP.setPAOverlaps(polarization);
+            connections.setPAOverlaps(polarization);
         }
         return sdr;
     }
