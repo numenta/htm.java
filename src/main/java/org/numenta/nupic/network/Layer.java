@@ -51,6 +51,7 @@ import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -468,24 +469,39 @@ public class Layer<T> {
         return this;
     }
     
+    /**
+     * Called from {@link FunctionFactory#createSpatialFunc(SpatialPooler)} and from {@link #close()}
+     * to calculate the size of the input vector given the output source either being a {@link TemporalMemory}
+     * or a {@link SpatialPooler} - from this {@link Region} or a previous {@link Region}.
+     * 
+     * @return  the length of the input vector
+     */
     private int calculateInputWidth() {
-        if(previous == null || ((previous.algo_content_mask & Layer.TEMPORAL_MEMORY) == 0)) {
-            // Check to see if there is a previous Region
-            if(previous == null) {
-                if(parentRegion.getUpstreamRegion() != null) {
-                    if((parentRegion.getUpstreamRegion().getHead().algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
-                        int out = -1;
-                        out = (parentRegion.getUpstreamRegion().getHead().getConnections().getCellsPerColumn() *
-                            (parentRegion.getUpstreamRegion().getHead().getConnections().getMemory().getMaxIndex() + 1));
-                        
-                        return out;
-                    }
+        // If no previous Layer, check upstream region for its output layer's output.
+        if(previous == null) {
+            if(parentRegion.getUpstreamRegion() != null) {
+                // Upstream region with TM
+                if((parentRegion.getUpstreamRegion().getHead().algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
+                    int out = -1;
+                    out = (parentRegion.getUpstreamRegion().getHead().getConnections().getCellsPerColumn() *
+                        (parentRegion.getUpstreamRegion().getHead().getConnections().getMemory().getMaxIndex() + 1));
+                    
+                    return out;
                 }
+                // Upstream region but no TM, so input is the upstream region's SP
+                
+                return new SparseBinaryMatrix(parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions()).getMaxIndex() + 1;
             }
+            // No previous Layer, and no upstream region
             return connections.getInputMatrix().getMaxIndex() + 1;
+        }else{
+            // There is a previous Layer and that layer contains a TM so compute by cells;
+            if((previous.algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
+                return previous.getConnections().getCellsPerColumn() * (previous.getConnections().getMemory().getMaxIndex() + 1); 
+            }
+            // Previous Layer but it has no TM so use the previous' column output (from SP)
+            return new SparseBinaryMatrix(previous.getConnections().getColumnDimensions()).getMaxIndex() + 1;
         }
-        
-        return previous.getConnections().getCellsPerColumn() * (previous.getConnections().getMemory().getMaxIndex() + 1); 
     }
 
     /**

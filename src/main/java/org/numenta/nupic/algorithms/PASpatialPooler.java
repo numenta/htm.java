@@ -22,19 +22,8 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.ArrayUtils;
-import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.SparseMatrix;
-import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
  * Subclasses {@link SpatialPooler} to perform Prediction-Assisted CLA
