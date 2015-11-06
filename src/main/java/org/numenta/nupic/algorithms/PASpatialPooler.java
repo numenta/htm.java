@@ -49,7 +49,8 @@ public class PASpatialPooler extends SpatialPooler {
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
         c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
-        overlaps = ArrayUtils.i_add(c.getPAOverlaps(), overlaps);
+        int[] paOverlaps = ArrayUtils.toIntArray(c.getPAOverlaps());
+        overlaps = ArrayUtils.i_add(paOverlaps, overlaps);
         ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
         return overlaps;
     }

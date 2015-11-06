@@ -40,34 +40,36 @@ import org.numenta.nupic.model.Column;
 public class PALayer<T> extends Layer<T> {
 
     /** Set to 0.0 to default to parent behavior */
-    public double paDepolarize = 2.0;
+    double paDepolarize = 1.0;
+
+    int verbosity = 0;
 
     /**
      * Constructs a new {@code PALayer} which resides in the specified
      * {@link Network}
-     * 
+     *
      * @param n     the parent {@link Network}
      */
     public PALayer(Network n) {
 	      super(n);
     }
-    
+
     /**
      * Constructs a new {@code PALayer} which resides in the specified
      * {@link Network} and uses the specified {@link Parameters}
-     * 
+     *
      * @param n     the parent {@link Network}
      * @param p     the parameters object from which to obtain settings
      */
     public PALayer(Network n, Parameters p) {
         super(n, p);
     }
-    
+
     /**
      * Constructs a new {@code PALayer} which resides in the specified
      * {@link Network} and uses the specified {@link Parameters}, with
      * the specified name.
-     * 
+     *
      * @param name  the name specified
      * @param n     the parent {@link Network}
      * @param p     the parameters object from which to obtain settings
@@ -75,21 +77,21 @@ public class PALayer<T> extends Layer<T> {
     public PALayer(String name, Network n, Parameters p) {
         super(name, n, p);
     }
-    
+
     /**
      * Manual method of creating a {@code Layer} and specifying its content.
-     * 
+     *
      * @param params                    the parameters object from which to obtain settings
      * @param e                         an (optional) encoder providing input
      * @param sp                        an (optional) SpatialPooler
-     * @param tm                        an (optional) {@link TemporalMemory}    
+     * @param tm                        an (optional) {@link TemporalMemory}
      * @param autoCreateClassifiers     flag indicating whether to create {@link CLAClassifier}s
      * @param a                         an (optional) {@link Anomaly} computer.
      */
     public PALayer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
         super(params, e, sp, tm, autoCreateClassifiers, a);
     }
-    
+
     /**
      * Returns paDepolarize (predictive assist per cell) for this {@link PALayer}
      *
@@ -98,7 +100,7 @@ public class PALayer<T> extends Layer<T> {
     public double getPADepolarize() {
         return paDepolarize;
     }
-    
+
     /**
      * Sets paDepolarize {@code PALayer}
      *
@@ -107,7 +109,25 @@ public class PALayer<T> extends Layer<T> {
     public void setPADepolarize(double pa) {
         paDepolarize = pa;
     }
-    
+
+    /**
+     * Returns verbosity level
+     *
+     * @return
+     */
+    public int getVerbosity() {
+        return verbosity;
+    }
+
+    /**
+     * Sets verbosity level (0 for silent)
+     *
+     * @param verbosity
+     */
+    public void setVerbosity(int verbosity) {
+        this.verbosity = verbosity;
+    }
+
     /**
      * Called internally to invoke the {@link TemporalMemory}
      *
@@ -121,10 +141,21 @@ public class PALayer<T> extends Layer<T> {
         int[] sdr = super.temporalInput(input, mi);
         ComputeCycle cc = mi.computeCycle;
         if(spatialPooler != null && spatialPooler instanceof PASpatialPooler) {
-            int[] polarization = new int[connections.getNumColumns()];
+            int boosted = 0;
+            double[] polarization = new double[connections.getNumColumns()];
             for(Cell cell : cc.predictiveCells) {
                 Column column = cell.getColumn();
-                polarization[column.getIndex()] += (int)paDepolarize;
+                if(polarization[column.getIndex()] == 0.0) {
+                    boosted++;
+                }
+                polarization[column.getIndex()] += paDepolarize;
+
+                if(verbosity >= 2) {
+                    System.out.println(String.format("[%d] = %d", column.getIndex(),(int)paDepolarize));
+                }
+            }
+            if(verbosity >= 1) {
+                System.out.println(String.format("boosted %d/%d columns", boosted, connections.getNumColumns()));
             }
             connections.setPAOverlaps(polarization);
         }
