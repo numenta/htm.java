@@ -14,6 +14,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased [0.6.5-SNAPSHOT]
+* Removed Problematic test in LayerTest and PALayerTest which hung build
+* Added Class MultiEncoderAssembler for ME construction
+* Added Tests for new MultiEncoderAssembler
+* Changed Refactored MultiEncoder building so that manual construction has benefit of evolved code
+* Added @fergalbyrne added PASpatialPooler
+* Added @fergalbyrne added PALayer, and PALayerTest
 * Removed .classpath from .gitignore
 * Added .classpath file back into repo with correct classpath (includes dependencies)
 
