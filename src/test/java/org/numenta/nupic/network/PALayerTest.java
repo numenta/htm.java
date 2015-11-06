@@ -95,7 +95,7 @@ public class PALayerTest {
      * @return
      */
     private boolean isWarmedUp(Layer<Map<String, Object>> l, double anomalyScore) {
-        if(anomalyScore >= 0 && anomalyScore <= 0.1) {
+        if(anomalyScore <= 0.1) {
             ++timesWithinThreshold;
         }else{
             timesWithinThreshold = 0;
@@ -491,7 +491,7 @@ public class PALayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
         Func1<ManualInput, ManualInput> addedFunc = l -> {
             return l.customObject("Interposed: " + Arrays.toString(l.getSDR()));
@@ -512,6 +512,7 @@ public class PALayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
+                System.out.println("sdr = " + Arrays.toString(i.getSDR()));
                 if(test == 0) {
                     assertTrue(Arrays.equals(expected0, i.getSDR()));
                     assertEquals("Interposed: [1, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
@@ -691,7 +692,7 @@ public class PALayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
         Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
 
@@ -739,7 +740,7 @@ public class PALayerTest {
         l.add(htmSensor).add(new PASpatialPooler());
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
         l.subscribe(new Observer<Inference>() {
             int test = 0;
 
@@ -868,7 +869,7 @@ public class PALayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
         // First test without prime directive :-P
         Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
