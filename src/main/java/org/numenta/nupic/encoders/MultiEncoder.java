@@ -147,35 +147,36 @@ public class MultiEncoder extends Encoder<Object> {
 
     @SuppressWarnings("rawtypes")
     public void addMultipleEncoders(Map<String, Map<String, Object>> fieldEncodings) {
-        // Sort the encoders so that they end up in a controlled order
-        List<String> sortedFields = new ArrayList<String>(fieldEncodings.keySet());
-        Collections.sort(sortedFields);
-
-        for (String field : sortedFields) {
-            Map<String, Object> params = fieldEncodings.get(field);
-
-            if (!params.containsKey("fieldName")) {
-                throw new IllegalArgumentException("Missing fieldname for encoder " + field);
-            }
-            String fieldName = (String) params.get("fieldName");
-
-            if (!params.containsKey("encoderType")) {
-                throw new IllegalArgumentException("Missing type for encoder " + field);
-            }
-
-            String encoderType = (String) params.get("encoderType");
-            Encoder.Builder builder = getBuilder(encoderType);
-            for (String param : params.keySet()) {
-                if (!param.equals("fieldName") && !param.equals("encoderType") &&
-                    !param.equals("fieldType") && !param.equals("fieldEncodings")) {
-
-                    setValue(builder, param, params.get(param));
-                }
-            }
-
-            Encoder encoder = (Encoder)builder.build();
-            this.addEncoder(fieldName, encoder);
-        }
+        MultiEncoderAssembler.assemble(this, fieldEncodings);
+//        // Sort the encoders so that they end up in a controlled order
+//        List<String> sortedFields = new ArrayList<String>(fieldEncodings.keySet());
+//        Collections.sort(sortedFields);
+//
+//        for (String field : sortedFields) {
+//            Map<String, Object> params = fieldEncodings.get(field);
+//
+//            if (!params.containsKey("fieldName")) {
+//                throw new IllegalArgumentException("Missing fieldname for encoder " + field);
+//            }
+//            String fieldName = (String) params.get("fieldName");
+//
+//            if (!params.containsKey("encoderType")) {
+//                throw new IllegalArgumentException("Missing type for encoder " + field);
+//            }
+//
+//            String encoderType = (String) params.get("encoderType");
+//            Encoder.Builder builder = getBuilder(encoderType);
+//            for (String param : params.keySet()) {
+//                if (!param.equals("fieldName") && !param.equals("encoderType") &&
+//                    !param.equals("fieldType") && !param.equals("fieldEncodings")) {
+//
+//                    setValue(builder, param, params.get(param));
+//                }
+//            }
+//
+//            Encoder encoder = (Encoder)builder.build();
+//            this.addEncoder(fieldName, encoder);
+//        }
     }
 
     /**
