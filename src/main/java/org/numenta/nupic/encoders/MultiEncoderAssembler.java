@@ -54,10 +54,8 @@ public class MultiEncoderAssembler {
                 Builder<?, ?> builder = ((MultiEncoder)encoder).getBuilder(encoderType);
                 
                 if(encoderType.equals("SDRCategoryEncoder")) {
-                    ((MultiEncoder)encoder).setValue(builder, "n", params.get("n"));
-                    ((MultiEncoder)encoder).setValue(builder, "w", params.get("w"));
-                    ((MultiEncoder)encoder).setValue(builder, "forced", params.get("forced"));
-                    ((MultiEncoder)encoder).setValue(builder, "categoryList", params.get("categoryList"));
+                    // Add mappings for category list
+                    configureCategoryBuilder((MultiEncoder)encoder, params, builder);
                 }else if(encoderType.equals("DateEncoder")) {
                     // Extract date specific mappings out of the map so that we can
                     // pre-configure the DateEncoder with its needed directives.
@@ -79,6 +77,15 @@ public class MultiEncoderAssembler {
                 ((MultiEncoder)encoder).addEncoder(fieldName, (Encoder<?>)builder.build());
             }
         }
+    }
+    
+    private static void configureCategoryBuilder(MultiEncoder multiEncoder, 
+        Map<String, Object> encoderSettings, Builder<?,?> builder) {
+        
+        multiEncoder.setValue(builder, "n", encoderSettings.get("n"));
+        multiEncoder.setValue(builder, "w", encoderSettings.get("w"));
+        multiEncoder.setValue(builder, "forced", encoderSettings.get("forced"));
+        multiEncoder.setValue(builder, "categoryList", encoderSettings.get("categoryList"));
     }
     
     /**
@@ -208,17 +215,33 @@ public class MultiEncoderAssembler {
      * @param key       the key to be set.
      */
     private static void setGeoFieldBits(GeospatialCoordinateEncoder.Builder b, Map<String, Object> m, String key) {
-        String t = (String)m.get(key);
-        switch(key) {
-            case "scale" : {
-                b.scale(Integer.parseInt(t));
-                break;
+        Object obj = m.get(key);
+        if(obj instanceof String) {
+            String t = (String)m.get(key);
+            switch(key) {
+                case "scale" : {
+                    b.scale(Integer.parseInt(t));
+                    break;
+                }
+                case "timestep" : {
+                    b.timestep(Integer.parseInt(t));
+                    break;
+                }
+                default: break;
             }
-            case "timestep" : {
-                b.timestep(Integer.parseInt(t));
-                break;
+        }else{
+            int t = (int)obj;
+            switch(key) {
+                case "scale" : {
+                    b.scale(t);
+                    break;
+                }
+                case "timestep" : {
+                    b.timestep(t);
+                    break;
+                }
+                default: break;
             }
-            default: break;
         }
     }
     
