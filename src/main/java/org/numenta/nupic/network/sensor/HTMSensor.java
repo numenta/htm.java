@@ -26,7 +26,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -40,7 +39,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -51,16 +49,15 @@ import org.numenta.nupic.encoders.CoordinateEncoder;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.DeltaEncoder;
 import org.numenta.nupic.encoders.Encoder;
-import org.numenta.nupic.encoders.Encoder.Builder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.GeospatialCoordinateEncoder;
 import org.numenta.nupic.encoders.LogEncoder;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.encoders.MultiEncoderAssembler;
 import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
 import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
-import org.numenta.nupic.util.Tuple;
 
 
 /**
@@ -595,168 +592,11 @@ public class HTMSensor<T> implements Sensor<T> {
                 throw new IllegalArgumentException(
                     "Cannot initialize this Sensor's MultiEncoder with a null settings");
             }
-            
-            // Sort the encoders so that they end up in a controlled order
-            List<String> sortedFields = new ArrayList<String>(encoderSettings.keySet());
-            Collections.sort(sortedFields);
-
-            for (String field : sortedFields) {
-                Map<String, Object> params = encoderSettings.get(field);
-
-                if (!params.containsKey("fieldName")) {
-                    throw new IllegalArgumentException("Missing fieldname for encoder " + field);
-                }
-                String fieldName = (String) params.get("fieldName");
-
-                if (!params.containsKey("encoderType")) {
-                    throw new IllegalArgumentException("Missing type for encoder " + field);
-                }
-                
-                String encoderType = (String) params.get("encoderType");
-                Builder<?, ?> builder = ((MultiEncoder)encoder).getBuilder(encoderType);
-                
-                if(encoderType.equals("SDRCategoryEncoder")) {
-                    ((MultiEncoder)encoder).setValue(builder, "n", params.get("n"));
-                    ((MultiEncoder)encoder).setValue(builder, "w", params.get("w"));
-                    ((MultiEncoder)encoder).setValue(builder, "forced", params.get("forced"));
-                    ((MultiEncoder)encoder).setValue(builder, "categoryList", params.get("categoryList"));
-                }else if(encoderType.equals("DateEncoder")) {
-                    // Extract date specific mappings out of the map so that we can
-                    // pre-configure the DateEncoder with its needed directives.
-                    configureDateBuilder(encoderSettings, (DateEncoder.Builder)builder);
-                }else if(encoderType.equals("GeospatialCoordinateEncoder")) {
-                    // Extract Geo specific mappings out of the map so that we can
-                    // pre-configure the GeospatialCoordinateEncoder with its needed directives.
-                    configureGeoBuilder(encoderSettings, (GeospatialCoordinateEncoder.Builder) builder);
-                }else{
-                    for (String param : params.keySet()) {
-                        if (!param.equals("fieldName") && !param.equals("encoderType") &&
-                            !param.equals("fieldType") && !param.equals("fieldEncodings")) {
-                            
-                            ((MultiEncoder)encoder).setValue(builder, param, params.get(param));
-                        }
-                    }
-                }
-
-                ((MultiEncoder)encoder).addEncoder(fieldName, (Encoder<?>)builder.build());
-            }
-        }
-    }
-    
-    /**
-     * Do special configuration for DateEncoder
-     * @param encoderSettings
-     */
-    private void configureDateBuilder(Map<String, Map<String, Object>> encoderSettings, DateEncoder.Builder b) {
-        Map<String, Object> dateEncoderSettings = getEncoderMap(encoderSettings, "DateEncoder");
-        if(dateEncoderSettings == null) {
-            throw new IllegalStateException("Input requires missing DateEncoder settings mapping.");
         }
         
-        for(String key : dateEncoderSettings.keySet()) {
-            if(!key.equals("fieldName") && !key.equals("encoderType") &&
-                !key.equals("fieldType") && !key.equals("fieldEncodings")) {
-                
-                if(!key.equals("season") && !key.equals("dayOfWeek") &&
-                    !key.equals("weekend") && !key.equals("holiday") &&
-                    !key.equals("timeOfDay") && !key.equals("customDays") && 
-                    !key.equals("formatPattern") && !key.equals("dateFormatter")) {
-                
-                    ((MultiEncoder)encoder).setValue(b, key, dateEncoderSettings.get(key));
-                }else{
-                    if(key.equals("formatPattern")) {
-                        b.formatPattern((String)dateEncoderSettings.get(key));
-                    }else if(key.equals("dateFormatter")) {
-                        b.formatter((DateTimeFormatter)dateEncoderSettings.get(key));
-                    }else{
-                        setDateFieldBits(b, dateEncoderSettings, key);
-                    }
-                }
-            }
-        }
+        MultiEncoderAssembler.assemble(encoder, encoderSettings);
     }
-
-    /**
-     * Extract the encoder settings out of the main map so that we can do
-     * special initialization on it
-     * @param encoderSettings
-     * @return the settings map
-     */
-    private Map<String, Object> getEncoderMap(Map<String, Map<String, Object>> encoderSettings, String encoderType) {
-        for(String key : encoderSettings.keySet()) {
-            String keyType = null;
-            if((keyType = (String)encoderSettings.get(key).get("encoderType")) != null &&
-                    keyType.equals(encoderType)) {
-                // Remove the key from the specified map (extraction)
-                return (Map<String, Object>)encoderSettings.get(key);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the {@link DateEncoder.Builder} specified
-     * @param b         the builder on which to set the mapping.
-     * @param m         the map containing the values
-     * @param key       the key to be set.
-     */
-    @SuppressWarnings("unchecked")
-    private void setDateFieldBits(DateEncoder.Builder b, Map<String, Object> m, String key) {
-        Tuple t = (Tuple)m.get(key);
-        switch(key) {
-            case "season" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.season((int)t.get(0), (double)t.get(1));
-                }else{
-                    b.season((int)t.get(0));
-                }
-                break;
-            }
-            case "dayOfWeek" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.dayOfWeek((int)t.get(0), (double)t.get(1));
-                }else{
-                    b.dayOfWeek((int)t.get(0));
-                }
-                break;
-            }
-            case "weekend" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.weekend((int)t.get(0), (double)t.get(1));
-                }else{
-                    b.weekend((int)t.get(0));
-                }
-                break;
-            }
-            case "holiday" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.holiday((int)t.get(0), (double)t.get(1));
-                }else{
-                    b.holiday((int)t.get(0));
-                }
-                break;
-            }
-            case "timeOfDay" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.timeOfDay((int)t.get(0), (double)t.get(1));
-                }else{
-                    b.timeOfDay((int)t.get(0));
-                }
-                break;
-            }
-            case "customDays" : {
-                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
-                    b.customDays((int)t.get(0), (List<String>)t.get(1));
-                }else{
-                    b.customDays((int)t.get(0));
-                }
-                break;
-            }
-            
-            default: break;
-        }
-    }
-    
+      
     /**
      * Returns this {@code HTMSensor}'s {@link MultiEncoder}
      * @return
@@ -765,49 +605,5 @@ public class HTMSensor<T> implements Sensor<T> {
         return (MultiEncoder)encoder;
     }
 
-    /**
-     * Specific configuration for GeospatialCoordinateEncoder builder
-     * @param encoderSettings
-     * @param builder
-     */
-    private void configureGeoBuilder(Map<String, Map<String, Object>> encoderSettings, GeospatialCoordinateEncoder.Builder builder) {
-        Map<String, Object> geoEncoderSettings = getEncoderMap(encoderSettings, "GeospatialCoordinateEncoder");
-        if(geoEncoderSettings == null) {
-            throw new IllegalStateException("Input requires missing GeospatialCoordinateEncoder settings mapping.");
-        }
-
-        for(String key : geoEncoderSettings.keySet()) {
-            if(!key.equals("fieldName") && !key.equals("encoderType") &&
-                    !key.equals("fieldType") && !key.equals("fieldEncodings")) {
-
-                if(!key.equals("scale") && !key.equals("timestep")) {
-                    ((MultiEncoder)encoder).setValue(builder, key, geoEncoderSettings.get(key));
-                } else {
-                    setGeoFieldBits(builder, geoEncoderSettings, key);
-                }
-            }
-        }
-    }
-
-    /**
-     * Initializes the {@link GeospatialCoordinateEncoder.Builder} specified
-     * @param b         the builder on which to set the mapping.
-     * @param m         the map containing the values
-     * @param key       the key to be set.
-     */
-    private void setGeoFieldBits(GeospatialCoordinateEncoder.Builder b, Map<String, Object> m, String key) {
-        String t = (String)m.get(key);
-        switch(key) {
-            case "scale" : {
-                b.scale(Integer.parseInt(t));
-                break;
-            }
-            case "timestep" : {
-                b.timestep(Integer.parseInt(t));
-                break;
-            }
-            default: break;
-        }
-    }
 }
 

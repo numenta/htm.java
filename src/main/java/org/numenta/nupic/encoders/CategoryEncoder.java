@@ -112,15 +112,24 @@ public class CategoryEncoder extends Encoder<String> {
 		ncategories = categoryList == null ? 0 : categoryList.size() + 1;
 		minVal = 0;
 		maxVal = ncategories - 1;
-
-		scalarEncoder = ScalarEncoder.builder()
-		        .n(this.n)
-		        .w(this.w)
-		        .radius(this.radius)
-		        .minVal(this.minVal)
-		        .maxVal(this.maxVal)
-		        .periodic(this.periodic)
-		        .forced(this.forced).build();
+		
+		try {
+    		scalarEncoder = ScalarEncoder.builder()
+    	        .n(this.n)
+    	        .w(this.w)
+    	        .radius(this.radius)
+    	        .minVal(this.minVal)
+    	        .maxVal(this.maxVal)
+    	        .periodic(this.periodic)
+    	        .forced(this.forced).build();
+		}catch(Exception e) {
+		    String msg = null;
+		    int idx = -1;
+		    if((idx = (msg = e.getMessage()).indexOf("ScalarEncoder")) != -1) {
+		        msg = msg.substring(0, idx).concat("CategoryEncoder");
+		        throw new IllegalStateException(msg);
+		    }
+		}
 
 		indexToCategory.put(0, "<UNKNOWN>");
 		if(categoryList != null && !categoryList.isEmpty()) {
