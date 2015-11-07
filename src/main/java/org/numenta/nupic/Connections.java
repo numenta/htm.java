@@ -212,13 +212,13 @@ public class Connections {
 
     ///////// paCLA extensions
 
-	  protected int[] paOverlaps;
+	  protected double[] paOverlaps;
     /**
      * Sets paOverlaps (predictive assist vector) for {@link PASpatialPooler}
      *
      * @param overlaps
      */
-    public void setPAOverlaps(int[] overlaps) {
+    public void setPAOverlaps(double[] overlaps) {
         this.paOverlaps = overlaps;
     }
 
@@ -227,7 +227,7 @@ public class Connections {
      *
      * @return
      */
-    public int[] getPAOverlaps() {
+    public double[] getPAOverlaps() {
         return this.paOverlaps;
     }
 
@@ -493,7 +493,7 @@ public class Connections {
      */
     public void setNumColumns(int n) {
         this.numColumns = n;
-        this.paOverlaps = new int[n];
+        this.paOverlaps = new double[n];
     }
 
     /**

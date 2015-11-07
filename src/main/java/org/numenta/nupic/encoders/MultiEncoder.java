@@ -172,6 +172,8 @@ public class MultiEncoder extends Encoder<Object> {
                 return PassThroughEncoder.builder();
             case "ScalarEncoder":
                 return ScalarEncoder.builder();
+            case "AdaptiveScalarEncoder":
+                return AdaptiveScalarEncoder.builder();
             case "SparsePassThroughEncoder":
                 return SparsePassThroughEncoder.sparseBuilder();
             case "SDRCategoryEncoder":

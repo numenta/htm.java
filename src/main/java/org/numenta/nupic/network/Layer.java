@@ -166,15 +166,15 @@ import rx.subjects.PublishSubject;
  */
 public class Layer<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
 
-    private Network parentNetwork;
-    private Region parentRegion;
+    protected Network parentNetwork;
+    protected Region parentRegion;
 
-    private Parameters params;
+    protected Parameters params;
     protected Connections connections;
-    private HTMSensor<?> sensor;
-    private MultiEncoder encoder;
+    protected HTMSensor<?> sensor;
+    protected MultiEncoder encoder;
     protected SpatialPooler spatialPooler;
     protected TemporalMemory temporalMemory;
     private Boolean autoCreateClassifiers;
@@ -188,7 +188,7 @@ public class Layer<T> {
     FunctionFactory factory;
 
     /** Active columns in the {@link SpatialPooler} at time "t" */
-    private int[] feedForwardActiveColumns;
+    protected int[] feedForwardActiveColumns;
     /** Active column indexes from the {@link SpatialPooler} at time "t" */
     private int[] feedForwardSparseActives;
     /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t - 1" */
@@ -204,7 +204,7 @@ public class Layer<T> {
 
     private boolean isClosed;
     private boolean isHalted;
-    private boolean isLearn = true;
+    protected boolean isLearn = true;
 
     private Layer<Inference> next;
     private Layer<Inference> previous;
@@ -430,7 +430,9 @@ public class Layer<T> {
             int[] upstreamDims = new int[] { calculateInputWidth() };//parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions();
             params.setInputDimensions(upstreamDims);
             connections.setInputDimensions(upstreamDims);
-        } else if(parentRegion != null && parentNetwork != null && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null && spatialPooler != null) {
+        } else if(parentRegion != null && parentNetwork != null
+                && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null
+                && spatialPooler != null) {
 
             Layer<?> curr = this;
             while((curr = curr.getPrevious()) != null) {
@@ -494,11 +496,11 @@ public class Layer<T> {
             }
             // No previous Layer, and no upstream region
             // layer contains a TM so compute by cells;
-            if((algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
+            if(hasTM() && !hasSP()) {
                 return getConnections().getCellsPerColumn() * (getConnections().getMemory().getMaxIndex() + 1); 
             }
             // layer only contains a SP
-            return connections.getInputMatrix().getMaxIndex() + 1;
+            return connections.getNumInputs();
         }else{
             // There is a previous Layer and that layer contains a TM so compute by cells;
             if((previous.algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY) {
@@ -509,7 +511,14 @@ public class Layer<T> {
             return new SparseBinaryMatrix(previous.getConnections().getColumnDimensions()).getMaxIndex() + 1;
         }
     }
-    
+
+    boolean hasTM() {
+        return (algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY;
+    }
+    boolean hasSP() {
+        return (algo_content_mask & Layer.SPATIAL_POOLER) == Layer.SPATIAL_POOLER;
+    }
+
     /**
      * Given an input field width and Spatial Pooler dimensionality; this method
      * will return an array of dimension sizes whose number is equal to the
