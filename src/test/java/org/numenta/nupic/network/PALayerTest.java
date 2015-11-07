@@ -147,6 +147,52 @@ public class PALayerTest {
     }
 
     @Test
+    public void testConstructors() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer(n, p);
+        assertTrue(n == l.getParentNetwork());
+    }
+
+    @Test
+    public void testPolariseAndVerbosity() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer(n, p);
+        l.setPADepolarize(1.0);
+        assertTrue(1.0 == l.getPADepolarize());
+
+        l.setVerbosity(1);
+        assertTrue(1 == l.getVerbosity());
+    }
+
+
+    @Test
+    public void testSpatialInput() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{3});
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer(n, p);
+
+        l.setVerbosity(2);
+        int[] result;
+        try {
+            result = l.spatialInput(null);
+        } catch(Exception e) {
+            assertTrue(e instanceof NullPointerException);
+        }
+
+        result = l.spatialInput(new int[] {});
+        assertTrue(result.length == 0);
+
+        try {
+            result = l.spatialInput(new int[] {1, 0, 1, 0, 0});
+        } catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Layer<?> l = Network.createPALayer("l1", p).add(new TemporalMemory());

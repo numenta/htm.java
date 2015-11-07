@@ -168,8 +168,8 @@ public class Layer<T> {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
 
-    private Network parentNetwork;
-    private Region parentRegion;
+    protected Network parentNetwork;
+    protected Region parentRegion;
 
     protected Parameters params;
     protected Connections connections;

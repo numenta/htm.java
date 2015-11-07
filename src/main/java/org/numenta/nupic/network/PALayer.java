@@ -135,6 +135,14 @@ public class PALayer<T> extends Layer<T> {
     public void setVerbosity(int verbosity) {
         this.verbosity = verbosity;
     }
+    /**
+     * Returns network
+     *
+     * @return
+     */
+    public Network getParentNetwork() {
+        return parentNetwork;
+    }
 
     /**
      * Called internally to invoke the {@link SpatialPooler}
