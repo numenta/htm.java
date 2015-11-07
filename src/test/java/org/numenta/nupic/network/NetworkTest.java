@@ -833,11 +833,11 @@ public class NetworkTest {
         
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
-                .add(Network.createLayer("2", p)
-                    .add(Anomaly.create())
-                    .add(new TemporalMemory())
-                    .add(new SpatialPooler())
-                    .close()));
+                    .add(Network.createLayer("2", p)
+                            .add(Anomaly.create())
+                            .add(new TemporalMemory())
+                                    //.add(new SpatialPooler())
+                            .close()));
         
         Region r1 = network.lookup("r1");
         Layer<?> layer2 = r1.lookup("2");
@@ -845,7 +845,28 @@ public class NetworkTest {
         int width = layer2.calculateInputWidth();
         assertEquals(65536, width);
     }
-    
+
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_NoPrevRegion_andSPTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Network network = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                        .add(Network.createLayer("2", p)
+                                .add(Anomaly.create())
+                                .add(new TemporalMemory())
+                                        .add(new SpatialPooler())
+                                .close()));
+
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+
+        int width = layer2.calculateInputWidth();
+        assertEquals(8, width);
+    }
+
     @Test
     public void testCalculateInputWidth_NoPrevLayer_NoPrevRegion_andNoTM() {
         Parameters p = NetworkTestHarness.getParameters();

@@ -129,6 +129,29 @@ public class PALayer<T> extends Layer<T> {
     }
 
     /**
+     * Called internally to invoke the {@link SpatialPooler}
+     *
+     * @param input
+     * @return
+     */
+    protected int[] spatialInput(int[] input) {
+        if(input == null) {
+            LOGGER.info("Layer ".concat(getName()).concat(" received null input"));
+        } else if(input.length < 1) {
+            LOGGER.info("Layer ".concat(getName()).concat(" received zero length bit vector"));
+            return input;
+        } else if(input.length > connections.getNumInputs()) {
+            if(verbosity > 0) {
+                System.out.println(input);
+            }
+            throw new IllegalArgumentException(String.format("Input size %d > SP's NumInputs %d",input.length, connections.getNumInputs()));
+        }
+        spatialPooler.compute(connections, input, feedForwardActiveColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
+
+        return feedForwardActiveColumns;
+    }
+
+    /**
      * Called internally to invoke the {@link TemporalMemory}
      *
      * @param input
