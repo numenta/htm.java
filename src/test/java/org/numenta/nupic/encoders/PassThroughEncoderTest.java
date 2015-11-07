@@ -93,7 +93,6 @@ public class PassThroughEncoderTest {
 		
 		int[] out1 = encoder.encode(bitmap1);
 		encoder.setW(ArrayUtils.where(bitmap2, ArrayUtils.WHERE_1).length);
-		System.out.println("n = " + encoder.getN());
 		int[] out2 = encoder.encode(bitmap2);
 
 		TDoubleList result = encoder.closenessScores(new TDoubleArrayList(ArrayUtils.toDoubleArray(out1)), new TDoubleArrayList(ArrayUtils.toDoubleArray(out2)), true);

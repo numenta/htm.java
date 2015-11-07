@@ -33,6 +33,14 @@ import org.numenta.nupic.model.Column;
 
 /**
  * Extension to Prediction-Assisted CLA
+ * 
+ * PALayer is a Layer which can contain a PASpatialPooler, in which case (via Connections) 
+ * it prepopulates the paSP's overlap vector with a depolarisation value derived from its 
+ * TM's predictive cells. PASpatialPooler adds this vector to the overlaps calculated from the 
+ * feedforward input before doing inhibition. This change pre-biases the paSP to favour columns 
+ * with predictive cells. 
+ * 
+ * Full details at http://arxiv.org/abs/1509.08255
  *
  * @author David Ray
  * @author Fergal Byrne

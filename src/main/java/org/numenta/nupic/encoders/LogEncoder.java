@@ -405,8 +405,17 @@ public class LogEncoder extends Encoder<Double> {
 			//  Implementing classes would do setting of specific //
 			//  vars here together with any sanity checking       //
 			////////////////////////////////////////////////////////
-
-			((LogEncoder)encoder).init();
+			
+			try {
+			    ((LogEncoder)encoder).init();
+			}catch(Exception e) {
+			    String msg = null;
+			    int idx = -1;
+			    if((idx = (msg = e.getMessage()).indexOf("ScalarEncoder")) != -1) {
+			        msg = msg.substring(0, idx).concat("LogEncoder");
+			    }
+			    throw new IllegalStateException(msg);
+			}
 
 			return (LogEncoder)encoder;
 		}
