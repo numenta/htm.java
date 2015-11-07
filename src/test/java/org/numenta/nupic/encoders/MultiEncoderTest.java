@@ -46,7 +46,24 @@ public class MultiEncoderTest {
 	private void initME() {
 		me = builder.build();
 	}
-	
+	/**
+	 * Test addition of encoders one-by-one.
+	 */
+	@Test
+	public void testAdaptiveScalarEncoder() {
+		setUp();
+		initME();
+		Encoder.Builder<?,?> ase = me.getBuilder("AdaptiveScalarEncoder");
+
+		try {
+			Encoder.Builder<?,?> be = me.getBuilder("BogusEncoder");
+		} catch (Exception e) {
+			assertTrue(e instanceof IllegalArgumentException);
+		}
+
+		//runMixedTests(me);
+	}
+
 	/**
 	 * Test addition of encoders one-by-one.
 	 */
