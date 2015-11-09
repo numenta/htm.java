@@ -22,7 +22,9 @@
 package org.numenta.nupic.encoders;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,9 +56,11 @@ public class MultiEncoderTest {
 		setUp();
 		initME();
 		Encoder.Builder<?,?> ase = me.getBuilder("AdaptiveScalarEncoder");
-
+		assertNotNull(ase);
+		
 		try {
-			Encoder.Builder<?,?> be = me.getBuilder("BogusEncoder");
+			me.getBuilder("BogusEncoder");
+			fail(); //Expect exception thrown here
 		} catch (Exception e) {
 			assertTrue(e instanceof IllegalArgumentException);
 		}
