@@ -150,7 +150,7 @@ public class PALayerTest {
     public void testConstructors() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Network n = new Network("test",p);
-        PALayer<?> l = new PALayer(n, p);
+        PALayer<?> l = new PALayer<>(n, p);
         assertTrue(n == l.getParentNetwork());
     }
 
@@ -158,7 +158,7 @@ public class PALayerTest {
     public void testPolariseAndVerbosity() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Network n = new Network("test",p);
-        PALayer<?> l = new PALayer(n, p);
+        PALayer<?> l = new PALayer<>(n, p);
         l.setPADepolarize(1.0);
         assertTrue(1.0 == l.getPADepolarize());
 
@@ -172,7 +172,7 @@ public class PALayerTest {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{3});
         Network n = new Network("test",p);
-        PALayer<?> l = new PALayer(n, p);
+        PALayer<?> l = new PALayer<>(n, p);
 
         l.setVerbosity(2);
         int[] result;
