@@ -13,13 +13,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased
-* Nothing yet... 
+## Unreleased [0.6.5-SNAPSHOT]
+* Removed Problematic test in LayerTest and PALayerTest which hung build
+* Added Class MultiEncoderAssembler for ME construction
+* Added Tests for new MultiEncoderAssembler
+* Changed Refactored MultiEncoder building so that manual construction has benefit of evolved code
+* Added @fergalbyrne added PASpatialPooler
+* Added @fergalbyrne added PALayer, and PALayerTest
+* Removed .classpath from .gitignore
+* Added .classpath file back into repo with correct classpath (includes dependencies)
 
 ***
 
-## [v0.6.3-alpha] - 2015-10-21 (Delayed for anticipated features)
+## [v0.6.4-alpha] - 2015-10-23
 #### Added
+* New [SDR](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/SDR.java) class - for sdr related convenience methods
 * [[PR #329](https://github.com/numenta/htm.java/pull/329)] - Added low memory implementation of SparseMatrix classes and including tests
 * [[Issue #323 PR #324](https://github.com/numenta/htm.java/pull/324)] - Added / Fixed ability to input Coordinate data into the NAPI sensors.
 * [Issue #319] - Added feedback for Network thread start detection
@@ -27,6 +35,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [Issue #319] - (same issue) Added new tests in NetworkTest.java to ensure above functionality
 
 #### Changed
+* [[PR #335](https://github.com/numenta/htm.java/pull/335)] - Re-write of TemporalMemory to CLAClassifier data type for input of _Active Cells_ instead of Predicted Column-cells
 * [[PR #333](https://github.com/numenta/htm.java/pull/333)] - Corrected the getNeighborsND method to use topology matrix instead of input matrix for dimension calculations
 
 ## [v0.6.2-alpha] - 2015-09-15

@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +39,9 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -94,7 +93,7 @@ public class NetworkTest {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
-                System.out.println("output = " + Arrays.toString(output.getSDR()));
+//                System.out.println("output = " + Arrays.toString(output.getSDR()));
             }
         });
         
@@ -343,7 +342,8 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 netInference = (ManualInput)i;
-                if(netInference.getPredictedColumns().length > 15) {
+                if(r1.getHead().getInference().getPredictiveCells().size() > 0 && 
+                    r2.getHead().getInference().getPredictiveCells().size() > 0) {
                     network.halt();
                 }
             }
@@ -369,12 +369,15 @@ public class NetworkTest {
         // Let run for 5 secs.
         try {
             r2.lookup("1").getLayerThread().join();//5000);
-            assertTrue(!Arrays.equals(topInference.getSparseActives(), 
-                bottomInference.getSparseActives()));
-            assertTrue(!Arrays.equals(topInference.getPredictedColumns(), 
-                bottomInference.getPredictedColumns()));
-            assertTrue(topInference.getPredictedColumns().length > 0);
-            assertTrue(bottomInference.getPredictedColumns().length > 0);
+//            System.out.println("top ff = " + Arrays.toString(topInference.getFeedForwardSparseActives()));
+//            System.out.println("bot ff = " + Arrays.toString(bottomInference.getFeedForwardSparseActives()));
+//            System.out.println("top pred = " + topInference.getPredictiveCells());
+//            System.out.println("bot pred = " + bottomInference.getPredictiveCells());
+//            System.out.println("top active = " + topInference.getActiveCells());
+//            System.out.println("bot active = " + bottomInference.getActiveCells());
+            assertTrue(!topInference.getPredictiveCells().equals(bottomInference.getPredictiveCells()));
+            assertTrue(topInference.getPredictiveCells().size() > 0);
+            assertTrue(bottomInference.getPredictiveCells().size() > 0);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -541,8 +544,8 @@ public class NetworkTest {
             for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
                 multiInput.put("dayOfWeek", j);
                 Inference inf = n.computeImmediate(multiInput);
-                if(inf.getPredictedColumns().length > 6) {
-                    assertTrue(inf.getPredictedColumns() != null);
+                if(inf.getPredictiveCells().size() > 6) {
+                    assertTrue(inf.getPredictiveCells() != null);
                     // Make sure we've gotten all the responses
                     assertEquals((i * 7) + (int)j, inf.getRecordNum());
                     gotResult = true;
@@ -677,7 +680,7 @@ public class NetworkTest {
                  //System.out.println(output.getRecordNum() + ":  input = " + Arrays.toString(output.getEncoding()));//output = " + Arrays.toString(output.getSDR()) + ", " + output.getAnomalyScore());
                 if(output.getAnomalyScore() < anomaly) {
                     anomaly = output.getAnomalyScore();
-                    System.out.println("anomaly = " + anomaly);
+//                    System.out.println("anomaly = " + anomaly);
                 }
             }
         });
@@ -762,6 +765,171 @@ public class NetworkTest {
         assertEquals("Cannot autoclassify with raw array input or  " +
             "Coordinate based encoders... Remove auto classify setting.", errorMessage);
     }
-
     
+    ///////////////////////////////////////////////////////////////////////////////////
+    //    Tests of Calculate Input Width for inter-regional and inter-layer calcs    //
+    ///////////////////////////////////////////////////////////////////////////////////
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_UpstreamRegion_with_TM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())))
+            .add(Network.createRegion("r2")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
+            .connect("r1", "r2");
+        
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+        
+        int width = layer2.calculateInputWidth();
+        assertEquals(65536, width);
+    }
+    
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_UpstreamRegion_without_TM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())))
+            .add(Network.createRegion("r2")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
+            .connect("r1", "r2");
+        
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+        
+        int width = layer2.calculateInputWidth();
+        assertEquals(2048, width);
+        
+    }
+    
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_NoPrevRegion_andTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                    .add(Network.createLayer("2", p)
+                            .add(Anomaly.create())
+                            .add(new TemporalMemory())
+                                    //.add(new SpatialPooler())
+                            .close()));
+        
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+        
+        int width = layer2.calculateInputWidth();
+        assertEquals(65536, width);
+    }
+
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_NoPrevRegion_andSPTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Network network = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                        .add(Network.createLayer("2", p)
+                                .add(Anomaly.create())
+                                .add(new TemporalMemory())
+                                        .add(new SpatialPooler())
+                                .close()));
+
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+
+        int width = layer2.calculateInputWidth();
+        assertEquals(8, width);
+    }
+
+    @Test
+    public void testCalculateInputWidth_NoPrevLayer_NoPrevRegion_andNoTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new SpatialPooler())
+                    .close()));
+        
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+        
+        int width = layer2.calculateInputWidth();
+        assertEquals(8, width);
+    }
+    
+    @Test
+    public void testCalculateInputWidth_WithPrevLayer_WithTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .add(Anomaly.create())
+                    .add(new SpatialPooler()))
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler()))
+                .connect("1", "2"));
+                    
+        Region r1 = network.lookup("r1");
+        Layer<?> layer1 = r1.lookup("1");
+        
+        int width = layer1.calculateInputWidth();
+        assertEquals(65536, width);
+    }
+    
+    @Test
+    public void testCalculateInputWidth_WithPrevLayer_NoTM() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .add(Anomaly.create())
+                    .add(new SpatialPooler()))
+                .add(Network.createLayer("2", p)
+                    .add(new SpatialPooler()))
+                .connect("1", "2"));
+                    
+        Region r1 = network.lookup("r1");
+        Layer<?> layer1 = r1.lookup("1");
+        
+        int width = layer1.calculateInputWidth();
+        assertEquals(2048, width);
+    }
 }

@@ -44,7 +44,7 @@ import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
@@ -65,48 +65,46 @@ import rx.functions.Func1;
 
 /**
  * Tests the "heart and soul" of the Network API
- * 
+ *
  * @author DavidRay
  *
  */
-public class LayerTest {
+public class PALayerTest {
 
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
-
-    
 
     @Test
     public void testMasking() {
         byte algo_content_mask = 0;
 
         // -- Build up mask
-        algo_content_mask |= Layer.CLA_CLASSIFIER;
+        algo_content_mask |= PALayer.CLA_CLASSIFIER;
         assertEquals(4, algo_content_mask);
 
-        algo_content_mask |= Layer.SPATIAL_POOLER;
+        algo_content_mask |= PALayer.SPATIAL_POOLER;
         assertEquals(5, algo_content_mask);
 
-        algo_content_mask |= Layer.TEMPORAL_MEMORY;
+        algo_content_mask |= PALayer.TEMPORAL_MEMORY;
         assertEquals(7, algo_content_mask);
 
-        algo_content_mask |= Layer.ANOMALY_COMPUTER;
+        algo_content_mask |= PALayer.ANOMALY_COMPUTER;
         assertEquals(15, algo_content_mask);
 
         // -- Now Peel Off
-        algo_content_mask ^= Layer.ANOMALY_COMPUTER;
+        algo_content_mask ^= PALayer.ANOMALY_COMPUTER;
         assertEquals(7, algo_content_mask);
 
-        assertEquals(0, algo_content_mask & Layer.ANOMALY_COMPUTER);
-        assertEquals(2, algo_content_mask & Layer.TEMPORAL_MEMORY);
+        assertEquals(0, algo_content_mask & PALayer.ANOMALY_COMPUTER);
+        assertEquals(2, algo_content_mask & PALayer.TEMPORAL_MEMORY);
 
-        algo_content_mask ^= Layer.TEMPORAL_MEMORY;
+        algo_content_mask ^= PALayer.TEMPORAL_MEMORY;
         assertEquals(5, algo_content_mask);
 
-        algo_content_mask ^= Layer.SPATIAL_POOLER;
+        algo_content_mask ^= PALayer.SPATIAL_POOLER;
         assertEquals(4, algo_content_mask);
 
-        algo_content_mask ^= Layer.CLA_CLASSIFIER;
+        algo_content_mask ^= PALayer.CLA_CLASSIFIER;
         assertEquals(0, algo_content_mask);
     }
 
@@ -117,7 +115,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<Map<String, Object>>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
         // Test that we get the expected exception if there hasn't been any processing.
         try {
@@ -149,9 +147,55 @@ public class LayerTest {
     }
 
     @Test
+    public void testConstructors() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer<>(n, p);
+        assertTrue(n == l.getParentNetwork());
+    }
+
+    @Test
+    public void testPolariseAndVerbosity() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer<>(n, p);
+        l.setPADepolarize(1.0);
+        assertTrue(1.0 == l.getPADepolarize());
+
+        l.setVerbosity(1);
+        assertTrue(1 == l.getVerbosity());
+    }
+
+
+    @Test
+    public void testSpatialInput() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{3});
+        Network n = new Network("test",p);
+        PALayer<?> l = new PALayer<>(n, p);
+
+        l.setVerbosity(2);
+        int[] result;
+        try {
+            result = l.spatialInput(null);
+        } catch(Exception e) {
+            assertTrue(e instanceof NullPointerException);
+        }
+
+        result = l.spatialInput(new int[] {});
+        assertTrue(result.length == 0);
+
+        try {
+            result = l.spatialInput(new int[] {1, 0, 1, 0, 0});
+        } catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        Layer<?> l = Network.createLayer("l1", p).add(new TemporalMemory());
+        Layer<?> l = Network.createPALayer("l1", p).add(new TemporalMemory());
         try {
             l.reset();
             assertTrue(l.hasTemporalMemory());
@@ -159,7 +203,7 @@ public class LayerTest {
             fail();
         }
 
-        Layer<?> l2 = Network.createLayer("l2", p).add(new SpatialPooler());
+        Layer<?> l2 = Network.createPALayer("l2", p).add(new PASpatialPooler());
         try {
             l2.reset();
             assertFalse(l2.hasTemporalMemory());
@@ -172,7 +216,7 @@ public class LayerTest {
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         @SuppressWarnings("unchecked")
-        Layer<int[]> l = (Layer<int[]>)Network.createLayer("l1", p).add(new TemporalMemory());
+        Layer<int[]> l = (PALayer<int[]>)Network.createPALayer("l1", p).add(new TemporalMemory());
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -193,7 +237,7 @@ public class LayerTest {
     @Test
     public void testHalt() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
+                        FileSensor::create,
                         SensorParams.create(
                                         Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
 
@@ -205,7 +249,7 @@ public class LayerTest {
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
+        final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         l.start();
@@ -233,7 +277,7 @@ public class LayerTest {
     @Test
     public void testReset() {
         Sensor<File> sensor = Sensor.create(
-            FileSensor::create, 
+            FileSensor::create,
                 SensorParams.create(
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-4reset.csv")));
 
@@ -245,7 +289,7 @@ public class LayerTest {
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
+        final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         l.start();
@@ -273,7 +317,7 @@ public class LayerTest {
     @Test
     public void testSequenceChangeReset() {
         Sensor<File> sensor = Sensor.create(
-            FileSensor::create, 
+            FileSensor::create,
                 SensorParams.create(
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-4seqReset.csv")));
 
@@ -285,7 +329,7 @@ public class LayerTest {
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
+        final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         l.start();
@@ -318,7 +362,7 @@ public class LayerTest {
             .build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, 
+            ObservableSensor::create,
             SensorParams.create(
                 Keys::obs, new Object[] {"name", manual}));
 
@@ -330,7 +374,7 @@ public class LayerTest {
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
         Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
+        final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         l.start();
@@ -353,7 +397,7 @@ public class LayerTest {
         });
 
         try {
-            String[] entries = { 
+            String[] entries = {
                 "7/2/10 0:00,21.2",
                 "7/2/10 1:00,34.0",
                 "7/2/10 2:00,40.4",
@@ -370,7 +414,7 @@ public class LayerTest {
             fail();
         }
     }
-    
+
     @Test
     public void testLayerWithObservableInputIntegerArray() {
         Publisher manual = Publisher.builder()
@@ -380,7 +424,7 @@ public class LayerTest {
             .build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, 
+            ObservableSensor::create,
                 SensorParams.create(
                     Keys::obs, new Object[] {"name", manual}));
 
@@ -391,7 +435,7 @@ public class LayerTest {
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
         Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
+        final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         l.start();
@@ -426,7 +470,7 @@ public class LayerTest {
         });
 
         try {
-            String[] entries = { 
+            String[] entries = {
                   input
             };
 
@@ -441,10 +485,10 @@ public class LayerTest {
             e.printStackTrace();
             fail();
         }
-        
+
     }
 
-    @Test 
+    @Test
     public void testLayerWithGenericObservable() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -459,20 +503,20 @@ public class LayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
-        Func1<ManualInput, ManualInput> addedFunc = l -> { 
+        Func1<ManualInput, ManualInput> addedFunc = l -> {
             return l.customObject("Interposed: " + Arrays.toString(l.getSDR()));
         };
 
         Network n = Network.create("Generic Test", p)
             .add(Network.createRegion("R1")
-                .add(Network.createLayer("L1", p)
+                .add(Network.createPALayer("L1", p)
                     .add(addedFunc)
-                    .add(new SpatialPooler())));
+                    .add(new PASpatialPooler())));
 
         @SuppressWarnings("unchecked")
-        Layer<int[]> l = (Layer<int[]>)n.lookup("R1").lookup("L1");
+        Layer<int[]> l = (PALayer<int[]>)n.lookup("R1").lookup("L1");
         l.subscribe(new Observer<Inference>() {
             int test = 0;
 
@@ -480,6 +524,7 @@ public class LayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
+                System.out.println("sdr = " + Arrays.toString(i.getSDR()));
                 if(test == 0) {
                     assertTrue(Arrays.equals(expected0, i.getSDR()));
                     assertEquals("Interposed: [1, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
@@ -488,7 +533,7 @@ public class LayerTest {
                     assertTrue(Arrays.equals(expected1, i.getSDR()));
                     assertEquals("Interposed: [1, 1, 1, 0, 0, 0, 0, 0]", i.getCustomObject());
                 }
-                ++test; 
+                ++test;
             }
         });
 
@@ -505,7 +550,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, null, null, null, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, null, null, null, null);
 
         final int[][] expected = new int[7][8];
         expected[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -539,7 +584,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, null, null, null, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, null, null, null, null);
 
         final int[][] expected = new int[7][8];
         expected[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -570,7 +615,7 @@ public class LayerTest {
     @Test
     public void testBasicSetupEncoder_AUTO_MODE() {
         Sensor<File> sensor = Sensor.create(
-            FileSensor::create, 
+            FileSensor::create,
             SensorParams.create(
                 Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
 
@@ -582,7 +627,7 @@ public class LayerTest {
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
-        Layer<int[]> l = new Layer<>(n);
+        Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
         final int[][] expected = new int[][] {
@@ -631,7 +676,7 @@ public class LayerTest {
                 seq2++;
             }
         });
-        
+
         l.start();
 
         try {
@@ -659,9 +704,9 @@ public class LayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
-        Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
+        Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
 
         l.subscribe(new Observer<Inference>() {
             int test = 0;
@@ -676,7 +721,7 @@ public class LayerTest {
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, spatialPoolerOutput.getSDR()));
                 }
-                ++test; 
+                ++test;
             }
         });
 
@@ -691,7 +736,7 @@ public class LayerTest {
     @Test
     public void testBasicSetup_SpatialPooler_AUTO_MODE() {
         Sensor<File> sensor = Sensor.create(
-            FileSensor::create, 
+            FileSensor::create,
             SensorParams.create(
                 Keys::path, "", ResourceLocator.path("days-of-week.csv")));
 
@@ -703,11 +748,11 @@ public class LayerTest {
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
-        Layer<int[]> l = new Layer<>(n);
-        l.add(htmSensor).add(new SpatialPooler());
-        
+        Layer<int[]> l = new PALayer<>(n);
+        l.add(htmSensor).add(new PASpatialPooler());
+
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
         l.subscribe(new Observer<Inference>() {
             int test = 0;
 
@@ -721,10 +766,10 @@ public class LayerTest {
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, spatialPoolerOutput.getSDR()));
                 }
-                ++test; 
+                ++test;
             }
         });
-        
+
         l.start();
 
         try {
@@ -751,9 +796,9 @@ public class LayerTest {
         final int[] input7 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
 
-        
-        Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, null);
-        
+
+        Layer<int[]> l = new PALayer<>(p, null, null, new TemporalMemory(), null, null);
+
         int timeUntilStable = 600;
 
         l.subscribe(new Observer<Inference>() {
@@ -804,7 +849,7 @@ public class LayerTest {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), null, null);
+        Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), new TemporalMemory(), null, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -836,10 +881,10 @@ public class LayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
 
         // First test without prime directive :-P
-        Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
+        Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
 
         l.subscribe(new Observer<Inference>() {
             int test = 0;
@@ -854,7 +899,7 @@ public class LayerTest {
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, i.getSDR()));
                 }
-                ++test; 
+                ++test;
             }
         });
 
@@ -869,14 +914,14 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42)); // due to static RNG we have to reset the sequence
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, 1);
 
-        Layer<int[]> l2 = new Layer<>(p, null, new SpatialPooler(), null, null, null);
+        Layer<int[]> l2 = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
 
         l2.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
-                // should be one and only onNext() called 
+                // should be one and only onNext() called
                 assertTrue(Arrays.equals(expected1, i.getSDR()));
             }
         });
@@ -898,7 +943,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -917,10 +962,10 @@ public class LayerTest {
     }
 
     /**
-     * The {@link SpatialPooler} sometimes needs to have data run through it 
+     * The {@link PASpatialPooler} sometimes needs to have data run through it
      * prior to passing the data on to subsequent algorithmic components. This
-     * tests the ability to specify exactly the number of input records for 
-     * the SpatialPooler to consume before passing records on.
+     * tests the ability to specify exactly the number of input records for
+     * the PASpatialPooler to consume before passing records on.
      */
     @Test
     public void testMoreComplexSpatialPoolerPriming() {
@@ -936,7 +981,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -965,7 +1010,7 @@ public class LayerTest {
 
     /**
      * Tests the ability for multiple subscribers to receive copies of
-     * a given {@link Layer}'s computed values.
+     * a given {@link PALayer}'s computed values.
      */
     @Test
     public void test2ndAndSubsequentSubscribersPossible() {
@@ -981,7 +1026,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -1050,12 +1095,13 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
-        
+
         final int cellsPerColumn = (int)p.getParameterByKey(KEY.CELLS_PER_COLUMN);
         assertTrue(cellsPerColumn > 0);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final PALayer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        l.setPADepolarize(0.0);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -1064,13 +1110,13 @@ public class LayerTest {
             public void onNext(Inference i) {
                 assertNotNull(i);
                 TOTAL++;
-                
-                if(l.getPreviousPredictiveCells() != null) {
+
+//                if(l.getPreviousPredictiveCells() != null) {
                     //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-//                    System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " + 
+//                    System.out.println("recordNum: " + i.getRecordNum() + "  Day: " + ((Map<String, Object>)i.getLayerInput()).get("dayOfWeek") + "  -  " +
 //                       Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
 //                         "   -   " + Arrays.toString(SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
-                }
+//                }
             }
         });
 
@@ -1103,14 +1149,14 @@ public class LayerTest {
 
         assertEquals(highestIdx, l.getMostProbableBucketIndex("dayOfWeek", 1));
         assertEquals(7, l.getAllPredictions("dayOfWeek", 1).length);
-        
+
         assertTrue(Arrays.equals(
             ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1),
                 SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
     }
 
     /**
-     * Test that a given layer can return an {@link Observable} capable of 
+     * Test that a given layer can return an {@link Observable} capable of
      * service multiple subscribers.
      */
     @Test
@@ -1120,7 +1166,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
         final List<int[]> emissions = new ArrayList<int[]>();
         Observable<Inference> o = l.observe();
@@ -1180,13 +1226,13 @@ public class LayerTest {
         params.put(KEY_USE_MOVING_AVG, true);
         Anomaly anomalyComputer = Anomaly.create(params);
 
-        Layer<?> l = Network.createLayer("TestLayer", p)
+        Layer<?> l = Network.createPALayer("TestLayer", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(anomalyComputer)
             .add(new TemporalMemory())
-            .add(new SpatialPooler())
+            .add(new PASpatialPooler())
             .add(Sensor.create(
-                FileSensor::create, 
+                FileSensor::create,
                 SensorParams.create(
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
 

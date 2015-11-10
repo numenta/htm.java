@@ -49,11 +49,11 @@ import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
- * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and 
- * {@link TemporalMemory} as well as the state of all support structures 
- * (i.e. Cells, Columns, Segments, Synapses etc.). 
- * 
- * In the separation of data from logic, this class represents the data/state. 
+ * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and
+ * {@link TemporalMemory} as well as the state of all support structures
+ * (i.e. Cells, Columns, Segments, Synapses etc.).
+ *
+ * In the separation of data from logic, this class represents the data/state.
  */
 public class Connections {
     /////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
@@ -111,7 +111,7 @@ public class Connections {
      * columns where the overlaps are identical.
      */
     private double[] tieBreaker;
-    /** 
+    /**
      * Stores the number of connected synapses for each column. This is simply
      * a sum of each row of 'connectedSynapses'. again, while this
      * information is readily available from 'connectedSynapses', it is
@@ -152,8 +152,8 @@ public class Connections {
     protected int cellsPerColumn = 32;
     /** What will comprise the Layer input. Input (i.e. from encoder) */
     protected int[] inputDimensions = new int[] { 32, 32 };
-    /** 
-     * If the number of active connected synapses on a segment 
+    /**
+     * If the number of active connected synapses on a segment
      * is at least this threshold, the segment is said to be active.
      */
     private int activationThreshold = 13;
@@ -178,12 +178,12 @@ public class Connections {
      * to be connected.
      */
     private double connectedPermanence = 0.50;
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are incremented during learning.
      */
     private double permanenceIncrement = 0.10;
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are decremented during learning.
      */
@@ -210,10 +210,30 @@ public class Connections {
     /** The random number generator */
     protected Random random = new MersenneTwister(42);
 
+    ///////// paCLA extensions
+
+	  protected double[] paOverlaps;
+    /**
+     * Sets paOverlaps (predictive assist vector) for {@link PASpatialPooler}
+     *
+     * @param overlaps
+     */
+    public void setPAOverlaps(double[] overlaps) {
+        this.paOverlaps = overlaps;
+    }
+
+    /**
+     * Returns paOverlaps (predictive assist vector) for {@link PASpatialPooler}
+     *
+     * @return
+     */
+    public double[] getPAOverlaps() {
+        return this.paOverlaps;
+    }
 
     /**
      * Constructs a new {@code Connections} object. Use
-     * 
+     *
      */
     public Connections() {}
 
@@ -332,7 +352,7 @@ public class Connections {
     /**
      * Returns an array containing the {@link Cell}s specified
      * by the passed in indexes.
-     * 
+     *
      * @param cellIndexes	indexes of the Cells to return
      * @return
      */
@@ -347,7 +367,7 @@ public class Connections {
     /**
      * Returns a {@link LinkedHashSet} containing the {@link Cell}s specified
      * by the passed in indexes.
-     * 
+     *
      * @param cellIndexes	indexes of the Cells to return
      * @return
      */
@@ -363,7 +383,7 @@ public class Connections {
      * Sets the seed used for the internal random number generator.
      * If the generator has been instantiated, this method will initialize
      * a new random generator with the specified seed.
-     * 
+     *
      * @param seed
      */
     public void setSeed(int seed) {
@@ -442,8 +462,8 @@ public class Connections {
     }
 
     /**
-     * Returns the product of the input dimensions 
-     * @return  the product of the input dimensions 
+     * Returns the product of the input dimensions
+     * @return  the product of the input dimensions
      */
     public int getNumInputs() {
         return numInputs;
@@ -459,20 +479,21 @@ public class Connections {
     }
 
     /**
-     * Returns the product of the column dimensions 
-     * @return  the product of the column dimensions 
+     * Returns the product of the column dimensions
+     * @return  the product of the column dimensions
      */
     public int getNumColumns() {
         return numColumns;
     }
 
     /**
-     * Sets the product of the column dimensions to be 
+     * Sets the product of the column dimensions to be
      * the column count.
      * @param n
      */
     public void setNumColumns(int n) {
         this.numColumns = n;
+        this.paOverlaps = new double[n];
     }
 
     /**
@@ -486,7 +507,7 @@ public class Connections {
      * parameter defines a square (or hyper square) area: a
      * column will have a max square potential pool with
      * sides of length 2 * potentialRadius + 1.
-     * 
+     *
      * @param potentialRadius
      */
     public void setPotentialRadius(int potentialRadius) {
@@ -513,7 +534,7 @@ public class Connections {
      * ((2*potentialRadius + 1)^(# inputDimensions) *
      * potentialPct) input bits to comprise the column's
      * potential pool.
-     * 
+     *
      * @param potentialPct
      */
     public void setPotentialPct(double potentialPct) {
@@ -522,7 +543,7 @@ public class Connections {
 
     /**
      * Returns the configured potential pct
-     * 
+     *
      * @return the configured potential pct
      * @see setPotentialPct
      */
@@ -531,9 +552,9 @@ public class Connections {
     }
 
     /**
-     * Sets the {@link SparseObjectMatrix} which represents the 
+     * Sets the {@link SparseObjectMatrix} which represents the
      * proximal dendrite permanence values.
-     * 
+     *
      * @param s the {@link SparseObjectMatrix}
      */
     public void setPermanences(SparseObjectMatrix<double[]> s) {
@@ -562,7 +583,7 @@ public class Connections {
     /**
      * Atomically increments and returns the incremented
      * {@link Synapse} count.
-     * 
+     *
      * @return
      */
     public int incrementSynapses() {
@@ -570,7 +591,7 @@ public class Connections {
     }
 
     /**
-     * Atomically decrements and returns the decremented 
+     * Atomically decrements and returns the decremented
      * {link Synapse} count
      * @return
      */
@@ -616,7 +637,7 @@ public class Connections {
 
     /**
      * Sets the array holding the random noise added to proximal dendrite overlaps.
-     * 
+     *
      * @param tieBreaker	random values to help break ties
      */
     public void setTieBreaker(double[] tieBreaker) {
@@ -626,7 +647,7 @@ public class Connections {
     /**
      * Returns the array holding random values used to add to overlap scores
      * to break ties.
-     * 
+     *
      * @return
      */
     public double[] getTieBreaker() {
@@ -640,7 +661,7 @@ public class Connections {
      * are selected with respect to their local
      * neighborhoods. Using global inhibition boosts
      * performance x60.
-     * 
+     *
      * @param globalInhibition
      */
     public void setGlobalInhibition(boolean globalInhibition) {
@@ -650,7 +671,7 @@ public class Connections {
     /**
      * Returns the configured global inhibition flag
      * @return  the configured global inhibition flag
-     * 
+     *
      * @see setGlobalInhibition
      */
     public boolean getGlobalInhibition() {
@@ -667,7 +688,7 @@ public class Connections {
      * remain ON within a local inhibition area, where N =
      * localAreaDensity * (total number of columns in
      * inhibition area).
-     * 
+     *
      * @param localAreaDensity
      */
     public void setLocalAreaDensity(double localAreaDensity) {
@@ -700,7 +721,7 @@ public class Connections {
      * contrast to the localAreaDensity method, which keeps
      * the density of active columns the same regardless of
      * the size of their receptive fields.
-     * 
+     *
      * @param numActiveColumnsPerInhArea
      */
     public void setNumActiveColumnsPerInhArea(double numActiveColumnsPerInhArea) {
@@ -724,7 +745,7 @@ public class Connections {
      * turn ON. The purpose of this is to prevent noise
      * input from activating columns. Specified as a percent
      * of a fully grown synapse.
-     * 
+     *
      * @param stimulusThreshold
      */
     public void setStimulusThreshold(double stimulusThreshold) {
@@ -744,7 +765,7 @@ public class Connections {
      * The amount by which an inactive synapse is
      * decremented in each round. Specified as a percent of
      * a fully grown synapse.
-     * 
+     *
      * @param synPermInactiveDec
      */
     public void setSynPermInactiveDec(double synPermInactiveDec) {
@@ -764,7 +785,7 @@ public class Connections {
      * The amount by which an active synapse is incremented
      * in each round. Specified as a percent of a
      * fully grown synapse.
-     * 
+     *
      * @param synPermActiveInc
      */
     public void setSynPermActiveInc(double synPermActiveInc) {
@@ -785,7 +806,7 @@ public class Connections {
      * permanence value is above the connected threshold is
      * a "connected synapse", meaning it can contribute to
      * the cell's firing.
-     * 
+     *
      * @param synPermConnected
      */
     public void setSynPermConnected(double synPermConnected) {
@@ -802,7 +823,7 @@ public class Connections {
     }
 
     /**
-     * Sets the stimulus increment for synapse permanences below 
+     * Sets the stimulus increment for synapse permanences below
      * the measured threshold.
      * @param stim
      */
@@ -811,9 +832,9 @@ public class Connections {
     }
 
     /**
-     * Returns the stimulus increment for synapse permanences below 
+     * Returns the stimulus increment for synapse permanences below
      * the measured threshold.
-     * 
+     *
      * @return
      */
     public double getSynPermBelowStimulusInc() {
@@ -838,7 +859,7 @@ public class Connections {
      * previously learned inputs are no longer ever active,
      * or when the vast majority of them have been
      * "hijacked" by other columns.
-     * 
+     *
      * @param minPctOverlapDutyCycle
      */
     public void setMinPctOverlapDutyCycles(double minPctOverlapDutyCycle) {
@@ -865,7 +886,7 @@ public class Connections {
      * On each iteration, any column whose duty cycle after
      * inhibition falls below this computed value will get
      * its internal boost factor increased.
-     * 
+     *
      * @param minPctActiveDutyCycle
      */
     public void setMinPctActiveDutyCycles(double minPctActiveDutyCycle) {
@@ -886,7 +907,7 @@ public class Connections {
      * values make it take longer to respond to changes in
      * boost or synPerConnectedCell. Shorter values make it
      * more unstable and likely to oscillate.
-     * 
+     *
      * @param dutyCyclePeriod
      */
     public void setDutyCyclePeriod(int dutyCyclePeriod) {
@@ -912,7 +933,7 @@ public class Connections {
      * maxBoost is used if the duty cycle is 0, and any duty
      * cycle in between is linearly extrapolated from these
      * 2 end points.
-     * 
+     *
      * @param maxBoost
      */
     public void setMaxBoost(double maxBoost) {
@@ -930,7 +951,7 @@ public class Connections {
 
     /**
      * spVerbosity level: 0, 1, 2, or 3
-     * 
+     *
      * @param spVerbosity
      */
     public void setSpVerbosity(int spVerbosity) {
@@ -964,8 +985,8 @@ public class Connections {
 
     /**
      * Sets the {@link FlatMatrix} which holds the mapping
-     * of column indexes to their lists of potential inputs. 
-     * 
+     * of column indexes to their lists of potential inputs.
+     *
      * @param pools		{@link FlatMatrix} which holds the pools.
      */
     public void setPotentialPools(FlatMatrix<Pool>   pools) {
@@ -1026,7 +1047,7 @@ public class Connections {
     }
 
     /**
-     * Returns the dense (size=numColumns) array of duty cycle stats. 
+     * Returns the dense (size=numColumns) array of duty cycle stats.
      * @return	the dense array of active duty cycle values.
      */
     public double[] getActiveDutyCycles() {
@@ -1034,7 +1055,7 @@ public class Connections {
     }
 
     /**
-     * Sets the dense (size=numColumns) array of duty cycle stats. 
+     * Sets the dense (size=numColumns) array of duty cycle stats.
      * @param activeDutyCycles
      */
     public void setActiveDutyCycles(double[] activeDutyCycles) {
@@ -1046,7 +1067,7 @@ public class Connections {
      * the active duty cycles of the column corresponding to the index specified.
      * The length of the specified array must be as long as the configured number
      * of columns of this {@code Connections}' column configuration.
-     * 
+     *
      * @param	denseActiveDutyCycles	a dense array containing values to set.
      */
     public void updateActiveDutyCycles(double[] denseActiveDutyCycles) {
@@ -1130,7 +1151,7 @@ public class Connections {
 
     /**
      * Returns the current {@link Set} of active {@link Cell}s
-     * 
+     *
      * @return  the current {@link Set} of active {@link Cell}s
      */
     public Set<Cell> getActiveCells() {
@@ -1147,7 +1168,7 @@ public class Connections {
 
     /**
      * Returns the current {@link Set} of winner cells
-     * 
+     *
      * @return  the current {@link Set} of winner cells
      */
     public Set<Cell> getWinnerCells() {
@@ -1196,7 +1217,7 @@ public class Connections {
 
     /**
      * Returns the {@link Set} of columns successfully predicted from t - 1.
-     * 
+     *
      * @return  the current {@link Set} of predicted columns
      */
     public Set<Column> getSuccessfullyPredictedColumns() {
@@ -1260,12 +1281,12 @@ public class Connections {
     }
 
     /**
-     * Returns the mapping of {@link Cell}s to their reverse mapped 
+     * Returns the mapping of {@link Cell}s to their reverse mapped
      * {@link Synapse}s.
-     * 
+     *
      * @param cell      the {@link Cell} used as a key.
-     * @return          the mapping of {@link Cell}s to their reverse mapped 
-     *                  {@link Synapse}s.   
+     * @return          the mapping of {@link Cell}s to their reverse mapped
+     *                  {@link Synapse}s.
      */
     public Set<Synapse> getReceptorSynapses(Cell cell) {
         if(cell == null) {
@@ -1286,7 +1307,7 @@ public class Connections {
 
     /**
      * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-     * 
+     *
      * @param cell      the {@link Cell} used as a key.
      * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
      */
@@ -1309,7 +1330,7 @@ public class Connections {
 
     /**
      * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
-     * 
+     *
      * @param segment   the {@link DistalDendrite} used as a key.
      * @return          the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
      */
@@ -1332,7 +1353,7 @@ public class Connections {
 
     /**
      * Returns the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
-     * 
+     *
      * @param segment   the {@link ProximalDendrite} used as a key.
      * @return          the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
      */
@@ -1364,7 +1385,7 @@ public class Connections {
 
     /**
      * Sets the number of {@link Column}.
-     * 
+     *
      * @param columnDimensions
      */
     public void setColumnDimensions(int[] columnDimensions) {
@@ -1373,7 +1394,7 @@ public class Connections {
 
     /**
      * Gets the number of {@link Column}.
-     * 
+     *
      * @return columnDimensions
      */
     public int[] getColumnDimensions() {
@@ -1387,7 +1408,7 @@ public class Connections {
      * topology of one dimension with 100 inputs use 100, or
      * [100]. For a two dimensional topology of 10x5 use
      * [10,5].
-     * 
+     *
      * @param inputDimensions
      */
     public void setInputDimensions(int[] inputDimensions) {
@@ -1413,7 +1434,7 @@ public class Connections {
 
     /**
      * Gets the number of {@link Cell}s per {@link Column}.
-     * 
+     *
      * @return cellsPerColumn
      */
     public int getCellsPerColumn() {
@@ -1422,10 +1443,10 @@ public class Connections {
 
     /**
      * Sets the activation threshold.
-     * 
-     * If the number of active connected synapses on a segment 
+     *
+     * If the number of active connected synapses on a segment
      * is at least this threshold, the segment is said to be active.
-     * 
+     *
      * @param activationThreshold
      */
     public void setActivationThreshold(int activationThreshold) {
@@ -1443,7 +1464,7 @@ public class Connections {
     /**
      * Radius around cell from which it can
      * sample to form distal dendrite connections.
-     * 
+     *
      * @param   learningRadius
      */
     public void setLearningRadius(int learningRadius) {
@@ -1462,7 +1483,7 @@ public class Connections {
      * If the number of synapses active on a segment is at least this
      * threshold, it is selected as the best matching
      * cell in a bursting column.
-     * 
+     *
      * @param   minThreshold
      */
     public void setMinThreshold(int minThreshold) {
@@ -1477,9 +1498,9 @@ public class Connections {
         return minThreshold;
     }
 
-    /** 
-     * The maximum number of synapses added to a segment during learning. 
-     * 
+    /**
+     * The maximum number of synapses added to a segment during learning.
+     *
      * @param   maxNewSynapseCount
      */
     public void setMaxNewSynapseCount(int maxNewSynapseCount) {
@@ -1489,16 +1510,16 @@ public class Connections {
     /**
      * Returns the maximum number of synapses added to a segment during
      * learning.
-     * 
+     *
      * @return
      */
     public int getMaxNewSynapseCount() {
         return maxNewSynapseCount;
     }
 
-    /** 
-     * Initial permanence of a new synapse 
-     * 
+    /**
+     * Initial permanence of a new synapse
+     *
      * @param   initialPermanence
      */
     public void setInitialPermanence(double initialPermanence) {
@@ -1517,7 +1538,7 @@ public class Connections {
      * If the permanence value for a synapse
      * is greater than this value, it is said
      * to be connected.
-     * 
+     *
      * @param connectedPermanence
      */
     public void setConnectedPermanence(double connectedPermanence) {
@@ -1528,24 +1549,24 @@ public class Connections {
      * If the permanence value for a synapse
      * is greater than this value, it is said
      * to be connected.
-     * 
+     *
      * @return
      */
     public double getConnectedPermanence() {
         return connectedPermanence;
     }
 
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are incremented during learning.
-     * 
+     *
      * @param   permanenceIncrement
      */
     public void setPermanenceIncrement(double permanenceIncrement) {
         this.permanenceIncrement = permanenceIncrement;
     }
 
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are incremented during learning.
      */
@@ -1553,17 +1574,17 @@ public class Connections {
         return this.permanenceIncrement;
     }
 
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are decremented during learning.
-     * 
+     *
      * @param   permanenceDecrement
      */
     public void setPermanenceDecrement(double permanenceDecrement) {
         this.permanenceDecrement = permanenceDecrement;
     }
 
-    /** 
+    /**
      * Amount by which permanences of synapses
      * are decremented during learning.
      */
@@ -1590,7 +1611,7 @@ public class Connections {
     /**
      * Converts a {@link Collection} of {@link Cell}s to a list
      * of cell indexes.
-     * 
+     *
      * @param cells
      * @return
      */
@@ -1606,7 +1627,7 @@ public class Connections {
     /**
      * Converts a {@link Collection} of {@link Column}s to a list
      * of column indexes.
-     * 
+     *
      * @param columns
      * @return
      */
@@ -1646,9 +1667,9 @@ public class Connections {
     }
 
     /**
-     * Returns a {@link Set} view of the {@link Column}s specified by 
+     * Returns a {@link Set} view of the {@link Column}s specified by
      * the indexes passed in.
-     * 
+     *
      * @param indexes		the indexes of the Columns to return
      * @return				a set view of the specified columns
      */
@@ -1661,9 +1682,9 @@ public class Connections {
     }
 
     /**
-     * Returns a {@link List} view of the {@link Column}s specified by 
+     * Returns a {@link List} view of the {@link Column}s specified by
      * the indexes passed in.
-     * 
+     *
      * @param indexes		the indexes of the Columns to return
      * @return				a List view of the specified columns
      */

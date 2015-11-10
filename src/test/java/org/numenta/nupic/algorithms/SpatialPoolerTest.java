@@ -153,8 +153,8 @@ public class SpatialPoolerTest {
         }
 
         for(int i = 0;i < mem.getNumColumns();i++) {
-            System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
-            System.out.println(Arrays.toString(mem.getPotentialPools().get(i).getDensePermanences(mem)));
+//            System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
+//            System.out.println(Arrays.toString(mem.getPotentialPools().get(i).getDensePermanences(mem)));
             assertTrue(Arrays.equals(inputVector, ((int[])mem.getConnectedCounts().getSlice(i))));
         }
     }

@@ -6,9 +6,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.Test;
 import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
 import org.numenta.nupic.util.NamedTuple;
 
 
@@ -34,12 +38,12 @@ public class ManualInputTest {
         HashMap<String, NamedTuple> classifierInput = new HashMap<>();
         NamedTuple classifiers = new NamedTuple(new String[] { "one", "two" }, 1, 2);
         Object layerInput = new Object();
-        int[] sdr = new int[20];
+        int[] sdr = new int[] { 20 };
         int[] encoding = new int[40];
         int[] activeColumns = new int[25];
         int[] sparseActives = new int[2];
-        int[] previousPrediction = new int[4];
-        int[] currentPrediction = new int[8];
+        Set<Cell> previousPrediction = new LinkedHashSet<>(); previousPrediction.add(new Cell(new Column(4, 0), 2));
+        Set<Cell> currentPrediction = new LinkedHashSet<>(); currentPrediction.add(new Cell(new Column(4, 0), 3));
         ClassifierResult<Object> classification = new ClassifierResult<>();
         double anomalyScore = 0.48d;
         Object customObject = new Network("", NetworkTestHarness.getNetworkDemoTestEncoderParams());
@@ -49,10 +53,10 @@ public class ManualInputTest {
         .layerInput(layerInput)
         .sdr(sdr)
         .encoding(encoding)
-        .activeColumns(activeColumns)
-        .sparseActives(sparseActives)
-        .predictedColumns(previousPrediction)
-        .predictedColumns(currentPrediction) // last prediction internally becomes previous
+        .feedForwardActiveColumns(activeColumns)
+        .feedForwardSparseActives(sparseActives)
+        .predictiveCells(previousPrediction)
+        .predictiveCells(currentPrediction) // last prediction internally becomes previous
         .classifiers(classifiers)
         .storeClassification("foo", classification)
         .anomalyScore(anomalyScore)
@@ -70,17 +74,17 @@ public class ManualInputTest {
         assertTrue(Arrays.equals(copy.getEncoding(), encoding));
         assertFalse(copy.getEncoding() == encoding);
         
-        assertTrue(Arrays.equals(copy.getActiveColumns(), activeColumns));
-        assertFalse(copy.getActiveColumns() == activeColumns);
+        assertTrue(Arrays.equals(copy.getFeedForwardActiveColumns(), activeColumns));
+        assertFalse(copy.getFeedForwardActiveColumns() == activeColumns);
         
-        assertTrue(Arrays.equals(copy.getSparseActives(), sparseActives));
-        assertFalse(copy.getSparseActives() == sparseActives);
+        assertTrue(Arrays.equals(copy.getFeedForwardSparseActives(), sparseActives));
+        assertFalse(copy.getFeedForwardSparseActives() == sparseActives);
         
-        assertTrue(Arrays.equals(copy.getPredictedColumns(), currentPrediction));
-        assertFalse(copy.getPredictedColumns() == currentPrediction);
+        assertTrue(copy.getPredictiveCells().equals(currentPrediction));
+        assertFalse(copy.getPredictiveCells() == currentPrediction);
         
-        assertTrue(Arrays.equals(copy.getPreviousPrediction(), previousPrediction));
-        assertFalse(copy.getPreviousPrediction() == previousPrediction);
+        assertTrue(copy.getPreviousPredictiveCells().equals(previousPrediction));
+        assertFalse(copy.getPreviousPredictiveCells() == previousPrediction);
         
         assertTrue(copy.getClassifiers().equals(classifiers));
         assertFalse(copy.getClassifiers() == classifiers);

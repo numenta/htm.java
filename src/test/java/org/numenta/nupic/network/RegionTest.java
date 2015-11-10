@@ -201,7 +201,7 @@ public class RegionTest {
         r1.observe().subscribe(new Subscriber<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {
-                System.out.println("onCompleted() called");
+//                System.out.println("onCompleted() called");
             }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
@@ -209,7 +209,7 @@ public class RegionTest {
                     isHalted = true;
                 }
                 seq++;
-                System.out.println("output: " + i.getSDR());
+//                System.out.println("output: " + i.getSDR());
             }
         });
         
@@ -327,8 +327,8 @@ public class RegionTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
-                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+                System.out.println("Day: " + r1.getInput() + " - predictive cells: " + i.getPreviousPredictiveCells() +
+                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
                     ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });
@@ -405,99 +405,6 @@ public class RegionTest {
             layer = layer.getNext();
             assertFalse(layer.isLearn());
         }
-    }
-    
-    /**
-     * Tests that a Region can be assembled containing multiple layers
-     * with an underlying FileSensor and started and that it produces the proper emissions.
-     */
-    @Test
-    public void testMultiLayerAssemblyWithSensor() {
-        Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        
-        Map<String, Object> params = new HashMap<>();
-        params.put(KEY_MODE, Mode.PURE);
-        
-        Network n = Network.create("test network", p)
-            .add(Network.createRegion("r1")
-            .add(Network.createLayer("1", p)
-                .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
-            .add(Network.createLayer("2", p)
-                .add(Anomaly.create(params)))
-            .add(Network.createLayer("3", p)
-                .add(new TemporalMemory()))
-            .add(Network.createLayer("4", p)
-                .add(Sensor.create(FileSensor::create, SensorParams.create(
-                    Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
-                .add(new SpatialPooler()))
-            .connect("1", "2")
-            .connect("2", "3")
-            .connect("3", "4"));
-        
-        n.lookup("r1").observe().subscribe(new Subscriber<Inference>() {
-            int idx = 0;
-            
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference i) {
-                // Test Classifier and Anomaly output
-                switch(idx) {
-                    case 0: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertEquals(1.0, i.getClassification("dayOfWeek").getStats(1)[0], 0.0);
-                            //assertEquals(1, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 0: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 1: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertEquals(1.0, i.getClassification("dayOfWeek").getStats(1)[0], 0.0);
-                            //assertEquals(1, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 1: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 2: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertTrue(Arrays.equals(new double[] { 0.5, 0.5 }, i.getClassification("dayOfWeek").getStats(1)));
-                            //assertEquals(2, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 2: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 3: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertTrue(Arrays.equals(new double[] { 
-                            //    0.33333333333333333, 0.33333333333333333, 0.33333333333333333 }, i.getClassification("dayOfWeek").getStats(1)));
-                            //assertEquals(3, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 3: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 4: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertTrue(Arrays.equals(new double[] { 0.25, 0.25, 0.25, 0.25 }, i.getClassification("dayOfWeek").getStats(1)));
-                            //assertEquals(4, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 4: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 5: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertTrue(Arrays.equals(new double[] { 0.2, 0.2, 0.2, 0.2, 0.2 }, i.getClassification("dayOfWeek").getStats(1)));
-                            //assertEquals(5, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 5: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                    case 6: //assertEquals(1.0, i.getAnomalyScore(), 0.0); 
-                            //assertTrue(Arrays.equals(new double[] { 
-                            //    0.16666666666666666, 0.16666666666666666,
-                            //    0.16666666666666666, 0.16666666666666666, 
-                            //    0.16666666666666666, 0.16666666666666666 }, i.getClassification("dayOfWeek").getStats(1)));
-                            //assertEquals(6, i.getClassification("dayOfWeek").getStats(1).length);
-                        System.out.println("case 6: " + i.getAnomalyScore() + ",  " + Arrays.toString(i.getClassification("dayOfWeek").getStats(1)));
-                            break;
-                }
-                idx++;
-            }
-        });
-       
-        Region r1 = n.lookup("r1");
-        r1.start();
-        
-        try {
-            r1.lookup("4").getLayerThread().join();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-        
-        
     }
     
     int idx0 = 0;

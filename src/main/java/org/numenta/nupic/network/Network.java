@@ -219,6 +219,12 @@ public class Network {
         Network.checkName(name);
         return new Layer(name, null, p);
     }
+    @SuppressWarnings("rawtypes")
+    public static PALayer<?> createPALayer(String name, Parameters p) {
+        Network.checkName(name);
+        return new PALayer(name, null, p);
+    }
+
 
     /**
      * Returns the String identifier for this {@code Network}

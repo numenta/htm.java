@@ -86,6 +86,7 @@ public class SpatialPooler {
         SparseObjectMatrix<Column> mem = c.getMemory();
         c.setMemory(mem == null ? 
                 mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
+        
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
 
         //Calculate numInputs and numColumns

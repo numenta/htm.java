@@ -145,9 +145,9 @@ public class ObservableSensorTest {
     @Test
     public void testReadIntegerArray() {
         try {
-            Stream<String> s = Files.lines(Paths.get(getClass().getResource("1_100.csv").getPath()));
+            Stream<String> s = Files.lines(Paths.get(ResourceLocator.path("1_100.csv")));
             @SuppressWarnings("resource")
-            int[][] ia = s.map(l -> l.split("[\\s]*\\,[\\s]*")).map(i -> {
+            int[][] ia = s.skip(3).map(l -> l.split("[\\s]*\\,[\\s]*")).map(i -> {
                 return Arrays.stream(i).mapToInt(Integer::parseInt).toArray();
             }).toArray(int[][]::new);  
             

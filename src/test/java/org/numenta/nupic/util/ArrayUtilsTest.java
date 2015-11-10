@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -312,5 +313,14 @@ public class ArrayUtilsTest {
 	    assertTrue(Arrays.equals(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
 	        ArrayUtils.replace(5, 10, new int[]{1, 2, 3, 4, 5, -1, -1, -1, -1, -1}, new int[] { 6, 7, 8, 9, 0})));
 	        
+	}
+	
+	@Test
+	public void testIsSparse() {
+	    int[] t = new int[] { 0, 1, 0 };
+	    int[] t1 = new int[] { 4, 5, 6, 7 };
+	    
+	    assertFalse(ArrayUtils.isSparse(t));
+	    assertTrue(ArrayUtils.isSparse(t1));
 	}
 }

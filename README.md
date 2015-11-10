@@ -1,27 +1,35 @@
 # ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
 # htm.java
 
-[![htm.java awesomeness](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](http://cogmission.ai)
+<br>
 
-#### Official community-supported Java implementation of [Hierarchal Temporal Memory (HTM)](http://numenta.org/htm-white-paper.html), ported from the [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
+[![htm.java awesomeness](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](http://cogmission.ai) [![AGI Probability](https://img.shields.io/badge/AGI%20Probability-97%25-blue.svg)](http://numenta.com/#hero) [![Coolness Factor](https://img.shields.io/badge/Coolness%20Factor-100%25-blue.svg)](https://github.com/numenta/htm.java-examples) [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java) [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/numenta/htm.java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-* Build: [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java)
-* Unit Test Coverage: [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master)
+<br>
 
-For HTM.java Demos and Example apps, see the [HTM.java Examples Repository](https://github.com/numenta/htm.java-examples)
+#### [Official](https://github.com/numenta/htm.java/issues/193)  **Java&trade;** version of...
+## Hierarchical Temporal Memory [(HTM)](http://numenta.com/learn/principles-of-hierarchical-temporal-memory.html)
 
-**NOTE: Minimum JavaSE version is 1.8**  
+**Community-supported & ported from the** [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java)
+_**NOTE: Minimum JavaSE version is 1.8**_
 
+<br>
 
 ***
 
+#### Demos & Examples: [HTM.java-examples](https://github.com/numenta/htm.java-examples) repository
+
+***
+
+<br>
+
 ### Recent News Items...
+* **Network API Rework** for [improved input classification!](http://www.cogmission.ai/2015/10/23/putting-out-fires-with-gasoline/) - (10/23/2015)
 * **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
 * [HTM.java Splits off Demo repository](https://github.com/numenta/htm.java-examples) (08/19/2015)
-* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
+* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java-examples/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
 
 ### News Archives...
 * [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
@@ -55,6 +63,8 @@ For answers to more detailed questions, email the [nupic-discuss](http://lists.n
 For more detailed discussions regarding HTM.java specifically, come chat with us here: 
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-green.svg?style=flat)](https://gitter.im/numenta/htm.java?utm_source=badge)
+
+See the blog: [Join the Cogmission](http://www.cogmission.ai)
 
 ***
 <a name="callToArms"></a>

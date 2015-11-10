@@ -482,11 +482,13 @@ public class SDRCategoryEncoder extends Encoder<String> {
             if (w == 0) {
                 throw new IllegalStateException("\"W\" should be set");
             }
+            if(categoryList == null) {
+                throw new IllegalStateException("Category List cannot be null");
+            }
             SDRCategoryEncoder sdrCategoryEncoder = new SDRCategoryEncoder();
             sdrCategoryEncoder.init(n, w, categoryList, name, encoderSeed, forced);
+            
             return sdrCategoryEncoder;
-
-
         }
 
         public Builder categoryList(List<String> categoryList) {
