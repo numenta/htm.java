@@ -130,4 +130,9 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
         
         return trueCounts;
     }
+
+    @Override
+    public SparseBinaryMatrixSupport setForTest(int index, int value) {
+        return set(index, value);
+    }
 }

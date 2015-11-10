@@ -61,10 +61,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      */
     @Override
     public Object getSlice(int... coordinates) {
-        Object slice = backingArray;
-        for(int i = 0;i < coordinates.length;i++) {
-            slice = Array.get(slice, coordinates[i]);
-        }
+        Object slice = ArrayUtils.getValue(this.backingArray, coordinates);
         //Ensure return value is of type Array
         if(!slice.getClass().isArray()) {
             sliceError(coordinates);
@@ -109,7 +106,6 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      */
     @Override
     public SparseBinaryMatrixSupport set(int value, int... coordinates) {
-        super.set(value, coordinates);
         back(value, coordinates);
         return this;
     }
@@ -145,4 +141,20 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
         return this;
     }
 
+    @Override
+    public Integer get(int index) {
+        int[] coordinates = computeCoordinates(index);
+        if (coordinates.length == 1) {
+            return Array.getInt(this.backingArray, index);
+        }
+        
+        else return (Integer) ArrayUtils.getValue(this.backingArray, coordinates);
+    }
+
+    @Override
+    public SparseBinaryMatrixSupport setForTest(int index, int value) {
+        ArrayUtils.setValue(this.backingArray, value, computeCoordinates(index));
+        return this;
+    }
+   
 }

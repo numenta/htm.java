@@ -59,12 +59,4 @@ public interface SparseMatrix<T> extends FlatMatrix<T>{
      */
     T[] asDense(TypeFactory<T> factory);
 
-    /**
-     * Returns an integer array representing the coordinates of the specified index
-     * in terms of the configuration of this {@code SparseMatrix}.
-     * @param index the flat index to be returned as coordinates
-     * @return  coordinates
-     */
-    int[] computeCoordinates(int index);
-
 }

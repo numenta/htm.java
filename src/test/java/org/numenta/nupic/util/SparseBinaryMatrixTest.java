@@ -262,6 +262,7 @@ public class SparseBinaryMatrixTest {
     public void testGetSparseIndices() {
         doTestGetSparseIndices(new SparseBinaryMatrix(this.dimensions));
         doTestGetSparseIndices(new LowMemorySparseBinaryMatrix(this.dimensions));
+        doTestGetSparseIndices(new FastConnectionsMatrix(this.dimensions));
     }
     
     private void doTestGetSparseIndices(SparseBinaryMatrixSupport sm) {
