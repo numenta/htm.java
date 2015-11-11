@@ -119,6 +119,27 @@ For tips and insights on how to use the Network API to add HTM's into your own a
 
 [NAPI Overview](https://github.com/numenta/htm.java/wiki/NAPI-In-Depth-Component-Overview)
 
+Here's how to include SNAPSHOT builds:
+``` 
+<dependency>
+    <groupId>org.numenta</groupId>
+    <artifactId>htm.java</artifactId>
+    <version>0.6.5-SNAPSHOT</version>
+</dependency>
+
+I also needed to add a repositories entry:
+
+<repository>
+    <id>oss-sonatype</id>
+    <name>oss-sonatype</name>
+    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    <snapshots>
+        <enabled>true</enabled>
+    </snapshots>
+</repository>
+```
+
+
 
 ## For Updates Follow
 
