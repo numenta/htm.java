@@ -22,6 +22,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Added @fergalbyrne added PALayer, and PALayerTest
 * Removed .classpath from .gitignore
 * Added .classpath file back into repo with correct classpath (includes dependencies)
+* [Network API Re-write](https://github.com/numenta/htm.java/pull/335) Changed data transformed between a TemporalMemory and the input of the CLAClassifier
 
 ***
 
