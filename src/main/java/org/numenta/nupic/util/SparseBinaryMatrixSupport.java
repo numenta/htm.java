@@ -217,6 +217,9 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      */
     public void clearStatistics(int row) {
         trueCounts[row] = 0;
+        
+        for (int index : getSliceIndexes(new int[] { row }))
+            set(index, 0);
     }
 
     /**

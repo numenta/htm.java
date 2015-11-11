@@ -86,7 +86,7 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
                 int[] coordinates = computeCoordinates(value);
                 
                 if (inputVector[coordinates[1]]  != 0)
-                    results[coordinates[0]] += inputVector[coordinates[1]] * get(value);
+                    results[coordinates[0]] += 1;
             }
         }
         else {
