@@ -127,7 +127,7 @@ For tips and insights on how to use the Network API to add HTM's into your own a
 
 
 [license]:LICENSE.txt
-[license img]:https://img.shields.io/badge/License-GNU%25Affero-blue.svg
+[license img]:https://img.shields.io/badge/License-GNU%20Affero-blue.svg
 
 [docs-badge]:https://img.shields.io/badge/API-docs-blue.svg?style=flat-square
 [docs]:http://numenta.org/docs/htm.java/
