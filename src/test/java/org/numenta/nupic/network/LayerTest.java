@@ -1214,6 +1214,115 @@ public class LayerTest {
             e.printStackTrace();
         }
     }
+    
+    @Test
+    public void testMissingEncoderMap() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        //p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
+        p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+
+//        System.out.println(p);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        params.put(KEY_WINDOW_SIZE, 3);
+        params.put(KEY_USE_MOVING_AVG, true);
+        Anomaly anomalyComputer = Anomaly.create(params);
+
+        Layer<?> l = Network.createLayer("TestLayer", p)
+            .alterParameter(KEY.AUTO_CLASSIFY, true)
+            .add(anomalyComputer)
+            .add(new TemporalMemory())
+            .add(new SpatialPooler())
+            .add(Sensor.create(
+                FileSensor::create, 
+                SensorParams.create(
+                    Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
+
+        l.getConnections().printParameters();
+
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                if(flowReceived) return; // No need to set this value multiple times
+
+                flowReceived = i.getClassifiers().size() == 4 &&
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
+            }
+        });
+        
+        try {
+            l.close();
+            fail();
+        }catch(Exception e) {
+            assertEquals("Cannot initialize this Sensor's MultiEncoder with a null settings", e.getMessage());
+        }
+
+        try {
+            assertFalse(flowReceived);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        ////////////////// Test catch with no Sensor ////////////////////
+        
+        p = NetworkTestHarness.getParameters().copy();
+        //p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
+        p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+
+        params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        params.put(KEY_WINDOW_SIZE, 3);
+        params.put(KEY_USE_MOVING_AVG, true);
+        anomalyComputer = Anomaly.create(params);
+
+        l = Network.createLayer("TestLayer", p)
+            .alterParameter(KEY.AUTO_CLASSIFY, true)
+            .add(anomalyComputer)
+            .add(new TemporalMemory())
+            .add(new SpatialPooler())
+            .add(anomalyComputer)
+            .add(MultiEncoder.builder().name("").build());
+        
+        l.getConnections().printParameters();
+
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                if(flowReceived) return; // No need to set this value multiple times
+
+                flowReceived = i.getClassifiers().size() == 4 &&
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
+            }
+        });
+        
+        try {
+            l.close();
+            fail();
+        }catch(Exception e) {
+            assertEquals("No field encoding map found for specified MultiEncoder", e.getMessage());
+        }
+
+        try {
+            assertFalse(flowReceived);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private Parameters getArrayTestParams() {
         Map<String, Map<String, Object>> fieldEncodings = setupMap(
