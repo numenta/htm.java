@@ -127,7 +127,7 @@ Here's how to include SNAPSHOT builds:
     <version>0.6.5-SNAPSHOT</version>
 </dependency>
 
-I also needed to add a repositories entry:
+You also may need to include a repositories entry:
 
 <repository>
     <id>oss-sonatype</id>
