@@ -14,15 +14,25 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased [0.6.5-SNAPSHOT]
-* Removed Problematic test in LayerTest and PALayerTest which hung build
+* Nothing yet...
+
+***
+
+## [v0.6.5-alpha] - 2015-11-11
+#### Added
 * Added Class MultiEncoderAssembler for ME construction
 * Added Tests for new MultiEncoderAssembler
-* Changed Refactored MultiEncoder building so that manual construction has benefit of evolved code
 * Added @fergalbyrne added PASpatialPooler
 * Added @fergalbyrne added PALayer, and PALayerTest
+* Added .classpath file back into repo with correct classpath (includes dependencies) TemporalMemory and the input of the CLAClassifier
+
+#### Changed
+* Changed Refactored MultiEncoder building so that manual construction has benefit of evolved code
+* [Network API Re-write](https://github.com/numenta/htm.java/pull/335) Changed data transformed between a 
+
+#### Removed
+* Removed Problematic test in LayerTest and PALayerTest which hung build
 * Removed .classpath from .gitignore
-* Added .classpath file back into repo with correct classpath (includes dependencies)
-* [Network API Re-write](https://github.com/numenta/htm.java/pull/335) Changed data transformed between a TemporalMemory and the input of the CLAClassifier
 
 ***
 
