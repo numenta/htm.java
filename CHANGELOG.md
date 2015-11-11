@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.5-SNAPSHOT]
+## Unreleased [0.6.6-SNAPSHOT]
 * Nothing yet...
 
 ***
