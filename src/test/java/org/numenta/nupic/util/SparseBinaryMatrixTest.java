@@ -25,6 +25,7 @@ package org.numenta.nupic.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -296,5 +297,39 @@ public class SparseBinaryMatrixTest {
         
        for (int i = 0; i < this.dimensions[0]; i++)
            assertArrayEquals(expected[i], sm.getSliceIndexes(new int[] {i}));
+    }
+    
+    @Test
+    public void testOr() {
+        SparseBinaryMatrix sm = createDefaultMatrix();
+        int[] orBits = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        int[] expected = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        sm.or(orBits);
+        assertArrayEquals(expected, (int[]) sm.getSlice(new int[] {0}));
+    }
+    
+    @Test
+    public void testAll() {
+        SparseBinaryMatrix sm = createDefaultMatrix();
+        int[] all = {0, 5, 11, 16, 22, 27, 33, 38, 44, 49};
+        assertTrue(sm.all(all));
+    }
+    
+    private SparseBinaryMatrix createDefaultMatrix() {
+        SparseBinaryMatrix sm  = new SparseBinaryMatrix(this.dimensions);
+        int[][] values = {
+            {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+            {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+            {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+        
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 10; j++) {
+                sm.set(values[i][j], new int[] {i, j});
+            }
+        }
+        
+        return sm;
     }
 }
