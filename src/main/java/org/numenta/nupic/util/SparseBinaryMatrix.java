@@ -130,7 +130,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * being set
      */
     public void clearStatistics(int row) {
-        super.clearStatistics(row);
+        this.setTrueCount(row, 0);
         int[] slice = (int[])Array.get(backingArray, row);
         Arrays.fill(slice, 0);
     }
