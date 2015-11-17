@@ -224,6 +224,29 @@ public class DateEncoderTest {
     }
 
     /**
+     * tests hour of week separately
+     */
+    @Test
+    public void testHourOfWeek() {
+        //use of forced is not recommended, used here for readability, see ScalarEncoder
+        DateEncoder e = DateEncoder.builder().hourOfWeek(21,24).forced(true).build();
+        int [] holiday = new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+                1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
+
+        DateTime d = new DateTime(2010, 11, 4, 14, 55);
+        System.out.println(String.format("enc:%s", Arrays.toString(e.encode(d))));
+        System.out.println(String.format("exp:%s", Arrays.toString(holiday)));
+        assertArrayEquals(holiday, e.encode(d));
+
+    }
+
+    /**
      * Test weekend encoder
      */
     @Test

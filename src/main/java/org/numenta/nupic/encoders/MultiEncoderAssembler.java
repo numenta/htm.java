@@ -104,7 +104,8 @@ public class MultiEncoderAssembler {
                 
                 if(!key.equals("season") && !key.equals("dayOfWeek") &&
                     !key.equals("weekend") && !key.equals("holiday") &&
-                    !key.equals("timeOfDay") && !key.equals("customDays") && 
+                    !key.equals("timeOfDay") && !key.equals("hourOfWeek")
+                        && !key.equals("customDays") &&
                     !key.equals("formatPattern") && !key.equals("dateFormatter")) {
                 
                     multiEncoder.setValue(b, key, dateEncoderSettings.get(key));
@@ -168,6 +169,14 @@ public class MultiEncoderAssembler {
                     b.timeOfDay((int)t.get(0), (double)t.get(1));
                 }else{
                     b.timeOfDay((int)t.get(0));
+                }
+                break;
+            }
+            case "hourOfWeek" : {
+                if(t.size() > 1 && ((double)t.get(1)) > 0.0) {
+                    b.hourOfWeek((int)t.get(0), (double)t.get(1));
+                }else{
+                    b.hourOfWeek((int)t.get(0));
                 }
                 break;
             }
