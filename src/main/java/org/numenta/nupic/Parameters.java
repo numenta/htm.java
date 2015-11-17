@@ -287,6 +287,7 @@ public class Parameters {
         DATEFIELD_WKEND("weekend", Tuple.class),
         DATEFIELD_HOLIDAY("holiday", Tuple.class),
         DATEFIELD_TOFD("timeOfDay", Tuple.class),
+        DATEFIELD_HOW("hourOfWeek", Tuple.class),
         DATEFIELD_CUSTOM("customDays", Tuple.class), // e.g. Tuple(bits:int, List<String>:"mon,tue,fri")
         DATEFIELD_PATTERN("formatPattern", String.class),
         DATEFIELD_FORMATTER("dateFormatter", DateTimeFormatter.class);
