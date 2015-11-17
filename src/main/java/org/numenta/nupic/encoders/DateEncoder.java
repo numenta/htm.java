@@ -266,9 +266,9 @@ public class DateEncoder extends Encoder<DateTime> {
                     .w((int) hourOfWeek.get(0))
                     .radius((double) hourOfWeek.get(1))
                     .minVal(0)
-                    .maxVal(24)
+                    .maxVal(169)
                     .periodic(true)
-                    .name("time of day")
+                    .name("hour of week")
                     .forced(this.isForced())
                     .build();
             addChildEncoder(hourOfWeekEncoder);
@@ -710,9 +710,8 @@ public class DateEncoder extends Encoder<DateTime> {
         //  late night, etc.
         protected Tuple timeOfDay = new Tuple(0, 4.0);
 
-        // Value is time of day in hours
-        // Radius = 4 hours, e.g. morning, afternoon, evening, early night,
-        //  late night, etc.
+        // Value is hours since 00:00 Monday
+        // Radius = 24 hours
         protected Tuple hourOfWeek = new Tuple(0, 24.0);
         
         protected DateTimeFormatter customFormatter;
