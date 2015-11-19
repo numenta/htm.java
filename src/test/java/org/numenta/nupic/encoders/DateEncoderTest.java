@@ -224,29 +224,6 @@ public class DateEncoderTest {
     }
 
     /**
-     * tests hour of week separately
-     */
-    @Test
-    public void testHourOfWeek() {
-        //use of forced is not recommended, used here for readability, see ScalarEncoder
-        DateEncoder e = DateEncoder.builder().hourOfWeek(21,24).forced(true).build();
-        int [] holiday = new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-                1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        //in the middle of fall, Thursday, not a weekend, afternoon - 4th Nov, 2010, 14:55
-
-        DateTime d = new DateTime(2010, 11, 4, 14, 55);
-        System.out.println(String.format("enc:%s", Arrays.toString(e.encode(d))));
-        System.out.println(String.format("exp:%s", Arrays.toString(holiday)));
-        assertArrayEquals(holiday, e.encode(d));
-
-    }
-
-    /**
      * Test weekend encoder
      */
     @Test
@@ -259,8 +236,11 @@ public class DateEncoderTest {
                 "Monday"
         )).forced(true).build();
         DateEncoder e2 = DateEncoder.builder().weekend(21, 1).forced(true).build();
+        //DateTime d = new DateTime(1988,5,29,20,0);
         DateTime d = new DateTime(1988,5,29,20,0);
 
+        System.out.println("DateEncoderTest.testWeekend(): e.encode(d)  = " + Arrays.toString(e.encode(d)));
+        System.out.println("DateEncoderTest.testWeekend(): e2.encode(d) = " + Arrays.toString(e2.encode(d)));
         assertArrayEquals(e.encode(d), e2.encode(d));
 
         for (int i = 0; i < 300; i++) {
@@ -281,6 +261,7 @@ public class DateEncoderTest {
             assertEquals(1, range.size());
             assertEquals(1, ((List<MinMax>)range.get(0)).size());
             MinMax minmax = range.getRange(0);
+            System.out.println("DateEncoderTest.testWeekend(): minmax.min() = " + minmax.min());
 
             if(minmax.min() == 1.0) {
                 assertEquals(1, curDate.getDayOfWeek());
