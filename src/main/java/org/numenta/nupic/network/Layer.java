@@ -1585,6 +1585,8 @@ public class Layer<T> {
      */
     @SuppressWarnings("unchecked")
     private Observable<ManualInput> fillInOrderedSequence(Observable<ManualInput> o) {
+        Collections.reverse(addedItems);
+        
         for(Object node : addedItems) {
             if(node instanceof Func1<?, ?>) {
                 o = o.map((Func1<ManualInput, ManualInput>)node);
