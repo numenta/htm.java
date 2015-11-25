@@ -74,10 +74,6 @@ import org.numenta.nupic.util.Tuple;
  *
  * forced (default True) : if True, skip checks for parameters' settings; see {@code ScalarEncoders} for details
  *
- * hourOfWeek (00:00 Monday = 0; units = hour)
- * (int) width of attribute: default radius = 24 hours
- * (tuple) hourOfWeek[0] = width; hourOfWeek[1] = radius
- *
  * @author utensil
  *
  * TODO Improve the document:
@@ -110,9 +106,6 @@ public class DateEncoder extends Encoder<DateTime> {
 
     protected Tuple timeOfDay;
     protected ScalarEncoder timeOfDayEncoder;
-
-    protected Tuple hourOfWeek;
-    protected ScalarEncoder hourOfWeekEncoder;
 
     protected List<Integer> customDaysList = new ArrayList<>();
 
@@ -167,7 +160,7 @@ public class DateEncoder extends Encoder<DateTime> {
         setForced(true);
 
         // Note: The order of adding encoders matters, must be in the following
-        // season, dayOfWeek, weekend, customDays, holiday, timeOfDay, hourOfWeek
+        // season, dayOfWeek, weekend, customDays, holiday, timeOfDay
 
         if(isValidEncoderPropertyTuple(season)) {
             seasonEncoder = ScalarEncoder.builder()
@@ -261,18 +254,6 @@ public class DateEncoder extends Encoder<DateTime> {
             addChildEncoder(timeOfDayEncoder);
         }
 
-        if(isValidEncoderPropertyTuple(hourOfWeek)) {
-            hourOfWeekEncoder = ScalarEncoder.builder()
-                    .w((int) hourOfWeek.get(0))
-                    .radius((double) hourOfWeek.get(1))
-                    .minVal(0)
-                    .maxVal(169)
-                    .periodic(true)
-                    .name("hour of week")
-                    .forced(this.isForced())
-                    .build();
-            addChildEncoder(hourOfWeekEncoder);
-        }
     }
 
     private boolean isValidEncoderPropertyTuple(Tuple encoderPropertyTuple) {
@@ -382,14 +363,6 @@ public class DateEncoder extends Encoder<DateTime> {
 
     public void setTimeOfDay(Tuple timeOfDay) {
         this.timeOfDay = timeOfDay;
-    }
-
-    public Tuple getHourOfWeek() {
-        return hourOfWeek;
-    }
-
-    public void setHourOfWeek(Tuple hourOfWeek) {
-        this.hourOfWeek = hourOfWeek;
     }
 
     /**
@@ -538,14 +511,11 @@ public class DateEncoder extends Encoder<DateTime> {
 
         //Get the scalar values for each sub-field
 
-        double timeOfDay = inputData.getHourOfDay() + inputData.getMinuteOfHour() / 60.0;
+        double timeOfDay = inputData.getHourOfDay() + inputData.getMinuteOfHour() / 60.0
+                + inputData.getSecondOfMinute() / 3600.0;
 
         // The day of week was 1 based, so convert to 0 based
-        int dayOfWeek = inputData.getDayOfWeek() - 1; // + timeOfDay / 24.0
-
-        double hourOfWeek = (24.0 * dayOfWeek) + inputData.getHourOfDay()
-                + inputData.getMinuteOfHour() / 60.0
-                + inputData.getSecondOfMinute() / 3600.0;
+        double dayOfWeek = (double)inputData.getDayOfWeek() - 1.0 + (timeOfDay / 24.0);
 
         if(seasonEncoder != null) {
             // The day of year was 1 based, so convert to 0 based
@@ -560,8 +530,7 @@ public class DateEncoder extends Encoder<DateTime> {
         if(weekendEncoder != null) {
 
             //saturday, sunday or friday evening
-            boolean isWeekend = dayOfWeek == 6 || dayOfWeek == 5 ||
-                    (dayOfWeek == 4 && timeOfDay > 18);
+            boolean isWeekend = (dayOfWeek >= 4.75);
 
             int weekend = isWeekend ? 1 : 0;
 
@@ -569,7 +538,8 @@ public class DateEncoder extends Encoder<DateTime> {
         }
 
         if(customDaysEncoder != null) {
-            boolean isCustomDays = customDaysList.contains(dayOfWeek);
+            int ordinalDay = (int)dayOfWeek;
+            boolean isCustomDays = customDaysList.contains(ordinalDay);
 
             int customDay = isCustomDays ? 1 : 0;
 
@@ -616,10 +586,6 @@ public class DateEncoder extends Encoder<DateTime> {
 
         if(timeOfDayEncoder != null) {
             values.add(timeOfDay);
-        }
-
-        if(hourOfWeekEncoder != null) {
-            values.add(hourOfWeek);
         }
 
         return values;
@@ -709,10 +675,6 @@ public class DateEncoder extends Encoder<DateTime> {
         // Radius = 4 hours, e.g. morning, afternoon, evening, early night,
         //  late night, etc.
         protected Tuple timeOfDay = new Tuple(0, 4.0);
-
-        // Value is hours since 00:00 Monday
-        // Radius = 24 hours
-        protected Tuple hourOfWeek = new Tuple(0, 24.0);
         
         protected DateTimeFormatter customFormatter;
 
@@ -738,7 +700,6 @@ public class DateEncoder extends Encoder<DateTime> {
             e.setWeekend(this.weekend);
             e.setHoliday(this.holiday);
             e.setTimeOfDay(this.timeOfDay);
-            e.setHourOfWeek(this.hourOfWeek);
             e.setCustomDays(this.customDays);
             e.setCustomFormat(this.customFormatter);
 
@@ -836,21 +797,6 @@ public class DateEncoder extends Encoder<DateTime> {
          */
         public DateEncoder.Builder timeOfDay(int timeOfDay) {
             return this.timeOfDay(timeOfDay, (double) this.timeOfDay.get(1));
-        }
-
-        /**
-         * Set how many bits are used to encode hourOfWeek
-         */
-        public DateEncoder.Builder hourOfWeek(int hourOfWeek, double radius) {
-            this.hourOfWeek = new Tuple(hourOfWeek, radius);
-            return this;
-        }
-
-        /**
-         * Set how many bits are used to encode hourOfWeek
-         */
-        public DateEncoder.Builder hourOfWeek(int hourOfWeek) {
-            return this.hourOfWeek(hourOfWeek, (double) this.hourOfWeek.get(1));
         }
 
         /**
