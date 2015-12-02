@@ -482,11 +482,11 @@ public class LayerTest {
             public void onNext(Inference i) {
                 if(test == 0) {
                     assertTrue(Arrays.equals(expected0, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
+                    assertEquals("Interposed: [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0]", i.getCustomObject());
                 }
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 1, 0, 0, 0, 0, 0]", i.getCustomObject());
+                    assertEquals("Interposed: [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0]", i.getCustomObject());
                 }
                 ++test; 
             }
