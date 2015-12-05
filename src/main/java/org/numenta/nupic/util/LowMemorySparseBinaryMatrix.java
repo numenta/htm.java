@@ -25,6 +25,9 @@ package org.numenta.nupic.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+
 /**
  * Low Memory implementation of {@link SparseBinaryMatrix} without 
  * a backing array.
@@ -32,6 +35,8 @@ import java.util.Arrays;
  * @author Jose Luis Martin
  */
 public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
+    
+    private TIntSet sparseSet = new TIntHashSet();
 
     public LowMemorySparseBinaryMatrix(int[] dimensions) {
         this(dimensions, false);
@@ -73,14 +78,15 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
         return slice;
     }
-
+    
     @Override
     public void rightVecSumAtNZ(int[] inputVector, int[] results) {
         if (this.dimensions.length > 1) {
-            for(int i = 0; i < this.dimensions[0]; i++) {
-                for(int j = 0;  j < this.dimensions[1] ; j++) {
-                    results[i] += (inputVector[j] * (int) get(i, j));
-                }
+            for (int value : getSparseIndices()) {
+                int[] coordinates = computeCoordinates(value);
+                
+                if (inputVector[coordinates[1]]  != 0)
+                    results[coordinates[0]] += 1;
             }
         }
         else {
@@ -96,7 +102,15 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
     @Override
     public LowMemorySparseBinaryMatrix set(int value, int... coordinates) {
-        super.set(value, coordinates);
+        int index = computeIndex(coordinates);
+                
+        if (value == 1) {
+            this.sparseSet.add(index);
+        }
+        else {
+            this.sparseSet.remove(index);
+        }
+        
         updateTrueCounts(coordinates);
 
         return this;
@@ -104,8 +118,11 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
 
     @Override
     public LowMemorySparseBinaryMatrix setForTest(int index, int value) {
-        if (value > 1) {
-            super.setForTest(index, value);
+        if (value == 1) {
+            this.sparseSet.add(index);
+        }
+        else {
+            this.sparseSet.remove(index);
         }
 
         return this;
@@ -127,5 +144,9 @@ public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
         return this;
     }
 
+    @Override
+    public Integer get(int index) {
+       return this.sparseSet.contains(index) ? 1 : 0;
+    }
 
 }

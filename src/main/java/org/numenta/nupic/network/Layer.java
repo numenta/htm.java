@@ -47,8 +47,11 @@ import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.URISensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.SparseBinaryMatrix;
@@ -264,12 +267,9 @@ public class Layer<T> {
     /**
      * Creates a new {@code Layer} using the specified {@link Parameters}
      * 
-     * @param name
-     *            the name identifier of this {@code Layer}
-     * @param n
-     *            the parent {@link Network}
-     * @param p
-     *            the {@link Parameters} to use with this {@code Layer}
+     * @param name  the name identifier of this {@code Layer}
+     * @param n     the parent {@link Network}
+     * @param p     the {@link Parameters} to use with this {@code Layer}
      */
     public Layer(String name, Network n, Parameters p) {
         this.name = name;
@@ -298,24 +298,15 @@ public class Layer<T> {
      * Creates a new {@code Layer} initialized with the specified algorithmic
      * components.
      * 
-     * @param params
-     *            A {@link Parameters} object containing configurations for a
-     *            SpatialPooler, TemporalMemory, and Encoder (all or none may be
-     *            used).
-     * @param e
-     *            (optional) The Network API only uses a {@link MultiEncoder} at
-     *            the top level because of its ability to delegate to child
-     *            encoders.
-     * @param sp
-     *            (optional) {@link SpatialPooler}
-     * @param tm
-     *            (optional) {@link TemporalMemory}
-     * @param autoCreateClassifiers
-     *            (optional) Indicates that the {@link Parameters} object
-     *            contains the configurations necessary to create the required
-     *            encoders.
-     * @param a
-     *            (optional) An {@link Anomaly} computer.
+     * @param params                    A {@link Parameters} object containing configurations for a
+     *                                  SpatialPooler, TemporalMemory, and Encoder (all or none may be used).
+     * @param e                         (optional) The Network API only uses a {@link MultiEncoder} at
+     *                                  the top level because of its ability to delegate to child encoders.
+     * @param sp                        (optional) {@link SpatialPooler}
+     * @param tm                        (optional) {@link TemporalMemory}
+     * @param autoCreateClassifiers     (optional) Indicates that the {@link Parameters} object
+     *                                  contains the configurations necessary to create the required encoders.
+     * @param a                         (optional) An {@link Anomaly} computer.
      */
     public Layer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
 
@@ -530,12 +521,10 @@ public class Layer<T> {
      * Otherwise if the input field dimensionality is correctly specified, this
      * method should <b>not</b> be used.
      * 
-     * @param inputWidth
-     *            the flat input width of an {@link Encoder}'s output or the
-     *            vector used as input to the {@link SpatialPooler}
-     * @param numColumnDims
-     *            a number specifying the number of column dimensions that
-     *            should be returned.
+     * @param inputWidth        the flat input width of an {@link Encoder}'s output or the
+     *                          vector used as input to the {@link SpatialPooler}
+     * @param numColumnDims     a number specifying the number of column dimensions that
+     *                          should be returned.
      * @return
      */
     public int[] inferInputDimensions(int inputWidth, int numColumnDims) {
@@ -558,9 +547,9 @@ public class Layer<T> {
 
     /**
      * Returns an {@link Observable} that can be subscribed to, or otherwise
-     * operated upon by a
+     * operated upon by another Observable or by an Observable chain.
      * 
-     * @return
+     * @return  this {@code Layer}'s output {@link Observable}
      */
     @SuppressWarnings("unchecked")
     public Observable<Inference> observe() {
@@ -581,9 +570,8 @@ public class Layer<T> {
      * Called by the {@code Layer} client to receive output {@link Inference}s
      * from the configured algorithms.
      * 
-     * @param subscriber
-     *            a {@link Subscriber} to be notified as data is published.
-     * @return
+     * @param subscriber    a {@link Subscriber} to be notified as data is published.
+     * @return  a {@link Subscription}
      */
     public Subscription subscribe(final Observer<Inference> subscriber) {
         if(subscriber == null) {
@@ -599,8 +587,7 @@ public class Layer<T> {
      * Allows the user to define the {@link Connections} object data structure
      * to use. Or possibly to share connections between two {@code Layer}s
      * 
-     * @param c
-     *            the {@code Connections} object to use.
+     * @param c     the {@code Connections} object to use.
      * @return this Layer instance (in fluent-style)
      */
     public Layer<T> using(Connections c) {
@@ -623,8 +610,8 @@ public class Layer<T> {
      * first makes a local copy of the {@link Parameters} object, then modifies
      * the specified parameter.
      * 
-     * @param p
-     * @return
+     * @param p     the {@link Parameters} to use in this {@code Layer}
+     * @return      this {@code Layer}
      */
     public Layer<T> using(Parameters p) {
         if(isClosed) {
@@ -635,9 +622,12 @@ public class Layer<T> {
     }
 
     /**
-     * Adds an {@link HTMSensor} to this {@code Layer}
+     * Adds an {@link HTMSensor} to this {@code Layer}. An HTMSensor is a regular
+     * {@link Sensor} (i.e. {@link FileSensor}, {@link URISensor}, or {@link ObservableSensor})
+     * which has had an {@link Encoder} configured and added to it. HTMSensors are
+     * HTM Aware, where as regular Sensors have no knowledge of HTM requirements.
      * 
-     * @param sensor
+     * @param sensor    the {@link HTMSensor}
      * @return this Layer instance (in fluent-style)
      */
     @SuppressWarnings("rawtypes")
@@ -656,8 +646,7 @@ public class Layer<T> {
     /**
      * Adds a {@link MultiEncoder} to this {@code Layer}
      * 
-     * @param encoder
-     *            the added MultiEncoder
+     * @param encoder   the added MultiEncoder
      * @return this Layer instance (in fluent-style)
      */
     public Layer<T> add(MultiEncoder encoder) {
@@ -672,8 +661,7 @@ public class Layer<T> {
     /**
      * Adds a {@link SpatialPooler} to this {@code Layer}
      * 
-     * @param sp
-     *            the added SpatialPooler
+     * @param sp    the added SpatialPooler
      * @return this Layer instance (in fluent-style)
      */
     public Layer<T> add(SpatialPooler sp) {
@@ -692,8 +680,7 @@ public class Layer<T> {
     /**
      * Adds a {@link TemporalMemory} to this {@code Layer}
      * 
-     * @param tm
-     *            the added TemporalMemory
+     * @param tm    the added TemporalMemory
      * @return this Layer instance (in fluent-style)
      */
     public Layer<T> add(TemporalMemory tm) {
@@ -713,8 +700,7 @@ public class Layer<T> {
     /**
      * Adds an {@link Anomaly} computer to this {@code Layer}
      * 
-     * @param anomalyComputer
-     *            the Anomaly instance
+     * @param anomalyComputer   the Anomaly instance
      * @return this Layer instance (in fluent-style)
      */
     public Layer<T> add(Anomaly anomalyComputer) {
@@ -738,10 +724,9 @@ public class Layer<T> {
      * the addXXX() methods becomes crucially important. Make sure you 
      * have added items in a valid order in your "fluent" add call declarations.</b></em>
      * 
-     * @param func
-     *            a {@link Func1} function to be performed at the point of
-     *            insertion within the {@code Layer}'s declaration.
-     * @return
+     * @param func      a {@link Func1} function to be performed at the point of
+     *                  insertion within the {@code Layer}'s declaration.
+     * @return     this Layer instance (in fluent-style)
      */
     public Layer<T> add(Func1<ManualInput, ManualInput> func) {
         if(isClosed) {
@@ -765,9 +750,9 @@ public class Layer<T> {
      * local modifications may be made without having to reset them afterward
      * for subsequent use with another network structure.
      * 
-     * @param key
-     * @param value
-     * @return
+     * @param key       the {@link Parameters} key.
+     * @param value     the value of the parameter
+     * @return  this Layer instance (in fluent-style)
      */
     public Layer<T> alterParameter(KEY key, Object value) {
         if(isClosed) {
@@ -792,10 +777,10 @@ public class Layer<T> {
     }
 
     /**
-     * Returns the configured {@link Sensor} if any exists in this {@code Layer}
-     * , or null if one does not.
+     * Returns the configured {@link Sensor} if any exists in this {@code Layer},
+     * or null if one does not.
      * 
-     * @return
+     * @return    any existing HTMSensor applied to this {@code Layer}
      */
     public HTMSensor<?> getSensor() {
         return sensor;
@@ -804,7 +789,7 @@ public class Layer<T> {
     /**
      * Returns the {@link Connections} object being used by this {@link Layer}
      * 
-     * @return
+     * @return      this {@code Layer}'s {@link Connections}
      */
     public Connections getConnections() {
         return this.connections;
@@ -821,8 +806,7 @@ public class Layer<T> {
      * at the bottom of the input chain, therefore the "type" (&lt;T&gt;) of the
      * input cannot be changed once this method is called for the first time.
      * 
-     * @param t
-     *            the input object who's type is generic.
+     * @param t     the input object who's type is generic.
      */
     public void compute(T t) {
         if(!isClosed) {
@@ -1061,8 +1045,7 @@ public class Layer<T> {
      * Sets the sparse form of the {@link SpatialPooler} column activations and
      * returns the specified array.
      * 
-     * @param activesInSparseForm
-     *            the sparse column activations
+     * @param activesInSparseForm       the sparse column activations
      * @return
      */
     int[] feedForwardSparseActives(int[] activesInSparseForm) {
@@ -1205,10 +1188,8 @@ public class Layer<T> {
      * indexes correspond to the indexes of probabilities returned when calling
      * {@link #getAllPredictions(String, int)}.
      * 
-     * @param field
-     *            The field name of the required prediction
-     * @param step
-     *            The step for the required prediction
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -1233,10 +1214,8 @@ public class Layer<T> {
      * {@code Layer} - the indexes of each probability will match the index of
      * each actual value entered.
      * 
-     * @param field
-     *            The field name of the required prediction
-     * @param step
-     *            The step for the required prediction
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
      * @return
      */
     public double[] getAllPredictions(String field, int step) {
@@ -1256,10 +1235,8 @@ public class Layer<T> {
      * Returns the value whose probability is calculated to be the highest for
      * the specified field and step.
      * 
-     * @param field
-     *            The field name of the required prediction
-     * @param step
-     *            The step for the required prediction
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -1280,10 +1257,8 @@ public class Layer<T> {
      * Returns the bucket index of the value with the highest calculated
      * probability for the specified field and step.
      * 
-     * @param field
-     *            The field name of the required prediction
-     * @param step
-     *            The step for the required prediction
+     * @param field     The field name of the required prediction
+     * @param step      The step for the required prediction
      * @return
      */
     public int getMostProbableBucketIndex(String field, int step) {
@@ -1320,8 +1295,7 @@ public class Layer<T> {
      * Called internally to propagate the specified {@link Exception} up the
      * network hierarchy
      * 
-     * @param e
-     *            the exception to notify users of
+     * @param e     the exception to notify users of
      */
     void notifyError(Exception e) {
         for(Observer<Inference> o : subscribers) {
@@ -1464,8 +1438,7 @@ public class Layer<T> {
      * This method is necessary to be able to retrieve the mapped
      * {@link Observable} types to input types or their subclasses if any.
      * 
-     * @param t
-     *            the input type. The "expected" types are:
+     * @param t   the input type. The "expected" types are:
      *            <ul>
      *            <li>{@link Map}</li>
      *            <li>{@link ManualInput}</li>
@@ -1537,8 +1510,7 @@ public class Layer<T> {
      * Connects the {@link Transformer} to the rest of the {@link Observable}
      * sequence.
      * 
-     * @param o
-     *            the Transformer part of the sequence.
+     * @param o     the Transformer part of the sequence.
      * @return the completed {@link Observable} sequence.
      */
     private Observable<ManualInput> fillInSequence(Observable<ManualInput> o) {
@@ -1579,8 +1551,7 @@ public class Layer<T> {
      * Connects {@link Observable} or {@link Transformer} emissions in the order
      * they are declared.
      * 
-     * @param o
-     *            first {@link Observable} in sequence.
+     * @param o     first {@link Observable} in sequence.
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -1619,8 +1590,7 @@ public class Layer<T> {
      * Called internally to create a subscription on behalf of the specified
      * {@link LayerObserver}
      * 
-     * @param sub
-     *            the LayerObserver (subscriber).
+     * @param sub       the LayerObserver (subscriber).
      * @return
      */
     private Subscription createSubscription(final Observer<Inference> sub) {
@@ -1750,10 +1720,8 @@ public class Layer<T> {
     /**
      * Called internally to invoke the {@link TemporalMemory}
      * 
-     * @param input
-     *            the current input vector
-     * @param mi
-     *            the current input inference container
+     * @param input     the current input vector
+     * @param mi        the current input inference container
      * @return
      */
     protected int[] temporalInput(int[] input, ManualInput mi) {

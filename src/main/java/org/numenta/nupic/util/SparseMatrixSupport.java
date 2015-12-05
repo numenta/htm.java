@@ -126,12 +126,6 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
     protected double getDoubleValue(int index) { return -1.0; }
 
     /**
-     * Returns an outer array of T values.
-     * @return
-     */
-    protected abstract <V> V values();
-
-    /**
      * Returns the T at the index computed from the specified coordinates
      * @param coordinates   the coordinates from which to retrieve the indexed object
      * @return  the indexed object

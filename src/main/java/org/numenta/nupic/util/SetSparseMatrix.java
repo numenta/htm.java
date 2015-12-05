@@ -22,12 +22,6 @@ public class SetSparseMatrix extends SparseMatrixSupport<Integer> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected int[] values() {
-        return this.indexes.stream().mapToInt(i -> i).toArray();
-    }
-
-    @Override
     public SetSparseMatrix set(int[] coordinates, Integer value) {
         return set(computeIndex(coordinates), value);
 

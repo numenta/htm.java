@@ -1313,6 +1313,7 @@ public class ArrayUtils {
             if(ia[i] > 1) return true;
             else if(j > 0 && ia[i] == end) return false;
         }
+        
         return false;
     }
     
@@ -1330,7 +1331,7 @@ public class ArrayUtils {
         Arrays.stream(in).forEach(i -> {retVal[i] = 1;});
         return retVal;
     }
-
+    
     /**
      * Scans the specified values and applies the {@link Condition} to each
      * value, returning the indexes of the values where the condition evaluates
@@ -1725,6 +1726,22 @@ public class ArrayUtils {
             setValue(Array.get(array, indexes[0]), value, tail(indexes));
         }
     }
+    
+    /**
+     * Get <tt>value</tt> for <tt>array</tt> at specified position <tt>indexes</tt>
+     *
+     * @param array
+     * @param indexes
+     */
+    public static Object getValue(Object array, int... indexes) {
+        Object slice = array;
+        for(int i = 0;i < indexes.length;i++) {
+            slice = Array.get(slice, indexes[i]);
+        }
+        
+        return slice;
+    }
+
 
     /**
      *Assigns the specified int value to each element of the specified any dimensional array
