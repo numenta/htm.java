@@ -323,4 +323,10 @@ public class ArrayUtilsTest {
 	    assertFalse(ArrayUtils.isSparse(t));
 	    assertTrue(ArrayUtils.isSparse(t1));
 	}
+
+	@Test
+	public void testNGreatest() {
+	    double[] overlaps = new double[] { 1, 2, 1, 4, 8, 3, 12, 5, 4, 1 };
+	    assertTrue(Arrays.equals(new int[] { 6, 4, 7 }, ArrayUtils.nGreatest(overlaps, 3)));
+	}
 }

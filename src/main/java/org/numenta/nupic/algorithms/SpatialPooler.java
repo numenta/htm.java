@@ -25,7 +25,11 @@ package org.numenta.nupic.algorithms;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Column;
@@ -898,11 +902,19 @@ public class SpatialPooler {
      * @return
      */
     public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
-        int numCols = c.getNumColumns();
-        int numActive = (int)(density * numCols);
-        int[] winners = ArrayUtils.nGreatest(overlaps, numActive);
-        Arrays.sort(winners);
-        return winners;
+    	int numCols = c.getNumColumns();
+    	int numActive = (int)(density * numCols);
+    	return IntStream.range(0, overlaps.length)
+    			.boxed()
+    			.collect(Collectors.toMap(index->index, index->overlaps[index]))
+    			.entrySet()
+    			.stream()
+    			.sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+    			.limit(numActive)
+    			.map(Entry::getKey)
+    			.sorted()
+    			.mapToInt(Integer::intValue)
+    			.toArray();
     }
 
     /**
