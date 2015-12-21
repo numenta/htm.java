@@ -568,10 +568,15 @@ public class Parameters {
             if (propKey != null) {
                 Object paramValue = this.getParameterByKey(propKey);
                 Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
-                if ((paramValue != null && !paramValue.equals(cnValue)) || (paramValue == null && cnValue != null)) {
+                
+                // KEY.POTENTIAL_RADIUS is defined as Math.min(cn.numInputs, potentialRadius) so just log...
+                if(propKey == KEY.POTENTIAL_RADIUS) {
+                    System.out.println(
+                        "Difference is OK: Property:" + fieldName + " is different - CN:" + cnValue + " | PARAM:" + paramValue);
+                }else if ((paramValue != null && !paramValue.equals(cnValue)) || (paramValue == null && cnValue != null)) {
                     result = true;
                     System.out.println(
-                            "Property:" + fieldName + " is different - CN:" + cnValue + " | PARAM:" + paramValue);
+                        "Property:" + fieldName + " is different - CONNECTIONS:" + cnValue + " | PARAMETERS:" + paramValue);
                 }
             }
         }
@@ -954,15 +959,6 @@ public class Parameters {
      */
     public void setMaxBoost(double maxBoost) {
         paramMap.put(KEY.MAX_BOOST, maxBoost);
-    }
-
-    /**
-     * spVerbosity level: 0, 1, 2, or 3
-     *
-     * @param spVerbosity
-     */
-    public void setSpVerbosity(int spVerbosity) {
-        paramMap.put(KEY.SP_VERBOSITY, spVerbosity);
     }
 
     /**
