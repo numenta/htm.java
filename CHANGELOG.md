@@ -14,7 +14,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ***
 
 ## Unreleased [0.6.6-SNAPSHOT]
-* Nothing yet...
+#### Removed
+* Removed setSpVerbosity() method from Parameters.java
+
+#### Added
+* [[PR #359](https://github.com/numenta/htm.java/pull/359)] Added HourOfWeek to DateEncoder.
+* [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
+
+#### Changed
+* [[PR #365](https://github.com/numenta/htm.java/pull/365)] Changed inhibitColumnsGlobal() to use Java 8 Streams - 50% performance increase! Fixes [Issue #354](https://github.com/numenta/htm.java/issues/354)
+* [[PR #370](https://github.com/numenta/htm.java/pull/370)] Changed Connections initialization to be able to specify RNG implementation from Parameters value.
+
+#### Fixed
+* [[PR #360](https://github.com/numenta/htm.java/pull/360)] Fixed dayOfWeek to accept fractional values.
+* [[PR #362](https://github.com/numenta/htm.java/pull/362)] Fix for Generic Observable execution order. Fixes [Issue #363](https://github.com/numenta/htm.java/issues/363)
+* [[PR #367](https://github.com/numenta/htm.java/pull/367)] Fixed some class and method java docs.
 
 ***
 
