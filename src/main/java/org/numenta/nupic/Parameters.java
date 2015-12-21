@@ -474,7 +474,6 @@ public class Parameters {
         Set<KEY> presentKeys = paramMap.keySet();
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
-                if(key == KEY.RANDOM) continue;
                 beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
             }
         }
