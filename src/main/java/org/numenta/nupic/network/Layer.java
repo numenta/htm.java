@@ -1964,7 +1964,7 @@ public class Layer<T> {
                         // then set on Manual Input (t1)
                         t1 = t1.sdr(feedForwardSparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1))).feedForwardSparseActives(t1.getSDR());
                     }
-                    return t1.sdr(temporalInput(t1.getSDR(), t1)).activeCells(t1.getActiveCells());
+                    return t1.sdr(temporalInput(t1.getSDR(), t1));
                 }
             };
         }
