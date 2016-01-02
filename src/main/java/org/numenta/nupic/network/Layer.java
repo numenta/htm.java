@@ -1151,7 +1151,7 @@ public class Layer<T> {
      * @param name
      * @return
      */
-    Layer<T> name(String name) {
+    public Layer<T> name(String name) {
         this.name = name;
         return this;
     }

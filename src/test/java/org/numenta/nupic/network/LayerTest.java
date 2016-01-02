@@ -1364,4 +1364,33 @@ public class LayerTest {
 
         return map;
     }
+    
+    @Test
+    public void testEquality() {
+        Parameters p = Parameters.getAllDefaultParameters();
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l2 = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        assertTrue(l.equals(l));
+        assertFalse(l.equals(null));
+        assertTrue(l.equals(l2));
+       
+        l2.name("I'm different");
+        assertFalse(l.equals(l2));
+        
+        l2.name(null);
+        assertTrue(l.equals(l2));
+        
+        Network n = new Network("TestNetwork", p);
+        Region r = new Region("r1", n);
+        l.setRegion(r);
+        assertFalse(l.equals(l2));
+        
+        l2.setRegion(r);
+        assertTrue(l.equals(l2));
+        
+        Region r2 = new Region("r2", n);
+        l2.setRegion(r2);
+        assertFalse(l.equals(l2));
+    }
 }
