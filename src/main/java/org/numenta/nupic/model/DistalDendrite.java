@@ -49,12 +49,12 @@ public class DistalDendrite extends Segment {
      * Constructs a new {@code Segment} object with the specified owner
      * {@link Cell} and the specified index.
      * 
-     * @param cell
-     *            the owner
-     * @param index
-     *            this {@code Segment}'s index.
+     * @param cell      the owner
+     * @param index     this {@code Segment}'s index.
      */
     public DistalDendrite(Cell cell, int index) {
+        super(index);
+        
         this.cell = cell;
         this.index = index;
     }
@@ -197,6 +197,40 @@ public class DistalDendrite extends Segment {
      */
     @Override
     public String toString() {
-        return "" + index;
+        return String.valueOf(index);
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((cell == null) ? 0 : cell.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!super.equals(obj))
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        DistalDendrite other = (DistalDendrite)obj;
+        if(cell == null) {
+            if(other.cell != null)
+                return false;
+        } else if(!cell.equals(other.cell))
+            return false;
+        return true;
+    }
+    
+    
+  
 }

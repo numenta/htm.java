@@ -37,7 +37,7 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public class SparseObjectMatrix<T> extends SparseMatrixSupport<T> {
+public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> {
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
 
     /**

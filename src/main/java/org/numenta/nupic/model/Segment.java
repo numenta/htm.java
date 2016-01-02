@@ -34,8 +34,14 @@ import org.numenta.nupic.Connections;
  * @see DistalDendrite
  * @see ProximalDendrite
  */
-public abstract class Segment {
+public abstract class Segment implements Comparable<Segment> {
     protected int index;
+    protected Integer boxedIndex;
+    
+    public Segment(int index) {
+        this.index = index;
+        this.boxedIndex = new Integer(index);
+    }
     
     /**
      * Returns this {@link ProximalDendrite}'s index.
@@ -71,4 +77,44 @@ public abstract class Segment {
         syns.add(s);
         return s;
     }
+    
+    /**
+     * {@inheritDoc}
+     * 
+     * <em> Note: All comparisons use the segment's index only </em>
+     */
+    @Override
+    public int compareTo(Segment arg0) {
+        return boxedIndex.compareTo(arg0.boxedIndex);
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + index;
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Segment other = (Segment)obj;
+        if(index != other.index)
+            return false;
+        return true;
+    }
+    
+    
 }

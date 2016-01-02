@@ -303,6 +303,7 @@ public class ManualInput implements Inference {
         retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
         retVal.customObject = this.customObject;
+        retVal.activeCells = new LinkedHashSet<Cell>(this.activeCells);
         
         return retVal;
     }

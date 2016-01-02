@@ -42,6 +42,7 @@ public class ManualInputTest {
         int[] encoding = new int[40];
         int[] activeColumns = new int[25];
         int[] sparseActives = new int[2];
+        Set<Cell> activeCells = new LinkedHashSet<>(); activeCells.add(new Cell(new Column(4, 0), 1));
         Set<Cell> previousPrediction = new LinkedHashSet<>(); previousPrediction.add(new Cell(new Column(4, 0), 2));
         Set<Cell> currentPrediction = new LinkedHashSet<>(); currentPrediction.add(new Cell(new Column(4, 0), 3));
         ClassifierResult<Object> classification = new ClassifierResult<>();
@@ -57,6 +58,7 @@ public class ManualInputTest {
         .feedForwardSparseActives(sparseActives)
         .predictiveCells(previousPrediction)
         .predictiveCells(currentPrediction) // last prediction internally becomes previous
+        .activeCells(activeCells)
         .classifiers(classifiers)
         .storeClassification("foo", classification)
         .anomalyScore(anomalyScore)
@@ -82,6 +84,9 @@ public class ManualInputTest {
         
         assertTrue(copy.getPredictiveCells().equals(currentPrediction));
         assertFalse(copy.getPredictiveCells() == currentPrediction);
+        
+        assertTrue(copy.getActiveCells().equals(activeCells));
+        assertFalse(copy.getActiveCells() == activeCells);
         
         assertTrue(copy.getPreviousPredictiveCells().equals(previousPrediction));
         assertFalse(copy.getPreviousPredictiveCells() == previousPrediction);

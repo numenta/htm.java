@@ -44,7 +44,7 @@ public class SparseBinaryMatrixTest {
         doTestBackingStoreAndSliceAccess(new FastConnectionsMatrix(this.dimensions));
     }
 
-    private void doTestBackingStoreAndSliceAccess(SparseBinaryMatrixSupport sm) {
+    private void doTestBackingStoreAndSliceAccess(AbstractSparseBinaryMatrix sm) {
         int[][] connectedSynapses = new int[][]{
             {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
             {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
@@ -87,7 +87,7 @@ public class SparseBinaryMatrixTest {
         doTestRightVecSumAtNZFast(new FastConnectionsMatrix(this.dimensions));
     }
 
-    private void doTestRightVecSumAtNZFast(SparseBinaryMatrixSupport sm) {
+    private void doTestRightVecSumAtNZFast(AbstractSparseBinaryMatrix sm) {
         int[] dimensions = new int[]{5, 10};
         int[][] connectedSynapses = new int[][]{
             {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
@@ -155,7 +155,7 @@ public class SparseBinaryMatrixTest {
         doTestSetTrueCount(new FastConnectionsMatrix(this.dimensions));
     }
 
-    private void doTestSetTrueCount(SparseBinaryMatrixSupport sm) {
+    private void doTestSetTrueCount(AbstractSparseBinaryMatrix sm) {
         int[][] connectedSynapses = new int[][]{
             {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
             {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
@@ -198,7 +198,7 @@ public class SparseBinaryMatrixTest {
         doTestBackingStoreAndSliceAccessManyDimensions(new LowMemorySparseBinaryMatrix(dimensions));
     }
 
-    private void doTestBackingStoreAndSliceAccessManyDimensions(SparseBinaryMatrixSupport sm) {
+    private void doTestBackingStoreAndSliceAccessManyDimensions(AbstractSparseBinaryMatrix sm) {
         /*set diagonal element to true*/
         sm.set(1, 0, 0, 0);
         sm.set(1, 1, 1, 1);
@@ -245,7 +245,7 @@ public class SparseBinaryMatrixTest {
         doTestArraySet(new FastConnectionsMatrix(dimensions));
     }
 
-    private void doTestArraySet(SparseBinaryMatrixSupport sm) {
+    private void doTestArraySet(AbstractSparseBinaryMatrix sm) {
         int[] expected = { 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };
         int[] values = { 1, 1, 1, 1, 1 };
         int[] indexes = { 0, 4, 6, 7, 8 };
@@ -266,7 +266,7 @@ public class SparseBinaryMatrixTest {
         doTestGetSparseIndices(new FastConnectionsMatrix(this.dimensions));
     }
     
-    private void doTestGetSparseIndices(SparseBinaryMatrixSupport sm) {
+    private void doTestGetSparseIndices(AbstractSparseBinaryMatrix sm) {
         int[] expected = {0, 5, 11, 16, 22, 27, 33, 38, 44, 49};
         int[][] values = new int[][]{
             {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},

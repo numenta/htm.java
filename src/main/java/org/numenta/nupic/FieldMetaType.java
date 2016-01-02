@@ -105,8 +105,10 @@ public enum FieldMetaType {
             case INTEGER : 
             case FLOAT : return (T)new Double(input);
             case SARR :
-            case DARR: return (T)Arrays.stream(input.replace("[","").replace("]","")
-                .split("[\\s]*\\,[\\s]*")).mapToInt(Integer::parseInt).toArray();
+            case DARR: { 
+                return (T)Arrays.stream(input.replace("[","").replace("]","")
+                    .split("[\\s]*\\,[\\s]*")).mapToInt(Integer::parseInt).toArray();
+            }
             default : return null;
         }
 	}

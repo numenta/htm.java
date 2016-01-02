@@ -27,6 +27,7 @@ import org.numenta.nupic.util.SparseObjectMatrix;
  * @author David Ray
  */
 public class TemporalMemory implements ComputeDecorator {
+    
     /**
      * Constructs a new {@code TemporalMemory}
      */
@@ -116,7 +117,7 @@ public class TemporalMemory implements ComputeDecorator {
      */
     public ComputeCycle computeFn(Connections c, Set<Column> activeColumns, Set<Cell> prevPredictiveCells, Set<DistalDendrite> prevActiveSegments,
         Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells, Set<DistalDendrite> prevMatchingSegments, Set<Cell> prevMatchingCells, boolean learn) {
-        
+
         ComputeCycle cycle = new ComputeCycle();
         
         activateCorrectlyPredictiveCells(c, cycle, prevPredictiveCells, prevMatchingCells, activeColumns);
@@ -452,6 +453,7 @@ public class TemporalMemory implements ComputeDecorator {
         int randomIdx = c.getRandom().nextInt(leastUsedCells.size());
         List<Cell> l = new ArrayList<>(leastUsedCells);
         Collections.sort(l);
+         
         return l.get(randomIdx);
     }
     
@@ -461,6 +463,8 @@ public class TemporalMemory implements ComputeDecorator {
     class CellSearch {
         Cell bestCell;
         DistalDendrite bestSegment;
+        
+        public CellSearch() {}
         public CellSearch(Cell bestCell, DistalDendrite bestSegment) {
             this.bestCell = bestCell;
             this.bestSegment = bestSegment;

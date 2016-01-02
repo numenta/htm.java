@@ -9,7 +9,7 @@ import java.util.TreeSet;
  * 
  * @author Jose Luis Martin
  */
-public class SetSparseMatrix extends SparseMatrixSupport<Integer> {
+public class SetSparseMatrix extends AbstractSparseMatrix<Integer> {
 
     private SortedSet<Integer> indexes = new TreeSet<>();
 

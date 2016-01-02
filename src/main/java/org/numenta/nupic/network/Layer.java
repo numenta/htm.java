@@ -415,10 +415,9 @@ public class Layer<T> {
         }
 
         // We must adjust this Layer's inputDimensions to the size of the input
-        // received from the
-        // previous Region's output vector.
+        // received from the previous Region's output vector.
         if(parentRegion != null && parentRegion.getUpstreamRegion() != null) {
-            int[] upstreamDims = new int[] { calculateInputWidth() };//parentRegion.getUpstreamRegion().getHead().getConnections().getColumnDimensions();
+            int[] upstreamDims = new int[] { calculateInputWidth() };
             params.setInputDimensions(upstreamDims);
             connections.setInputDimensions(upstreamDims);
         } else if(parentRegion != null && parentNetwork != null
@@ -440,9 +439,12 @@ public class Layer<T> {
             // The exact dimensions don't have to be the same but the number of
             // dimensions do!
             int inputLength, columnLength = 0;
-            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) != (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
-                LOGGER.warn("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " + "(" + columnLength + ") in Parameters!");
-
+            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) != 
+                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+                
+                LOGGER.error("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " + 
+                    "(" + columnLength + ") in Parameters! - SpatialPooler not initialized!");
+                
                 return this;
             }
             spatialPooler.init(connections);
@@ -503,9 +505,20 @@ public class Layer<T> {
         }
     }
 
+    /**
+     * For internal use only. Returns a flag indicating whether this {@link Layer}
+     * contains a {@link TemporalMemory}
+     * @return
+     */
     boolean hasTM() {
         return (algo_content_mask & Layer.TEMPORAL_MEMORY) == Layer.TEMPORAL_MEMORY;
     }
+    
+    /**
+     * For internal use only. Returns a flag indicating whether this {@link Layer}
+     * contains a {@link SpatialPooler}
+     * @return
+     */
     boolean hasSP() {
         return (algo_content_mask & Layer.SPATIAL_POOLER) == Layer.SPATIAL_POOLER;
     }
@@ -931,7 +944,7 @@ public class Layer<T> {
 
         LOGGER.debug("Start called on Layer thread {}", LAYER_THREAD);
     }
-
+    
     /**
      * Sets a pointer to the "next" Layer in this {@code Layer}'s
      * {@link Observable} sequence.
@@ -1747,9 +1760,9 @@ public class Layer<T> {
         return SDR.asCellIndices(activeCells = cc.activeCells());
     }
 
-    // ////////////////////////////////////////////////////////////
-    // Inner Class Definition Transformer Example //
-    // ////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    //        Inner Class Definition Transformer Example        //
+    //////////////////////////////////////////////////////////////
     /**
      * Factory which returns an {@link Observable} capable of transforming known
      * input formats to the universal format object passed between all
@@ -1771,9 +1784,9 @@ public class Layer<T> {
 
         ManualInput inference = new ManualInput();
 
-        // ////////////////////////////////////////////////////////////////////////////
-        // TRANSFORMERS //
-        // ////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////
+        //                              TRANSFORMERS                                //
+        //////////////////////////////////////////////////////////////////////////////
         /**
          * WARNING: UNIMPLEMENTED
          * 
@@ -1800,12 +1813,12 @@ public class Layer<T> {
                     @Override
                     public ManualInput call(String[] t1) {
 
-                        // /////////////////// Do transformative work here
-                        // /////////////////////
-                        // In "real life", this will send data through the
-                        // MultiEncoder //
-                        // Below is simply a faked out place holder... //
-                        // //////////////////////////////////////////////////////////////////////
+                        ////////////////////////////////////////////////////////////////////////
+                        //                  Do transformative work here                       //
+                        //                                                                    //
+                        // In "real life", this will send data through the MultiEncoder       //
+                        // Below is simply a faked out place holder...                        //
+                        ////////////////////////////////////////////////////////////////////////
                         int[] sdr = new int[t1.length];
                         for(int i = 0;i < sdr.length;i++) {
                             sdr[i] = Integer.parseInt(t1[i]);
@@ -1913,9 +1926,9 @@ public class Layer<T> {
             }
         }
 
-        // ////////////////////////////////////////////////////////////////////////////
-        // INPUT TRANSFORMATION FUNCTIONS //
-        // ////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////
+        //                    INPUT TRANSFORMATION FUNCTIONS                        //
+        //////////////////////////////////////////////////////////////////////////////
         public Observable<ManualInput> createEncoderFunc(Observable<T> in) {
             return in.ofType(String[].class).compose(new String2Inference());
         }

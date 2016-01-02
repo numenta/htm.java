@@ -34,7 +34,7 @@ public class ProximalDendrite extends Segment {
      * @param index     this {@code ProximalDendrite}'s index.
      */
     public ProximalDendrite(int index) {
-        this.index = index;
+        super(index);
     }
 
     /**

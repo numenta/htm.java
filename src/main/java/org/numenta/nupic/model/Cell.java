@@ -134,7 +134,7 @@ public class Cell implements Comparable<Cell> {
      * {@inheritDoc}
      */
     public String toString() {
-        return "" + index;
+        return String.valueOf(index);
     }
 
     /**

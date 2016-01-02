@@ -1216,7 +1216,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
-        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
 
 //        System.out.println(p);
 

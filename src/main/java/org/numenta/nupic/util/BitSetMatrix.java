@@ -29,7 +29,7 @@ import java.util.BitSet;
  * 
  * @author Jose Luis Martin
  */
-public class BitSetMatrix extends FlatMatrixSupport<Boolean> {
+public class BitSetMatrix extends AbstractFlatMatrix<Boolean> {
 
     private BitSet data;
 
