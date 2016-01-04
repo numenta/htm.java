@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
@@ -32,7 +33,10 @@ import java.util.Arrays;
  * @author cogmission
  *
  */
-public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix {
+public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private Object backingArray;
 
     /**

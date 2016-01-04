@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
@@ -33,7 +34,9 @@ import java.util.Arrays;
  * 
  * @param <T> element type
  */
-public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T> {
+public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T>, Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
 
     protected int[] dimensions;
     protected int[] dimensionMultiples;

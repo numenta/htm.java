@@ -25,6 +25,7 @@ package org.numenta.nupic.util;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -37,7 +38,10 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> {
+public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
 
     /**

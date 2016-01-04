@@ -22,9 +22,11 @@
 
 package org.numenta.nupic.util;
 
-import org.numenta.nupic.Connections;
-
 import gnu.trove.set.hash.TIntHashSet;
+
+import java.io.Serializable;
+
+import org.numenta.nupic.Connections;
 
 /**
  * Fast implementation of {@link SparseBinaryMatrix} for use as ConnectedMatrix in  
@@ -32,7 +34,9 @@ import gnu.trove.set.hash.TIntHashSet;
  * 
  * @author Jose Luis Martin
  */
-public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix {
+public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
     
     private TIntHashSet[] columns;
    

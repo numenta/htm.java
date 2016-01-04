@@ -22,15 +22,16 @@
 
 package org.numenta.nupic.util;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 /**
  * Base class for matrices containing specifically binary (0 or 1) integer values
@@ -39,7 +40,10 @@ import gnu.trove.set.hash.TIntHashSet;
  * @author Jose Luis Martin
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix {
+public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private int[] trueCounts;
 
     /**

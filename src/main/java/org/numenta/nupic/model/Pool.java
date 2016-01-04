@@ -26,6 +26,8 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.io.Serializable;
+
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.util.ArrayUtils;
 
@@ -41,7 +43,10 @@ import org.numenta.nupic.util.ArrayUtils;
  * @see Synapse
  * @see Connections
  */
-public class Pool {
+public class Pool implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     int size;
 
     /** Allows fast removal of connected synapse indexes. */

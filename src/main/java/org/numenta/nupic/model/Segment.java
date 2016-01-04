@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.numenta.nupic.Connections;
@@ -34,7 +35,10 @@ import org.numenta.nupic.Connections;
  * @see DistalDendrite
  * @see ProximalDendrite
  */
-public abstract class Segment implements Comparable<Segment> {
+public abstract class Segment implements Comparable<Segment>, Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     protected int index;
     protected Integer boxedIndex;
     

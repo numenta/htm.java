@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.BitSet;
 
 /**
@@ -29,8 +30,10 @@ import java.util.BitSet;
  * 
  * @author Jose Luis Martin
  */
-public class BitSetMatrix extends AbstractFlatMatrix<Boolean> {
-
+public class BitSetMatrix extends AbstractFlatMatrix<Boolean> implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private BitSet data;
 
     /**

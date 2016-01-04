@@ -22,6 +22,8 @@
 
 package org.numenta.nupic.model;
 
+import java.io.Serializable;
+
 import org.numenta.nupic.Connections;
 
 /**
@@ -44,7 +46,10 @@ import org.numenta.nupic.Connections;
  * @see DistalDendrite
  * @see Connections
  */
-public class Synapse {
+public class Synapse implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private Cell sourceCell;
     private Segment segment;
     private Pool pool;

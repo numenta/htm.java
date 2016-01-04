@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -40,7 +41,10 @@ import org.numenta.nupic.Connections;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class DistalDendrite extends Segment {
+public class DistalDendrite extends Segment implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private static final double EPSILON = 0.0000001;
     
     private Cell cell;

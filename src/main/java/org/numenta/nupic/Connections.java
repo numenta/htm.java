@@ -22,6 +22,7 @@
 
 package org.numenta.nupic;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -42,9 +44,9 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
@@ -55,7 +57,10 @@ import org.numenta.nupic.util.SparseObjectMatrix;
  *
  * In the separation of data from logic, this class represents the data/state.
  */
-public class Connections {
+public class Connections implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     /////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
     private int potentialRadius = 16;
     private double potentialPct = 0.5;

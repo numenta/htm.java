@@ -22,10 +22,11 @@
 
 package org.numenta.nupic.util;
 
-import java.lang.reflect.Array;
-
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+
+import java.io.Serializable;
+import java.lang.reflect.Array;
 
 /**
  * Allows storage of array data in sparse form, meaning that the indexes
@@ -39,8 +40,10 @@ import gnu.trove.list.array.TIntArrayList;
  *
  * @param <T>
  */
-public abstract class AbstractSparseMatrix<T> extends AbstractFlatMatrix<T> implements SparseMatrix<T> {
-
+public abstract class AbstractSparseMatrix<T> extends AbstractFlatMatrix<T> implements SparseMatrix<T>, Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     /**
      * Constructs a new {@code AbstractSparseMatrix} with the specified
      * dimensions (defaults to row major ordering)

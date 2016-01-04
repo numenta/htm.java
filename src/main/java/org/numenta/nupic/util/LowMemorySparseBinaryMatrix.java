@@ -22,11 +22,12 @@
 
 package org.numenta.nupic.util;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 /**
  * Low Memory implementation of {@link SparseBinaryMatrix} without 
@@ -34,7 +35,9 @@ import gnu.trove.set.hash.TIntHashSet;
  * 
  * @author Jose Luis Martin
  */
-public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix {
+public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
     
     private TIntSet sparseSet = new TIntHashSet();
 

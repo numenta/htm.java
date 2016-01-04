@@ -1,5 +1,6 @@
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -9,8 +10,10 @@ import java.util.TreeSet;
  * 
  * @author Jose Luis Martin
  */
-public class SetSparseMatrix extends AbstractSparseMatrix<Integer> {
-
+public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private SortedSet<Integer> indexes = new TreeSet<>();
 
     public SetSparseMatrix(int[] dimensions) {

@@ -9,7 +9,8 @@ import java.io.Serializable;
  * see http://www.javamex.com/tutorials/random_numbers/xorshift.shtml
  */
 public strictfp class FastRandom extends java.util.Random implements Serializable, Cloneable {
-    private static final long serialVersionUID = 6208727693524452904L;
+    private static final long serialVersionUID = 1L;
+    
     protected long seed;
 
     /**
