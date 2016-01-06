@@ -89,7 +89,7 @@ public class SpatialPooler {
     public void initMatrices(final Connections c) {
         SparseObjectMatrix<Column> mem = c.getMemory();
         c.setMemory(mem == null ? 
-                mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
+            mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
         
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
 
@@ -775,12 +775,12 @@ public class SpatialPooler {
             }else{
                 final int idx = i;
                 curRange = ArrayUtils.retainLogicalAnd(range, 
-                        new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
-                                new Condition.Adapter<Integer>() {
+                    new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
+                        new Condition.Adapter<Integer>() {
                             @Override public boolean eval(int n) { return n < dimensions[idx]; }
                         }
-                }
-                        );
+                    }
+                );
             }
             dimensionCoords.add(ArrayUtils.unique(curRange));
         }
@@ -905,16 +905,16 @@ public class SpatialPooler {
     	int numCols = c.getNumColumns();
     	int numActive = (int)(density * numCols);
     	return IntStream.range(0, overlaps.length)
-    			.boxed()
-    			.collect(Collectors.toMap(index->index, index->overlaps[index]))
-    			.entrySet()
-    			.stream()
-    			.sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
-    			.limit(numActive)
-    			.map(Entry::getKey)
-    			.sorted()
-    			.mapToInt(Integer::intValue)
-    			.toArray();
+			.boxed()
+			.collect(Collectors.toMap(index->index, index->overlaps[index]))
+			.entrySet()
+			.stream()
+			.sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+			.limit(numActive)
+			.map(Entry::getKey)
+			.sorted()
+			.mapToInt(Integer::intValue)
+			.toArray();
     }
 
     /**

@@ -90,7 +90,7 @@ public class Parameters {
         defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
         defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, 16);
         defaultSpatialParams.put(KEY.POTENTIAL_PCT, 0.5);
-        defaultSpatialParams.put(KEY.GLOBAL_INHIBITIONS, false);
+        defaultSpatialParams.put(KEY.GLOBAL_INHIBITION, false);
         defaultSpatialParams.put(KEY.INHIBITION_RADIUS, 0);
         defaultSpatialParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
         defaultSpatialParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
@@ -211,7 +211,7 @@ public class Parameters {
         INPUT_DIMENSIONS("inputDimensions", int[].class),
         POTENTIAL_RADIUS("potentialRadius", Integer.class),
         POTENTIAL_PCT("potentialPct", Double.class), //TODO add range here?
-        GLOBAL_INHIBITIONS("globalInhibition", Boolean.class),
+        GLOBAL_INHIBITION("globalInhibition", Boolean.class),
         INHIBITION_RADIUS("inhibitionRadius", Integer.class, 0, null),
         LOCAL_AREA_DENSITY("localAreaDensity", Double.class), //TODO add range here?
         NUM_ACTIVE_COLUMNS_PER_INH_AREA("numActiveColumnsPerInhArea", Double.class),//TODO add range here?
@@ -780,7 +780,7 @@ public class Parameters {
      * @param globalInhibition
      */
     public void setGlobalInhibition(boolean globalInhibition) {
-        paramMap.put(KEY.GLOBAL_INHIBITIONS, globalInhibition);
+        paramMap.put(KEY.GLOBAL_INHIBITION, globalInhibition);
     }
 
     /**

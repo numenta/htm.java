@@ -34,7 +34,7 @@ import gnu.trove.set.hash.TIntHashSet;
  * 
  * @author Jose Luis Martin
  */
-public class LowMemorySparseBinaryMatrix extends SparseBinaryMatrixSupport {
+public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix {
     
     private TIntSet sparseSet = new TIntHashSet();
 

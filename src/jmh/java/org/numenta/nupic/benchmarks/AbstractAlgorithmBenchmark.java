@@ -83,7 +83,7 @@ public abstract class AbstractAlgorithmBenchmark {
         //SpatialPooler specific
         parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
         parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITIONS, false);
+        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
         parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
         parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
         parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);

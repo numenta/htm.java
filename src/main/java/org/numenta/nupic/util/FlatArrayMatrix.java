@@ -29,7 +29,7 @@ import java.util.Arrays;
  * 
  * @author Jose Luis Martin
  */
-public class FlatArrayMatrix<T> extends FlatMatrixSupport<T> {
+public class FlatArrayMatrix<T> extends AbstractFlatMatrix<T> {
 
     private T[] data;
 

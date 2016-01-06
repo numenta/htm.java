@@ -733,10 +733,11 @@ public class LayerTest {
             e.printStackTrace();
         }
     }
-
+    
     /**
      * Temporary test to test basic sequence mechanisms
      */
+    int seq = 0;
     @Test
     public void testBasicSetup_TemporalMemory_MANUAL_MODE() {
         Parameters p = NetworkTestHarness.getParameters().copy();
@@ -758,7 +759,6 @@ public class LayerTest {
 
         l.subscribe(new Observer<Inference>() {
             int test = 0;
-            int seq = 0;
 
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -771,11 +771,10 @@ public class LayerTest {
                 }
 
                 if(test == 6) test = 0;
-                else test++;
-                seq++;
+                else test++;                
             }
         });
-
+        
         // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
             for(int i = 0;i < inputs.length;i++) {
@@ -1170,7 +1169,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
-        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
 
 //        System.out.println(p);
 
@@ -1223,7 +1222,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
-        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
 
 //        System.out.println(p);
 
@@ -1279,7 +1278,7 @@ public class LayerTest {
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
-        p.setParameterByKey(KEY.GLOBAL_INHIBITIONS, true);
+        p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
 
         params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -1364,5 +1363,34 @@ public class LayerTest {
         if(encoderType != null) inner.put("encoderType", encoderType);
 
         return map;
+    }
+    
+    @Test
+    public void testEquality() {
+        Parameters p = Parameters.getAllDefaultParameters();
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l2 = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        assertTrue(l.equals(l));
+        assertFalse(l.equals(null));
+        assertTrue(l.equals(l2));
+       
+        l2.name("I'm different");
+        assertFalse(l.equals(l2));
+        
+        l2.name(null);
+        assertTrue(l.equals(l2));
+        
+        Network n = new Network("TestNetwork", p);
+        Region r = new Region("r1", n);
+        l.setRegion(r);
+        assertFalse(l.equals(l2));
+        
+        l2.setRegion(r);
+        assertTrue(l.equals(l2));
+        
+        Region r2 = new Region("r2", n);
+        l2.setRegion(r2);
+        assertFalse(l.equals(l2));
     }
 }

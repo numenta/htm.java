@@ -363,8 +363,6 @@ public strictfp class MersenneTwister extends java.util.Random implements Serial
         mt[0] = 0x80000000; /* MSB is 1; assuring non-zero initial array */ 
         }
 
-
-
     /**
      * Returns an integer with <i>bits</i> bits filled with a random number.
      */
@@ -399,7 +397,7 @@ public strictfp class MersenneTwister extends java.util.Random implements Serial
         y ^= (y << 7) & TEMPERING_MASK_B;      // TEMPERING_SHIFT_S(y)
         y ^= (y << 15) & TEMPERING_MASK_C;    // TEMPERING_SHIFT_T(y)
         y ^= (y >>> 18);                        // TEMPERING_SHIFT_L(y)
-
+        
         return y >>> (32 - bits);   // hope that's right!
         }
     

@@ -32,7 +32,7 @@ import gnu.trove.set.hash.TIntHashSet;
  * 
  * @author Jose Luis Martin
  */
-public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
+public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix {
     
     private TIntHashSet[] columns;
    
@@ -81,7 +81,7 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     }
     
     @Override
-    public SparseBinaryMatrixSupport set(int value, int... coordinates) {
+    public AbstractSparseBinaryMatrix set(int value, int... coordinates) {
         TIntHashSet input = getColumnInput(coordinates[0]);
         if (value == 0) {
             input.remove(coordinates[1]);
@@ -132,7 +132,7 @@ public class FastConnectionsMatrix extends SparseBinaryMatrixSupport {
     }
 
     @Override
-    public SparseBinaryMatrixSupport setForTest(int index, int value) {
+    public AbstractSparseBinaryMatrix setForTest(int index, int value) {
         return set(index, value);
     }
 }

@@ -10,7 +10,7 @@ import java.io.Serializable;
  */
 public strictfp class FastRandom extends java.util.Random implements Serializable, Cloneable {
     private static final long serialVersionUID = 6208727693524452904L;
-    private long seed;
+    protected long seed;
 
     /**
      * Creates a new pseudo random number generator. The seed is initialized to
@@ -75,8 +75,14 @@ public strictfp class FastRandom extends java.util.Random implements Serializabl
         x ^= (x << 4);
         seed = x;
         x &= ((1L << nbits) - 1);
+        
         return (int) x;
     }
+    
+    /**
+     * Sets the specified seed value from the specified int[]
+     * @param array
+     */
     synchronized public void setSeed(int[] array) {
         if (array.length == 0)
             throw new IllegalArgumentException("Array length must be greater than zero");

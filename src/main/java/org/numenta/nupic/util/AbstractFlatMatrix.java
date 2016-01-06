@@ -26,14 +26,14 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
- * Support class for flat {@link Matrix} implementations.
+ * Base class for flat {@link Matrix} implementations.
  * 
  * @author David Ray
  * @author Jose Luis Martin
  * 
  * @param <T> element type
  */
-public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
+public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T> {
 
     protected int[] dimensions;
     protected int[] dimensionMultiples;
@@ -41,16 +41,16 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
     protected int numDimensions;
 
     /**
-     * Constructs a new {@link FlatMatrixSupport} object to be configured with specified
+     * Constructs a new {@link AbstractFlatMatrix} object to be configured with specified
      * dimensions and major ordering.
      * @param dimensions  the dimensions of this matrix	
      */
-    public FlatMatrixSupport(int[] dimensions) {
+    public AbstractFlatMatrix(int[] dimensions) {
         this(dimensions, false);
     }
 
     /**
-     * Constructs a new {@link FlatMatrixSupport} object to be configured with specified
+     * Constructs a new {@link AbstractFlatMatrix} object to be configured with specified
      * dimensions and major ordering.
      * 
      * @param dimensions				the dimensions of this sparse array	
@@ -59,7 +59,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
      * 									major ordering will be used. If true, then column major
      * 									ordering will be used.
      */
-    public FlatMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
+    public AbstractFlatMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         this.dimensions = dimensions;
         this.numDimensions = dimensions.length;
         this.dimensionMultiples = initDimensionMultiples(
@@ -68,7 +68,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
     }
 
     /**
-     * Compute the flat index of a multidimensonal array.
+     * Compute the flat index of a multidimensional array.
      * @param indexes multidimensional indexes
      * @return the flat array index;
      */
@@ -76,6 +76,14 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         return computeIndex(indexes, true);
     }
 
+    /**
+     * Returns a flat index computed from the specified coordinates
+     * which represent a "dimensioned" index.
+     * 
+     * @param   coordinates     an array of coordinates
+     * @param   doCheck         enforce validated comparison to locally stored dimensions
+     * @return  a flat index
+     */
     public int computeIndex(int[] coordinates, boolean doCheck) {
         if(doCheck) checkDims(coordinates);
 
@@ -106,6 +114,13 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
         }
     }
 
+    /**
+     * Returns an array of coordinates calculated from
+     * a flat index.
+     * 
+     * @param   index   specified flat index
+     * @return  a coordinate array
+     */
     @Override
     public int[] computeCoordinates(int index) {
         int[] returnVal = new int[getNumDimensions()];
@@ -186,7 +201,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
     public abstract T get(int index);
 
     @Override 
-    public abstract FlatMatrixSupport<T> set(int index, T value);
+    public abstract AbstractFlatMatrix<T> set(int index, T value);
 
     @Override
     public T get(int... indexes) {
@@ -194,7 +209,7 @@ public abstract class FlatMatrixSupport<T> implements FlatMatrix<T> {
     }
 
     @Override
-    public FlatMatrixSupport<T> set(int[] indexes, T value) {
+    public AbstractFlatMatrix<T> set(int[] indexes, T value) {
         set(computeIndex(indexes), value); 
         return this;
     }

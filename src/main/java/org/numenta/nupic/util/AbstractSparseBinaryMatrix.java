@@ -32,16 +32,36 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
+/**
+ * Base class for matrices containing specifically binary (0 or 1) integer values
+ * 
+ * @author cogmission
+ * @author Jose Luis Martin
+ */
 @SuppressWarnings("rawtypes")
-public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
+public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix {
     private int[] trueCounts;
 
-
-    public SparseBinaryMatrixSupport(int[] dimensions) {
+    /**
+     * Constructs a new {@code AbstractSparseBinaryMatrix} with the specified
+     * dimensions (defaults to row major ordering)
+     * 
+     * @param dimensions    each indexed value is a dimension size
+     */
+    public AbstractSparseBinaryMatrix(int[] dimensions) {
         this(dimensions, false);
     }
 
-    public SparseBinaryMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
+    /**
+     * Constructs a new {@code AbstractSparseBinaryMatrix} with the specified dimensions,
+     * allowing the specification of column major ordering if desired. 
+     * (defaults to row major ordering)
+     * 
+     * @param dimensions                each indexed value is a dimension size
+     * @param useColumnMajorOrdering    if true, indicates column first iteration, otherwise
+     *                                  row first iteration is the default (if false).
+     */
+    public AbstractSparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
         this.trueCounts = new int[dimensions[0]];
     }
@@ -70,7 +90,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
     }
     
     /**
-     * Calculate the flat indexes of an slice
+     * Calculate the flat indexes of a slice
      * @return the flat indexes array
      */
     protected int[] getSliceIndexes(int[] coordinates) {
@@ -123,7 +143,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param object    the object to be indexed.
      */
     @Override
-    public SparseBinaryMatrixSupport set(int index, int value) {
+    public AbstractSparseBinaryMatrix set(int index, int value) {
         int[] coordinates = computeCoordinates(index);
         return set(value, coordinates);
     }
@@ -135,7 +155,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param object        the object to be indexed.
      */
     @Override
-    public abstract SparseBinaryMatrixSupport set(int value, int... coordinates);
+    public abstract AbstractSparseBinaryMatrix set(int value, int... coordinates);
 
     /**
      * Sets the specified values at the specified indexes.
@@ -145,7 +165,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    public SparseBinaryMatrixSupport set(int[] indexes, int[] values) { 
+    public AbstractSparseBinaryMatrix set(int[] indexes, int[] values) { 
         for(int i = 0;i < indexes.length;i++) {
             set(indexes[i], values[i]);
         }
@@ -166,7 +186,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param index     the index the object will occupy
      * @param object    the object to be indexed.
      */
-    public abstract SparseBinaryMatrixSupport setForTest(int index, int value);
+    public abstract AbstractSparseBinaryMatrix setForTest(int index, int value);
 
     /**
      * Call This for TEST METHODS ONLY
@@ -177,7 +197,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    public SparseBinaryMatrixSupport set(int[] indexes, int[] values, boolean isTest) { 
+    public AbstractSparseBinaryMatrix set(int[] indexes, int[] values, boolean isTest) { 
         for(int i = 0;i < indexes.length;i++) {
             if(isTest) setForTest(indexes[i], values[i]);
             else set(indexes[i], values[i]);
@@ -265,7 +285,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param inputMatrix   the matrix containing the "on" bits to or
      * @return  this matrix
      */
-    public SparseBinaryMatrixSupport or(SparseBinaryMatrixSupport inputMatrix) {
+    public AbstractSparseBinaryMatrix or(AbstractSparseBinaryMatrix inputMatrix) {
         int[] mask = inputMatrix.getSparseIndices();
         int[] ones = new int[mask.length];
         Arrays.fill(ones, 1);
@@ -280,7 +300,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param onBitIndexes  the matrix containing the "on" bits to or
      * @return  this matrix
      */
-    public SparseBinaryMatrixSupport or(TIntCollection onBitIndexes) {
+    public AbstractSparseBinaryMatrix or(TIntCollection onBitIndexes) {
         int[] ones = new int[onBitIndexes.size()];
         Arrays.fill(ones, 1);
         return set(onBitIndexes.toArray(), ones);
@@ -294,7 +314,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param onBitIndexes  the int array containing the "on" bits to or
      * @return  this matrix
      */
-    public SparseBinaryMatrixSupport or(int[] onBitIndexes) {
+    public AbstractSparseBinaryMatrix or(int[] onBitIndexes) {
         int[] ones = new int[onBitIndexes.length];
         Arrays.fill(ones, 1);
         return set(onBitIndexes, ones);
@@ -312,7 +332,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param matrix
      * @return
      */
-    public boolean all(SparseBinaryMatrixSupport matrix) {
+    public boolean all(AbstractSparseBinaryMatrix matrix) {
         return getSparseSet().containsAll(matrix.getSparseIndices());
     }
 
@@ -348,7 +368,7 @@ public abstract class SparseBinaryMatrixSupport extends SparseMatrixSupport {
      * @param matrix
      * @return
      */
-    public boolean any(SparseBinaryMatrixSupport matrix) {
+    public boolean any(AbstractSparseBinaryMatrix matrix) {
         TIntSet keySet = getSparseSet();
         
         for(int i : matrix.getSparseIndices()) {

@@ -36,7 +36,7 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.SparseBinaryMatrixSupport;
+import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
@@ -54,7 +54,7 @@ public class SpatialPoolerTest {
         parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
         parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 3);//3
         parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITIONS, false);
+        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
         parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
         parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
         parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
@@ -1307,7 +1307,7 @@ public class SpatialPoolerTest {
         parameters.setColumnDimensions(dimensions);
         parameters.setInputDimensions(dimensions);
         initSP();
-        SparseBinaryMatrixSupport sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+        AbstractSparseBinaryMatrix sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
         sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
         radius = 1;
         columnIndex = 3;
@@ -1323,7 +1323,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
         sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 3;
@@ -1339,7 +1339,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
         sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
         radius = 2;
         columnIndex = 0;
@@ -1355,7 +1355,7 @@ public class SpatialPoolerTest {
         dimensions = new int[] { 8 };
         parameters.setInputDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
         sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
         radius = 20;
         columnIndex = 6;
@@ -1372,7 +1372,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(dimensions);
         parameters.setColumnDimensions(dimensions);
         initSP();
-        sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
         int[][] input = new int[][] { {0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0},
             {0, 1, 1, 1, 0},
@@ -1400,7 +1400,7 @@ public class SpatialPoolerTest {
             parameters.setInputDimensions(dimensions);
             parameters.setColumnDimensions(dimensions);
             initSP();
-            sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+            sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
             input = new int[][] { {0, 0, 0, 0, 0},
                 {1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1},
@@ -1428,7 +1428,7 @@ public class SpatialPoolerTest {
                 parameters.setInputDimensions(dimensions);
                 parameters.setColumnDimensions(dimensions);
                 initSP();
-                sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+                sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
                 input = new int[][] { {1, 1, 1, 1, 1},
                     {1, 1, 1, 1, 1},
                     {1, 1, 1, 1, 1},
@@ -1456,7 +1456,7 @@ public class SpatialPoolerTest {
                     parameters.setInputDimensions(dimensions);
                     parameters.setColumnDimensions(dimensions);
                     initSP();
-                    sbm = (SparseBinaryMatrixSupport)mem.getInputMatrix();
+                    sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
                     input = new int[][] { {1, 0, 0, 1, 1},
                         {0, 0, 0, 0, 0},
                         {0, 0, 0, 0, 0},
@@ -1594,7 +1594,7 @@ public class SpatialPoolerTest {
             {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
             {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
             {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
-            SparseBinaryMatrixSupport sm = new SparseBinaryMatrix(dimensions);
+            AbstractSparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
             for(int i = 0;i < sm.getDimensions()[0];i++) {
                 for(int j = 0;j < sm.getDimensions()[1];j++) {
                     sm.set(connectedSynapses[i][j], i, j);

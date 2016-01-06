@@ -39,14 +39,28 @@ import gnu.trove.list.array.TIntArrayList;
  *
  * @param <T>
  */
-public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implements SparseMatrix<T> {
+public abstract class AbstractSparseMatrix<T> extends AbstractFlatMatrix<T> implements SparseMatrix<T> {
 
-    public SparseMatrixSupport(int[] dimensions) {
+    /**
+     * Constructs a new {@code AbstractSparseMatrix} with the specified
+     * dimensions (defaults to row major ordering)
+     * 
+     * @param dimensions    each indexed value is a dimension size
+     */
+    public AbstractSparseMatrix(int[] dimensions) {
         this(dimensions, false);
     }
 
-
-    public SparseMatrixSupport(int[] dimensions, boolean useColumnMajorOrdering) {
+    /**
+     * Constructs a new {@code AbstractSparseMatrix} with the specified dimensions,
+     * allowing the specification of column major ordering if desired. 
+     * (defaults to row major ordering)
+     * 
+     * @param dimensions                each indexed value is a dimension size
+     * @param useColumnMajorOrdering    if true, indicates column first iteration, otherwise
+     *                                  row first iteration is the default (if false).
+     */
+    public AbstractSparseMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
     }
 
@@ -58,7 +72,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrixSupport<T>> S set(int index, int value) { return null; }
+    protected <S extends AbstractSparseMatrix<T>> S set(int index, int value) { return null; }
 
     /**
      * Sets the object to occupy the specified index.
@@ -68,7 +82,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrixSupport<T>> S set(int index, double value) { return null; }
+    protected <S extends AbstractSparseMatrix<T>> S set(int index, double value) { return null; }
 
     /**
      * Sets the specified object to be indexed at the index
@@ -79,7 +93,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * @return this {@code SparseMatrix} implementation
      */
     @Override
-    public SparseMatrixSupport<T> set(int[] coordinates, T object) { return null; }
+    public AbstractSparseMatrix<T> set(int[] coordinates, T object) { return null; }
 
     /**
      * Sets the specified object to be indexed at the index
@@ -89,7 +103,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrixSupport<T>> S set(int value, int... coordinates) { return null; }
+    protected <S extends AbstractSparseMatrix<T>> S set(int value, int... coordinates) { return null; }
 
     /**
      * Sets the specified object to be indexed at the index
@@ -99,7 +113,7 @@ public abstract class SparseMatrixSupport<T> extends FlatMatrixSupport<T> implem
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    protected <S extends SparseMatrixSupport<T>> S set(double value, int... coordinates) { return null; }
+    protected <S extends AbstractSparseMatrix<T>> S set(double value, int... coordinates) { return null; }
 
     /**
      * Returns the T at the specified index.

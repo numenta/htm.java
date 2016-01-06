@@ -25,13 +25,35 @@ package org.numenta.nupic.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
+/**
+ * Implementation of a sparse matrix which contains binary integer
+ * values only.
+ * 
+ * @author cogmission
+ *
+ */
+public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix {
     private Object backingArray;
 
+    /**
+     * Constructs a new {@code SparseBinaryMatrix} with the specified
+     * dimensions (defaults to row major ordering)
+     * 
+     * @param dimensions    each indexed value is a dimension size
+     */
     public SparseBinaryMatrix(int[] dimensions) {
         this(dimensions, false);
     }
 
+    /**
+     * Constructs a new {@code SparseBinaryMatrix} with the specified dimensions,
+     * allowing the specification of column major ordering if desired. 
+     * (defaults to row major ordering)
+     * 
+     * @param dimensions                each indexed value is a dimension size
+     * @param useColumnMajorOrdering    if true, indicates column first iteration, otherwise
+     *                                  row first iteration is the default (if false).
+     */
     public SparseBinaryMatrix(int[] dimensions, boolean useColumnMajorOrdering) {
         super(dimensions, useColumnMajorOrdering);
         this.backingArray = Array.newInstance(int.class, dimensions);
@@ -93,7 +115,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * @param object    the object to be indexed.
      */
     @Override
-    public SparseBinaryMatrixSupport set(int index, int value) {
+    public AbstractSparseBinaryMatrix set(int index, int value) {
         int[] coordinates = computeCoordinates(index);
         return set(value, coordinates);
     }
@@ -105,7 +127,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * @param object        the object to be indexed.
      */
     @Override
-    public SparseBinaryMatrixSupport set(int value, int... coordinates) {
+    public AbstractSparseBinaryMatrix set(int value, int... coordinates) {
         back(value, coordinates);
         return this;
     }
@@ -118,7 +140,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
      * 
      * @return this {@code SparseMatrix} implementation
      */
-    public SparseBinaryMatrixSupport set(int[] indexes, int[] values) { 
+    public AbstractSparseBinaryMatrix set(int[] indexes, int[] values) { 
         for(int i = 0;i < indexes.length;i++) {
             set(indexes[i], values[i]);
         }
@@ -136,7 +158,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
     }
 
     @Override
-    public SparseBinaryMatrixSupport set(int index, Object value) {
+    public AbstractSparseBinaryMatrix set(int index, Object value) {
         set(index, ((Integer) value).intValue());
         return this;
     }
@@ -152,7 +174,7 @@ public class SparseBinaryMatrix extends SparseBinaryMatrixSupport {
     }
 
     @Override
-    public SparseBinaryMatrixSupport setForTest(int index, int value) {
+    public AbstractSparseBinaryMatrix setForTest(int index, int value) {
         ArrayUtils.setValue(this.backingArray, value, computeCoordinates(index));
         return this;
     }
