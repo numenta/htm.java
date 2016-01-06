@@ -1,23 +1,36 @@
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
+import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
+import org.nustaq.serialization.FSTConfiguration;
 
 import rx.Subscriber;
+
+import com.cedarsoftware.util.DeepEquals;
 
 
 public class JavaNetworkSerializationTest {
@@ -178,6 +191,196 @@ public class JavaNetworkSerializationTest {
         return parameters;
     }
     
+    //////////////////////////////////////////////////////////////////
+    //     First, Test Serialization of Each Object Individually    //
+    //////////////////////////////////////////////////////////////////
+    
+    // Parameters
+    @Test
+    public void testSerializeParameters() {
+        Parameters p = getParameters();
+        FSTConfiguration config = Network.getSerialConfig();
+        
+        // 1. serialize
+        byte[] data = config.asByteArray(p);
+        
+        // 2. deserialize
+        Parameters serialized = (Parameters)config.asObject(data);
+        
+        assertTrue(p.keys().size() == serialized.keys().size());
+        assertTrue(DeepEquals.deepEquals(p, serialized));
+        for(KEY k : p.keys()) {
+            test(serialized.getParameterByKey(k), p.getParameterByKey(k));
+        }
+    }
+    
+    // Connections
+    @Test
+    public void testSerializeConnections() {
+        Parameters p = getParameters();
+        Connections con = new Connections();
+        p.apply(con);
+        
+        TemporalMemory tm = new TemporalMemory();
+        tm.init(con);
+        
+        FSTConfiguration config = Network.getSerialConfig();
+        
+        // 1. serialize
+        byte[] data = config.asByteArray(con);
+        
+        // 2. deserialize
+        Connections serialized = (Connections)config.asObject(data);
+        assertTrue(DeepEquals.deepEquals(con, serialized));
+        
+        serialized.printParameters();
+        int cellCount = con.getCellsPerColumn();
+        for(int i = 0;i < con.getNumColumns();i++) {
+            test(con.getColumn(i), serialized.getColumn(i));
+            for(int j = 0;j < cellCount;j++) {
+                Cell cell = serialized.getCell(i * cellCount + j);
+                test(con.getCell(i * cellCount + j), cell);
+            }
+        }
+    }
+    
+    // Connections with all types populated
+    @SuppressWarnings("unused")
+    @Test
+    public void testMorePopulatedConnections() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        cn.setConnectedPermanence(0.50);
+        cn.setMinThreshold(1);
+        // Init with default params defined in Connections.java default fields.
+        tm.init(cn);
+        
+        FSTConfiguration config = Network.getSerialConfig();
+        
+        DistalDendrite dd = cn.getCell(0).createSegment(cn);
+        Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
+        Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
+        Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
+        
+        byte[] dda = config.asByteArray(dd);
+        DistalDendrite ddo = (DistalDendrite)config.asObject(dda);
+        test(dd, ddo);
+        List<Synapse> l1 = dd.getAllSynapses(cn);
+        List<Synapse> l2 = ddo.getAllSynapses(cn);
+        assertTrue(l2.equals(l1));
+        
+        DistalDendrite dd1 = cn.getCell(0).createSegment(cn);
+        Synapse s3 = dd1.createSynapse(cn, cn.getCell(49), 0.9);
+        Synapse s4 = dd1.createSynapse(cn, cn.getCell(3), 0.8);
+        
+        DistalDendrite dd2 = cn.getCell(1).createSegment(cn);
+        Synapse s5 = dd2.createSynapse(cn, cn.getCell(733), 0.7);
+        
+        DistalDendrite dd3 = cn.getCell(8).createSegment(cn);
+        Synapse s6 = dd3.createSynapse(cn, cn.getCell(486), 0.9);
+        
+        
+        Connections cn2 = new Connections();
+        cn2.setConnectedPermanence(0.50);
+        cn2.setMinThreshold(1);
+        tm.init(cn2);
+        
+        DistalDendrite ddb = cn2.getCell(0).createSegment(cn2);
+        Synapse s0b = ddb.createSynapse(cn2, cn2.getCell(23), 0.6);
+        Synapse s1b = ddb.createSynapse(cn2, cn2.getCell(37), 0.4);
+        Synapse s2b = ddb.createSynapse(cn2, cn2.getCell(477), 0.9);
+        
+        DistalDendrite dd1b = cn2.getCell(0).createSegment(cn2);
+        Synapse s3b = dd1b.createSynapse(cn2, cn2.getCell(49), 0.9);
+        Synapse s4b = dd1b.createSynapse(cn2, cn2.getCell(3), 0.8);
+        
+        DistalDendrite dd2b = cn2.getCell(1).createSegment(cn2);
+        Synapse s5b = dd2b.createSynapse(cn2, cn2.getCell(733), 0.7);
+        
+        DistalDendrite dd3b = cn2.getCell(8).createSegment(cn2);
+        Synapse s6b = dd3b.createSynapse(cn2, cn2.getCell(486), 0.9);
+        
+        assertTrue(cn.equals(cn2));
+        
+        Set<Cell> activeCells = cn.getCellSet(new int[] { 733, 37, 974, 23 });
+        
+        SegmentSearch result = tm.getBestMatchingSegment(cn, cn.getCell(0), activeCells);
+        assertEquals(dd, result.bestSegment);
+        assertEquals(2, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(1), activeCells);
+        assertEquals(dd2, result.bestSegment);
+        assertEquals(1, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(8), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(100), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        //Test that we can repeat this
+        result = tm.getBestMatchingSegment(cn, cn.getCell(0), activeCells);
+        assertEquals(dd, result.bestSegment);
+        assertEquals(2, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(1), activeCells);
+        assertEquals(dd2, result.bestSegment);
+        assertEquals(1, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(8), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(cn, cn.getCell(100), activeCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        // 1. serialize
+        byte[] data = config.asByteArray(cn);
+        
+        // 2. deserialize
+        Connections serialized = (Connections)config.asObject(data);
+        
+        Set<Cell> serialActiveCells = serialized.getCellSet(new int[] { 733, 37, 974, 23 });
+        
+        test(activeCells, serialActiveCells);
+        
+        result = tm.getBestMatchingSegment(serialized, serialized.getCell(0), serialActiveCells);
+        assertEquals(dd, result.bestSegment);
+        assertEquals(2, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(serialized, serialized.getCell(1), serialActiveCells);
+        assertEquals(dd2, result.bestSegment);
+        assertEquals(1, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(serialized, serialized.getCell(8), serialActiveCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        result = tm.getBestMatchingSegment(serialized, serialized.getCell(100), serialActiveCells);
+        assertEquals(null, result.bestSegment);
+        assertEquals(0, result.numActiveSynapses);
+        
+        boolean b = DeepEquals.deepEquals(cn, serialized);
+        test(cn, serialized);
+        assertTrue(b);
+        
+        //{0=[synapse: [ synIdx=0, inIdx=23, sgmtIdx=0, srcCellIdx=23 ], synapse: [ synIdx=1, inIdx=37, sgmtIdx=0, srcCellIdx=37 ], synapse: [ synIdx=2, inIdx=477, sgmtIdx=0, srcCellIdx=477 ]], 1=[synapse: [ synIdx=3, inIdx=49, sgmtIdx=1, srcCellIdx=49 ], synapse: [ synIdx=4, inIdx=3, sgmtIdx=1, srcCellIdx=3 ]], 2=[synapse: [ synIdx=5, inIdx=733, sgmtIdx=2, srcCellIdx=733 ]], 3=[synapse: [ synIdx=6, inIdx=486, sgmtIdx=3, srcCellIdx=486 ]]}
+        //{0=[synapse: [ synIdx=0, inIdx=23, sgmtIdx=0, srcCellIdx=23 ], synapse: [ synIdx=1, inIdx=37, sgmtIdx=0, srcCellIdx=37 ], synapse: [ synIdx=2, inIdx=477, sgmtIdx=0, srcCellIdx=477 ]], 1=[synapse: [ synIdx=3, inIdx=49, sgmtIdx=1, srcCellIdx=49 ], synapse: [ synIdx=4, inIdx=3, sgmtIdx=1, srcCellIdx=3 ]], 2=[synapse: [ synIdx=5, inIdx=733, sgmtIdx=2, srcCellIdx=733 ]], 3=[synapse: [ synIdx=6, inIdx=486, sgmtIdx=3, srcCellIdx=486 ]]}
+        
+    }
+    
+    private void test(Object obj1, Object obj2) {
+        try {
+            assertTrue(DeepEquals.deepEquals(obj1, obj2));
+            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+        }catch(AssertionError ae) {
+            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+        }
+    }
+    
     @Test
     public void testThreadedPublisher() {
         Publisher manual = Publisher.builder()
@@ -243,6 +446,8 @@ public class JavaNetworkSerializationTest {
         Layer<?> l = network.lookup("r1").lookup("1");
         try {
             l.getLayerThread().join();
+            
+            System.out.println(Arrays.toString(SDR.asCellIndices(l.getConnections().getActiveCells())));
         }catch(Exception e) {
             assertEquals(InterruptedException.class, e.getClass());
         }

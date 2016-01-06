@@ -35,6 +35,7 @@ import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
+import org.nustaq.serialization.FSTConfiguration;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -154,6 +155,9 @@ import rx.Subscriber;
  * @see NetworkAPIDemo
  */
 public class Network {
+    /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
+    private static final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
+    
     public enum Mode { MANUAL, AUTO, REACTIVE };
 
     private String name;
@@ -180,6 +184,14 @@ public class Network {
         if(parameters == null) {
             throw new IllegalArgumentException("Network Parameters were null.");
         }
+    }
+    
+    /**
+     * Returns the FAST Serial Config
+     * @return
+     */
+    public static FSTConfiguration getSerialConfig() {
+        return fastSerialConfig;
     }
 
     /**

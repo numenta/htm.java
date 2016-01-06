@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
@@ -132,8 +131,6 @@ public class Connections implements Serializable {
      */
     private int inhibitionRadius = 0;
 
-    private int proximalSynapseCounter = 0;
-
     private double[] overlapDutyCycles;
     private double[] activeDutyCycles;
     private double[] minOverlapDutyCycles;
@@ -201,15 +198,15 @@ public class Connections implements Serializable {
 
     ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
-    protected Map<Cell, Set<Synapse>> receptorSynapses;
+    protected Map<Cell, LinkedHashSet<Synapse>> receptorSynapses;
 
     protected Map<Cell, List<DistalDendrite>> segments;
     protected Map<Segment, List<Synapse>> synapses;
 
     /** Helps index each new Segment */
-    protected AtomicInteger segmentCounter = new AtomicInteger(0);
+    protected int segmentCounter = -1;
     /** Helps index each new Synapse */
-    protected AtomicInteger synapseCounter = new AtomicInteger(0);
+    protected int synapseCounter = -1;
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
@@ -269,7 +266,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int getSegmentCount() {
-        return segmentCounter.get();
+        return segmentCounter + 1;
     }
 
     /**
@@ -277,7 +274,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int incrementSegments() {
-        return segmentCounter.getAndIncrement();
+        return ++segmentCounter;
     }
 
     /**
@@ -285,7 +282,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int decrementSegments() {
-        return segmentCounter.getAndDecrement();
+        return --segmentCounter;
     }
 
     /**
@@ -293,7 +290,7 @@ public class Connections implements Serializable {
      * @param counter
      */
     public void setSegmentCount(int counter) {
-        this.segmentCounter.set(counter);
+        segmentCounter = counter;
     }
 
     /**
@@ -573,7 +570,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int getSynapseCount() {
-        return synapseCounter.get();
+        return synapseCounter + 1;
     }
 
     /**
@@ -581,7 +578,7 @@ public class Connections implements Serializable {
      * @param i
      */
     public void setSynapseCount(int i) {
-        this.synapseCounter.set(i);
+        this.synapseCounter = i;
     }
 
     /**
@@ -591,7 +588,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int incrementSynapses() {
-        return this.synapseCounter.getAndIncrement();
+        return ++synapseCounter;
     }
 
     /**
@@ -600,7 +597,7 @@ public class Connections implements Serializable {
      * @return
      */
     public int decrementSynapses() {
-        return this.synapseCounter.getAndDecrement();
+        return --synapseCounter;
     }
 
     /**
@@ -1107,14 +1104,6 @@ public class Connections implements Serializable {
     }
 
     /**
-     * Returns the current count of {@link Synapse}s for {@link ProximalDendrite}s.
-     * @return
-     */
-    public int getProxSynCount() {
-        return proximalSynapseCounter;
-    }
-
-    /**
      * High verbose output useful for debugging
      */
     public void printParameters() {
@@ -1301,7 +1290,7 @@ public class Connections implements Serializable {
             receptorSynapses = new LinkedHashMap<>();
         }
 
-        Set<Synapse> retVal = null;
+        LinkedHashSet<Synapse> retVal = null;
         if((retVal = receptorSynapses.get(cell)) == null) {
             receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
         }
@@ -1698,6 +1687,291 @@ public class Connections implements Serializable {
             retVal.add(memory.getObject(indexes[i]));
         }
         return retVal;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + activationThreshold;
+        result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
+        result = prime * result + Arrays.hashCode(activeDutyCycles);
+        result = prime * result + ((activeSegments == null) ? 0 : activeSegments.hashCode());
+        result = prime * result + Arrays.hashCode(boostFactors);
+        result = prime * result + Arrays.hashCode(cells);
+        result = prime * result + cellsPerColumn;
+        result = prime * result + Arrays.hashCode(columnDimensions);
+        result = prime * result + ((connectedCounts == null) ? 0 : connectedCounts.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(connectedPermanence);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + dutyCyclePeriod;
+        result = prime * result + (globalInhibition ? 1231 : 1237);
+        result = prime * result + inhibitionRadius;
+        temp = Double.doubleToLongBits(initConnectedPct);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(initialPermanence);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + Arrays.hashCode(inputDimensions);
+        result = prime * result + ((inputMatrix == null) ? 0 : inputMatrix.hashCode());
+        result = prime * result + iterationLearnNum;
+        result = prime * result + iterationNum;
+        result = prime * result + learningRadius;
+        result = prime * result + ((learningSegments == null) ? 0 : learningSegments.hashCode());
+        temp = Double.doubleToLongBits(localAreaDensity);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((matchingCells == null) ? 0 : matchingCells.hashCode());
+        result = prime * result + ((matchingSegments == null) ? 0 : matchingSegments.hashCode());
+        temp = Double.doubleToLongBits(maxBoost);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + maxNewSynapseCount;
+        result = prime * result + ((memory == null) ? 0 : memory.hashCode());
+        result = prime * result + Arrays.hashCode(minActiveDutyCycles);
+        result = prime * result + Arrays.hashCode(minOverlapDutyCycles);
+        temp = Double.doubleToLongBits(minPctActiveDutyCycles);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(minPctOverlapDutyCycles);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + minThreshold;
+        temp = Double.doubleToLongBits(numActiveColumnsPerInhArea);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + numColumns;
+        result = prime * result + numInputs;
+        result = prime * result + Arrays.hashCode(overlapDutyCycles);
+        result = prime * result + Arrays.hashCode(paOverlaps);
+        temp = Double.doubleToLongBits(permanenceDecrement);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(permanenceIncrement);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(potentialPct);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((potentialPools == null) ? 0 : potentialPools.hashCode());
+        result = prime * result + potentialRadius;
+        temp = Double.doubleToLongBits(predictedSegmentDecrement);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
+        result = prime * result + ((random == null) ? 0 : random.hashCode());
+        result = prime * result + ((receptorSynapses == null) ? 0 : receptorSynapses.hashCode());
+        result = prime * result + seed;
+        result = prime * result + segmentCounter;
+        result = prime * result + ((segments == null) ? 0 : segments.hashCode());
+        result = prime * result + spVerbosity;
+        temp = Double.doubleToLongBits(stimulusThreshold);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((successfullyPredictedColumns == null) ? 0 : successfullyPredictedColumns.hashCode());
+        temp = Double.doubleToLongBits(synPermActiveInc);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermBelowStimulusInc);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermConnected);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermInactiveDec);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermMax);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermMin);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(synPermTrimThreshold);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + synapseCounter;
+        result = prime * result + ((synapses == null) ? 0 : synapses.hashCode());
+        result = prime * result + Arrays.hashCode(tieBreaker);
+        result = prime * result + updatePeriod;
+        temp = Double.doubleToLongBits(version);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((winnerCells == null) ? 0 : winnerCells.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Connections other = (Connections)obj;
+        if(activationThreshold != other.activationThreshold)
+            return false;
+        if(activeCells == null) {
+            if(other.activeCells != null)
+                return false;
+        } else if(!activeCells.equals(other.activeCells))
+            return false;
+        if(!Arrays.equals(activeDutyCycles, other.activeDutyCycles))
+            return false;
+        if(activeSegments == null) {
+            if(other.activeSegments != null)
+                return false;
+        } else if(!activeSegments.equals(other.activeSegments))
+            return false;
+        if(!Arrays.equals(boostFactors, other.boostFactors))
+            return false;
+        if(!Arrays.equals(cells, other.cells))
+            return false;
+        if(cellsPerColumn != other.cellsPerColumn)
+            return false;
+        if(!Arrays.equals(columnDimensions, other.columnDimensions))
+            return false;
+        if(connectedCounts == null) {
+            if(other.connectedCounts != null)
+                return false;
+        } else if(!connectedCounts.equals(other.connectedCounts))
+            return false;
+        if(Double.doubleToLongBits(connectedPermanence) != Double.doubleToLongBits(other.connectedPermanence))
+            return false;
+        if(dutyCyclePeriod != other.dutyCyclePeriod)
+            return false;
+        if(globalInhibition != other.globalInhibition)
+            return false;
+        if(inhibitionRadius != other.inhibitionRadius)
+            return false;
+        if(Double.doubleToLongBits(initConnectedPct) != Double.doubleToLongBits(other.initConnectedPct))
+            return false;
+        if(Double.doubleToLongBits(initialPermanence) != Double.doubleToLongBits(other.initialPermanence))
+            return false;
+        if(!Arrays.equals(inputDimensions, other.inputDimensions))
+            return false;
+        if(inputMatrix == null) {
+            if(other.inputMatrix != null)
+                return false;
+        } else if(!inputMatrix.equals(other.inputMatrix))
+            return false;
+        if(iterationLearnNum != other.iterationLearnNum)
+            return false;
+        if(iterationNum != other.iterationNum)
+            return false;
+        if(learningRadius != other.learningRadius)
+            return false;
+        if(learningSegments == null) {
+            if(other.learningSegments != null)
+                return false;
+        } else if(!learningSegments.equals(other.learningSegments))
+            return false;
+        if(Double.doubleToLongBits(localAreaDensity) != Double.doubleToLongBits(other.localAreaDensity))
+            return false;
+        if(matchingCells == null) {
+            if(other.matchingCells != null)
+                return false;
+        } else if(!matchingCells.equals(other.matchingCells))
+            return false;
+        if(matchingSegments == null) {
+            if(other.matchingSegments != null)
+                return false;
+        } else if(!matchingSegments.equals(other.matchingSegments))
+            return false;
+        if(Double.doubleToLongBits(maxBoost) != Double.doubleToLongBits(other.maxBoost))
+            return false;
+        if(maxNewSynapseCount != other.maxNewSynapseCount)
+            return false;
+        if(memory == null) {
+            if(other.memory != null)
+                return false;
+        } else if(!memory.equals(other.memory))
+            return false;
+        if(!Arrays.equals(minActiveDutyCycles, other.minActiveDutyCycles))
+            return false;
+        if(!Arrays.equals(minOverlapDutyCycles, other.minOverlapDutyCycles))
+            return false;
+        if(Double.doubleToLongBits(minPctActiveDutyCycles) != Double.doubleToLongBits(other.minPctActiveDutyCycles))
+            return false;
+        if(Double.doubleToLongBits(minPctOverlapDutyCycles) != Double.doubleToLongBits(other.minPctOverlapDutyCycles))
+            return false;
+        if(minThreshold != other.minThreshold)
+            return false;
+        if(Double.doubleToLongBits(numActiveColumnsPerInhArea) != Double.doubleToLongBits(other.numActiveColumnsPerInhArea))
+            return false;
+        if(numColumns != other.numColumns)
+            return false;
+        if(numInputs != other.numInputs)
+            return false;
+        if(!Arrays.equals(overlapDutyCycles, other.overlapDutyCycles))
+            return false;
+        if(!Arrays.equals(paOverlaps, other.paOverlaps))
+            return false;
+        if(Double.doubleToLongBits(permanenceDecrement) != Double.doubleToLongBits(other.permanenceDecrement))
+            return false;
+        if(Double.doubleToLongBits(permanenceIncrement) != Double.doubleToLongBits(other.permanenceIncrement))
+            return false;
+        if(Double.doubleToLongBits(potentialPct) != Double.doubleToLongBits(other.potentialPct))
+            return false;
+        if(potentialPools == null) {
+            if(other.potentialPools != null)
+                return false;
+        } else if(!potentialPools.equals(other.potentialPools))
+            return false;
+        if(potentialRadius != other.potentialRadius)
+            return false;
+        if(Double.doubleToLongBits(predictedSegmentDecrement) != Double.doubleToLongBits(other.predictedSegmentDecrement))
+            return false;
+        if(predictiveCells == null) {
+            if(other.predictiveCells != null)
+                return false;
+        } else if(!predictiveCells.equals(other.predictiveCells))
+            return false;
+        if(receptorSynapses == null) {
+            if(other.receptorSynapses != null)
+                return false;
+        } else if(!receptorSynapses.toString().equals(other.receptorSynapses.toString()))
+            return false;
+        if(seed != other.seed)
+            return false;
+        if(segmentCounter != other.segmentCounter)
+            return false;
+        if(segments == null) {
+            if(other.segments != null)
+                return false;
+        } else if(!segments.equals(other.segments))
+            return false;
+        if(spVerbosity != other.spVerbosity)
+            return false;
+        if(Double.doubleToLongBits(stimulusThreshold) != Double.doubleToLongBits(other.stimulusThreshold))
+            return false;
+        if(successfullyPredictedColumns == null) {
+            if(other.successfullyPredictedColumns != null)
+                return false;
+        } else if(!successfullyPredictedColumns.equals(other.successfullyPredictedColumns))
+            return false;
+        if(Double.doubleToLongBits(synPermActiveInc) != Double.doubleToLongBits(other.synPermActiveInc))
+            return false;
+        if(Double.doubleToLongBits(synPermBelowStimulusInc) != Double.doubleToLongBits(other.synPermBelowStimulusInc))
+            return false;
+        if(Double.doubleToLongBits(synPermConnected) != Double.doubleToLongBits(other.synPermConnected))
+            return false;
+        if(Double.doubleToLongBits(synPermInactiveDec) != Double.doubleToLongBits(other.synPermInactiveDec))
+            return false;
+        if(Double.doubleToLongBits(synPermMax) != Double.doubleToLongBits(other.synPermMax))
+            return false;
+        if(Double.doubleToLongBits(synPermMin) != Double.doubleToLongBits(other.synPermMin))
+            return false;
+        if(Double.doubleToLongBits(synPermTrimThreshold) != Double.doubleToLongBits(other.synPermTrimThreshold))
+            return false;
+        if(synapseCounter != other.synapseCounter)
+            return false;
+        if(synapses == null) {
+            if(other.synapses != null)
+                return false;
+        } else if(!synapses.equals(other.synapses))
+            return false;
+        if(!Arrays.equals(tieBreaker, other.tieBreaker))
+            return false;
+        if(updatePeriod != other.updatePeriod)
+            return false;
+        if(Double.doubleToLongBits(version) != Double.doubleToLongBits(other.version))
+            return false;
+        if(winnerCells == null) {
+            if(other.winnerCells != null)
+                return false;
+        } else if(!winnerCells.equals(other.winnerCells))
+            return false;
+        return true;
     }
 
 }

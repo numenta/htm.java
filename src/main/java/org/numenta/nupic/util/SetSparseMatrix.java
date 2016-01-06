@@ -2,7 +2,6 @@ package org.numenta.nupic.util;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
@@ -14,7 +13,7 @@ public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Se
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
-    private SortedSet<Integer> indexes = new TreeSet<>();
+    private TreeSet<Integer> indexes = new TreeSet<>();
 
     public SetSparseMatrix(int[] dimensions) {
         this(dimensions, false);
@@ -41,5 +40,36 @@ public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Se
             this.indexes.add(index);
 
         return this;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((indexes == null) ? 0 : indexes.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!super.equals(obj))
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        SetSparseMatrix other = (SetSparseMatrix)obj;
+        if(indexes == null) {
+            if(other.indexes != null)
+                return false;
+        } else if(!indexes.equals(other.indexes))
+            return false;
+        return true;
     }	
 }

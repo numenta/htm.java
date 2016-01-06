@@ -65,4 +65,33 @@ public class FlatArrayMatrix<T> extends AbstractFlatMatrix<T> implements Seriali
         Arrays.fill(this.data, value);
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + Arrays.hashCode(data);
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!super.equals(obj))
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        FlatArrayMatrix other = (FlatArrayMatrix)obj;
+        if(!Arrays.equals(data, other.data))
+            return false;
+        return true;
+    }
+
 }

@@ -22,6 +22,8 @@
 
 package org.numenta.nupic;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -40,6 +42,8 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -52,7 +56,10 @@ import org.numenta.nupic.util.Tuple;
  * @see Connections
  * @see ComputeCycle
  */
-public class Parameters {
+public class Parameters implements Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
@@ -1000,4 +1007,13 @@ public class Parameters {
         spatialInfo.append("\t\t").append(key.getFieldName()).append(":").append(value).append("\n");
     }
 
+    public Parameters readForNetwork(FSTObjectInput in) throws Exception {
+        Parameters result = (Parameters)in.readObject(Parameters.class);
+        return result;
+    }
+
+    public void writeForNetwork(FSTObjectOutput out) throws IOException {
+        out.writeObject(this, Parameters.class);
+        out.close();
+    }
 }

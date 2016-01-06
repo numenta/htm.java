@@ -225,7 +225,6 @@ public class CLAClassifierTest {
 		recordNum += 1;
 		
 		String json = classifier.serialize();
-		System.out.println(json);
 		
 		//Using the deserialized classifier, continue test
 		CLAClassifier c = CLAClassifier.deSerialize(json);

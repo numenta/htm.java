@@ -245,4 +245,42 @@ public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T>, Serializab
         return this.dimensionMultiples;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(dimensionMultiples);
+        result = prime * result + Arrays.hashCode(dimensions);
+        result = prime * result + (isColumnMajor ? 1231 : 1237);
+        result = prime * result + numDimensions;
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        AbstractFlatMatrix other = (AbstractFlatMatrix)obj;
+        if(!Arrays.equals(dimensionMultiples, other.dimensionMultiples))
+            return false;
+        if(!Arrays.equals(dimensions, other.dimensions))
+            return false;
+        if(isColumnMajor != other.isColumnMajor)
+            return false;
+        if(numDimensions != other.numDimensions)
+            return false;
+        return true;
+    }
+
 }

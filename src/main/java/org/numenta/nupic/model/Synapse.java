@@ -167,4 +167,58 @@ public class Synapse implements Serializable {
         sb.append(" ]");
         return sb.toString();
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + inputIndex;
+        long temp;
+        temp = Double.doubleToLongBits(permanence);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((pool == null) ? 0 : pool.hashCode());
+        result = prime * result + ((segment == null) ? 0 : segment.hashCode());
+        result = prime * result + ((sourceCell == null) ? 0 : sourceCell.hashCode());
+        result = prime * result + synapseIndex;
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Synapse other = (Synapse)obj;
+        if(inputIndex != other.inputIndex)
+            return false;
+        if(Double.doubleToLongBits(permanence) != Double.doubleToLongBits(other.permanence))
+            return false;
+        if(pool == null) {
+            if(other.pool != null)
+                return false;
+        } else if(!pool.equals(other.pool))
+            return false;
+        if(segment == null) {
+            if(other.segment != null)
+                return false;
+        } else if(!segment.equals(other.segment))
+            return false;
+        if(sourceCell == null) {
+            if(other.sourceCell != null)
+                return false;
+        } else if(!sourceCell.equals(other.sourceCell))
+            return false;
+        if(synapseIndex != other.synapseIndex)
+            return false;
+        return true;
+    }
 }

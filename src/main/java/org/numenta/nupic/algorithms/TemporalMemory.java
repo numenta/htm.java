@@ -460,9 +460,9 @@ public class TemporalMemory implements ComputeDecorator {
     /**
      * Used locally to return best cell/segment pair
      */
-    class CellSearch {
-        Cell bestCell;
-        DistalDendrite bestSegment;
+    public class CellSearch {
+        public Cell bestCell;
+        public DistalDendrite bestSegment;
         
         public CellSearch() {}
         public CellSearch(Cell bestCell, DistalDendrite bestSegment) {
@@ -474,9 +474,9 @@ public class TemporalMemory implements ComputeDecorator {
     /**
      * Used locally to return best segment matching results
      */
-    class SegmentSearch {
-        DistalDendrite bestSegment;
-        int numActiveSynapses;
+    public class SegmentSearch {
+        public DistalDendrite bestSegment;
+        public int numActiveSynapses;
         
         public SegmentSearch(DistalDendrite bestSegment, int numActiveSynapses) {
             this.bestSegment = bestSegment;
