@@ -18,14 +18,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #373](https://github.com/numenta/htm.java/pull/373)] Added "activeCells" field and to ManualInput.copy()
+* [[PR #370](https://github.com/numenta/htm.java/pull/370)] Added FastRandom implementation (yields 2x speed increase to codebase!) from MoClu's (@antidata)
+* [[PR #370](https://github.com/numenta/htm.java/pull/370)] Added Tests for FastRandom (util package)
 * [[PR #359](https://github.com/numenta/htm.java/pull/359)] Added HourOfWeek to DateEncoder.
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* [[PR #373](https://github.com/numenta/htm.java/pull/373)] Changed Matrix class hierarchy naming from XXXSupport to AbstractXXX - more conventional
+* [[PR #373](https://github.com/numenta/htm.java/pull/373)] Parameters.KEY_GLOBALINHIBITIONS to KEY_GLOBALINHIBITION
 * [[PR #365](https://github.com/numenta/htm.java/pull/365)] Changed inhibitColumnsGlobal() to use Java 8 Streams - 50% performance increase! Fixes [Issue #354](https://github.com/numenta/htm.java/issues/354)
 * [[PR #370](https://github.com/numenta/htm.java/pull/370)] Changed Connections initialization to be able to specify RNG implementation from Parameters value.
 
 #### Fixed
+* [[PR #373](https://github.com/numenta/htm.java/pull/373)] Rooted out cause of codebase indeterminacy!
 * [[PR #360](https://github.com/numenta/htm.java/pull/360)] Fixed dayOfWeek to accept fractional values.
 * [[PR #362](https://github.com/numenta/htm.java/pull/362)] Fix for Generic Observable execution order. Fixes [Issue #363](https://github.com/numenta/htm.java/issues/363)
 * [[PR #367](https://github.com/numenta/htm.java/pull/367)] Fixed some class and method java docs.
