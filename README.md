@@ -124,7 +124,7 @@ Here's how to include SNAPSHOT builds:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.5-SNAPSHOT</version>
+    <version>0.6.6-SNAPSHOT</version>
 </dependency>
 
 You also may need to include a repositories entry:
