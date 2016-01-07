@@ -26,6 +26,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 <br>
 
 ### Recent News Items...
+* [HTM.java Receives Speed Increase Optimizations & Roots out Indeterminacy!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2016-January/004422.html) (01/05/2016)
 * **Network API Rework** for [improved input classification!](http://www.cogmission.ai/2015/10/23/putting-out-fires-with-gasoline/) - (10/23/2015)
 * **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
