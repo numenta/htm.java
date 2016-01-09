@@ -26,7 +26,6 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,7 +91,6 @@ public class BeanUtil {
   private void setSimpleProperty(Object bean, PropertyInfo info, Object value) {
     if (info.getWriteMethod() == null) {
         try {
-            System.out.println("info name: " + info.getName());
             Field f = bean.getClass().getDeclaredField(info.getName());
             f.setAccessible(true);
             f.set(bean, value);
@@ -111,20 +109,11 @@ public class BeanUtil {
     }
     try {
       return m.invoke(instance, args);
-    } catch (IllegalArgumentException e) {
+    } catch (Exception e) {
       final String msg = "Cannot invoke " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + e.getMessage();
       //LOG.error(msg, e);
       throw new IllegalArgumentException(msg, e);
-    } catch (IllegalAccessException e) {
-      final String msg = "Cannot invoke " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + e.getMessage();
-      //LOG.error(msg, e);
-      throw new RuntimeException(msg, e);
-    } catch (InvocationTargetException e) {
-      Throwable te = e.getTargetException() == null ? e : e.getTargetException();
-      final String msg = "Error invoking " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + te.getMessage();
-      //LOG.error(msg, e);
-      throw new RuntimeException(msg, te);
-    }
+    } 
   }
 
   public PropertyInfo getPropertyInfo(Object bean, String name) {
