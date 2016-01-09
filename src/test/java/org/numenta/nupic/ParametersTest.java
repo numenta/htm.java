@@ -99,6 +99,20 @@ public class ParametersTest {
         KNNClassifier knn = KNNClassifier.builder().apply(params);
         try {
             params.apply(knn);
+            assertTrue(knn.getNumSVDDims() == null);
+            assertTrue(knn.getDistanceMethod() == DistanceMethod.NORM); // the default
+        }catch(Exception e) {
+            fail();
+        }
+        
+        params = Parameters.getKNNDefaultParameters();
+        params.setParameterByKey(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
+        params.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.PCT_INPUT_OVERLAP);
+        knn = KNNClassifier.builder().apply(params);
+        try {
+            params.apply(knn);
+            assertTrue(knn.getNumSVDDims() == Constants.KNN.ADAPTIVE);
+            assertTrue(knn.getDistanceMethod() == DistanceMethod.PCT_INPUT_OVERLAP);
         }catch(Exception e) {
             fail();
         }
