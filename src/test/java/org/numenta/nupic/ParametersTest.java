@@ -34,6 +34,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.KNNClassifier;
 import org.numenta.nupic.util.MersenneTwister;
 
 public class ParametersTest {
@@ -89,6 +90,17 @@ public class ParametersTest {
 
         public void setPotentialPct(double potentialPct) {
             this.potentialPct = potentialPct;
+        }
+    }
+    
+    @Test
+    public void testKNNEnumAndConstantFields() {
+        Parameters params = Parameters.getKNNDefaultParameters();
+        KNNClassifier knn = KNNClassifier.builder().apply(params);
+        try {
+            params.apply(knn);
+        }catch(Exception e) {
+            fail();
         }
     }
     
@@ -160,13 +172,13 @@ public class ParametersTest {
     @Test
     public void testSize() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(47, params.size());
+        assertEquals(64, params.size());
     }
     
     @Test
     public void testKeys() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertTrue(params.keys() != null && params.keys().size() == 47); 
+        assertTrue(params.keys() != null && params.keys().size() == 64); 
     }
     
     @Test

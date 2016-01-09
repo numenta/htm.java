@@ -25,6 +25,7 @@ package org.numenta.nupic.util;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -90,10 +91,18 @@ public class BeanUtil {
 
   private void setSimpleProperty(Object bean, PropertyInfo info, Object value) {
     if (info.getWriteMethod() == null) {
-      throw new IllegalArgumentException("Property '" + info.name + "' of bean " + bean.getClass().getName() +
+        try {
+            System.out.println("info name: " + info.getName());
+            Field f = bean.getClass().getDeclaredField(info.getName());
+            f.setAccessible(true);
+            f.set(bean, value);
+        }catch(Exception e) {
+            throw new IllegalArgumentException("Property '" + info.name + "' of bean " + bean.getClass().getName() +
                                          " does not have setter method");
+        }
+    }else {
+        invokeMethod(info.getWriteMethod(), bean, value);
     }
-    invokeMethod(info.getWriteMethod(), bean, value);
   }
 
   private Object invokeMethod(Method m, Object instance, Object... args) {
