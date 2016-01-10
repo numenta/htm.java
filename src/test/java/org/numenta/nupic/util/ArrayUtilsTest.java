@@ -22,19 +22,137 @@
 
 package org.numenta.nupic.util;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 public class ArrayUtilsTest {
+    
+    @Test 
+    public void testReshape() {
+        int[][] test = {
+            { 0, 1, 2, 3, 4, 5 },
+            { 6, 7, 8, 9, 10, 11 }
+        };
+        
+        int[][] expected = {
+            { 0, 1, 2 },
+            { 3, 4, 5 },
+            { 6, 7, 8 },
+            { 9, 10, 11 }
+        };
+        
+        int[][] result = ArrayUtils.reshape(test, 3);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j]);
+            }
+        }
+        
+        // Unhappy case
+        try {
+            ArrayUtils.reshape(test, 5);
+        }catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+            assertEquals("12 is not evenly divisible by 5", e.getMessage());
+        }
+        
+        // Test zero-length case
+        int[] result4 = ArrayUtils.unravel(new int[0][]);
+        assertNotNull(result4);
+        assertTrue(result4.length == 0);
+    }
+    
+    @Test
+    public void testRavelAndUnRavel() {
+        int[] test = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        int[][] expected = {
+            { 0, 1, 2, 3, 4, 5 },
+            { 6, 7, 8, 9, 10, 11 }
+        };
+        
+        int[][] result = ArrayUtils.ravel(test, 6);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j]);
+            }
+        }
+        
+        int[] result2 = ArrayUtils.unravel(result);
+        for(int i = 0;i < result2.length;i++) {
+            assertEquals(test[i], result2[i]);
+        }
+        
+        // Unhappy case
+        try {
+            ArrayUtils.ravel(test, 5);
+        }catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+            assertEquals("12 is not evenly divisible by 5", e.getMessage());
+        }
+        
+        // Test zero-length case
+        int[] result4 = ArrayUtils.unravel(new int[0][]);
+        assertNotNull(result4);
+        assertTrue(result4.length == 0);
+    }
+    
+    @Test
+    public void testRotateRight() {
+        int[][] test = new int[][] {
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 }
+        };
+        
+        int[][] expected = new int[][] {
+            { 1, 1, 1, 1 },
+            { 0, 0, 0, 0 },
+            { 1, 1, 1, 1 },
+            { 0, 0, 0, 0 }            
+        };
+        
+        int[][] result = ArrayUtils.rotateRight(test);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(result[i][j], expected[i][j]);
+            }
+        }
+    }
+    
+    @Test
+    public void testRotateLeft() {
+        int[][] test = new int[][] {
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 },
+            { 1, 0, 1, 0 }
+        };
+        
+        int[][] expected = new int[][] {
+            { 0, 0, 0, 0 },
+            { 1, 1, 1, 1 },
+            { 0, 0, 0, 0 },
+            { 1, 1, 1, 1 }
+        };
+        
+        int[][] result = ArrayUtils.rotateLeft(test);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(result[i][j], expected[i][j]);
+            }
+        }
+    }
     
     @Test
     public void testConcat() {
@@ -192,16 +310,18 @@ public class ArrayUtilsTest {
         int dimSize = 14, dimNumber = 5;
         int[] dimCoordinates = new int[dimSize];
         List<int[]> dimensions = new ArrayList<int[]>();
+        
         for (int i = 0; i < dimNumber; i++) {
             for (int j = 0; j < dimSize; j++) {
                 dimCoordinates[j] = j;
             }
             dimensions.add(dimCoordinates);
         }
-        long startTime = System.currentTimeMillis();
         
+        long startTime = System.currentTimeMillis();
         List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
         long take = System.currentTimeMillis() - startTime;
+        
         System.out.print("Execute in:" + take + " milliseconds");
 
         assertEquals(neighborList.size(), 537824);

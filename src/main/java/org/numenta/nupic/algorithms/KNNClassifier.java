@@ -113,6 +113,8 @@ public class KNNClassifier {
     private int cellsPerCol;
     
     
+    
+    
     /**
      * Privately constructs a {@code KNNClassifier}. 
      * This method is called by the
@@ -127,6 +129,42 @@ public class KNNClassifier {
         return new KNNClassifier.Builder();
     }
     
+    ///////////////////////////////////////////////////////
+    //                  Core Methods                     //
+    ///////////////////////////////////////////////////////
+    /**
+     * Train the classifier to associate specified input pattern with a
+     * particular category.
+     * 
+     * @param inputPattern      The pattern to be assigned a category. If
+     *                          isSparse is 0, this should be a dense array (both ON and OFF bits
+     *                          present). Otherwise, if isSparse > 0, this should be a list of the
+     *                          indices of the non-zero bits in sorted order
+     *                          
+     * @param inputCategory     The category to be associated with the training pattern
+     * 
+     * @param partitionId       allows you to associate an id with each
+     *                          input vector. It can be used to associate input patterns stored in the
+     *                          classifier with an external id. This can be useful for debugging or
+     *                          visualizing. Another use case is to ignore vectors with a specific id
+     *                          during inference (see description of infer() for details). There can be
+     *                          at most one partitionId per stored pattern (i.e. if two patterns are
+     *                          within distThreshold, only the first partitionId will be stored). This
+     *                          is an optional parameter.
+     *                          
+     * @param sparseSpec        If 0, the input pattern is a dense representation. If
+     *                          isSparse > 0, the input pattern is a list of non-zero indices and
+     *                          isSparse is the length of the dense representation
+     *                          
+     * @return                  The number of patterns currently stored in the classifier
+     */
+    public int learn(int[] inputPattern, int inputCategory, int partitionId, int sparseSpec) {
+        return -1;
+    }
+    
+    ///////////////////////////////////////////////////////
+    //                  Accessor Methods                 //
+    ///////////////////////////////////////////////////////
     /**
      * Returns the number of nearest neighbors used in the classification of patterns. <b>Must be odd</b>
      * @return the k
