@@ -837,8 +837,7 @@ public class SpatialPooler {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
-        ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
+        c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps, c.getStimulusThreshold());
         return overlaps;
     }
 

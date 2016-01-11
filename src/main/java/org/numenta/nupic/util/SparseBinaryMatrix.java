@@ -107,6 +107,25 @@ public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix {
             }
         }
     }
+    
+    /**
+     * Fills the specified results array with the result of the 
+     * matrix vector multiplication.
+     * 
+     * @param inputVector       the right side vector
+     * @param results           the results array
+     */
+    public void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold) {
+        for(int i = 0;i < dimensions[0];i++) {
+            int[] slice = (int[])(dimensions.length > 1 ? getSlice(i) : backingArray);
+            for(int j = 0;j < slice.length;j++) {
+                results[i] += (inputVector[j] * slice[j]);
+                if(j==slice.length - 1) {
+                    results[i] -= results[i] < stimulusThreshold ? results[i] : 0;
+                }
+            }
+        }
+    }
 
     /**
      * Sets the value at the specified index.

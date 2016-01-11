@@ -73,6 +73,21 @@ public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix {
             }
         }
     }
+    
+    @Override
+    public void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold) {
+        for (int i = 0; i < dimensions[0]; i++) {
+            int[] columnIndexes = getColumnInput(i).toArray();
+            for (int j = 0;j < columnIndexes.length;j++) {
+                if (inputVector[columnIndexes[j]] != 0) {
+                    results[i] += 1;
+                }
+                if(j == columnIndexes.length - 1 && results[i] < stimulusThreshold) {
+                    results[i] = 0;
+                }
+            }
+        }
+    }
 
     @Override
     public FastConnectionsMatrix set(int index, Object value) {
