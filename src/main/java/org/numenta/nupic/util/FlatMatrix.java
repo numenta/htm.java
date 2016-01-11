@@ -25,6 +25,7 @@ package org.numenta.nupic.util;
 /**
  * Provides contract for flat matrix implementations.
  * 
+ * @author David Ray
  * @author Jose Luis Martin
  */
 public interface FlatMatrix<T> extends Matrix<T> {

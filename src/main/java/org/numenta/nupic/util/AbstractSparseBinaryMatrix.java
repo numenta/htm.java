@@ -35,7 +35,7 @@ import gnu.trove.set.hash.TIntHashSet;
 /**
  * Base class for matrices containing specifically binary (0 or 1) integer values
  * 
- * @author cogmission
+ * @author David Ray
  * @author Jose Luis Martin
  */
 @SuppressWarnings("rawtypes")
@@ -135,7 +135,16 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix {
      * @param results			the results array
      */
     public abstract void rightVecSumAtNZ(int[] inputVector, int[] results);
-
+    
+    /**
+     * Fills the specified results array with the result of the 
+     * matrix vector multiplication.
+     * 
+     * @param inputVector       the right side vector
+     * @param results           the results array
+     */
+    public abstract void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold);
+        
     /**
      * Sets the value at the specified index.
      * 

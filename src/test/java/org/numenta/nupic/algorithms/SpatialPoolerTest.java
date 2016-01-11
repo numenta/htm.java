@@ -1594,124 +1594,161 @@ public class SpatialPoolerTest {
             {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
             {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
             {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
-            AbstractSparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
-            for(int i = 0;i < sm.getDimensions()[0];i++) {
-                for(int j = 0;j < sm.getDimensions()[1];j++) {
-                    sm.set(connectedSynapses[i][j], i, j);
-                }
+        AbstractSparseBinaryMatrix sm = new SparseBinaryMatrix(dimensions);
+        for(int i = 0;i < sm.getDimensions()[0];i++) {
+            for(int j = 0;j < sm.getDimensions()[1];j++) {
+                sm.set(connectedSynapses[i][j], i, j);
             }
+        }
 
-            mem.setConnectedMatrix(sm);
+        mem.setConnectedMatrix(sm);
 
-            for(int i = 0;i < 5;i++) {
-                for(int j = 0;j < 10;j++) {
-                    assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
-                }
+        for(int i = 0;i < 5;i++) {
+            for(int j = 0;j < 10;j++) {
+                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
             }
+        }
 
-            int[] inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            int[] overlaps = sp.calculateOverlap(mem, inputVector);
-            int[] trueOverlaps = new int[5];
-            double[] overlapsPct = sp.calculateOverlapPct(mem, overlaps);
-            double[] trueOverlapsPct = new double[5];
-            assertTrue(Arrays.equals(trueOverlaps, overlaps));
-            assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+        int[] inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        int[] overlaps = sp.calculateOverlap(mem, inputVector);
+        int[] trueOverlaps = new int[5];
+        double[] overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+        double[] trueOverlapsPct = new double[5];
+        assertTrue(Arrays.equals(trueOverlaps, overlaps));
+        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
 
-            /////////////////
+        /////////////////
 
-            dimensions = new int[] { 5, 10 };
-            connectedSynapses = new int[][] {
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-                {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-                {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-                {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
-                sm = new SparseBinaryMatrix(dimensions);
-                for(int i = 0;i < sm.getDimensions()[0];i++) {
-                    for(int j = 0;j < sm.getDimensions()[1];j++) {
-                        sm.set(connectedSynapses[i][j], i, j);
-                    }
-                }
+        dimensions = new int[] { 5, 10 };
+        connectedSynapses = new int[][] {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+        sm = new SparseBinaryMatrix(dimensions);
+        for(int i = 0;i < sm.getDimensions()[0];i++) {
+            for(int j = 0;j < sm.getDimensions()[1];j++) {
+                sm.set(connectedSynapses[i][j], i, j);
+            }
+        }
 
-                mem.setConnectedMatrix(sm);
+        mem.setConnectedMatrix(sm);
 
-                for(int i = 0;i < 5;i++) {
-                    for(int j = 0;j < 10;j++) {
-                        assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
-                    }
-                }
+        for(int i = 0;i < 5;i++) {
+            for(int j = 0;j < 10;j++) {
+                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+            }
+        }
 
-                inputVector = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-                overlaps = sp.calculateOverlap(mem, inputVector);
-                trueOverlaps = new int[] { 10, 8, 6, 4, 2 };
-                overlapsPct = sp.calculateOverlapPct(mem, overlaps);
-                trueOverlapsPct = new double[] { 1, 1, 1, 1, 1 };
-                assertTrue(Arrays.equals(trueOverlaps, overlaps));
-                assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+        inputVector = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        overlaps = sp.calculateOverlap(mem, inputVector);
+        trueOverlaps = new int[] { 10, 8, 6, 4, 2 };
+        overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+        trueOverlapsPct = new double[] { 1, 1, 1, 1, 1 };
+        assertTrue(Arrays.equals(trueOverlaps, overlaps));
+        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+        
+        ///////////////////
+        // test stimulsThreshold = 3
+        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 3.0);
+        initSP();
+        
+        dimensions = new int[] { 5, 10 };
+        connectedSynapses = new int[][] {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+        sm = new SparseBinaryMatrix(dimensions);
+        for(int i = 0;i < sm.getDimensions()[0];i++) {
+            for(int j = 0;j < sm.getDimensions()[1];j++) {
+                sm.set(connectedSynapses[i][j], i, j);
+            }
+        }
 
-                /////////////////
+        mem.setConnectedMatrix(sm);
 
-                dimensions = new int[] { 5, 10 };
-                connectedSynapses = new int[][] {
-                    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                    {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-                    {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-                    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
-                    sm = new SparseBinaryMatrix(dimensions);
-                    for(int i = 0;i < sm.getDimensions()[0];i++) {
-                        for(int j = 0;j < sm.getDimensions()[1];j++) {
-                            sm.set(connectedSynapses[i][j], i, j);
-                        }
-                    }
+        for(int i = 0;i < 5;i++) {
+            for(int j = 0;j < 10;j++) {
+                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+            }
+        }
 
-                    mem.setConnectedMatrix(sm);
+        inputVector = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        overlaps = sp.calculateOverlap(mem, inputVector);
+        trueOverlaps = new int[] { 10, 8, 6, 4, 0 }; // last gets squelched by stimulus threshold of 3
+        overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+        trueOverlapsPct = new double[] { 1, 1, 1, 1, 0 };
+        assertTrue(Arrays.equals(trueOverlaps, overlaps));
+        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));   
 
-                    for(int i = 0;i < 5;i++) {
-                        for(int j = 0;j < 10;j++) {
-                            assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
-                        }
-                    }
+        /////////////////
 
-                    inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
-                    overlaps = sp.calculateOverlap(mem, inputVector);
-                    trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
-                    overlapsPct = sp.calculateOverlapPct(mem, overlaps);
-                    trueOverlapsPct = new double[] { 0.1, 0.125, 1.0/6, 0.25, 0.5 };
-                    assertTrue(Arrays.equals(trueOverlaps, overlaps));
-                    assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
+        initSP();
+        dimensions = new int[] { 5, 10 };
+        connectedSynapses = new int[][] {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
+        sm = new SparseBinaryMatrix(dimensions);
+        for(int i = 0;i < sm.getDimensions()[0];i++) {
+            for(int j = 0;j < sm.getDimensions()[1];j++) {
+                sm.set(connectedSynapses[i][j], i, j);
+            }
+        }
 
-                    /////////////////
-                    // Zig-zag
-                    dimensions = new int[] { 5, 10 };
-                    connectedSynapses = new int[][] {
-                        {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-                        {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
-                        {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
-                        {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-                        sm = new SparseBinaryMatrix(dimensions);
-                        for(int i = 0;i < sm.getDimensions()[0];i++) {
-                            for(int j = 0;j < sm.getDimensions()[1];j++) {
-                                sm.set(connectedSynapses[i][j], i, j);
-                            }
-                        }
+        mem.setConnectedMatrix(sm);
 
-                        mem.setConnectedMatrix(sm);
+        for(int i = 0;i < 5;i++) {
+            for(int j = 0;j < 10;j++) {
+                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+            }
+        }
 
-                        for(int i = 0;i < 5;i++) {
-                            for(int j = 0;j < 10;j++) {
-                                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
-                            }
-                        }
+        inputVector = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+        overlaps = sp.calculateOverlap(mem, inputVector);
+        trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
+        overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+        trueOverlapsPct = new double[] { 0.1, 0.125, 1.0/6, 0.25, 0.5 };
+        assertTrue(Arrays.equals(trueOverlaps, overlaps));
+        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
 
-                        inputVector = new int[] { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
-                        overlaps = sp.calculateOverlap(mem, inputVector);
-                        trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
-                        overlapsPct = sp.calculateOverlapPct(mem, overlaps);
-                        trueOverlapsPct = new double[] { 0.5, 0.5, 0.5, 0.5, 0.5 };
-                        assertTrue(Arrays.equals(trueOverlaps, overlaps));
-                        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
+        /////////////////
+        // Zig-zag
+        dimensions = new int[] { 5, 10 };
+        connectedSynapses = new int[][] {
+            {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+            {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+            {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+        sm = new SparseBinaryMatrix(dimensions);
+        for(int i = 0;i < sm.getDimensions()[0];i++) {
+            for(int j = 0;j < sm.getDimensions()[1];j++) {
+                sm.set(connectedSynapses[i][j], i, j);
+            }
+        }
+
+        mem.setConnectedMatrix(sm);
+
+        for(int i = 0;i < 5;i++) {
+            for(int j = 0;j < 10;j++) {
+                assertEquals(connectedSynapses[i][j], sm.getIntValue(i, j));
+            }
+        }
+
+        inputVector = new int[] { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
+        overlaps = sp.calculateOverlap(mem, inputVector);
+        trueOverlaps = new int[] { 1, 1, 1, 1, 1 };
+        overlapsPct = sp.calculateOverlapPct(mem, overlaps);
+        trueOverlapsPct = new double[] { 0.5, 0.5, 0.5, 0.5, 0.5 };
+        assertTrue(Arrays.equals(trueOverlaps, overlaps));
+        assertTrue(Arrays.equals(trueOverlapsPct, overlapsPct));
     }
 
     /**
