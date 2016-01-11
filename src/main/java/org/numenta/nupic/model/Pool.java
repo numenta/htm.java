@@ -149,8 +149,7 @@ public class Pool {
      * @return the sparse array
      */
     public int[] getSparseConnections() {
-        int[] keys = ArrayUtils.reverse(synapsesBySourceIndex.keys());
-        return keys;
+        return ArrayUtils.reverse(synapsesBySourceIndex.keys());
     }
 
     /**

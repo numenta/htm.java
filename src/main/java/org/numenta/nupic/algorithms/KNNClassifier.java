@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import org.numenta.nupic.Constants;
 import org.numenta.nupic.DistanceMethod;
 import org.numenta.nupic.Parameters;
+import org.numenta.nupic.util.FastConnectionsMatrix;
+import org.numenta.nupic.util.NearestNeighbor;
 
 /**
  * This class implements NuPIC's k Nearest Neighbor Classifier. KNN is very
@@ -113,7 +115,18 @@ public class KNNClassifier {
     private int cellsPerCol;
     
     
+    ///////////////////////////////////////////////////////
+    //              Internal State Variables             //
+    ///////////////////////////////////////////////////////
+    private FastConnectionsMatrix memory;
     
+    private int iterationIdx;
+    
+    private Object vt;
+    
+    ///////////////////////////////////////////////////////
+    //                    Construction                   //
+    ///////////////////////////////////////////////////////
     
     /**
      * Privately constructs a {@code KNNClassifier}. 
@@ -132,6 +145,13 @@ public class KNNClassifier {
     ///////////////////////////////////////////////////////
     //                  Core Methods                     //
     ///////////////////////////////////////////////////////
+    /**
+     * Clears the state of the KNNClassifier.
+     */
+    public void clear() {
+        
+    }
+    
     /**
      * Train the classifier to associate specified input pattern with a
      * particular category.
@@ -156,9 +176,36 @@ public class KNNClassifier {
      *                          isSparse > 0, the input pattern is a list of non-zero indices and
      *                          isSparse is the length of the dense representation
      *                          
+     * @param rowID             Computed internally if not specified (i.e. for tests)
+     *                          
      * @return                  The number of patterns currently stored in the classifier
      */
-    public int learn(int[] inputPattern, int inputCategory, int partitionId, int sparseSpec) {
+    public int learn(int[] inputPattern, int inputCategory, int partitionId, int sparseSpec, int rowID) {
+        int inputWidth = 0;
+        
+        if(rowID == -1) rowID = iterationIdx;
+        
+        if(!useSparseMemory) {
+            //Implement later...
+        }else{
+            if(sparseSpec > 0 && (vt != null || distanceThreshold > 0 || numSVDDims != null || 
+                numSVDSamples != -1 || numWinners > 0)) {
+                
+                //Implement later...
+            }
+            
+            if(sparseSpec > 0) {
+                inputWidth = sparseSpec;
+            }else{
+                inputWidth = inputPattern.length;
+            }
+            
+            if(memory == null) {
+                //memory = new NearestNeighbor(0, inputWidth);
+            }
+        }
+        
+        
         return -1;
     }
     
@@ -336,7 +383,7 @@ public class KNNClassifier {
         public Builder() {}
         
         /**
-         * Returns a new KNNClassifier contructed from the fields specified
+         * Returns a new KNNClassifier constructed from the fields specified
          * by this {@code Builder}
          * @return
          */
