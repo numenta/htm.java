@@ -99,6 +99,36 @@ public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix {
             }
         }
     }
+    
+    @Override
+    public void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold) {
+        if (this.dimensions.length > 1) {
+            int[] values = getSparseIndices();
+            for (int i = 0;i < values.length;i++) {
+                int[] coordinates = computeCoordinates(values[i]);
+                
+                if(inputVector[coordinates[1]]  != 0)
+                    results[coordinates[0]] += 1;
+                
+                if(i == values.length - 1 && results[coordinates[0]] < stimulusThreshold) {
+                    results[coordinates[0]] = 0;
+                }
+            }
+        }
+        else {
+            for(int i = 0; i < this.dimensions[0]; i++) {
+                results[0] += (inputVector[i] * (int) get(i));
+            }
+
+            for (int i = 0; i < this.dimensions[0]; i++) {
+                results[i] = results[0];
+                
+                if(i == this.dimensions[0] - 1 && results[i] < stimulusThreshold) {
+                    results[i] = 0;
+                }
+            }
+        }
+    }
 
     @Override
     public LowMemorySparseBinaryMatrix set(int value, int... coordinates) {
