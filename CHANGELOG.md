@@ -25,6 +25,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* [[PR #375](https://github.com/numenta/htm.java/pull 375)] Optimized SpatialPooler.calculateOverlaps by adding the stimulus threshold to the rightVecSumAtNZ() method so we only loop once instead of twice.
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Changed Matrix class hierarchy naming from XXXSupport to AbstractXXX - more conventional
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Parameters.KEY_GLOBALINHIBITIONS to KEY_GLOBALINHIBITION
 * [[PR #365](https://github.com/numenta/htm.java/pull/365)] Changed inhibitColumnsGlobal() to use Java 8 Streams - 50% performance increase! Fixes [Issue #354](https://github.com/numenta/htm.java/issues/354)
