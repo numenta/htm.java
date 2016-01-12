@@ -21,12 +21,17 @@
  */
 package org.numenta.nupic.algorithms;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import org.numenta.nupic.Constants;
 import org.numenta.nupic.DistanceMethod;
 import org.numenta.nupic.Parameters;
-import org.numenta.nupic.util.FastConnectionsMatrix;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NearestNeighbor;
 
 /**
@@ -118,11 +123,17 @@ public class KNNClassifier {
     ///////////////////////////////////////////////////////
     //              Internal State Variables             //
     ///////////////////////////////////////////////////////
-    private FastConnectionsMatrix memory;
+    private NearestNeighbor memory;
     
-    private int iterationIdx;
+    private int iterationIdx = -1;
     
     private Object vt;
+    
+    private int protoSizes;
+    
+    private int[] overlapsWithProtos;
+    
+    private int inputPatternSum;
     
     ///////////////////////////////////////////////////////
     //                    Construction                   //
@@ -182,6 +193,7 @@ public class KNNClassifier {
      */
     public int learn(int[] inputPattern, int inputCategory, int partitionId, int sparseSpec, int rowID) {
         int inputWidth = 0;
+        boolean addRow = false;
         
         if(rowID == -1) rowID = iterationIdx;
         
@@ -194,17 +206,99 @@ public class KNNClassifier {
                 //Implement later...
             }
             
+            // Get the input width
             if(sparseSpec > 0) {
                 inputWidth = sparseSpec;
             }else{
                 inputWidth = inputPattern.length;
             }
             
+            // Allocate storage if this is the first training vector
             if(memory == null) {
-                //memory = new NearestNeighbor(0, inputWidth);
+                memory = new NearestNeighbor(0, inputWidth);
+            }
+            
+            // Support SVD if it is on
+            if(vt != null) {
+                
+            }
+            
+            // Threshold the input, zeroing out entries that are too close to 0.
+            //  This is only done if we are given a dense input.
+            if(sparseSpec == 0) {
+                // sparsifyVector
+            }
+            
+            addRow = true;
+            
+            if(true) { //cellsPerCol >= 1) {
+                System.out.println("vec = " + Arrays.toString(sparsifyVector(inputPattern, false)));
             }
         }
         
+        
+        return -1;
+    }
+    
+    /**
+     * Do sparsification, using a relative or absolute threshold
+     * 
+     * @param inputPattern
+     * @param doWinners
+     * @return
+     */
+    public int[] sparsifyVector(int[] inputPattern, boolean doWinners) {
+        int[] retVal = Arrays.copyOf(inputPattern, inputPattern.length);
+        
+        if(!relativeThreshold) {
+            retVal = IntStream.of(inputPattern).map(i -> i > sparseThreshold ? i : 0).toArray();
+        }else if(sparseThreshold > 0) {
+            retVal = IntStream.of(inputPattern).map(
+                i -> i > sparseThreshold * ArrayUtils.max(inputPattern) ? i : 0).toArray();
+        }
+        
+        // Do winner-take-all
+        if(doWinners) {
+            if(numWinners > 0 && numWinners < IntStream.of(inputPattern).filter(i -> i > 0).count()) {
+                int[] oa = (int[])Array.newInstance(int[].class, ArrayUtils.shape(inputPattern));
+                int[] sorted = ArrayUtils.argsort(oa, 0, numWinners);
+            }
+        }
+        return retVal;
+    }
+    
+    public double calcDistance(int[] inputPattern, double distanceNorm) {
+        double dist = 0;
+        
+        if(distanceNorm == -1) {
+            distanceNorm = this.distanceNorm;
+        }
+        
+        if(useSparseMemory) {
+            if(protoSizes == -1) {
+                //protoSizes = memory.rowSums();
+            }
+            
+            //overlapsWithProtos = memory.rightVecSumAtNZ(inputPattern);
+            //inputPatternSum = ArrayUtils.sum(inputPattern);
+            
+            if(distanceMethod == DistanceMethod.RAW_OVERLAP) {
+                //dist = inputPatternSum - 
+            }else if(distanceMethod == DistanceMethod.PCT_INPUT_OVERLAP) {
+                
+            }else if(distanceMethod == DistanceMethod.PCT_PROTO_OVERLAP) {
+                
+            }else if(distanceMethod == DistanceMethod.PCT_LARGER_OVERLAP) {
+                
+            }else if(distanceMethod == DistanceMethod.NORM) {
+                
+            }else{
+                throw new IllegalStateException(
+                    "Unimplemented distance method \"" + distanceMethod + "\"");
+            }
+        } else {
+            
+        }
         
         return -1;
     }
