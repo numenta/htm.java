@@ -120,6 +120,7 @@ public class KNNClassifierTest {
         int[] protoB = { 20, 28, 30 };
         
         classifier.learn(protoA, 0, -1, dimensionality, -1);
+        classifier.learn(protoB, 0, -1, dimensionality, -1);
     }
 
 }

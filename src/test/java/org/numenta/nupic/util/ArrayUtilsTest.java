@@ -155,6 +155,51 @@ public class ArrayUtilsTest {
     }
     
     @Test
+    public void testSubst() {
+        int[] original = new int[] { 30, 30, 30, 30, 30 };
+        int[] substitutes = new int[] { 0, 1, 2, 3, 4 };
+        int[] substInds = new int[] { 4, 1, 3 };
+        
+        int[] expected = { 30, 1, 30, 3, 4 };
+        
+        assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+    }
+    
+    @Test
+    public void testMaxIndex() {
+        int max = ArrayUtils.maxIndex(new int[] { 2, 4, 5 });
+        assertEquals(39, max);
+    }
+    
+    @Test
+    public void testToCoordinates() {
+        int[] coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, false);
+        assertTrue(Arrays.equals(new int[] { 0, 3, 4 }, coords));
+        
+        coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, true);
+        assertTrue(Arrays.equals(new int[] { 4, 3, 0 }, coords));
+    }
+    
+    @Test
+    public void testArgsort() {
+        int[] args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 });
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+        
+        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, -1, -1);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+        
+        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
+    }
+    
+    @Test
+    public void testShape() {
+        int[][] inputPattern = { { 2, 3, 4, 5 }, { 6, 7, 8, 9} };
+        int[] shape = ArrayUtils.shape(inputPattern);
+        assertTrue(Arrays.equals(new int[] { 2, 4 }, shape));
+    }
+    
+    @Test
     public void testConcat() {
         // Test happy path
         double[] one = new double[] { 1., 2., 3. };

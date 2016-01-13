@@ -170,6 +170,32 @@ public class ArrayUtils {
         }
         return retVal;
     }
+    
+    public static int maxIndex(int[] shape) {
+        return shape[0] * Math.max(1, initDimensionMultiples(shape)[0]) - 1;
+    }
+    
+    /**
+     * Returns an array of coordinates calculated from
+     * a flat index.
+     * 
+     * @param   index   specified flat index
+     * @param   shape   the array specifying the size of each dimension
+     * @param   isColumnMajor   increments row first then column (default: false)
+     * 
+     * @return  a coordinate array
+     */
+    public static int[] toCoordinates(int index, int[] shape, boolean isColumnMajor) {
+        int[] dimensionMultiples = initDimensionMultiples(shape);
+        int[] returnVal = new int[shape.length];
+        int base = index;
+        for(int i = 0;i < dimensionMultiples.length; i++) {
+            int quotient = base / dimensionMultiples[i];
+            base %= dimensionMultiples[i];
+            returnVal[i] = quotient;
+        }
+        return isColumnMajor ? reverse(returnVal) : returnVal;
+    }
 
     /**
      * Utility to compute a flat index from coordinates.
@@ -205,15 +231,15 @@ public class ArrayUtils {
      * Initializes internal helper array which is used for multidimensional
      * index computation.
      *
-     * @param dimensions
+     * @param shape     an array specifying sizes of each dimension
      * @return
      */
-    public static int[] initDimensionMultiples(int[] dimensions) {
+    public static int[] initDimensionMultiples(int[] shape) {
         int holder = 1;
-        int len = dimensions.length;
-        int[] dimensionMultiples = new int[dimensions.length];
+        int len = shape.length;
+        int[] dimensionMultiples = new int[shape.length];
         for (int i = 0; i < len; i++) {
-            holder *= (i == 0 ? 1 : dimensions[len - i]);
+            holder *= (i == 0 ? 1 : shape[len - i]);
             dimensionMultiples[len - 1 - i] = holder;
         }
         return dimensionMultiples;
@@ -350,8 +376,65 @@ public class ArrayUtils {
         }
         return result;
     }
-
-   /**
+    
+    /**
+     * Returns an int[] with the dimensions of the input.
+     * @param inputArray
+     * @return
+     */
+    public static int[] shape(Object inputArray) {
+        int nr = 1 + inputArray.getClass().getName().lastIndexOf('[');
+        Object oa = inputArray;
+        int[] l = new int[nr];
+        for(int i = 0;i < nr;i++) {
+            int len = l[i] = Array.getLength(oa);
+            if (0 < len) { oa = Array.get(oa, 0); }
+        }
+        
+        return l;
+    }
+    
+    /**
+     * Sorts the array, then returns an array containing the indexes of
+     * those sorted items in the original array.
+     * <p>
+     * int[] args = argsort(new int[] { 11, 2, 3, 7, 0 });
+     * contains:
+     * [4, 1, 2, 3, 0]
+     * 
+     * @param in
+     * @return
+     */
+    public static int[] argsort(int[] in) {
+        return argsort(in, -1, -1);
+    }
+    
+    /**
+     * Sorts the array, then returns an array containing the indexes of
+     * those sorted items in the original array which are between the
+     * given bounds (start=inclusive, end=exclusive)
+     * <p>
+     * int[] args = argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
+     * contains:
+     * [4, 1, 2]
+     * 
+     * @param in
+     * @return  the indexes of input elements filtered in the way specified
+     * 
+     * @see #argsort(int[])
+     */
+    public static int[] argsort(int[] in, int start, int end) {
+        if(start == -1 || end == -1) {
+            return IntStream.of(in).sorted().map(i -> 
+                Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
+        }
+        
+        return IntStream.of(in).sorted().map(i -> 
+            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
+                .skip(start).limit(end).toArray();
+    }
+    
+    /**
     * Transforms 2D matrix of doubles to 1D by concatenation
     * @param A
     * @return
@@ -387,7 +470,7 @@ public class ArrayUtils {
        return B;
    }
 
-    /**
+   /**
      * Returns a string representing an array of 0's and 1's
      *
      * @param arr an binary array (0's and 1's only)
@@ -1121,6 +1204,21 @@ public class ArrayUtils {
             orig[i] = replacement[j];
         }
         return orig;
+    }
+    
+    /**
+     * Returns a new array containing the source array contents with 
+     * substitutions from "substitutes" whose indexes reside in "substInds".
+     * 
+     * @param source        the original array
+     * @param substitutes   the replacements whose indexes must be in substInds to be used.
+     * @param substInds     the indexes of "substitutes" to replace in "source"
+     * @return  a new array with the specified indexes replaced with "substitutes"
+     */
+    public static int[] subst(int[] source, int[] substitutes, int[] substInds) {
+        List<Integer> l = Arrays.stream(substInds).boxed().collect(Collectors.toList());
+        return IntStream.range(0, source.length).map(
+            i -> l.indexOf(i) == -1 ? source[i] : substitutes[i]).toArray();
     }
     
     /**
