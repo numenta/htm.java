@@ -225,13 +225,14 @@ public class KNNClassifier {
             
             // Threshold the input, zeroing out entries that are too close to 0.
             //  This is only done if we are given a dense input.
+            int[] thresholdedInput = null;
             if(sparseSpec == 0) {
-                // sparsifyVector
+                thresholdedInput = sparsifyVector(inputPattern, true);
             }
             
             addRow = true;
             
-            if(true) { //cellsPerCol >= 1) {
+            if(cellsPerCol >= 1) {
                 System.out.println("vec = " + Arrays.toString(sparsifyVector(inputPattern, false)));
             }
         }
