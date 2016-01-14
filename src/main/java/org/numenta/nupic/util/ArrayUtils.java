@@ -435,6 +435,31 @@ public class ArrayUtils {
     }
     
     /**
+     * Sorts the array, then returns an array containing the indexes of
+     * those sorted items in the original array which are between the
+     * given bounds (start=inclusive, end=exclusive)
+     * <p>
+     * double[] args = argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
+     * contains:
+     * [4, 1, 2]
+     * 
+     * @param in
+     * @return  the indexes of input elements filtered in the way specified
+     * 
+     * @see #argsort(int[])
+     */
+    public static double[] argsort(double[] in, int start, int end) {
+        if(start == -1 || end == -1) {
+            return DoubleStream.of(in).sorted().map(i -> 
+                Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
+        }
+        
+        return DoubleStream.of(in).sorted().map(i -> 
+            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
+                .skip(start).limit(end).toArray();
+    }
+    
+    /**
     * Transforms 2D matrix of doubles to 1D by concatenation
     * @param A
     * @return

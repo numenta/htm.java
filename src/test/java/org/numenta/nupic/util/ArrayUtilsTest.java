@@ -190,6 +190,10 @@ public class ArrayUtilsTest {
         
         args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
         assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
+        
+        // Test double version
+        double[] d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
+        assertTrue(Arrays.equals(new double[] {4, 1, 2}, d_args));
     }
     
     @Test

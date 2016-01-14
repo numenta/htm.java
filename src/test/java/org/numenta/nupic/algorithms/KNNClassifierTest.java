@@ -1,9 +1,7 @@
 package org.numenta.nupic.algorithms;
 
-import static org.junit.Assert.*;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.numenta.nupic.Constants;
@@ -116,8 +114,8 @@ public class KNNClassifierTest {
         KNNClassifier classifier = initClassifier(p);
         
         int dimensionality = 40;
-        int[] protoA = { 0, 1, 3, 7, 11 };
-        int[] protoB = { 20, 28, 30 };
+        double[] protoA = { 0, 1, 3, 7, 11 };
+        double[] protoB = { 20, 28, 30 };
         
         classifier.learn(protoA, 0, -1, dimensionality, -1);
         classifier.learn(protoB, 0, -1, dimensionality, -1);

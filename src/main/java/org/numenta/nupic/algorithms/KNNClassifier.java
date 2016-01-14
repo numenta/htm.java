@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import org.numenta.nupic.Constants;
@@ -51,73 +52,73 @@ public class KNNClassifier {
     /** The number of nearest neighbors used in the classification of patterns. <b>Must be odd</b> */
     private int k = 1;
     /** If true, patterns must match exactly when assigning class labels */
-    private boolean exact;
+    private boolean exact = false;
     /** When distance method is "norm", this specifies the p value of the Lp-norm */
-    private double distanceNorm;
+    private double distanceNorm = 2.0;
     /** 
      * The method used to compute distance between input patterns and prototype patterns.
      * see({@link DistanceMethod}) 
      */
-    private DistanceMethod distanceMethod;
+    private DistanceMethod distanceMethod = DistanceMethod.NORM;
     /** 
      * A threshold on the distance between learned
      * patterns and a new pattern proposed to be learned. The distance must be
      * greater than this threshold in order for the new pattern to be added to
      * the classifier's memory
      */
-    private double distanceThreshold;
+    private double distanceThreshold = .0;
     /** If True, then scalar inputs will be binarized. */
-    private boolean doBinarization;
+    private boolean doBinarization = false;
     /** If doBinarization is True, this specifies the threshold for the binarization of inputs */
-    private double binarizationThreshold;
+    private double binarizationThreshold = 0.5;
     /** If True, classifier will use a sparse memory matrix */
-    private boolean useSparseMemory;
+    private boolean useSparseMemory = true;
     /** 
      * If useSparseMemory is True, input variables whose absolute values are 
      * less than this threshold will be stored as zero
      */
-    private double sparseThreshold;
+    private double sparseThreshold = 0.1;
     /** Flag specifying whether to multiply sparseThreshold by max value in input */
-    private boolean relativeThreshold;
+    private boolean relativeThreshold = false;
     /** Number of elements of the input that are stored. If 0, all elements are stored */
-    private int numWinners;
+    private int numWinners = 0;
     /** 
      * Number of samples the must occur before a SVD
      * (Singular Value Decomposition) transformation will be performed. If 0,
      * the transformation will never be performed
      */
-    private int numSVDSamples;
+    private int numSVDSamples = -1;
     /** 
      * Controls dimensions kept after SVD transformation. If "adaptive", 
      * the number is chosen automatically
      */
-    private Constants.KNN numSVDDims;
+    private Constants.KNN numSVDDims = Constants.KNN.ADAPTIVE;
     /**
      * If numSVDDims is "adaptive", this controls the
      * smallest singular value that is retained as a fraction of the largest
      * singular value
      */
-    private double fractionOfMax;
+    private double fractionOfMax = -1.0;
     /**
      * Limits the maximum number of the training
      * patterns stored. When KNN learns in a fixed capacity mode, the unused
      * patterns are deleted once the number of stored patterns is greater than
      * maxStoredPatterns. A value of -1 is no limit
      */
-    private int maxStoredPatterns;
+    private int maxStoredPatterns = -1;
     /**
      * A boolean flag that determines whether,
      * during learning, the classifier replaces duplicates that match exactly,
      * even if distThreshold is 0. Should be TRUE for online learning
      */
-    private boolean replaceDuplicates;
+    private boolean replaceDuplicates = false;
     /**
      * If >= 1, input is assumed to be organized into
      * columns, in the same manner as the temporal pooler AND whenever a new
      * prototype is stored, only the start cell (first cell) is stored in any
      * bursting column
      */
-    private int cellsPerCol;
+    private int cellsPerCol = 0;
     
     
     ///////////////////////////////////////////////////////
@@ -191,7 +192,7 @@ public class KNNClassifier {
      *                          
      * @return                  The number of patterns currently stored in the classifier
      */
-    public int learn(int[] inputPattern, int inputCategory, int partitionId, int sparseSpec, int rowID) {
+    public int learn(double[] inputPattern, int inputCategory, int partitionId, int sparseSpec, int rowID) {
         int inputWidth = 0;
         boolean addRow = false;
         
@@ -225,7 +226,7 @@ public class KNNClassifier {
             
             // Threshold the input, zeroing out entries that are too close to 0.
             //  This is only done if we are given a dense input.
-            int[] thresholdedInput = null;
+            double[] thresholdedInput = null;
             if(sparseSpec == 0) {
                 thresholdedInput = sparsifyVector(inputPattern, true);
             }
@@ -248,21 +249,21 @@ public class KNNClassifier {
      * @param doWinners
      * @return
      */
-    public int[] sparsifyVector(int[] inputPattern, boolean doWinners) {
-        int[] retVal = Arrays.copyOf(inputPattern, inputPattern.length);
+    public double[] sparsifyVector(double[] inputPattern, boolean doWinners) {
+        double[] retVal = Arrays.copyOf(inputPattern, inputPattern.length);
         
         if(!relativeThreshold) {
-            retVal = IntStream.of(inputPattern).map(i -> i > sparseThreshold ? i : 0).toArray();
+            retVal = DoubleStream.of(inputPattern).map(i -> i > sparseThreshold ? i : 0).toArray();
         }else if(sparseThreshold > 0) {
-            retVal = IntStream.of(inputPattern).map(
+            retVal = DoubleStream.of(inputPattern).map(
                 i -> i > sparseThreshold * ArrayUtils.max(inputPattern) ? i : 0).toArray();
         }
         
         // Do winner-take-all
         if(doWinners) {
-            if(numWinners > 0 && numWinners < IntStream.of(inputPattern).filter(i -> i > 0).count()) {
-                int[] oa = (int[])Array.newInstance(int[].class, ArrayUtils.shape(inputPattern));
-                int[] sorted = ArrayUtils.argsort(oa, 0, numWinners);
+            if(numWinners > 0 && numWinners < DoubleStream.of(inputPattern).filter(i -> i > 0).count()) {
+                double[] oa = (double[])Array.newInstance(double[].class, ArrayUtils.shape(inputPattern));
+                double[] sorted = ArrayUtils.argsort(oa, 0, numWinners);
             }
         }
         return retVal;
