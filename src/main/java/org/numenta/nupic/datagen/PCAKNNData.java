@@ -88,4 +88,8 @@ public class PCAKNNData {
     public KNNDataArray[] getPCAKNNShortData() {
         return new KNNDataArray[] { trainData, testData };
     }
+    
+    public static void main(String[] args) {
+        new PCAKNNData();
+    }
 }
