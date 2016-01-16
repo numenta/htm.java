@@ -22,7 +22,6 @@ public class KNNClassifierIntegrationTest {
         System.out.println("\nTesting PCA/k-NN classifier");
         System.out.println("Mode=" + _short);
         
-        int numDims = 10;
         int numClasses = 10;
         int k = 10;
         int numPatternsPerClass = 100;
