@@ -7,15 +7,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.numenta.nupic.algorithms.KNNClassifierIntegrationTest;
-
 /**
  * Generates test data for use with KNNClassifierIntegrationTest for
  * PCAKNN short.
  * 
  * @author cogmission
- * @see KNNClassifierIntegrationTest
- * @see PCAKNNDataTest
  */
 public class PCAKNNData {
     
