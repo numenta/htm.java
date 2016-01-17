@@ -380,6 +380,29 @@ public class ArrayUtils {
     }
     
     /**
+     * Takes an input array of m rows and n columns, and transposes it to form an array
+     * of n rows and m columns. The value in location [i][j] of the input array is copied
+     * into location [j][i] of the new array.
+     * 
+     * @param array The array to transpose.
+     * @return The transposed array.
+     */
+    public static int[][] transpose(int[][] array) {
+        int r = array.length;
+        if (r == 0) {
+            return new int[0][0]; // Special case: zero-length array
+        }
+        int c = array[0].length;
+        int[][] result = new int[c][r];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                result[j][i] = array[i][j];
+            }
+        }
+        return result;
+    }
+    
+    /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array.
      * <p>
@@ -479,6 +502,57 @@ public class ArrayUtils {
        }
        return B;
    }
+   
+   public static int[][] dot(int[][] a, int[][] b) {
+       if(a[0].length != b.length) {
+           throw new IllegalArgumentException(
+               "Matrix inner dimensions must agree.");
+       }
+       
+       int[][] c = new int[a.length][b[0].length];
+       int[] bColj = new int[a.length];
+       for(int j = 0;j < b[0].length;j++) {
+           for(int k = 0;k < a.length;k++) {
+               bColj[k] = b[k][j];
+           }
+           
+           for(int i = 0;i < a.length;i++) {
+               int[] aRowi = a[i];
+               int s = 0;
+               for(int k = 0;k < a[0].length;k++) {
+                   s += aRowi[k] * bColj[k];
+               }
+               c[i][j] = s;
+           }
+       }
+       
+       return c;
+   }
+   
+//   public Matrix times(Matrix B) {
+//       if (B.m != n) {
+//         throw new IllegalArgumentException(
+//             "Matrix inner dimensions must agree.");
+//       }
+//       Matrix X = new Matrix(m, B.n);
+//       double[][] C = X.getArray();
+//       double[] Bcolj = new double[n];
+//       for (int j = 0; j < B.n; j++) {
+//         for (int k = 0; k < n; k++) {
+//           Bcolj[k] = B.A[k][j];
+//         }
+//         for (int i = 0; i < m; i++) {
+//           double[] Arowi = A[i];
+//           double s = 0;
+//           for (int k = 0; k < n; k++) {
+//             s += Arowi[k] * Bcolj[k];
+//           }
+//           C[i][j] = s;
+//         }
+//       }
+//       return X;
+//     }
+
 
    /**
      * Returns a string representing an array of 0's and 1's
@@ -527,7 +601,7 @@ public class ArrayUtils {
      */
     public static List<Tuple> zip(int[]... args) {
         // Find the array with the minimum size
-        int minLength = Arrays.stream(args).mapToInt(i -> i.length).min().getAsInt();
+        int minLength = Arrays.stream(args).mapToInt(i -> i.length).min().orElse(0);
 
         return IntStream.range(0, minLength).mapToObj(i -> {
             Tuple.Builder builder = Tuple.builder();

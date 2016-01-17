@@ -38,6 +38,57 @@ import org.junit.Test;
 public class ArrayUtilsTest {
     
     @Test
+    public void testTranspose() {
+        int[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
+        int[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };
+        
+        int[][] result = ArrayUtils.transpose(a);
+        for(int i = 0;i < expected.length;i++) {
+            for(int j = 0;j < expected[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j]);
+            }
+        }
+        
+        int[][] zero = { {} };
+        expected = new int[0][0];
+        result = ArrayUtils.transpose(zero);
+        assertEquals(expected.length, result.length);
+        assertEquals(0, result.length);
+    }
+    
+    @Test
+    public void testDot() {
+//        int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
+//        int[][] b = new int[][] { { 1, 1 }, { 1, 1 } };
+//        
+//        int[][] c = ArrayUtils.dot(a, b);
+//        
+//        assertEquals(3, c[0][0]);
+//        assertEquals(3, c[0][1]);
+//        assertEquals(7, c[1][0]);
+//        assertEquals(7, c[1][1]);
+        
+        // Single dimension
+        int[][] a = new int[][] { { 2, 2, 2 } };
+        int[][] b = new int[][] { { 3 }, { 3 }, { 3 } };
+        
+        int[][] c = ArrayUtils.dot(a, b);
+        
+        System.out.println("c = " + c);
+        
+        
+        // Ensure un-aligned dimensions get reported
+        b = new int[][] { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+        try {
+            ArrayUtils.dot(a, b);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().equals(IllegalArgumentException.class));
+            assertEquals("Matrix inner dimensions must agree.", e.getMessage());
+        }
+    }
+    
+    @Test
     public void testZip() {
         int[] t1 = { 1, 2, 3 };
         int[] t2 = { 4, 5, 6 };
