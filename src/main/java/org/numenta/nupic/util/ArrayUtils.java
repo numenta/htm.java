@@ -503,6 +503,17 @@ public class ArrayUtils {
         return B;
     }
 
+    /**
+     * Performs matrix multiplication on the two specified
+     * matrices throwing an exception if the two inner dimensions
+     * are not in agreement.
+     * 
+     * @param a     the first matrix
+     * @param b     the second matrix
+     * @return  the dot product of the two matrices
+     * @throws  IllegalArgumentException if the two inner dimensions
+     *          are not in agreement
+     */
     public static int[][] dot(int[][] a, int[][] b) {
         if(a[0].length != b.length) {
             throw new IllegalArgumentException(
@@ -510,9 +521,9 @@ public class ArrayUtils {
         } 
 
         int[][] c = new int[a.length][b[0].length];
-        int[] bColj = new int[a.length];
+        int[] bColj = new int[a[0].length];
         for(int j = 0;j < b[0].length;j++) {
-            for(int k = 0;k < a.length;k++) {
+            for(int k = 0;k < a[0].length;k++) {
                 bColj[k] = b[k][j];
             }
 
@@ -528,7 +539,7 @@ public class ArrayUtils {
 
         return c;
     }
-
+    
     /**
      * Returns a string representing an array of 0's and 1's
      *
