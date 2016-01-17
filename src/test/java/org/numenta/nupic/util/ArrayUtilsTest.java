@@ -58,23 +58,23 @@ public class ArrayUtilsTest {
     
     @Test
     public void testDot() {
-//        int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
-//        int[][] b = new int[][] { { 1, 1 }, { 1, 1 } };
-//        
-//        int[][] c = ArrayUtils.dot(a, b);
-//        
-//        assertEquals(3, c[0][0]);
-//        assertEquals(3, c[0][1]);
-//        assertEquals(7, c[1][0]);
-//        assertEquals(7, c[1][1]);
-        
-        // Single dimension
-        int[][] a = new int[][] { { 2, 2, 2 } };
-        int[][] b = new int[][] { { 3 }, { 3 }, { 3 } };
+        int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
+        int[][] b = new int[][] { { 1, 1 }, { 1, 1 } };
         
         int[][] c = ArrayUtils.dot(a, b);
         
-        System.out.println("c = " + c);
+        assertEquals(3, c[0][0]);
+        assertEquals(3, c[0][1]);
+        assertEquals(7, c[1][0]);
+        assertEquals(7, c[1][1]);
+        
+        // Single dimension
+//        int[][] a = new int[][] { { 2, 2, 2 } };
+//        int[][] b = new int[][] { { 3 }, { 3 }, { 3 } };
+//        
+//        int[][] c = ArrayUtils.dot(a, b);
+//        
+//        System.out.println("c = " + c);
         
         
         // Ensure un-aligned dimensions get reported
