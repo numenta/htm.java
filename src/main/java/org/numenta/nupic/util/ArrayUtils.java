@@ -49,7 +49,7 @@ import java.util.stream.IntStream;
 public class ArrayUtils {
     /** Empty array constant */
     private static int[] EMPTY_ARRAY = new int[0];
-    
+
     public static Condition<Integer> WHERE_1 = new Condition.Adapter<Integer>() {
         public boolean eval(int i) {
             return i == 1;
@@ -68,8 +68,8 @@ public class ArrayUtils {
     public static Condition<Integer> GREATER_OR_EQUAL_0 = new Condition.Adapter<Integer>() {
         @Override public boolean eval(int n) { return n >= 0; }
     };
-    
-    
+
+
     /**
      * Returns the product of each integer in the specified array.
      * 
@@ -81,10 +81,10 @@ public class ArrayUtils {
         for(int i = 0;i < dims.length;i++) {
             retVal *= dims[i];
         }
-        
+
         return retVal;
     }
-    
+
     /**
      * Returns an array containing the successive elements of each
      * argument array as in [ first[0], second[0], first[1], second[1], ... ].
@@ -106,10 +106,10 @@ public class ArrayUtils {
                 retVal[k++] = Array.get(second, j++);
             }
         }
-        
+
         return retVal;
     }
-    
+
     /**
      * <p>
      * Return a new double[] containing the difference of each element and its
@@ -148,7 +148,7 @@ public class ArrayUtils {
         }
         return false;
     }
-    
+
     /**
      * Returns a new array of size first.length + second.length, with the
      * contents of the first array loaded into the returned array starting
@@ -170,11 +170,11 @@ public class ArrayUtils {
         }
         return retVal;
     }
-    
+
     public static int maxIndex(int[] shape) {
         return shape[0] * Math.max(1, initDimensionMultiples(shape)[0]) - 1;
     }
-    
+
     /**
      * Returns an array of coordinates calculated from
      * a flat index.
@@ -229,7 +229,7 @@ public class ArrayUtils {
         }
         return dimensionMultiples;
     }
-    
+
     /**
      * Takes a two-dimensional input array and returns a new array which is "rotated"
      * a quarter-turn clockwise.
@@ -274,7 +274,7 @@ public class ArrayUtils {
         }
         return result;
     }
-    
+
     /**
      * Takes a one-dimensional input array of m  n  numbers and returns a two-dimensional
      * array of m rows and n columns. The first n numbers of the given array are copied
@@ -348,7 +348,7 @@ public class ArrayUtils {
         int[][] result = new int[(r * c) / n][n];
         int ii = 0;
         int jj = 0;
-        
+
         for (int i = 0; i < r; i++) {
             for (int j = 0; j < c; j++) {
                 result[ii][jj] = array[i][j];
@@ -361,7 +361,7 @@ public class ArrayUtils {
         }
         return result;
     }
-    
+
     /**
      * Returns an int[] with the dimensions of the input.
      * @param inputArray
@@ -375,10 +375,10 @@ public class ArrayUtils {
             int len = l[i] = Array.getLength(oa);
             if (0 < len) { oa = Array.get(oa, 0); }
         }
-        
+
         return l;
     }
-    
+
     /**
      * Takes an input array of m rows and n columns, and transposes it to form an array
      * of n rows and m columns. The value in location [i][j] of the input array is copied
@@ -401,7 +401,7 @@ public class ArrayUtils {
         }
         return result;
     }
-    
+
     /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array.
@@ -416,7 +416,7 @@ public class ArrayUtils {
     public static int[] argsort(int[] in) {
         return argsort(in, -1, -1);
     }
-    
+
     /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array which are between the
@@ -434,14 +434,14 @@ public class ArrayUtils {
     public static int[] argsort(int[] in, int start, int end) {
         if(start == -1 || end == -1) {
             return IntStream.of(in).sorted().map(i -> 
-                Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
+            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
         }
-        
+
         return IntStream.of(in).sorted().map(i -> 
-            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
-                .skip(start).limit(end).toArray();
+        Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
+        .skip(start).limit(end).toArray();
     }
-    
+
     /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array which are between the
@@ -459,102 +459,77 @@ public class ArrayUtils {
     public static double[] argsort(double[] in, int start, int end) {
         if(start == -1 || end == -1) {
             return DoubleStream.of(in).sorted().map(i -> 
-                Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
+            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
         }
-        
+
         return DoubleStream.of(in).sorted().map(i -> 
-            Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
-                .skip(start).limit(end).toArray();
+        Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
+        .skip(start).limit(end).toArray();
     }
-    
+
     /**
-    * Transforms 2D matrix of doubles to 1D by concatenation
-    * @param A
-    * @return
-    */
-   public static double[] to1D(double[][] A){
-       
-       double[] B = new double[A.length * A[0].length];
-       int index = 0;
+     * Transforms 2D matrix of doubles to 1D by concatenation
+     * @param A
+     * @return
+     */
+    public static double[] to1D(double[][] A){
 
-       for(int i = 0;i<A.length;i++){
-           for(int j = 0;j<A[0].length;j++){
-               B[index++] = A[i][j];
-           }
-       }
-       return B;
-   }
-   
-   /**
-    * Transforms 2D matrix of integers to 1D by concatenation
-    * @param A
-    * @return
-    */
-   public static int[] to1D(int[][] A){
-       
-       int[] B = new int[A.length * A[0].length];
-       int index = 0;
+        double[] B = new double[A.length * A[0].length];
+        int index = 0;
 
-       for(int i = 0;i < A.length;i++){
-           for(int j = 0;j < A[0].length;j++){
-               B[index++] = A[i][j];
-           }
-       }
-       return B;
-   }
-   
-   public static int[][] dot(int[][] a, int[][] b) {
-       if(a[0].length != b.length) {
-           throw new IllegalArgumentException(
-               "Matrix inner dimensions must agree.");
-       }
-       
-       int[][] c = new int[a.length][b[0].length];
-       int[] bColj = new int[a.length];
-       for(int j = 0;j < b[0].length;j++) {
-           for(int k = 0;k < a.length;k++) {
-               bColj[k] = b[k][j];
-           }
-           
-           for(int i = 0;i < a.length;i++) {
-               int[] aRowi = a[i];
-               int s = 0;
-               for(int k = 0;k < a[0].length;k++) {
-                   s += aRowi[k] * bColj[k];
-               }
-               c[i][j] = s;
-           }
-       }
-       
-       return c;
-   }
-   
-//   public Matrix times(Matrix B) {
-//       if (B.m != n) {
-//         throw new IllegalArgumentException(
-//             "Matrix inner dimensions must agree.");
-//       }
-//       Matrix X = new Matrix(m, B.n);
-//       double[][] C = X.getArray();
-//       double[] Bcolj = new double[n];
-//       for (int j = 0; j < B.n; j++) {
-//         for (int k = 0; k < n; k++) {
-//           Bcolj[k] = B.A[k][j];
-//         }
-//         for (int i = 0; i < m; i++) {
-//           double[] Arowi = A[i];
-//           double s = 0;
-//           for (int k = 0; k < n; k++) {
-//             s += Arowi[k] * Bcolj[k];
-//           }
-//           C[i][j] = s;
-//         }
-//       }
-//       return X;
-//     }
+        for(int i = 0;i<A.length;i++){
+            for(int j = 0;j<A[0].length;j++){
+                B[index++] = A[i][j];
+            }
+        }
+        return B;
+    }
 
+    /**
+     * Transforms 2D matrix of integers to 1D by concatenation
+     * @param A
+     * @return
+     */
+    public static int[] to1D(int[][] A){
 
-   /**
+        int[] B = new int[A.length * A[0].length];
+        int index = 0;
+
+        for(int i = 0;i < A.length;i++){
+            for(int j = 0;j < A[0].length;j++){
+                B[index++] = A[i][j];
+            }
+        }
+        return B;
+    }
+
+    public static int[][] dot(int[][] a, int[][] b) {
+        if(a[0].length != b.length) {
+            throw new IllegalArgumentException(
+                            "Matrix inner dimensions must agree.");
+        } 
+
+        int[][] c = new int[a.length][b[0].length];
+        int[] bColj = new int[a.length];
+        for(int j = 0;j < b[0].length;j++) {
+            for(int k = 0;k < a.length;k++) {
+                bColj[k] = b[k][j];
+            }
+
+            for(int i = 0;i < a.length;i++) {
+                int[] aRowi = a[i];
+                int s = 0;
+                for(int k = 0;k < a[0].length;k++) {
+                    s += aRowi[k] * bColj[k];
+                }
+                c[i][j] = s;
+            }
+        }
+
+        return c;
+    }
+
+    /**
      * Returns a string representing an array of 0's and 1's
      *
      * @param arr an binary array (0's and 1's only)
@@ -590,7 +565,7 @@ public class ArrayUtils {
 
         return tuples;
     }
-    
+
     /**
      * Return a list of tuples, where each tuple contains the i-th element
      * from each of the argument sequences.  The returned list is
@@ -611,7 +586,7 @@ public class ArrayUtils {
             return builder.build();
         }).collect(Collectors.toList());
     }
-    
+
     /**
      * Returns an array with the same shape and the contents
      * converted to integers.
@@ -785,17 +760,17 @@ public class ArrayUtils {
      * @throws IllegalArgumentException if the two argument arrays are not the same length
      */
     public static double[] divide(double[] dividend, double[] divisor,
-                                  double dividendAdjustment, double divisorAdjustment) {
+        double dividendAdjustment, double divisorAdjustment) {
 
         if (dividend.length != divisor.length) {
             throw new IllegalArgumentException(
-                    "The dividend array and the divisor array must be the same length");
+                            "The dividend array and the divisor array must be the same length");
         }
         double[] quotient = new double[dividend.length];
         double denom = 1;
         for (int i = 0; i < dividend.length; i++) {
             quotient[i] = (dividend[i] + dividendAdjustment) /
-                          ((denom = divisor[i] + divisorAdjustment) == 0 ? 1 : denom); //Protect against division by 0
+                            ((denom = divisor[i] + divisorAdjustment) == 0 ? 1 : denom); //Protect against division by 0
         }
         return quotient;
     }
@@ -816,13 +791,13 @@ public class ArrayUtils {
 
         if (dividend.length != divisor.length) {
             throw new IllegalArgumentException(
-                    "The dividend array and the divisor array must be the same length");
+                            "The dividend array and the divisor array must be the same length");
         }
         double[] quotient = new double[dividend.length];
         double denom = 1;
         for (int i = 0; i < dividend.length; i++) {
             quotient[i] = (dividend[i]) /
-                          (double)((denom = divisor[i]) == 0 ? 1 : denom); //Protect against division by 0
+                            (double)((denom = divisor[i]) == 0 ? 1 : denom); //Protect against division by 0
         }
         return quotient;
     }
@@ -844,7 +819,7 @@ public class ArrayUtils {
         double denom = 1;
         for (int i = 0; i < dividend.length; i++) {
             quotient[i] = (dividend[i]) /
-                          (double)((denom = divisor) == 0 ? 1 : denom); //Protect against division by 0
+                            (double)((denom = divisor) == 0 ? 1 : denom); //Protect against division by 0
         }
         return quotient;
     }
@@ -864,7 +839,7 @@ public class ArrayUtils {
 
         if (dividend.length != divisor.length) {
             throw new IllegalArgumentException(
-                    "The dividend array and the divisor array must be the same length");
+                            "The dividend array and the divisor array must be the same length");
         }
         double[] quotient = new double[dividend.length];
         for (int i = 0; i < dividend.length; i++) {
@@ -887,11 +862,11 @@ public class ArrayUtils {
      * @throws IllegalArgumentException if the two argument arrays are not the same length
      */
     public static double[] multiply(
-    	double[] multiplicand, double[] factor, double multiplicandAdjustment, double factorAdjustment) {
+        double[] multiplicand, double[] factor, double multiplicandAdjustment, double factorAdjustment) {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(
-                    "The multiplicand array and the factor array must be the same length");
+                            "The multiplicand array and the factor array must be the same length");
         }
         double[] product = new double[multiplicand.length];
         for (int i = 0; i < multiplicand.length; i++) {
@@ -916,7 +891,7 @@ public class ArrayUtils {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(
-                    "The multiplicand array and the factor array must be the same length");
+                            "The multiplicand array and the factor array must be the same length");
         }
         double[] product = new double[multiplicand.length];
         for (int i = 0; i < multiplicand.length; i++) {
@@ -1013,7 +988,7 @@ public class ArrayUtils {
         }
         return sum / (double)arr.length;
     }
-    
+
     /**
      * Computes and returns the variance.
      * @param arr
@@ -1029,12 +1004,12 @@ public class ArrayUtils {
             accum += dev * dev;
             accum2 += dev;
         }
-        
+
         double var = (accum - (accum2 * accum2 / arr.length)) / arr.length;
-        
+
         return var;
     }
-    
+
     /**
      * Computes and returns the variance.
      * @param arr
@@ -1118,7 +1093,7 @@ public class ArrayUtils {
         }
         return sum;
     }
-    
+
     /**
      * Test whether each element of a 1-D array is also present in a second 
      * array.
@@ -1133,12 +1108,12 @@ public class ArrayUtils {
         if(ar1 == null || ar2 == null) {
             return EMPTY_ARRAY;
         }
-        
+
         TIntSet retVal = new TIntHashSet(ar2);
         retVal.retainAll(ar1);
         return retVal.toArray();
     }
-    
+
     /**
      * Returns the sum of all contents in the specified array.
      * @param array
@@ -1238,7 +1213,7 @@ public class ArrayUtils {
         }
         return doubs.toArray();
     }
-    
+
     /**
      * Returns an array which starts from lowerBounds (inclusive) and
      * ends at the upperBounds (exclusive).
@@ -1255,7 +1230,7 @@ public class ArrayUtils {
         }
         return ints.toArray();
     }
-    
+
     /**
      * Fisher-Yates implementation which shuffles the array contents.
      * 
@@ -1275,7 +1250,7 @@ public class ArrayUtils {
         }
         return array;
     }
-    
+
     /**
      * Replaces the range specified by "start" and "end" of "orig" with the 
      * array of replacement ints found in "replacement".
@@ -1292,7 +1267,7 @@ public class ArrayUtils {
         }
         return orig;
     }
-    
+
     /**
      * Returns a new array containing the source array contents with 
      * substitutions from "substitutes" whose indexes reside in "substInds".
@@ -1305,9 +1280,9 @@ public class ArrayUtils {
     public static int[] subst(int[] source, int[] substitutes, int[] substInds) {
         List<Integer> l = Arrays.stream(substInds).boxed().collect(Collectors.toList());
         return IntStream.range(0, source.length).map(
-            i -> l.indexOf(i) == -1 ? source[i] : substitutes[i]).toArray();
+                        i -> l.indexOf(i) == -1 ? source[i] : substitutes[i]).toArray();
     }
-    
+
     /**
      * Returns a sorted unique array of integers
      *
@@ -1651,7 +1626,7 @@ public class ArrayUtils {
         }
         return retVal.toArray();
     }
-    
+
     /**
      * Returns a flag indicating whether the specified array
      * is a sparse array of 0's and 1's or not.
@@ -1666,10 +1641,10 @@ public class ArrayUtils {
             if(ia[i] > 1) return true;
             else if(j > 0 && ia[i] == end) return false;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Returns a bit vector of the specified size whose "on" bit
      * indexes are specified in "in"; basically converting a sparse
@@ -1684,7 +1659,7 @@ public class ArrayUtils {
         Arrays.stream(in).forEach(i -> {retVal[i] = 1;});
         return retVal;
     }
-    
+
     /**
      * Scans the specified values and applies the {@link Condition} to each
      * value, returning the indexes of the values where the condition evaluates
@@ -1819,7 +1794,7 @@ public class ArrayUtils {
         }
         return index;
     }
-    
+
     /**
      * Returns a boxed Integer[] from the specified primitive array
      * @param ints      the primitive int array
@@ -1828,7 +1803,7 @@ public class ArrayUtils {
     public static Integer[] toBoxed(int[] ints) {
         return IntStream.of(ints).boxed().collect(Collectors.toList()).toArray(new Integer[ints.length]);
     }
-    
+
     /**
      * Returns a boxed Double[] from the specified primitive array
      * @param doubles       the primitive double array
@@ -1837,7 +1812,7 @@ public class ArrayUtils {
     public static Double[] toBoxed(double[] doubles) {
         return DoubleStream.of(doubles).boxed().collect(Collectors.toList()).toArray(new Double[doubles.length]);
     }
-    
+
     /**
      * Converts an array of Integer objects to an array of its
      * primitive form.
@@ -1852,7 +1827,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-    
+
     /**
      * Converts an array of Double objects to an array of its
      * primitive form.
@@ -1867,7 +1842,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-    
+
     /**
      * Returns the index of the max value in the specified array
      * @param array the array to find the max value index in
@@ -1962,7 +1937,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-    
+
     /**
      * Returns the minimum value in the specified array
      * @param array
@@ -2079,7 +2054,7 @@ public class ArrayUtils {
             setValue(Array.get(array, indexes[0]), value, tail(indexes));
         }
     }
-    
+
     /**
      * Get <tt>value</tt> for <tt>array</tt> at specified position <tt>indexes</tt>
      *
@@ -2091,7 +2066,7 @@ public class ArrayUtils {
         for(int i = 0;i < indexes.length;i++) {
             slice = Array.get(slice, indexes[i]);
         }
-        
+
         return slice;
     }
 
@@ -2113,10 +2088,10 @@ public class ArrayUtils {
     }
 
     /**
-    * Aggregates all element of multi dimensional array of ints
-    * @param array
-    * @return sum of all array elements
-    */
+     * Aggregates all element of multi dimensional array of ints
+     * @param array
+     * @return sum of all array elements
+     */
     public static int aggregateArray(Object array) {
         int sum = 0;
         if(array instanceof Integer){
