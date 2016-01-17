@@ -526,19 +526,16 @@ public class ArrayUtils {
      * @return a list of tuples
      */
     public static List<Tuple> zip(int[]... args) {
-        List<Tuple> retVal = new ArrayList<>();
         // Find the array with the minimum size
-        int minLength = Arrays.stream(args).map(i -> new Integer(i.length)).min((a, b) -> a.compareTo(b)).get();
-        
-        for(int i = 0;i < minLength;i++) {
+        int minLength = Arrays.stream(args).mapToInt(i -> i.length).min().getAsInt();
+
+        return IntStream.range(0, minLength).mapToObj(i -> {
             Tuple.Builder builder = Tuple.builder();
             for(int[] ia : args) {
                 builder.add(ia[i]);
             }
-            retVal.add(builder.build());
-        }
-         
-        return retVal;
+            return builder.build();
+        }).collect(Collectors.toList());
     }
     
     /**
