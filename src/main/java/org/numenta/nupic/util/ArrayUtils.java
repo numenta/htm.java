@@ -213,21 +213,6 @@ public class ArrayUtils {
     }
 
     /**
-     * Utility to compute a flat index from coordinates.
-     *
-     * @param coordinates an array of integer coordinates
-     * @return a flat index
-     */
-    public static int fromCoordinate(int[] coordinates) {
-        int[] localMults = initDimensionMultiples(coordinates);
-        int base = 0;
-        for (int i = 0; i < coordinates.length; i++) {
-            base += (localMults[i] * coordinates[i]);
-        }
-        return base;
-    }
-
-    /**
      * Initializes internal helper array which is used for multidimensional
      * index computation.
      *
@@ -537,17 +522,23 @@ public class ArrayUtils {
      * from each of the argument sequences.  The returned list is
      * truncated in length to the length of the shortest argument sequence.
      *
-     * @param args  the array of Objects to be wrapped in {@link Tuple}s
+     * @param args  the array of ints to be wrapped in {@link Tuple}s
      * @return a list of tuples
      */
-    public static List<Tuple> zip(Object[]... args) {
-        List<Tuple> tuples = new ArrayList<Tuple>();
-        int len = args.length;
-        for (int i = 0; i < len; i++) {
-            tuples.add(new Tuple(args[i]));
+    public static List<Tuple> zip(int[]... args) {
+        List<Tuple> retVal = new ArrayList<>();
+        // Find the array with the minimum size
+        int minLength = Arrays.stream(args).map(i -> new Integer(i.length)).min((a, b) -> a.compareTo(b)).get();
+        
+        for(int i = 0;i < minLength;i++) {
+            Tuple.Builder builder = Tuple.builder();
+            for(int[] ia : args) {
+                builder.add(ia[i]);
+            }
+            retVal.add(builder.build());
         }
-
-        return tuples;
+         
+        return retVal;
     }
     
     /**

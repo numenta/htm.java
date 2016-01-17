@@ -37,6 +37,43 @@ import org.junit.Test;
 
 public class ArrayUtilsTest {
     
+    @Test
+    public void testZip() {
+        int[] t1 = { 1, 2, 3 };
+        int[] t2 = { 4, 5, 6 };
+        List<Tuple> tuples = ArrayUtils.zip(new int[][] { t1, t2 });
+        assertEquals(3, tuples.size());
+        assertTrue(
+            ((Integer)tuples.get(0).get(0)) == 1 &&
+            ((Integer)tuples.get(0).get(1)) == 4 &&
+            ((Integer)tuples.get(1).get(0)) == 2 &&
+            ((Integer)tuples.get(1).get(1)) == 5 &&
+            ((Integer)tuples.get(2).get(0)) == 3 &&
+            ((Integer)tuples.get(2).get(1)) == 6);
+    }
+    
+    @Test
+    public void testTo1D() {
+        int[][] test = { { 1, 2 }, { 3, 4 } };
+        int[] expected = { 1, 2, 3, 4 };
+        int[] result = ArrayUtils.to1D(test);
+        assertTrue(Arrays.equals(expected, result));
+        
+        // Test double version
+        double[][] d_test = { { 1., 2. }, { 3., 4. } };
+        double[] d_expected = { 1., 2., 3., 4. };
+        double[] d_result = ArrayUtils.to1D(d_test);
+        assertTrue(Arrays.equals(d_expected, d_result));
+    }
+    
+    @Test
+    public void testFromCoordinate() {
+        int[] shape = { 2, 2 };
+        int[] testCoord = { 1, 1 };
+        int result = ArrayUtils.fromCoordinate(testCoord, shape);
+        assertEquals(3, result);
+    }
+    
     @Test 
     public void testReshape() {
         int[][] test = {
@@ -70,6 +107,12 @@ public class ArrayUtilsTest {
         int[] result4 = ArrayUtils.unravel(new int[0][]);
         assertNotNull(result4);
         assertTrue(result4.length == 0);
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.reshape(test, 1);
+        assertTrue(Arrays.equals(expected, result));
     }
     
     @Test
@@ -128,6 +171,12 @@ public class ArrayUtilsTest {
                 assertEquals(result[i][j], expected[i][j]);
             }
         }
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.rotateRight(test);
+        assertTrue(Arrays.equals(expected, result));
     }
     
     @Test
@@ -152,6 +201,12 @@ public class ArrayUtilsTest {
                 assertEquals(result[i][j], expected[i][j]);
             }
         }
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.rotateLeft(test);
+        assertTrue(Arrays.equals(expected, result));
     }
     
     @Test
@@ -194,6 +249,9 @@ public class ArrayUtilsTest {
         // Test double version
         double[] d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
         assertTrue(Arrays.equals(new double[] {4, 1, 2}, d_args));
+        
+        d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, -1, 3);
+        assertTrue(Arrays.equals(new double[] {4, 1, 2, 3, 0}, d_args));
     }
     
     @Test
