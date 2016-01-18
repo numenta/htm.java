@@ -401,6 +401,29 @@ public class ArrayUtils {
         }
         return result;
     }
+    
+    /**
+     * Takes an input array of m rows and n columns, and transposes it to form an array
+     * of n rows and m columns. The value in location [i][j] of the input array is copied
+     * into location [j][i] of the new array.
+     * 
+     * @param array The array to transpose.
+     * @return The transposed array.
+     */
+    public static double[][] transpose(double[][] array) {
+        int r = array.length;
+        if (r == 0) {
+            return new double[0][0]; // Special case: zero-length array
+        }
+        int c = array[0].length;
+        double[][] result = new double[c][r];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                result[j][i] = array[i][j];
+            }
+        }
+        return result;
+    }
 
     /**
      * Sorts the array, then returns an array containing the indexes of
@@ -517,7 +540,7 @@ public class ArrayUtils {
     public static int[][] dot(int[][] a, int[][] b) {
         if(a[0].length != b.length) {
             throw new IllegalArgumentException(
-                            "Matrix inner dimensions must agree.");
+                 "Matrix inner dimensions must agree.");
         } 
 
         int[][] c = new int[a.length][b[0].length];
@@ -530,6 +553,75 @@ public class ArrayUtils {
             for(int i = 0;i < a.length;i++) {
                 int[] aRowi = a[i];
                 int s = 0;
+                for(int k = 0;k < a[0].length;k++) {
+                    s += aRowi[k] * bColj[k];
+                }
+                c[i][j] = s;
+            }
+        }
+
+        return c;
+    }
+    
+    /**
+     * Performs matrix multiplication on the two specified
+     * matrices throwing an exception if the two inner dimensions
+     * are not in agreement. The 1D array is first transposed 
+     * into a columnal array and the result is transposed back
+     * to yield a 1D array.
+     * 
+     * @param a
+     * @param b
+     * @return
+     */
+    public static int[] dot(int[][] a, int[] b) {
+        int[][] result = dot(a, transpose(new int[][] { b }));
+        return transpose(result)[0];
+    }
+    
+    /**
+     * Performs matrix multiplication on the two specified
+     * matrices throwing an exception if the two inner dimensions
+     * are not in agreement. The 1D array is first transposed 
+     * into a columnal array and the result is transposed back
+     * to yield a 1D array.
+     * 
+     * @param a
+     * @param b
+     * @return
+     */
+    public static double[] dot(double[][] a, double[] b) {
+        double[][] result = dot(a, transpose(new double[][] { b }));
+        return transpose(result)[0];
+    }
+    
+    /**
+     * Performs matrix multiplication on the two specified
+     * matrices throwing an exception if the two inner dimensions
+     * are not in agreement.
+     * 
+     * @param a     the first matrix
+     * @param b     the second matrix
+     * @return  the dot product of the two matrices
+     * @throws  IllegalArgumentException if the two inner dimensions
+     *          are not in agreement
+     */
+    public static double[][] dot(double[][] a, double[][] b) {
+        if(a[0].length != b.length) {
+            throw new IllegalArgumentException(
+                "Matrix inner dimensions must agree.");
+        } 
+
+        double[][] c = new double[a.length][b[0].length];
+        double[] bColj = new double[a[0].length];
+        for(int j = 0;j < b[0].length;j++) {
+            for(int k = 0;k < a[0].length;k++) {
+                bColj[k] = b[k][j];
+            }
+
+            for(int i = 0;i < a.length;i++) {
+                double[] aRowi = a[i];
+                double s = 0;
                 for(int k = 0;k < a[0].length;k++) {
                     s += aRowi[k] * bColj[k];
                 }
@@ -1111,6 +1203,22 @@ public class ArrayUtils {
     public static double[] d_sub(double[] arr, double amount) {
         for (int i = 0; i < arr.length; i++) {
             arr[i] -= amount;
+        }
+        return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the subtraction of the specified double amount at the same
+     * index
+     *
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_sub(double[] arr, double[] amount) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] -= amount[i];
         }
         return arr;
     }

@@ -38,7 +38,7 @@
 	</scm>
 	<properties>
 		<argLine>-Xmx2048m -Xms1024m</argLine>
-    </properties>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>joda-time</groupId>
@@ -116,6 +116,11 @@
 			<artifactId>rxjava</artifactId>
 			<version>1.0.10</version>
 			<scope />
+		</dependency>
+		<dependency>
+			<groupId>org.la4j</groupId>
+			<artifactId>la4j</artifactId>
+			<version>0.6.0</version>
 		</dependency>
 	</dependencies>
 

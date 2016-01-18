@@ -128,13 +128,16 @@ public class KNNClassifier {
     
     private int iterationIdx = -1;
     
-    private Object vt;
-    
     private int protoSizes;
     
     private int[] overlapsWithProtos;
     
     private int inputPatternSum;
+    
+    // Used by PCA
+    private double[][] vt;
+    private double[] mean;
+    
     
     ///////////////////////////////////////////////////////
     //                    Construction                   //
@@ -221,7 +224,7 @@ public class KNNClassifier {
             
             // Support SVD if it is on
             if(vt != null) {
-                inputPattern = ArrayUtils.dot(vt, ArrayUtils.subtract(minuend, subtrahend))
+                //inputPattern = ArrayUtils.dot(vt, ArrayUtils.d_sub(inputPattern, mean));
             }
             
             // Threshold the input, zeroing out entries that are too close to 0.

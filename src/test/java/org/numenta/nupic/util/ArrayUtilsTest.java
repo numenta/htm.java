@@ -62,10 +62,14 @@ public class ArrayUtilsTest {
         double[] da = { 2., 2., 2., 2. };
         double[] d_expected = { 1.5, 1.5, 1.5, 1.5};
         assertTrue(Arrays.equals(d_expected, ArrayUtils.d_sub(da, 0.5)));
+        
+        da = new double[] { 2., 2., 2., 2. };
+        double[] sa = new double[] { 1., 1., 1., 1. };
+        assertTrue(Arrays.equals(sa, ArrayUtils.d_sub(da, sa)));
     }
     
     @Test
-    public void testTranspose() {
+    public void testTranspose_int() {
         int[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
         int[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };
         
@@ -84,7 +88,26 @@ public class ArrayUtilsTest {
     }
     
     @Test
-    public void testDot() {
+    public void testTranspose_double() {
+        double[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
+        double[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };
+        
+        double[][] result = ArrayUtils.transpose(a);
+        for(int i = 0;i < expected.length;i++) {
+            for(int j = 0;j < expected[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j], 0.);
+            }
+        }
+        
+        double[][] zero = { {} };
+        expected = new double[0][0];
+        result = ArrayUtils.transpose(zero);
+        assertEquals(expected.length, result.length);
+        assertEquals(0, result.length);
+    }
+    
+    @Test
+    public void testDot_int() {
         int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
         int[][] b = new int[][] { { 1, 1 }, { 1, 1 } };
         
@@ -115,6 +138,52 @@ public class ArrayUtilsTest {
             assertTrue(e.getClass().equals(IllegalArgumentException.class));
             assertEquals("Matrix inner dimensions must agree.", e.getMessage());
         }
+        
+        // Test 2D.1d
+        a = new int[][] { { 1, 2 }, { 3, 4 } };
+        int[] b2 = new int[] { 2, 2 };
+        int[] result = ArrayUtils.dot(a, b2);
+        assertTrue(Arrays.equals(new int[] { 6, 14 }, result));
+    }
+    
+    @Test
+    public void testDot_double() {
+        double[][] a = new double[][] { { 1., 2. }, { 3., 4. } };
+        double[][] b = new double[][] { { 1., 1. }, { 1., 1. } };
+        
+        double[][] c = ArrayUtils.dot(a, b);
+        
+        assertEquals(3, c[0][0], 0.);
+        assertEquals(3, c[0][1], 0.);
+        assertEquals(7, c[1][0], 0.);
+        assertEquals(7, c[1][1], 0.);
+        
+        // Single dimension
+        double[][] x = new double[][] { { 2., 2., 2. } };
+        b = new double[][] { { 3. }, { 3. }, { 3. } };
+        
+        c = ArrayUtils.dot(x, b);
+        
+        assertTrue(c.length == 1);
+        assertTrue(c[0].length == 1);
+        assertEquals(c[0][0], 18., 0.);
+        
+        
+        // Ensure un-aligned dimensions get reported
+        b = new double[][] { { 0., 0. }, { 0., 0. }, { 0., 0. } };
+        try {
+            ArrayUtils.dot(a, b);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().equals(IllegalArgumentException.class));
+            assertEquals("Matrix inner dimensions must agree.", e.getMessage());
+        }
+        
+        // Test 2D.1d
+        a = new double[][] { { 1., 2. }, { 3., 4. } };
+        double[] b2 = new double[] { 2., 2. };
+        double[] result = ArrayUtils.dot(a, b2);
+        assertTrue(Arrays.equals(new double[] { 6., 14. }, result));
     }
     
     @Test
