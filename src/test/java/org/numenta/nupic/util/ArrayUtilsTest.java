@@ -38,6 +38,33 @@ import org.junit.Test;
 public class ArrayUtilsTest {
     
     @Test
+    public void testAdd() {
+        int[] ia = { 1, 1, 1, 1 };
+        int[] expected = { 2, 2, 2, 2};
+        assertTrue(Arrays.equals(expected, ArrayUtils.add(ia, 1)));
+        
+        // add one array to another
+        expected = new int[] { 4, 4, 4, 4 };
+        assertTrue(Arrays.equals(expected, ArrayUtils.add(ia, ia)));
+        
+        ///////// double version //////////
+        double[] da = { 1., 1., 1., 1. };
+        double[] d_expected = { 2., 2., 2., 2.};
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_add(da, 1.)));
+        
+        // add one array to another
+        d_expected = new double[] { 4., 4., 4., 4. };
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_add(da, da)));
+    }
+    
+    @Test
+    public void testDSubtract() {
+        double[] da = { 2., 2., 2., 2. };
+        double[] d_expected = { 1.5, 1.5, 1.5, 1.5};
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_sub(da, 0.5)));
+    }
+    
+    @Test
     public void testTranspose() {
         int[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
         int[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };

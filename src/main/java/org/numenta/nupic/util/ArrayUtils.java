@@ -958,7 +958,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-
+    
     /**
      * Subtracts the contents of the first argument from the last argument's list.
      *
@@ -1033,6 +1033,8 @@ public class ArrayUtils {
     /**
      * Returns the passed in array with every value being altered
      * by the addition of the specified amount.
+     * 
+     * Warning: This method mutates original array
      *
      * @param arr
      * @param amount
@@ -1049,12 +1051,14 @@ public class ArrayUtils {
      * Returns the passed in array with every value being altered
      * by the addition of the specified double amount at the same
      * index
+     * 
+     * Warning: This method mutates original array
      *
      * @param arr
      * @param amount
      * @return
      */
-    public static int[] i_add(int[] arr, int[] amount) {
+    public static int[] add(int[] arr, int[] amount) {
         for (int i = 0; i < arr.length; i++) {
             arr[i] += amount[i];
         }
@@ -1065,6 +1069,8 @@ public class ArrayUtils {
      * Returns the passed in array with every value being altered
      * by the addition of the specified double amount at the same
      * index
+     * 
+     * Warning: This method mutates original array
      *
      * @param arr
      * @param amount
@@ -1080,6 +1086,8 @@ public class ArrayUtils {
     /**
      * Returns the passed in array with every value being altered
      * by the addition of the specified double amount
+     * 
+     * Warning: This method mutates original array
      *
      * @param arr
      * @param amount
@@ -1088,6 +1096,21 @@ public class ArrayUtils {
     public static double[] d_add(double[] arr, double amount) {
         for (int i = 0; i < arr.length; i++) {
             arr[i] += amount;
+        }
+        return arr;
+    }
+    
+    /**
+     * Returns the passed in array with every value being altered
+     * by the subtraction of the specified double amount
+     *
+     * @param arr
+     * @param amount
+     * @return
+     */
+    public static double[] d_sub(double[] arr, double amount) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] -= amount;
         }
         return arr;
     }

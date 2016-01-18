@@ -221,7 +221,7 @@ public class KNNClassifier {
             
             // Support SVD if it is on
             if(vt != null) {
-                
+                inputPattern = ArrayUtils.dot(vt, ArrayUtils.subtract(minuend, subtrahend))
             }
             
             // Threshold the input, zeroing out entries that are too close to 0.
