@@ -370,6 +370,17 @@ public class ArrayUtilsTest {
     }
     
     @Test
+    public void testSubst_doubles() {
+        double[] original = new double[] { 30, 30, 30, 30, 30 };
+        double[] substitutes = new double[] { 0, 1, 2, 3, 4 };
+        int[] substInds = new int[] { 4, 1, 3 };
+        
+        double[] expected = { 30, 1, 30, 3, 4 };
+        
+        assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+    }
+    
+    @Test
     public void testMaxIndex() {
         int max = ArrayUtils.maxIndex(new int[] { 2, 4, 5 });
         assertEquals(39, max);
@@ -396,11 +407,11 @@ public class ArrayUtilsTest {
         assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
         
         // Test double version
-        double[] d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
-        assertTrue(Arrays.equals(new double[] {4, 1, 2}, d_args));
+        int[] d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2}, d_args));
         
         d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, -1, 3);
-        assertTrue(Arrays.equals(new double[] {4, 1, 2, 3, 0}, d_args));
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, d_args));
     }
     
     @Test

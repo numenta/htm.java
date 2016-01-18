@@ -479,13 +479,13 @@ public class ArrayUtils {
      * 
      * @see #argsort(int[])
      */
-    public static double[] argsort(double[] in, int start, int end) {
+    public static int[] argsort(double[] in, int start, int end) {
         if(start == -1 || end == -1) {
-            return DoubleStream.of(in).sorted().map(i -> 
+            return DoubleStream.of(in).sorted().mapToInt(i -> 
             Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i)).toArray();
         }
 
-        return DoubleStream.of(in).sorted().map(i -> 
+        return DoubleStream.of(in).sorted().mapToInt(i -> 
         Arrays.stream(in).boxed().collect(Collectors.toList()).indexOf(i))
         .skip(start).limit(end).toArray();
     }
@@ -1420,9 +1420,24 @@ public class ArrayUtils {
      * @return  a new array with the specified indexes replaced with "substitutes"
      */
     public static int[] subst(int[] source, int[] substitutes, int[] substInds) {
-        List<Integer> l = Arrays.stream(substInds).boxed().collect(Collectors.toList());
+        TIntHashSet h = new TIntHashSet(substInds);
         return IntStream.range(0, source.length).map(
-                        i -> l.indexOf(i) == -1 ? source[i] : substitutes[i]).toArray();
+            i -> h.contains(i) ? substitutes[i] : source[i]).toArray();
+    }
+    
+    /**
+     * Returns a new array containing the source array contents with 
+     * substitutions from "substitutes" whose indexes reside in "substInds".
+     * 
+     * @param source        the original array
+     * @param substitutes   the replacements whose indexes must be in substInds to be used.
+     * @param substInds     the indexes of "substitutes" to replace in "source"
+     * @return  a new array with the specified indexes replaced with "substitutes"
+     */
+    public static double[] subst(double[] source, double[] substitutes, int[] substInds) {
+        TIntHashSet h = new TIntHashSet(substInds);
+        return IntStream.range(0, source.length).mapToDouble(
+            i -> h.contains(i) ? substitutes[i] : source[i]).toArray();
     }
 
     /**

@@ -3,6 +3,8 @@ package org.numenta.nupic.algorithms;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.numenta.nupic.Constants;
 import org.numenta.nupic.DistanceMethod;
@@ -103,6 +105,39 @@ public class KNNClassifierTest {
         assertEquals(30, knn.getMaxStoredPatterns());
         assertTrue(knn.isReplaceDuplicates());
         assertEquals(32, knn.getCellsPerCol());
+    }
+    
+    @Test
+    public void sparsifyVector() {
+        Parameters p = Parameters.getKNNDefaultParameters();
+        p.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
+        p.setParameterByKey(KEY.DISTANCE_NORM, 2.0);
+        
+        KNNClassifier classifier = initClassifier(p);
+        double[] inputPattern = { 0, 1, 3, 7, 11 };
+        double[] outputPattern = classifier.sparsifyVector(inputPattern, true);
+        assertTrue(Arrays.equals(inputPattern, outputPattern));
+        
+        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
+        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
+        classifier = initClassifier(p);
+        outputPattern = classifier.sparsifyVector(inputPattern, true);
+        assertTrue(Arrays.equals(new double[] { 0, 0, 3, 7, 11 }, outputPattern));
+        
+        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
+        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
+        p.setParameterByKey(KEY.NUM_WINNERS, 2);
+        classifier = initClassifier(p);
+        outputPattern = classifier.sparsifyVector(inputPattern, true);
+        assertTrue(Arrays.equals(new double[] { 0, 0, 0, 0, 0 }, outputPattern));
+        
+        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
+        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
+        p.setParameterByKey(KEY.DO_BINARIZATION, true);
+        p.clearParameter(KEY.NUM_WINNERS);
+        classifier = initClassifier(p);
+        outputPattern = classifier.sparsifyVector(inputPattern, true);
+        assertTrue(Arrays.equals(new double[] { 0., 0., 1., 1., 1. }, outputPattern));
     }
     
     @Test

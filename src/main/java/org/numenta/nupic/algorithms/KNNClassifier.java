@@ -224,7 +224,7 @@ public class KNNClassifier {
             
             // Support SVD if it is on
             if(vt != null) {
-                //inputPattern = ArrayUtils.dot(vt, ArrayUtils.d_sub(inputPattern, mean));
+                inputPattern = ArrayUtils.dot(vt, ArrayUtils.d_sub(inputPattern, mean));
             }
             
             // Threshold the input, zeroing out entries that are too close to 0.
@@ -265,9 +265,14 @@ public class KNNClassifier {
         // Do winner-take-all
         if(doWinners) {
             if(numWinners > 0 && numWinners < DoubleStream.of(inputPattern).filter(i -> i > 0).count()) {
-                double[] oa = (double[])Array.newInstance(double[].class, ArrayUtils.shape(inputPattern));
-                double[] sorted = ArrayUtils.argsort(oa, 0, numWinners);
+                double[] sparseInput = (double[])Array.newInstance(double.class, ArrayUtils.shape(inputPattern));
+                int[] sorted = ArrayUtils.argsort(retVal, 0, numWinners);
+                retVal = ArrayUtils.subst(sparseInput, inputPattern, sorted);
             }
+        }
+        
+        if(doBinarization) {
+            retVal = Arrays.stream(retVal).map(d -> d > 0 ? 1. : 0.).toArray();
         }
         return retVal;
     }
