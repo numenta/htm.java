@@ -361,6 +361,101 @@ public class ArrayUtils {
         }
         return result;
     }
+    
+    /**
+     * Takes a two-dimensional array of r rows and c columns and reshapes it to
+     * have (r*c)/n by n columns. The value in location [i][j] of the input array
+     * is copied into location [j][i] of the new array.
+     * 
+     * @param array The array of values to be reshaped.
+     * @param n The number of columns in the created array.
+     * @return The new (r*c)/n by n array.
+     * @throws IllegalArgumentException If r*c  is not evenly divisible by n.
+     */
+    public static double[][] reshape(double[][] array, int n) throws IllegalArgumentException {
+        int r = array.length;
+        if (r == 0) {
+            return new double[0][0]; // Special case: zero-length array
+        }
+        if ((array.length * array[0].length) % n != 0) {
+            int size = array.length * array[0].length;
+            throw new IllegalArgumentException(size + " is not evenly divisible by " + n);
+        }
+        int c = array[0].length;
+        double[][] result = new double[(r * c) / n][n];
+        int ii = 0;
+        int jj = 0;
+
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                result[ii][jj] = array[i][j];
+                jj++;
+                if (jj == n) {
+                    jj = 0;
+                    ii++;
+                }
+            }
+        }
+        return result;
+    }
+   
+    /**
+     * Returns an array of minimum values collected from the specified axis.
+     * <p>
+     * <pre>
+     * int[] a = min(new int[][] { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } }, 0)
+     * output:
+     * a = { 6, 2, 3, 4, 5 }
+     * 
+     * int[] a = min(new int[][] { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } }, 1)
+     * output:
+     * a = { 6, 2 }
+     * 
+     * @param arr
+     * @param axis
+     * @return
+     */
+    public static int[] min(int[][] arr, int axis) {
+        switch(axis) {
+            case 0:
+                return IntStream.range(0, arr[0].length)
+                    .map(i -> Arrays.stream(arr).mapToInt(ia -> ia[i]).min().getAsInt()).toArray();
+            case 1:
+                return Arrays.stream(arr).mapToInt(i -> Arrays.stream(i).min().getAsInt()).toArray();
+            
+            default: throw new IllegalArgumentException("axis must be either '0' or '1'");
+        }
+    }
+    
+    /**
+     * Returns an array of minimum values collected from the specified axis.
+     * <p>
+     * <pre>
+     * // axis = 0
+     * double[] a = min(new double[][] { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } }, 0)
+     * output:
+     * a = { 6, 2, 3, 4, 5 }
+     * 
+     * // axis = 1
+     * double[] a = min(new double[][] { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } }, 1)
+     * output:
+     * a = { 2, 6 }
+     * </pre>
+     * @param arr
+     * @param axis
+     * @return
+     */
+    public static double[] min(double[][] arr, int axis) {
+        switch(axis) {
+            case 0:
+                return IntStream.range(0, arr[0].length)
+                    .mapToDouble(i -> Arrays.stream(arr).mapToDouble(ia -> ia[i]).min().getAsDouble()).toArray();
+            case 1:
+                return Arrays.stream(arr).mapToDouble(i -> Arrays.stream(i).min().getAsDouble()).toArray();
+            
+            default: throw new IllegalArgumentException("axis must be either '0' or '1'");
+        }
+    }
 
     /**
      * Returns an int[] with the dimensions of the input.
@@ -1540,6 +1635,23 @@ public class ArrayUtils {
      * @param setTo  the value to set the indexes to
      */
     public static void setRangeTo(int[] values, int start, int stop, int setTo) {
+        stop = stop < 0 ? values.length + stop : stop;
+        for (int i = start; i < stop; i++) {
+            values[i] = setTo;
+        }
+    }
+    
+    /**
+     * Sets the values in range start to stop to the value specified. If
+     * stop &lt; 0, then stop indicates the number of places counting from the
+     * length of "values" back.
+     *
+     * @param values the array to alter
+     * @param start  the start index (inclusive)
+     * @param stop   the end index (exclusive)
+     * @param setTo  the value to set the indexes to
+     */
+    public static void setRangeTo(double[] values, int start, int stop, double setTo) {
         stop = stop < 0 ? values.length + stop : stop;
         for (int i = start; i < stop; i++) {
             values[i] = setTo;

@@ -236,8 +236,23 @@ public class KNNClassifier {
             
             addRow = true;
             
+            // If given the layout of the cells, then turn on the logic that stores
+            // only the start cell for bursting columns
             if(cellsPerCol >= 1) {
-                System.out.println("vec = " + Arrays.toString(sparsifyVector(inputPattern, false)));
+                double[] burstingCols = ArrayUtils.min(
+                    ArrayUtils.reshape(new double[][] { thresholdedInput }, cellsPerCol), 1);
+                
+                burstingCols = ArrayUtils.toDoubleArray(
+                    ArrayUtils.where(burstingCols, ArrayUtils.GREATER_THAN_0));
+                
+                for(double col : burstingCols) {
+                    ArrayUtils.setRangeTo(
+                        thresholdedInput, 
+                        (((int)col) * cellsPerCol) + 1, 
+                        (((int)col) * cellsPerCol) + cellsPerCol, 
+                        0
+                    );
+                }
             }
         }
         

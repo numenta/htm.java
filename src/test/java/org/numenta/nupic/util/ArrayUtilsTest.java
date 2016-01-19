@@ -224,7 +224,7 @@ public class ArrayUtilsTest {
     }
     
     @Test 
-    public void testReshape() {
+    public void testReshape_int() {
         int[][] test = {
             { 0, 1, 2, 3, 4, 5 },
             { 6, 7, 8, 9, 10, 11 }
@@ -253,13 +253,54 @@ public class ArrayUtilsTest {
         }
         
         // Test zero-length case
-        int[] result4 = ArrayUtils.unravel(new int[0][]);
+        int[][] result4 = ArrayUtils.reshape(new int[0][], 5);
         assertNotNull(result4);
         assertTrue(result4.length == 0);
         
         // Test empty array arg
         test = new int[][]{};
         expected = new int[0][0];
+        result = ArrayUtils.reshape(test, 1);
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    @Test 
+    public void testReshape_double() {
+        double[][] test = {
+            { 0, 1, 2, 3, 4, 5 },
+            { 6, 7, 8, 9, 10, 11 }
+        };
+        
+        double[][] expected = {
+            { 0, 1, 2 },
+            { 3, 4, 5 },
+            { 6, 7, 8 },
+            { 9, 10, 11 }
+        };
+        
+        double[][] result = ArrayUtils.reshape(test, 3);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j], 0.);
+            }
+        }
+        
+        // Unhappy case
+        try {
+            ArrayUtils.reshape(test, 5);
+        }catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+            assertEquals("12 is not evenly divisible by 5", e.getMessage());
+        }
+        
+        // Test zero-length case
+        double[][] result4 = ArrayUtils.reshape(new double[0][], 5);
+        assertNotNull(result4);
+        assertTrue(result4.length == 0);
+        
+        // Test empty array arg
+        test = new double[][]{};
+        expected = new double[0][0];
         result = ArrayUtils.reshape(test, 1);
         assertTrue(Arrays.equals(expected, result));
     }
@@ -378,6 +419,74 @@ public class ArrayUtilsTest {
         double[] expected = { 30, 1, 30, 3, 4 };
         
         assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+    }
+    
+    @Test
+    public void testMin_int() {
+        int[][] protoA = { { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10} };
+        int[][] resh = ArrayUtils.reshape(protoA, 5);
+        int[] a = ArrayUtils.min(resh, 0);
+        int[] b = ArrayUtils.min(resh, 1);
+        assertTrue(Arrays.equals(new int[] { 6, 2, 3, 4, 5 }, a));
+        assertTrue(Arrays.equals(new int[] { 2, 6 }, b));
+        
+        try {
+            ArrayUtils.min(resh, 3);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("axis must be either '0' or '1'", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testMin_double() {
+        double[][] protoA = { { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10} };
+        double[][] resh = ArrayUtils.reshape(protoA, 5);
+        double[] a = ArrayUtils.min(resh, 0);
+        double[] b = ArrayUtils.min(resh, 1);
+        assertTrue(Arrays.equals(new double[] { 6, 2, 3, 4, 5 }, a));
+        assertTrue(Arrays.equals(new double[] { 2, 6 }, b));
+        
+        try {
+            ArrayUtils.min(resh, 3);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("axis must be either '0' or '1'", e.getMessage());
+        }
+    }
+    
+    /**
+     * This test has two purposes: 
+     * 1. Test specific branch in KNNClassifier learn() method
+     * 2. Test its name sake: ArrayUtils.setRangeTo()
+     */
+    @Test
+    public void testSetRangeTo() {
+        double[] thresholdedInput = { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        int cellsPerCol = 5;
+        
+        // Make thresholdedInput into 2D array for calling ArrayUtils.min()
+        // thresholdedInput = { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } };
+        double[][] burstingCols = ArrayUtils.reshape(new double[][] { thresholdedInput }, cellsPerCol);
+        // get minimum values in each row = { 2, 6 }
+        double[] bc = ArrayUtils.min(burstingCols, 1);
+        // get indexes of min = { 0, 1 }
+        bc = ArrayUtils.toDoubleArray(ArrayUtils.where(bc, ArrayUtils.GREATER_THAN_0));
+       
+        // Use produced indexes to test setRangeTo in complicated manner, 
+        // setting each value not in the calculated indexes to "0"
+        for(double col : bc) {
+            ArrayUtils.setRangeTo(
+                thresholdedInput, 
+                (((int)col) * cellsPerCol) + 1, 
+                (((int)col) * cellsPerCol) + cellsPerCol, 
+                0
+            );
+        }
+        // Every index set to zero except range start - 1 and stop
+        assertTrue(Arrays.equals(new double[] { 49, 0, 0, 0, 0, 6, 0, 0, 0, 0 }, thresholdedInput));
     }
     
     @Test
