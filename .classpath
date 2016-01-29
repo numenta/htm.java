@@ -17,7 +17,6 @@
 	<classpathentry kind="lib" path="libs/rxjava-1.0.10.jar" sourcepath="/Users/cogmission/Resources/RxJava/rxjava-1.0.10-sources.jar"/>
 	<classpathentry kind="lib" path="libs/slf4j-api-1.7.10.jar"/>
 	<classpathentry kind="lib" path="libs/trove-3.1a1.jar" sourcepath="/Users/cogmission/Resources/trove/3.1a1/trove-3.1a1-src.jar"/>
-	<classpathentry kind="lib" path="libs/mtj-1.0.4.jar" sourcepath="/Users/cogmission/Resources/mtj/mtj-1.0.4-sources.jar"/>
 	<classpathentry kind="lib" path="libs/algorithmfoundry-shade-culled-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
