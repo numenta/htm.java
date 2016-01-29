@@ -100,7 +100,7 @@ public class Parameters {
         defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
         defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
-        defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
+        defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
         defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
