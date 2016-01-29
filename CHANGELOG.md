@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased [0.6.6-SNAPSHOT]
 #### Removed
+* [[PR #384](https://github.com/numenta/htm.java/pull/384)] Removed obsolete demo jars which are in htm.java-examples and don't need to be here.
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
