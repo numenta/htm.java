@@ -117,11 +117,6 @@
 			<version>1.0.10</version>
 			<scope />
 		</dependency>
-		<dependency>
-			<groupId>org.la4j</groupId>
-			<artifactId>la4j</artifactId>
-			<version>0.6.0</version>
-		</dependency>
 	</dependencies>
 
 	<build>

@@ -3,22 +3,21 @@ package org.numenta.nupic.util;
 
 
 public class NearestNeighbor {
-    //private LinkedList
-
-    public NearestNeighbor(int[] dimensions) {
-        
-    }
+    
+    private boolean isSparse;
+    
     
     /**
-     * Creates a new {@code NearestNeighbor} with the specified
-     * rows. Rows must be 0 or greater, and cols must be greater
-     * than zero (i.e. NearestNeighbor(0, 40) is ok).
-     * 
-     * @param rows      (optional) number of rows
-     * @param cols      number of columns
+     * Constructs a new {@code NearestNeighbor} matrix
+     * @param inputWidth
+     * @param isSparse
      */
-    public NearestNeighbor(int rows, int cols) {
+    public NearestNeighbor(int inputWidth, boolean isSparse) {
+        if(inputWidth < 1) {
+            throw new IllegalArgumentException("Input width must be greater than 0.");
+        }
         
+        this.isSparse = isSparse;   
     }
     
     public double[] vecLpDist(double distanceNorm, int[] inputPattern, boolean takeRoot) {
@@ -35,4 +34,6 @@ public class NearestNeighbor {
         }
         return results;
     }
+    
+    
 }

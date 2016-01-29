@@ -23,11 +23,9 @@ package org.numenta.nupic.algorithms;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.numenta.nupic.Constants;
 import org.numenta.nupic.DistanceMethod;
@@ -189,7 +187,7 @@ public class KNNClassifier {
      *                          
      * @param sparseSpec        If 0, the input pattern is a dense representation. If
      *                          isSparse > 0, the input pattern is a list of non-zero indices and
-     *                          isSparse is the length of the dense representation
+     *                          isSparse is the length of the sparse representation
      *                          
      * @param rowID             Computed internally if not specified (i.e. for tests)
      *                          
@@ -198,6 +196,7 @@ public class KNNClassifier {
     public int learn(double[] inputPattern, int inputCategory, int partitionId, int sparseSpec, int rowID) {
         int inputWidth = 0;
         boolean addRow = false;
+        double[] thresholdedInput = null;
         
         if(rowID == -1) rowID = iterationIdx;
         
@@ -219,7 +218,7 @@ public class KNNClassifier {
             
             // Allocate storage if this is the first training vector
             if(memory == null) {
-                memory = new NearestNeighbor(0, inputWidth);
+                memory = new NearestNeighbor(inputWidth, sparseSpec == 1);
             }
             
             // Support SVD if it is on
@@ -229,7 +228,6 @@ public class KNNClassifier {
             
             // Threshold the input, zeroing out entries that are too close to 0.
             //  This is only done if we are given a dense input.
-            double[] thresholdedInput = null;
             if(sparseSpec == 0) {
                 thresholdedInput = sparsifyVector(inputPattern, true);
             }
@@ -253,6 +251,17 @@ public class KNNClassifier {
                         0
                     );
                 }
+            }
+        }
+        
+        if(addRow) {
+            protoSizes = -1;  // Need to recompute
+            if(sparseSpec == 0) {
+                //memory.addRow(thresholdedInput);
+            }else{
+//                memory.addRowNZ(
+//                    inputPattern, DoubleStream.generate(() -> 1)
+//                        .limit(inputPattern.length).toArray());
             }
         }
         
