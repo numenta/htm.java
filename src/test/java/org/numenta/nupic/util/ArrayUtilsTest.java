@@ -38,6 +38,44 @@ import static org.junit.Assert.fail;
 public class ArrayUtilsTest {
     
     @Test
+    public void testToBytes() {
+        boolean[] ba = { true, true, };
+        byte[] bytes = ArrayUtils.toBytes(ba);
+        assertEquals(0, bytes.length);
+        
+        // 8 positions -> binary 1
+        ba = new boolean[] { false, false, false, false, false, false, false, true };
+        bytes = ArrayUtils.toBytes(ba);
+        assertEquals(1, bytes.length);
+        assertEquals(1, bytes[0]);
+        
+        // 8 positions -> binary 3
+        ba = new boolean[] { false, false, false, false, false, false, true, true };
+        bytes = ArrayUtils.toBytes(ba);
+        assertEquals(1, bytes.length);
+        assertEquals(3, bytes[0]);
+        
+        // 9 positions -> squeezes last bit out
+        ba = new boolean[] { false, false, false, false, false, false, false, true, true };
+        bytes = ArrayUtils.toBytes(ba);
+        assertEquals(1, bytes.length);
+        assertEquals(1, bytes[0]);
+        
+        // 10 positions -> squeeze last to bits out
+        ba = new boolean[] { false, false, false, false, false, false, false, false, true, true };
+        bytes = ArrayUtils.toBytes(ba);
+        assertEquals(1, bytes.length);
+        assertEquals(0, bytes[0]);
+        
+        // 16 positions -> enough for two bytes, array length increases to 2
+        ba = new boolean[] { false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true };
+        bytes = ArrayUtils.toBytes(ba);
+        assertEquals(2, bytes.length);
+        assertEquals(0, bytes[0]);
+        assertEquals(3, bytes[1]);
+    }
+    
+    @Test
     public void testSubst() {
         int[] original = new int[] { 30, 30, 30, 30, 30 };
         int[] substitutes = new int[] { 0, 1, 2, 3, 4 };
