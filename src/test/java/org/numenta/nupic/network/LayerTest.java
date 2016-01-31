@@ -57,11 +57,19 @@ import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.spi.FilterReply;
+import ch.qos.logback.core.util.StatusPrinter;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -1393,4 +1401,54 @@ public class LayerTest {
         l2.setRegion(r2);
         assertFalse(l.equals(l2));
     }
+    
+    @Test
+    public void testInferInputDimensions() {
+        Parameters p = Parameters.getAllDefaultParameters();
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        int[] dims = l.inferInputDimensions(16384, 2);
+        assertTrue(Arrays.equals(new int[] { 128, 128 }, dims));
+        
+        dims = l.inferInputDimensions(8000, 3);
+        assertTrue(Arrays.equals(new int[] { 20, 20, 20 }, dims));
+        
+        // Now test non-square dimensions
+        dims = l.inferInputDimensions(450, 2);
+        assertTrue(Arrays.equals(new int[] { 1, 450 }, dims));
+    }
+    
+    String filterMessage = null;
+    @Test
+    public void testExplicitCloseFailure() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new SpatialPooler())
+                    .close()));
+        
+        // Set up a log filter to grab the next message.
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        StatusPrinter.print(lc);
+        lc.addTurboFilter(new TurboFilter() {
+            @Override
+            public FilterReply decide(Marker arg0, Logger arg1, Level arg2, String arg3, Object[] arg4, Throwable arg5) {
+                filterMessage = arg3;
+                return FilterReply.ACCEPT;
+            }
+        });
+        
+        network.lookup("r1").lookup("2").close();
+        
+        // Test that the close() method exited after logging the correct message
+        assertEquals("Close called on Layer r1:2 which is already closed.", filterMessage);
+        // Make sure not to slow the entire test phase down by removing the filter
+        lc.resetTurboFilterList();
+    }
+    
 }

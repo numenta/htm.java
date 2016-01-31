@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.network;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -536,16 +538,22 @@ public class Layer<T> {
      * 
      * @param inputWidth        the flat input width of an {@link Encoder}'s output or the
      *                          vector used as input to the {@link SpatialPooler}
-     * @param numColumnDims     a number specifying the number of column dimensions that
+     * @param numDims           a number specifying the number of dimensions that
      *                          should be returned.
      * @return
      */
-    public int[] inferInputDimensions(int inputWidth, int numColumnDims) {
+    public int[] inferInputDimensions(int inputWidth, int numDims) {
         double flatSize = inputWidth;
-        double numColDims = numColumnDims;
-        double sliceArrangement = Math.pow(flatSize, 1 / numColDims);
-        double remainder = sliceArrangement % (int)sliceArrangement;
+        double numColDims = numDims;
         int[] retVal = new int[(int)numColDims];
+        
+        BigDecimal log = new BigDecimal(Math.log10(flatSize));
+        BigDecimal dimensions = new BigDecimal(numColDims);
+        double sliceArrangement = new BigDecimal(
+            Math.pow(10, log.divide(dimensions).doubleValue()), 
+                MathContext.DECIMAL32).doubleValue();
+        double remainder = sliceArrangement % (int)sliceArrangement;
+        
         if(remainder > 0) {
             for(int i = 0;i < numColDims - 1;i++)
                 retVal[i] = 1;
