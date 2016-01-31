@@ -19,6 +19,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #386](https://github.com/numenta/htm.java/pull/386)] Added test for close() method in LayerTest
 * [[PR #378](https://github.com/numenta/htm.java/pull/378)] Added more utility methods to ArrayUtils in prep for KNNClassifier development
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Added new override of rightVecSumAtNZ() method to Matrix classes.
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Added "activeCells" field and to ManualInput.copy()
@@ -36,6 +37,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #370](https://github.com/numenta/htm.java/pull/370)] Changed Connections initialization to be able to specify RNG implementation from Parameters value.
 
 #### Fixed
+* [[PR #386](https://github.com/numenta/htm.java/pull/386)] Fixed floating point problem in Layer dimension inference
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Rooted out cause of codebase indeterminacy!
 * [[PR #360](https://github.com/numenta/htm.java/pull/360)] Fixed dayOfWeek to accept fractional values.
 * [[PR #362](https://github.com/numenta/htm.java/pull/362)] Fix for Generic Observable execution order. Fixes [Issue #363](https://github.com/numenta/htm.java/issues/363)
