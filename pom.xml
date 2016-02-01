@@ -120,6 +120,7 @@
 		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-core</artifactId>
+			<version>1.11.3</version>
 		</dependency>
 	</dependencies>
 
