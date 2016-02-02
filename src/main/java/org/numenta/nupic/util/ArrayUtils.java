@@ -1752,6 +1752,24 @@ public class ArrayUtils {
     }
     
     /**
+     * Returns a byte array transformed from the specified boolean array.
+     * @param input     the boolean array to transform to a byte array
+     * @return          a byte array
+     */
+    public static byte[] toBytes(boolean[] input) {
+        byte[] toReturn = new byte[input.length / 8];
+        for (int entry = 0; entry < toReturn.length; entry++) {
+            for (int bit = 0; bit < 8; bit++) {
+                if (input[entry * 8 + bit]) {
+                    toReturn[entry] |= (128 >> bit);
+                }
+            }
+        }
+
+        return toReturn;
+    } 
+    
+    /**
      * Converts an array of Integer objects to an array of its
      * primitive form.
      * 
