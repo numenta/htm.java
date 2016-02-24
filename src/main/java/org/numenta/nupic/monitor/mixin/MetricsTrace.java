@@ -20,7 +20,7 @@
  * ---------------------------------------------------------------------
  */
 package org.numenta.nupic.monitor.mixin;
-
+import java.util.Locale;
 /**
  * Each entry contains {@link Metrics} (for example metric for # of predicted => active
  * cells).
