@@ -210,7 +210,7 @@ public class JavaNetworkSerializationTest {
         assertTrue(p.keys().size() == serialized.keys().size());
         assertTrue(DeepEquals.deepEquals(p, serialized));
         for(KEY k : p.keys()) {
-            test(serialized.getParameterByKey(k), p.getParameterByKey(k));
+            deepCompare(serialized.getParameterByKey(k), p.getParameterByKey(k));
         }
     }
     
@@ -236,10 +236,10 @@ public class JavaNetworkSerializationTest {
         serialized.printParameters();
         int cellCount = con.getCellsPerColumn();
         for(int i = 0;i < con.getNumColumns();i++) {
-            test(con.getColumn(i), serialized.getColumn(i));
+            deepCompare(con.getColumn(i), serialized.getColumn(i));
             for(int j = 0;j < cellCount;j++) {
                 Cell cell = serialized.getCell(i * cellCount + j);
-                test(con.getCell(i * cellCount + j), cell);
+                deepCompare(con.getCell(i * cellCount + j), cell);
             }
         }
     }
@@ -264,7 +264,7 @@ public class JavaNetworkSerializationTest {
         
         byte[] dda = config.asByteArray(dd);
         DistalDendrite ddo = (DistalDendrite)config.asObject(dda);
-        test(dd, ddo);
+        deepCompare(dd, ddo);
         List<Synapse> l1 = dd.getAllSynapses(cn);
         List<Synapse> l2 = ddo.getAllSynapses(cn);
         assertTrue(l2.equals(l1));
@@ -345,7 +345,7 @@ public class JavaNetworkSerializationTest {
         
         Set<Cell> serialActiveCells = serialized.getCellSet(new int[] { 733, 37, 974, 23 });
         
-        test(activeCells, serialActiveCells);
+        deepCompare(activeCells, serialActiveCells);
         
         result = tm.getBestMatchingSegment(serialized, serialized.getCell(0), serialActiveCells);
         assertEquals(dd, result.bestSegment);
@@ -364,7 +364,7 @@ public class JavaNetworkSerializationTest {
         assertEquals(0, result.numActiveSynapses);
         
         boolean b = DeepEquals.deepEquals(cn, serialized);
-        test(cn, serialized);
+        deepCompare(cn, serialized);
         assertTrue(b);
         
         //{0=[synapse: [ synIdx=0, inIdx=23, sgmtIdx=0, srcCellIdx=23 ], synapse: [ synIdx=1, inIdx=37, sgmtIdx=0, srcCellIdx=37 ], synapse: [ synIdx=2, inIdx=477, sgmtIdx=0, srcCellIdx=477 ]], 1=[synapse: [ synIdx=3, inIdx=49, sgmtIdx=1, srcCellIdx=49 ], synapse: [ synIdx=4, inIdx=3, sgmtIdx=1, srcCellIdx=3 ]], 2=[synapse: [ synIdx=5, inIdx=733, sgmtIdx=2, srcCellIdx=733 ]], 3=[synapse: [ synIdx=6, inIdx=486, sgmtIdx=3, srcCellIdx=486 ]]}
@@ -372,7 +372,23 @@ public class JavaNetworkSerializationTest {
         
     }
     
-    private void test(Object obj1, Object obj2) {
+    @Test
+    public void testThreadedPublisher() {
+        Network network = createAndRunTestNetwork();
+        Layer<?> l = network.lookup("r1").lookup("1");
+        Connections cn = l.getConnections();
+        Connections serializedConnections = (Connections)Network.getSerialConfig().asObject(Network.getSerialConfig().asByteArray(cn));
+        
+        Network network2 = createAndRunTestNetwork();
+        Layer<?> l2 = network2.lookup("r1").lookup("1");
+        Connections newCons = l2.getConnections();
+        
+        boolean b = DeepEquals.deepEquals(newCons, serializedConnections);
+        deepCompare(newCons, serializedConnections);
+        assertTrue(b);
+    }
+    
+    private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
@@ -381,8 +397,7 @@ public class JavaNetworkSerializationTest {
         }
     }
     
-    @Test
-    public void testThreadedPublisher() {
+    private Network createAndRunTestNetwork() {
         Publisher manual = Publisher.builder()
             .addHeader("dayOfWeek")
             .addHeader("darr")
@@ -448,9 +463,12 @@ public class JavaNetworkSerializationTest {
             l.getLayerThread().join();
             
             System.out.println(Arrays.toString(SDR.asCellIndices(l.getConnections().getActiveCells())));
+            
         }catch(Exception e) {
             assertEquals(InterruptedException.class, e.getClass());
         }
+       
+        return network;
     }
     
 }

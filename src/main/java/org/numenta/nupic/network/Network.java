@@ -158,6 +158,8 @@ public class Network {
     /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
     private static final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
     
+    //private static final Kryo kryo = new Kryo();
+    
     public enum Mode { MANUAL, AUTO, REACTIVE };
 
     private String name;
