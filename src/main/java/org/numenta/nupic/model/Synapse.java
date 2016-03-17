@@ -176,10 +176,6 @@ public class Synapse implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + inputIndex;
-        long temp;
-        temp = Double.doubleToLongBits(permanence);
-        result = prime * result + (int)(temp ^ (temp >>> 32));
-        result = prime * result + ((pool == null) ? 0 : pool.hashCode());
         result = prime * result + ((segment == null) ? 0 : segment.hashCode());
         result = prime * result + ((sourceCell == null) ? 0 : sourceCell.hashCode());
         result = prime * result + synapseIndex;
@@ -199,13 +195,6 @@ public class Synapse implements Serializable {
             return false;
         Synapse other = (Synapse)obj;
         if(inputIndex != other.inputIndex)
-            return false;
-        if(Double.doubleToLongBits(permanence) != Double.doubleToLongBits(other.permanence))
-            return false;
-        if(pool == null) {
-            if(other.pool != null)
-                return false;
-        } else if(!pool.equals(other.pool))
             return false;
         if(segment == null) {
             if(other.segment != null)

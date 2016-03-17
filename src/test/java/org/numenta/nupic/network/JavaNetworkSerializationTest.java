@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.numenta.nupic.Connections;
@@ -28,9 +27,9 @@ import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
 import org.nustaq.serialization.FSTConfiguration;
 
-import rx.Subscriber;
-
 import com.cedarsoftware.util.DeepEquals;
+
+import rx.Subscriber;
 
 
 public class JavaNetworkSerializationTest {
