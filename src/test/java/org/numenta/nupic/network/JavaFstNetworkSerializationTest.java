@@ -1,8 +1,11 @@
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,25 +17,28 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.SDR;
+import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
-import org.nustaq.serialization.FSTConfiguration;
+import org.numenta.nupic.util.MersenneTwister;
 
 import com.cedarsoftware.util.DeepEquals;
 
+import rx.Observer;
 import rx.Subscriber;
 
 
-public class JavaNetworkSerializationTest {
+public class JavaFstNetworkSerializationTest {
     
     @Test
     public void testRandom() {
@@ -190,6 +196,32 @@ public class JavaNetworkSerializationTest {
         return parameters;
     }
     
+    @Test
+    public void testGetSerializer() {
+        SerialConfig config = new SerialConfig(SERIAL_FILE_NAME, Scheme.FST);
+        NetworkSerializer<?> serializer = Network.serializer(config, false);
+        assertNotNull(serializer);
+        
+        NetworkSerializer<?> serializer2 = Network.serializer(config, false);
+        assertTrue(serializer == serializer2);
+        
+        NetworkSerializer<?> serializer3 = Network.serializer(config, true);
+        assertTrue(serializer != serializer3);
+        assertTrue(serializer2 != serializer3);
+        assertTrue(serializer == serializer2);
+    }
+    
+    @Test
+    public void testEnsurePathExists() {
+        SerialConfig config = new SerialConfig(Scheme.FST);
+        NetworkSerializer<?> serializer = Network.serializer(config, false);
+        
+        File f1 = new File(System.getProperty("user.home") + File.separator + "HTMNetwork" + File.separator + SERIAL_FILE_NAME);
+        assertTrue(f1.exists());
+        File f2 = serializer.getSerializedFile();
+        assertEquals(f1.getAbsolutePath(), f2.getAbsolutePath());
+    }
+    
     //////////////////////////////////////////////////////////////////
     //     First, Test Serialization of Each Object Individually    //
     //////////////////////////////////////////////////////////////////
@@ -198,18 +230,27 @@ public class JavaNetworkSerializationTest {
     @Test
     public void testSerializeParameters() {
         Parameters p = getParameters();
-        FSTConfiguration config = Network.getSerialConfig();
+        SerialConfig config = new SerialConfig("testSerializeParameters", Scheme.FST);
+        NetworkSerializer<Parameters> serializer = Network.serializer(config, false);
         
         // 1. serialize
-        byte[] data = config.asByteArray(p);
+        byte[] data = serializer.serialize(p);
         
         // 2. deserialize
-        Parameters serialized = (Parameters)config.asObject(data);
+        Parameters serialized = serializer.deSerialize(Parameters.class, data);
         
         assertTrue(p.keys().size() == serialized.keys().size());
         assertTrue(DeepEquals.deepEquals(p, serialized));
         for(KEY k : p.keys()) {
             deepCompare(serialized.getParameterByKey(k), p.getParameterByKey(k));
+        }
+        
+        // 3. reify from file
+        Parameters fromFile = serializer.deSerialize(Parameters.class, null);
+        assertTrue(p.keys().size() == fromFile.keys().size());
+        assertTrue(DeepEquals.deepEquals(p, fromFile));
+        for(KEY k : p.keys()) {
+            deepCompare(fromFile.getParameterByKey(k), p.getParameterByKey(k));
         }
     }
     
@@ -223,13 +264,14 @@ public class JavaNetworkSerializationTest {
         TemporalMemory tm = new TemporalMemory();
         tm.init(con);
         
-        FSTConfiguration config = Network.getSerialConfig();
+        SerialConfig config = new SerialConfig("testSerializeConnections", Scheme.FST);
+        NetworkSerializer<Connections> serializer = Network.serializer(config, false);
         
         // 1. serialize
-        byte[] data = config.asByteArray(con);
+        byte[] data = serializer.serialize(con);
         
         // 2. deserialize
-        Connections serialized = (Connections)config.asObject(data);
+        Connections serialized = serializer.deSerialize(Connections.class, data);
         assertTrue(DeepEquals.deepEquals(con, serialized));
         
         serialized.printParameters();
@@ -238,6 +280,17 @@ public class JavaNetworkSerializationTest {
             deepCompare(con.getColumn(i), serialized.getColumn(i));
             for(int j = 0;j < cellCount;j++) {
                 Cell cell = serialized.getCell(i * cellCount + j);
+                deepCompare(con.getCell(i * cellCount + j), cell);
+            }
+        }
+        
+        // 3. reify from file
+        Connections fromFile = serializer.deSerialize(Connections.class, null);
+        assertTrue(DeepEquals.deepEquals(con, fromFile));
+        for(int i = 0;i < con.getNumColumns();i++) {
+            deepCompare(con.getColumn(i), fromFile.getColumn(i));
+            for(int j = 0;j < cellCount;j++) {
+                Cell cell = fromFile.getCell(i * cellCount + j);
                 deepCompare(con.getCell(i * cellCount + j), cell);
             }
         }
@@ -254,15 +307,16 @@ public class JavaNetworkSerializationTest {
         // Init with default params defined in Connections.java default fields.
         tm.init(cn);
         
-        FSTConfiguration config = Network.getSerialConfig();
+        SerialConfig config = new SerialConfig("testMorePopulatedConnections", Scheme.FST);
+        NetworkSerializer<DistalDendrite> serializer = Network.serializer(config, false);
         
         DistalDendrite dd = cn.getCell(0).createSegment(cn);
         Synapse s0 = dd.createSynapse(cn, cn.getCell(23), 0.6);
         Synapse s1 = dd.createSynapse(cn, cn.getCell(37), 0.4);
         Synapse s2 = dd.createSynapse(cn, cn.getCell(477), 0.9);
         
-        byte[] dda = config.asByteArray(dd);
-        DistalDendrite ddo = (DistalDendrite)config.asObject(dda);
+        byte[] dda = serializer.serialize(dd);
+        DistalDendrite ddo = serializer.deSerialize(DistalDendrite.class, dda);
         deepCompare(dd, ddo);
         List<Synapse> l1 = dd.getAllSynapses(cn);
         List<Synapse> l2 = ddo.getAllSynapses(cn);
@@ -336,11 +390,14 @@ public class JavaNetworkSerializationTest {
         assertEquals(null, result.bestSegment);
         assertEquals(0, result.numActiveSynapses);
         
+        SerialConfig config2 = new SerialConfig("testMorePopulatedConnections2", Scheme.FST);
+        NetworkSerializer<Connections> serializer2 = Network.serializer(config, false);
+        
         // 1. serialize
-        byte[] data = config.asByteArray(cn);
+        byte[] data = serializer2.serialize(cn);
         
         // 2. deserialize
-        Connections serialized = (Connections)config.asObject(data);
+        Connections serialized = serializer2.deSerialize(Connections.class, data);
         
         Set<Cell> serialActiveCells = serialized.getCellSet(new int[] { 733, 37, 974, 23 });
         
@@ -372,13 +429,17 @@ public class JavaNetworkSerializationTest {
     }
     
     @Test
-    public void testThreadedPublisher() {
-        Network network = createAndRunTestNetwork();
+    public void testThreadedPublisher_TemporalMemoryNetwork() {
+        Network network = createAndRunTestTemporalMemoryNetwork();
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
-        Connections serializedConnections = (Connections)Network.getSerialConfig().asObject(Network.getSerialConfig().asByteArray(cn));
         
-        Network network2 = createAndRunTestNetwork();
+        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.FST);
+        NetworkSerializer<Connections> serializer = Network.serializer(config, false);
+        serializer.serialize(cn);
+        Connections serializedConnections = serializer.deSerialize(Connections.class, null); // (null=get from file)
+        
+        Network network2 = createAndRunTestTemporalMemoryNetwork();
         Layer<?> l2 = network2.lookup("r1").lookup("1");
         Connections newCons = l2.getConnections();
         
@@ -387,16 +448,119 @@ public class JavaNetworkSerializationTest {
         assertTrue(b);
     }
     
+    @Test
+    public void testThreadedPublisher_SpatialPoolerNetwork() {
+        Network network = createAndRunTestSpatialPoolerNetwork(0, 6);
+        Layer<?> l = network.lookup("r1").lookup("1");
+        Connections cn = l.getConnections();
+        
+        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.KRYO);
+        NetworkSerializer<Connections> serializer = Network.serializer(config, false);
+        serializer.serialize(cn);
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Connections serializedConnections = serializer.deSerialize(Connections.class, null); // (null=get from file)
+        
+        Network network2 = createAndRunTestSpatialPoolerNetwork(0, 6);
+        Layer<?> l2 = network2.lookup("r1").lookup("1");
+        Connections newCons = l2.getConnections();
+        
+        //Compare the two Connections (both serialized and regular runs) - should be equal
+        boolean b = DeepEquals.deepEquals(newCons, serializedConnections);
+        deepCompare(newCons, serializedConnections);
+        assertTrue(b);
+    }
+    
     private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
-            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+//            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }catch(AssertionError ae) {
-            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+//            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }
     }
     
-    private Network createAndRunTestNetwork() {
+    private Network createAndRunTestSpatialPoolerNetwork(int start, int runTo) {
+        Publisher manual = Publisher.builder()
+            .addHeader("dayOfWeek")
+            .addHeader("darr")
+            .addHeader("B").build();
+
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", manual}));
+        
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+                    
+        Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
+            null, // map
+            8,   // n
+            0,    // w
+            0,    // min
+            0,    // max
+            0,    // radius
+            0,    // resolution
+            null, // periodic
+            null,                 // clip
+            Boolean.TRUE,         // forced
+            "dayOfWeek",          // fieldName
+            "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
+            "SDRPassThroughEncoder"); // encoderType
+        
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("1", p)
+                    .add(new SpatialPooler())
+                    .add(sensor)));
+                                
+        network.start();
+        
+        int[][] inputs = new int[7][8];
+        inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
+        inputs[1] = new int[] { 1, 1, 1, 0, 0, 0, 0, 0 };
+        inputs[2] = new int[] { 0, 1, 1, 1, 0, 0, 0, 0 };
+        inputs[3] = new int[] { 0, 0, 1, 1, 1, 0, 0, 0 };
+        inputs[4] = new int[] { 0, 0, 0, 1, 1, 1, 0, 0 };
+        inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
+        inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
+
+        int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
+        int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        int[] expected2 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
+        int[] expected3 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
+        int[] expected4 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
+        int[] expected5 = new int[] { 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
+        int[] expected6 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
+        int[][] expecteds = new int[][] { expected0, expected1, expected2, expected3, expected4, expected5, expected6 };
+
+        network.observe().subscribe(new Observer<Inference>() {
+            int test = 0;
+
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference spatialPoolerOutput) {
+                assertTrue(Arrays.equals(expecteds[test++], spatialPoolerOutput.getSDR()));
+            }
+        });
+
+        // Now push some fake data through so that "onNext" is called above
+        for(int i = start;i <= runTo;i++) {
+            manual.onNext(Arrays.toString(inputs[i]));
+        }
+        
+        manual.onComplete();
+        
+        try {
+            network.lookup("r1").lookup("1").getLayerThread().join();
+            
+        }catch(Exception e) { e.printStackTrace(); }
+        
+        return network;
+    }
+    
+    private Network createAndRunTestTemporalMemoryNetwork() {
         Publisher manual = Publisher.builder()
             .addHeader("dayOfWeek")
             .addHeader("darr")

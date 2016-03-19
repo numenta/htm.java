@@ -44,6 +44,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -931,5 +932,42 @@ public class NetworkTest {
         
         int width = layer1.calculateInputWidth();
         assertEquals(2048, width);
+    }
+    
+    @Test
+    public void testGetSerializer() {
+        SerialConfig config = new SerialConfig("test.ser", Scheme.FST);
+        NetworkSerializer<?> serializer = Network.serializer(config, false);
+        assertNotNull(serializer);
+        
+        NetworkSerializer<?> serializer2 = Network.serializer(config, false);
+        assertTrue(serializer == serializer2);
+        
+        NetworkSerializer<?> serializer3 = Network.serializer(config, true);
+        assertTrue(serializer != serializer3);
+        assertTrue(serializer2 != serializer3);
+        assertTrue(serializer == serializer2);
+    }
+    
+    @Test
+    public void testLearn() {
+        Region region = Network.createRegion("Region 1");
+        Layer<?> layer = Network.createLayer("Layer 2/3", Parameters.getAllDefaultParameters());
+        Network network = Network.create("Network 1", Parameters.getAllDefaultParameters());
+        region.add(layer);
+        network.add(region);
+        
+        // Close must be called to have this work
+        region.close();
+        
+        network.setLearn(true);
+        assertTrue(network.isLearn()); //true
+        assertTrue(region.isLearn()); //true
+        assertTrue(layer.isLearn()); //true
+    
+        network.setLearn(false);
+        assertFalse(network.isLearn()); //false
+        assertFalse(region.isLearn()); //false
+        assertFalse(layer.isLearn());
     }
 }

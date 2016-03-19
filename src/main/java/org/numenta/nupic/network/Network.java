@@ -32,10 +32,10 @@ import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
-import org.nustaq.serialization.FSTConfiguration;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -155,11 +155,6 @@ import rx.Subscriber;
  * @see NetworkAPIDemo
  */
 public class Network {
-    /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
-    private static final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
-    
-    //private static final Kryo kryo = new Kryo();
-    
     public enum Mode { MANUAL, AUTO, REACTIVE };
 
     private String name;
@@ -174,6 +169,11 @@ public class Network {
     private boolean isThreadRunning;
     
     private List<Region> regions = new ArrayList<>();
+    
+    /** Stored by the {@code Network} unless overwritten by using flag @see {@link #serializer(Scheme)} */
+    private static NetworkSerializerImpl<?> storedSerializer;
+    /** The stored configuration delineating output file and scheme etc. */
+    private static SerialConfig storedConfig;
 
     /**
      * Creates a new {@link Network}
@@ -188,14 +188,6 @@ public class Network {
         }
     }
     
-    /**
-     * Returns the FAST Serial Config
-     * @return
-     */
-    public static FSTConfiguration getSerialConfig() {
-        return fastSerialConfig;
-    }
-
     /**
      * Creates and returns an implementation of {@link Network}
      * 
@@ -233,12 +225,38 @@ public class Network {
         Network.checkName(name);
         return new Layer(name, null, p);
     }
+    
+    /**
+     * Creates a {@link PALayer} to hold algorithmic components and returns
+     * it.
+     * 
+     * @param name  the String identifier for the specified {@link PALayer}
+     * @param p     the {@link Parameters} to use for the specified {@link PALayer}
+     * @return
+     */
     @SuppressWarnings("rawtypes")
     public static PALayer<?> createPALayer(String name, Parameters p) {
         Network.checkName(name);
         return new PALayer(name, null, p);
     }
-
+    
+    /**
+     * Factory method to return a configured {@link NetworkSerializer}
+     * 
+     * If the "returnNew" flag is true, this method returns a new instance of 
+     * {@link NetworkSerializer} and stores it for subsequent invocations of this
+     * method. If false, the previously stored NetworkSerializer is returned.
+     * 
+     * @param type
+     * @param returnNew
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
+        return (returnNew || storedSerializer == null || (storedConfig != null && !config.equals(storedConfig))) ?  
+            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config)) : 
+                (NetworkSerializerImpl<T>)storedSerializer;
+    }
 
     /**
      * Returns the String identifier for this {@code Network}

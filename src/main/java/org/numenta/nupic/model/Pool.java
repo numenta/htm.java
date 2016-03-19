@@ -228,8 +228,9 @@ public class Pool implements Serializable {
         if(synapseConnections == null) {
             if(other.synapseConnections != null)
                 return false;
-        } else if(!synapseConnections.toString().equals(other.synapseConnections.toString()))
-            return false;
+        } else if((!synapseConnections.containsAll(other.synapseConnections) || 
+            !other.synapseConnections.containsAll(synapseConnections)))
+                return false;
         if(synapsesBySourceIndex == null) {
             if(other.synapsesBySourceIndex != null)
                 return false;
