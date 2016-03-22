@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +63,9 @@ import gnu.trove.set.hash.TIntHashSet;
  * @author David Ray
  *
  */
-public class SpatialPooler {
+public class SpatialPooler implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructs a new {@code SpatialPooler}
      */
