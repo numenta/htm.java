@@ -2,6 +2,8 @@ package org.numenta.nupic.network;
 
 import java.io.File;
 
+import org.numenta.nupic.network.NetworkSerializer.Scheme;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -52,6 +54,15 @@ public interface NetworkSerializer<T> {
      * @param instance  the object instance to serialize
      */
     public byte[] serialize(T instance);
+    /**
+     * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
+     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * array is returned - though both schemes serialize to an underlying file.
+     * 
+     * @param instance      the object instance to serialize
+     * @param bytesOnly     flag indicating whether to persist to disk or permanent storage.
+     */
+    public byte[] serialize(T instance, boolean bytesOnly);
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
      * to deserialize the specified Class type. If the scheme was previously set to {@link Scheme#FST}, a byte

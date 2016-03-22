@@ -78,7 +78,9 @@ import java.util.Map;
  */
 public class CategoryEncoder extends Encoder<String> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(CategoryEncoder.class);
+	private static final long serialVersionUID = 1L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(CategoryEncoder.class);
 
 	protected int ncategories;
 

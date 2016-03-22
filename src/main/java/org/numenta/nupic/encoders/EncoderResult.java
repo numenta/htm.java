@@ -34,6 +34,8 @@ import java.util.Arrays;
  */
 public class EncoderResult extends Tuple {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructs a new {@code EncoderResult}
      *

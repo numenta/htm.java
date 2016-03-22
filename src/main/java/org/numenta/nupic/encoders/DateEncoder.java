@@ -85,6 +85,8 @@ import org.numenta.nupic.util.Tuple;
  */
 public class DateEncoder extends Encoder<DateTime> {
 
+    private static final long serialVersionUID = 1L;
+
     protected int width;
 
     //See DateEncoder.Builder for default values.
@@ -114,17 +116,21 @@ public class DateEncoder extends Encoder<DateTime> {
     protected List<Tuple> holidaysList = Arrays.asList(new Tuple(12, 25));
     
     //////////////// Convenience DateTime Formats ////////////////////
-    public static DateTimeFormatter FULL_DATE_TIME_ZONE = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSSz");
-    public static DateTimeFormatter FULL_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
-    public static DateTimeFormatter RELAXED_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss");
-    public static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
-    public static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
-    public static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
-    public static DateTimeFormatter FULL_TIME_MILLIS = DateTimeFormat.forPattern("HH:mm:ss.SSS");
-    public static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
-    public static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
+    public transient static DateTimeFormatter FULL_DATE_TIME_ZONE = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSSz");
+    public transient static DateTimeFormatter FULL_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
+    public transient static DateTimeFormatter RELAXED_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss");
+    public transient static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
+    public transient static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
+    public transient static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
+    public transient static DateTimeFormatter FULL_TIME_MILLIS = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+    public transient static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
+    public transient static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
     
-    protected DateTimeFormatter customFormatter;
+    protected transient DateTimeFormatter customFormatter;
+    protected String customFormatterPattern;
+    
+    
+    
 
     /**
      * Constructs a new {@code DateEncoder}
@@ -401,8 +407,25 @@ public class DateEncoder extends Encoder<DateTime> {
      * Sets the custom formatter for the format field.
      * @param formatter
      */
-    public void setCustomFormat(DateTimeFormatter formatter) {
+    private void setCustomFormat(DateTimeFormatter formatter) {
         this.customFormatter = formatter;
+    }
+    
+    /**
+     * Stores the custom pattern set on the associated builder
+     * @param pattern   the pattern for the custom builder
+     */
+    private void setCustomFormatPattern(String pattern) {
+        this.customFormatterPattern = pattern;
+    }
+    
+    /**
+     * Returns the custom pattern used to establish the pattern expected for
+     * Encoder reads.
+     * @return  the custom pattern
+     */
+    public String getCustomFormatPattern() {
+        return customFormatterPattern;
     }
     
     /**
@@ -677,6 +700,8 @@ public class DateEncoder extends Encoder<DateTime> {
         protected Tuple timeOfDay = new Tuple(0, 4.0);
         
         protected DateTimeFormatter customFormatter;
+        
+        protected String customFormatPattern;
 
         private Builder() {}
 
@@ -702,6 +727,7 @@ public class DateEncoder extends Encoder<DateTime> {
             e.setTimeOfDay(this.timeOfDay);
             e.setCustomDays(this.customDays);
             e.setCustomFormat(this.customFormatter);
+            e.setCustomFormatPattern(this.customFormatPattern);
 
             ((DateEncoder)encoder).init();
 
@@ -813,17 +839,10 @@ public class DateEncoder extends Encoder<DateTime> {
          * @return
          */
         public DateEncoder.Builder formatPattern(String pattern) {
+            // Stored in addition in order to deserialize formatter object
+            this.customFormatPattern = pattern;
+            
             this.customFormatter = DateTimeFormat.forPattern(pattern);
-            return this;
-        }
-        
-        /**
-         * Sets the {@link DateTimeFormatte} on this builder.
-         * @param formatter
-         * @return
-         */
-        public DateEncoder.Builder formatter(DateTimeFormatter formatter) {
-            this.customFormatter = formatter;
             return this;
         }
     }

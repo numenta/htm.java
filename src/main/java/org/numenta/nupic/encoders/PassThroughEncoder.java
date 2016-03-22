@@ -39,6 +39,8 @@ import static java.lang.String.*;
  */
 public class PassThroughEncoder<T> extends Encoder<T> {
 
+    private static final long serialVersionUID = 1L;
+    
     protected final Logger LOGGER = LoggerFactory.getLogger(PassThroughEncoder.class);
 
     protected PassThroughEncoder() { }

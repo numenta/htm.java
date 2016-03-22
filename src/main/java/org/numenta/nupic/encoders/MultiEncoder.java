@@ -22,9 +22,6 @@
 
 package org.numenta.nupic.encoders;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +29,9 @@ import java.util.Map;
 
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.util.Tuple;
+
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
  * A MultiEncoder encodes a dictionary or object with
@@ -45,6 +45,8 @@ import org.numenta.nupic.util.Tuple;
  * @author wlmiller
  */
 public class MultiEncoder extends Encoder<Object> {
+    private static final long serialVersionUID = 1L;
+
     protected TIntObjectMap<String> indexToCategory = new TIntObjectHashMap<String>();
 
     protected List<Tuple> categoryList;

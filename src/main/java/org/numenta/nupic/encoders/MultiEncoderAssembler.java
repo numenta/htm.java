@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.encoders.Encoder.Builder;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.util.Tuple;
@@ -104,16 +103,13 @@ public class MultiEncoderAssembler {
                 
                 if(!key.equals("season") && !key.equals("dayOfWeek") &&
                     !key.equals("weekend") && !key.equals("holiday") &&
-                    !key.equals("timeOfDay")
-                        && !key.equals("customDays") &&
-                    !key.equals("formatPattern") && !key.equals("dateFormatter")) {
+                    !key.equals("timeOfDay") && !key.equals("customDays") &&
+                    !key.equals("formatPattern")) {
                 
                     multiEncoder.setValue(b, key, dateEncoderSettings.get(key));
                 }else{
                     if(key.equals("formatPattern")) {
                         b.formatPattern((String)dateEncoderSettings.get(key));
-                    }else if(key.equals("dateFormatter")) {
-                        b.formatter((DateTimeFormatter)dateEncoderSettings.get(key));
                     }else{
                         setDateFieldBits(b, dateEncoderSettings, key);
                     }

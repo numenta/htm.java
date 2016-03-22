@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
@@ -34,7 +33,6 @@ import org.numenta.nupic.util.MersenneTwister;
 
 import com.cedarsoftware.util.DeepEquals;
 
-import gnu.trove.set.hash.TIntHashSet;
 import rx.Observer;
 import rx.Subscriber;
 

@@ -21,10 +21,7 @@
  */
 package org.numenta.nupic.network.sensor;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -59,6 +56,10 @@ import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
 
 /**
  * <p>
@@ -85,12 +86,14 @@ import org.numenta.nupic.encoders.ScalarEncoder;
  *
  * @param <T>   the input type (i.e. File, URL, etc.)
  */
-public class HTMSensor<T> implements Sensor<T> {
+public class HTMSensor<T> implements Sensor<T>, Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private Sensor<T> delegate;
     private Header header;
     private Parameters localParameters;
     private MultiEncoder encoder;
-    private Stream<int[]> outputStream;
+    private transient Stream<int[]> outputStream;
     private List<int[]> output;
     private InputMap inputMap;
     
@@ -210,8 +213,8 @@ public class HTMSensor<T> implements Sensor<T> {
      * @return a {@link SensorParams} object.
      */
     @Override
-    public SensorParams getParams() {
-        return delegate.getParams();
+    public SensorParams getSensorParams() {
+        return delegate.getSensorParams();
     }
 
     /**
@@ -254,8 +257,8 @@ public class HTMSensor<T> implements Sensor<T> {
     
     /**
      * Specialized {@link Map} for the avoidance of key hashing. This
-     * optimization overrides {@link Map#get(Object)directly accesses the input arrays providing input
-     * and should be extremely faster.
+     * optimization overrides {@link Map#get(Object)} and directly accesses the 
+     * input arrays providing input and should be extremely faster.
      */
     class InputMap extends HashMap<String, Object> {
         private static final long serialVersionUID = 1L;

@@ -22,6 +22,7 @@
 
 package org.numenta.nupic;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +41,9 @@ import org.numenta.nupic.model.DistalDendrite;
  * 
  * @author David Ray
  */
-public class ComputeCycle {
+public class ComputeCycle implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
     public Set<Cell> predictiveCells = new LinkedHashSet<>();

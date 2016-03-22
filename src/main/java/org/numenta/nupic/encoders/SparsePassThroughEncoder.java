@@ -40,6 +40,9 @@ import java.util.Arrays;
  * @author wilsondy (from Python original)
  */
 public class SparsePassThroughEncoder extends PassThroughEncoder<int[]> {
+    
+    private static final long serialVersionUID = 1L;
+
     private SparsePassThroughEncoder() { super(); }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SparsePassThroughEncoder.class);

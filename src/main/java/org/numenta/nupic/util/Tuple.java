@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,11 +34,16 @@ import java.util.List;
  * 
  * @author David Ray
  */
-public class Tuple {
+public class Tuple implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+
     /** The internal container array */
 	protected Object[] container;
 	
 	private int hashcode;
+	
+	public Tuple() {}
 	
 	/**
 	 * Instantiates a new {@code Tuple}

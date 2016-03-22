@@ -21,6 +21,9 @@
  */
 package org.numenta.nupic.network.sensor;
 
+import java.io.Serializable;
+import java.util.List;
+
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
 
@@ -81,16 +84,23 @@ import rx.subjects.ReplaySubject;
  * @author David Ray
  *
  */
-public class Publisher {
+public class Publisher implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static final int HEADER_SIZE = 3;
     
-    private ReplaySubject<String> subject;
+    private transient ReplaySubject<String> subject;
+    
+    private String[] headerLines;
     
     public static class Builder<T> {
         private ReplaySubject<String> subject;
         
+        // The 3 lines of the header
         String[] lines = new String[3];
         int cursor = 0;
+        
+        
         /**
          * Adds a header line which in the case of a multi column input 
          * is a comma separated string.
@@ -122,6 +132,7 @@ public class Publisher {
             
             Publisher p = new Publisher();
             p.subject = subject;
+            p.headerLines = lines;
             
             return p;
         }

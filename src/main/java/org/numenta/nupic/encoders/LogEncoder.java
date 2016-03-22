@@ -72,7 +72,9 @@ import org.slf4j.LoggerFactory;
  */
 public class LogEncoder extends Encoder<Double> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(LogEncoder.class);
+	private static final long serialVersionUID = 1L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LogEncoder.class);
 
 	private ScalarEncoder encoder;
 	private double minScaledValue, maxScaledValue;

@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.numenta.nupic.encoders.DateEncoder;
+import org.numenta.nupic.encoders.DateEncoderSerializer;
+import org.numenta.nupic.util.TestSerializeContainer;
+import org.numenta.nupic.util.TestSerializeContainerSerializer;
 import org.nustaq.serialization.FSTConfiguration;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -38,7 +42,8 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * 
      * @param config      the configuration to use
      */
-    NetworkSerializerImpl(SerialConfig config) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    NetworkSerializerImpl(SerialConfig config, boolean autoRegisterSerializers) {
         this.config = config;
         this.scheme = config.getScheme();
         
@@ -51,6 +56,16 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
         if(config.getScheme() == Scheme.KRYO) {
             this.kryo = createKryo();
         }
+        
+        if(autoRegisterSerializers) {
+            registerSerializers();
+        }
+    }
+    
+    public void registerSerializers() {
+        //fastSerialConfig.registerClass(DateEncoder.class);
+        //fastSerialConfig.registerSerializer(DateEncoder.class, new DateEncoderSerializer(), false);
+        fastSerialConfig.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), true);
     }
     
     /**
@@ -98,11 +113,33 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
             case FST: {
+                return serialize(instance, false);
+            }
+            default: {
+                return null;
+            }
+        }
+    }
+    
+    /**
+     * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
+     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * array is returned - though both schemes serialize to an underlying file.
+     * 
+     * @param instance      the object instance to serialize
+     * @param bytesOnly     flag indicating whether to persist to disk or permanent storage.
+     */
+    public byte[] serialize(T instance, boolean bytesOnly) {
+        switch(scheme) {
+            case KRYO: // Fall through to FST Handler
+            case FST: {
                 byte[] bytes = fastSerialConfig.asByteArray(instance);
-                try {
-                    Files.write(serialPath.toPath(), bytes, config.getOpenOptions());
-                } catch(IOException e) {
-                    throw new RuntimeException(e);
+                if(!bytesOnly) {
+                    try {
+                        Files.write(serialPath.toPath(), bytes, config.getOpenOptions());
+                    } catch(IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 return bytes;
             }
@@ -185,7 +222,7 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
                 conf = new SerialConfig(
                     config.getFileName(), Scheme.FST, 
                         config.getRegistry(), config.getOpenOptions());
-                ser = Network.serializer(conf, true);
+                ser = Network.serializer(conf, true, true);
             }
             
             @SuppressWarnings("rawtypes")

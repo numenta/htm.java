@@ -6,11 +6,18 @@ import static org.junit.Assert.assertTrue;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.numenta.nupic.Connections;
@@ -20,10 +27,13 @@ import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
+import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
+import org.numenta.nupic.network.sensor.FileSensor;
+import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -31,6 +41,13 @@ import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
 import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.MinMax;
+import org.numenta.nupic.util.TestSerializeContainer;
+import org.numenta.nupic.util.TestSerializeContainerSerializer;
+import org.numenta.nupic.util.Tuple;
+import org.nustaq.serialization.FSTConfiguration;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
 import com.cedarsoftware.util.DeepEquals;
 
@@ -428,6 +445,7 @@ public class JavaFstNetworkSerializationTest {
         
     }
     
+    // Test Connections Serialization after running through TemporalMemory
     @Test
     public void testThreadedPublisher_TemporalMemoryNetwork() {
         Network network = createAndRunTestTemporalMemoryNetwork();
@@ -447,14 +465,15 @@ public class JavaFstNetworkSerializationTest {
         deepCompare(newCons, serializedConnections);
         assertTrue(b);
     }
-    
+   
+    // Test Connections Serialization after running through SpatialPooler
     @Test
     public void testThreadedPublisher_SpatialPoolerNetwork() {
         Network network = createAndRunTestSpatialPoolerNetwork(0, 6);
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
         
-        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.KRYO);
+        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.FST);
         NetworkSerializer<Connections> serializer = Network.serializer(config, false);
         serializer.serialize(cn);
         //Serialize above Connections for comparison with same run but unserialized below...
@@ -469,13 +488,265 @@ public class JavaFstNetworkSerializationTest {
         deepCompare(newCons, serializedConnections);
         assertTrue(b);
     }
+    /////////////////////////// End Connections Serialization Testing //////////////////////////////////
     
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testHTMSensor_DaysOfWeek() {
+        Object[] n = { "some name", ResourceLocator.path("days-of-week.csv") };
+        HTMSensor<File> sensor = (HTMSensor<File>)Sensor.create(
+            FileSensor::create, SensorParams.create(Keys::path, n));
+        
+        Parameters p = getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        sensor.initEncoder(p);
+        
+        SerialConfig config = new SerialConfig("testHTMSensor", Scheme.FST);
+        NetworkSerializer<HTMSensor<File>> serializer = Network.serializer(config, false);
+        serializer.serialize(sensor);
+        //Serialize above Connections for comparison with same run but unserialized below...
+        HTMSensor<File> serializedSensor = serializer.deSerialize((Class<HTMSensor<File>>)sensor.getClass(), null); // (null=get from file)
+        System.out.println("sensor = " + serializedSensor);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testHTMSensor_HotGym() {
+        Object[] n = { "some name", ResourceLocator.path("rec-center-hourly-small.csv") };
+        HTMSensor<File> sensor = (HTMSensor<File>)Sensor.create(
+            FileSensor::create, SensorParams.create(Keys::path, n));
+        
+        sensor.initEncoder(getTestEncoderParams());
+        
+        SerialConfig config = new SerialConfig("testHTMSensor", Scheme.FST);
+        NetworkSerializer<HTMSensor<File>> serializer = Network.serializer(config, false);
+        serializer.serialize(sensor);
+        //Serialize above Connections for comparison with same run but unserialized below...
+        HTMSensor<File> serializedSensor = serializer.deSerialize((Class<HTMSensor<File>>)sensor.getClass(), null); // (null=get from file)
+        System.out.println("sensor = " + serializedSensor);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testSerializeObservableSensor() {
+        Publisher manual = Publisher.builder()
+            .addHeader("dayOfWeek")
+            .addHeader("darr")
+            .addHeader("B").build();
+        
+        ObservableSensor<String[]> oSensor = new ObservableSensor<>(SensorParams.create(Keys::obs, new Object[] {"name", manual}));
+        
+        SerialConfig config = new SerialConfig("testSerializeObservableSensor", Scheme.FST);
+        
+        NetworkSerializer<ObservableSensor> serializer = Network.serializer(config, false);
+        serializer.serialize(oSensor);
+        
+        //Serialize above Connections for comparison with same run but unserialized below...
+        ObservableSensor<String[]> serializedOSensor = serializer.deSerialize((Class<ObservableSensor>)oSensor.getClass(), null); // (null=get from file)
+        System.out.println("container = " + serializedOSensor);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testSerializeLayer() {
+        Publisher manual = Publisher.builder()
+            .addHeader("dayOfWeek")
+            .addHeader("darr")
+            .addHeader("B").build();
+
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", manual}));
+        
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+                    
+        Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
+            null, // map
+            8,    // n
+            0,    // w
+            0,    // min
+            0,    // max
+            0,    // radius
+            0,    // resolution
+            null, // periodic
+            null,                 // clip
+            Boolean.TRUE,         // forced
+            "dayOfWeek",          // fieldName
+            "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
+            "SDRPassThroughEncoder"); // encoderType
+        
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
+        
+        Layer<?> layer = Network.createLayer("1", p)
+            .add(new SpatialPooler())
+            .add(sensor);
+        
+        layer.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference spatialPoolerOutput) {
+                System.out.println("in onNext()");
+            }
+        });
+        
+        SerialConfig config = new SerialConfig("testSerializeLayer", Scheme.FST);
+        
+        NetworkSerializer<Layer> serializer = Network.serializer(config, false);
+        serializer.serialize(layer);
+        
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Layer<?> serializedLayer = serializer.deSerialize((Class<Layer>)layer.getClass(), null); // (null=get from file)
+        System.out.println("container = " + serializedLayer);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testObjectSerializers() {
+        TestSerializeContainer tsc = new TestSerializeContainer();
+        tsc.setMinMax(new MinMax(7,9));
+        
+        TestSerializeContainer tsc2 = new TestSerializeContainer();
+        tsc2.setMinMax(new MinMax(4,5));
+        
+//        SerialConfig config = new SerialConfig("testObjectSerializers", Scheme.FST, null, 
+//            new StandardOpenOption[] { 
+//                StandardOpenOption.CREATE,
+//                StandardOpenOption.APPEND 
+//            });
+        SerialConfig config = new SerialConfig("testObjectSerializers", Scheme.FST);
+        
+        NetworkSerializer<List<TestSerializeContainer>> serializer = Network.serializer(config, false);
+        //serializer.serialize(tsc);
+        //serializer.serialize(tsc2);
+        List<TestSerializeContainer> contList = Arrays.asList(tsc, tsc2);
+        serializer.serialize(contList);
+        
+        //Serialize above Connections for comparison with same run but unserialized below...
+        List<TestSerializeContainer> serializedContainer = serializer.deSerialize((Class<List<TestSerializeContainer>>)contList.getClass(), null); // (null=get from file)
+        System.out.println("container = " + serializedContainer);
+    }
+    
+    @Test
+    public void testObjectSerializersPureFST() {
+        FSTConfiguration cnf = FSTConfiguration.createDefaultConfiguration();
+        cnf.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), false);
+        
+        SerialConfig config = new SerialConfig("testObjectSerializersPureFST", Scheme.FST);
+        
+        TestSerializeContainer tsc = new TestSerializeContainer();
+        tsc.setMinMax(new MinMax());
+        
+        //////////////////////////
+        //    Write Object      //
+        //////////////////////////
+        
+        // Setup target path
+        String path = System.getProperty("user.home") + File.separator + "HTMNetwork";
+        File customDir = new File(path);
+        customDir.mkdirs();
+        
+        File serialPath = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
+        
+        byte[] bytes = cnf.asByteArray(tsc);
+        TestSerializeContainer serializedContainer = (TestSerializeContainer)cnf.asObject(bytes);
+        System.out.println("inner first check = " + serializedContainer.getMinMax());
+        
+        try {
+            if(!serialPath.exists()) {
+                serialPath.createNewFile();
+            }
+            
+            Files.write(serialPath.toPath(), bytes, config.getOpenOptions());
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
+        //////////////////////////
+        //     Read Object      //
+        //////////////////////////
+        
+        TestSerializeContainer serializedContainer2 = null;
+        try {
+            bytes = Files.readAllBytes(serialPath.toPath());
+            serializedContainer2 = (TestSerializeContainer)cnf.asObject(bytes);
+        } catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+    
+        System.out.println("inner = " + serializedContainer2.getMinMax());
+        
+    }
+    
+    @Test
+    public void testObjectSerializersFSTStreams() {
+        FSTConfiguration cnf = FSTConfiguration.createDefaultConfiguration();
+//        cnf.setShareReferences(false);
+//        cnf.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), false);
+        
+        SerialConfig config = new SerialConfig("testObjectSerializersFSTStreams", Scheme.FST);
+        
+        TestSerializeContainer tsc = new TestSerializeContainer();
+        tsc.setMinMax(new MinMax(3,9));
+        
+        //////////////////////////
+        //    Write Object      //
+        //////////////////////////
+        
+        // Setup target path
+        String path = System.getProperty("user.home") + File.separator + "HTMNetwork";
+        File customDir = new File(path);
+        customDir.mkdirs();
+        
+        File serialPath = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
+        
+        byte[] bytes = cnf.asByteArray(tsc);
+        TestSerializeContainer serializedContainer = (TestSerializeContainer)cnf.asObject(bytes);
+        System.out.println("inner first check = " + serializedContainer.getMinMax());
+        
+        try {
+            if(!serialPath.exists()) {
+                serialPath.createNewFile();
+            }
+            
+            FileOutputStream stream = new FileOutputStream(serialPath);
+            FSTObjectOutput out = cnf.getObjectOutput(stream);
+            out.writeObject(tsc, TestSerializeContainer.class);
+            // DON'T out.close() when using factory method;
+            out.flush();
+            stream.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        
+        //////////////////////////
+        //     Read Object      //
+        //////////////////////////
+        
+        TestSerializeContainer serializedContainer2 = null;
+        try {
+            FileInputStream stream = new FileInputStream(serialPath);
+            FSTObjectInput in = cnf.getObjectInput(stream);
+            serializedContainer2 = (TestSerializeContainer)in.readObject(TestSerializeContainer.class);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    
+        System.out.println("inner = " + serializedContainer2.getMinMax());
+        
+    }
+  
+    
+    //////////////////////////////
+    //     Utility Methods      //
+    //////////////////////////////
     private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
-//            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }catch(AssertionError ae) {
-//            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
+            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }
     }
     
@@ -554,7 +825,6 @@ public class JavaFstNetworkSerializationTest {
         
         try {
             network.lookup("r1").lookup("1").getLayerThread().join();
-            
         }catch(Exception e) { e.printStackTrace(); }
         
         return network;
@@ -572,19 +842,19 @@ public class JavaFstNetworkSerializationTest {
         Parameters p = getParameters();
         
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
-                        null, // map
-                        20,    // n
-                        0,    // w
-                        0,    // min
-                        0,    // max
-                        0,    // radius
-                        0,    // resolution
-                        null, // periodic
-                        null,                 // clip
-                        Boolean.TRUE,         // forced
-                        "dayOfWeek",          // fieldName
-                        "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
-                        "SDRPassThroughEncoder"); // encoderType
+            null, // map
+            20,    // n
+            0,    // w
+            0,    // min
+            0,    // max
+            0,    // radius
+            0,    // resolution
+            null, // periodic
+            null,                 // clip
+            Boolean.TRUE,         // forced
+            "dayOfWeek",          // fieldName
+            "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
+            "SDRPassThroughEncoder"); // encoderType
         
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
         
@@ -611,7 +881,7 @@ public class JavaFstNetworkSerializationTest {
         final int[] input7 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
         
-        // Now push some warm up data through so that "onNext" is called above
+        // Run until TemporalMemory is "warmed up".
         int timeUntilStable = 602;
         for(int j = 0;j < timeUntilStable;j++) {
             for(int i = 0;i < inputs.length;i++) {
@@ -632,6 +902,89 @@ public class JavaFstNetworkSerializationTest {
         }
        
         return network;
+    }
+    
+    public Stream<String> makeStream() {
+        return Stream.of(
+            "timestamp,consumption",
+            "datetime,float",
+            "T,",
+            "7/2/10 0:00,21.2",
+            "7/2/10 1:00,16.4",
+            "7/2/10 2:00,4.7",
+            "7/2/10 3:00,4.7",
+            "7/2/10 4:00,4.6",
+            "7/2/10 5:00,23.5",
+            "7/2/10 6:00,47.5",
+            "7/2/10 7:00,45.4",
+            "7/2/10 8:00,46.1",
+            "7/2/10 9:00,41.5",
+            "7/2/10 10:00,43.4",
+            "7/2/10 11:00,43.8",
+            "7/2/10 12:00,37.8",
+            "7/2/10 13:00,36.6",
+            "7/2/10 14:00,35.7",
+            "7/2/10 15:00,38.9",
+            "7/2/10 16:00,36.2",
+            "7/2/10 17:00,36.6",
+            "7/2/10 18:00,37.2",
+            "7/2/10 19:00,38.2",
+            "7/2/10 20:00,14.1");
+    }
+    
+    private Parameters getTestEncoderParams() {
+        Map<String, Map<String, Object>> fieldEncodings = setupMap(
+            null,
+            0, // n
+            0, // w
+            0, 0, 0, 0, null, null, null,
+            "timestamp", "datetime", "DateEncoder");
+        
+        fieldEncodings = setupMap(
+            fieldEncodings, 
+            25, 
+            3, 
+            0, 0, 0, 0.1, null, null, null, 
+            "consumption", "float", "RandomDistributedScalarEncoder");
+        
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_DOFW.getFieldName(), new Tuple(1, 1.0)); // Day of week
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_TOFD.getFieldName(), new Tuple(5, 4.0)); // Time of day
+        fieldEncodings.get("timestamp").put(KEY.DATEFIELD_PATTERN.getFieldName(), "MM/dd/YY HH:mm");
+        
+        Parameters p = Parameters.getEncoderDefaultParameters();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        
+        return p;
+    }
+    
+    private Map<String, Map<String, Object>> setupMap(
+        Map<String, Map<String, Object>> map,
+            int n, int w, double min, double max, double radius, double resolution, Boolean periodic,
+                Boolean clip, Boolean forced, String fieldName, String fieldType, String encoderType) {
+        
+        if(map == null) {
+            map = new HashMap<String, Map<String, Object>>();
+        }
+        Map<String, Object> inner = null;
+        if((inner = map.get(fieldName)) == null) {
+            map.put(fieldName, inner = new HashMap<String, Object>());
+        }
+        
+        inner.put("n", n);
+        inner.put("w", w);
+        inner.put("minVal", min);
+        inner.put("maxVal", max);
+        inner.put("radius", radius);
+        inner.put("resolution", resolution);
+        
+        if(periodic != null) inner.put("periodic", periodic);
+        if(clip != null) inner.put("clip", clip);
+        if(forced != null) inner.put("forced", forced);
+        if(fieldName != null) inner.put("fieldName", fieldName);
+        if(fieldType != null) inner.put("fieldType", fieldType);
+        if(encoderType != null) inner.put("encoderType", encoderType);
+        
+        return map;
     }
     
 }

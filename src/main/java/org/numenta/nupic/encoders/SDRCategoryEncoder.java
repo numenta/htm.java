@@ -59,6 +59,8 @@ import java.util.Set;
  */
 public class SDRCategoryEncoder extends Encoder<String> {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOG = LoggerFactory.getLogger(SDRCategoryEncoder.class);
 
     private Random random;

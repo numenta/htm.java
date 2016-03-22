@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.jar.JarFile;
@@ -48,13 +49,15 @@ import org.numenta.nupic.network.Network;
  * @see SensorFactory
  * @see Sensor#create(SensorFactory, SensorParams)
  */
-public class FileSensor implements Sensor<File> {
+public class FileSensor implements Sensor<File>, Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
     // This is OFF until Encoders are made concurrency safe
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
-    private BatchedCsvStream<String[]> stream;
+    private transient BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
     /**
@@ -112,7 +115,7 @@ public class FileSensor implements Sensor<File> {
     }
     
     @Override
-    public SensorParams getParams() {
+    public SensorParams getSensorParams() {
         return params;
     }
     

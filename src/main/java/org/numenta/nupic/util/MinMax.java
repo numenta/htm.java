@@ -22,13 +22,17 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
+
 /**
  * Holds two values, a min and a max. Can later be developed to
  * employ operations on those values (i.e. distance etc.)
  * 
  * @author David Ray
  */
-public class MinMax {
+public class MinMax implements Serializable {
+	private static final long serialVersionUID = 1L;
+    
 	private double min;
 	private double max;
 	

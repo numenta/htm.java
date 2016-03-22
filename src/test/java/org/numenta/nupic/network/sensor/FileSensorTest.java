@@ -40,8 +40,8 @@ public class FileSensorTest {
         Sensor<File> sensor = Sensor.create(FileSensor::create, parms);
         
         assertNotNull(sensor);
-        assertNotNull(sensor.getParams());
-        SensorParams sp = sensor.getParams();
+        assertNotNull(sensor.getSensorParams());
+        SensorParams sp = sensor.getSensorParams();
         assertEquals("some name", sp.get("FILE"));
         assertEquals(null, sp.get("NAME"));
         assertEquals(ResourceLocator.path("rec-center-hourly.csv"), sp.get("PATH"));
@@ -53,8 +53,8 @@ public class FileSensorTest {
         );
         
         assertNotNull(sensor2);
-        assertNotNull(sensor2.getParams());
-        sp = sensor2.getParams();
+        assertNotNull(sensor2.getSensorParams());
+        sp = sensor2.getSensorParams();
         assertEquals("some name", sp.get("FILE"));
         assertEquals(null, sp.get("NAME"));
         assertEquals(ResourceLocator.path("rec-center-hourly.csv"), sp.get("PATH"));

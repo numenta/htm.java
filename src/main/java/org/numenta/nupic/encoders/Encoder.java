@@ -27,6 +27,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -82,7 +83,9 @@ import org.slf4j.LoggerFactory;
  * @author Numenta
  * @author David Ray
  */
-public abstract class Encoder<T> {
+public abstract class Encoder<T>  implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Encoder.class);
 

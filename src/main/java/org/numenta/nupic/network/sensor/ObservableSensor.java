@@ -45,11 +45,13 @@ import rx.Observable;
  * @param <T>
  */
 public class ObservableSensor<T> implements Sensor<Observable<T>> {
+    private static final long serialVersionUID = 1L;
+    
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
-    private BatchedCsvStream<String[]> stream;
+    private transient BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
     
@@ -105,7 +107,7 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
      * @return the SensorParams
      */
     @Override
-    public SensorParams getParams() {
+    public SensorParams getSensorParams() {
         return params;
     }
     

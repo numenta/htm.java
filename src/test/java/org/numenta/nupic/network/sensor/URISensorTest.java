@@ -50,7 +50,7 @@ public class URISensorTest {
         Sensor<URI> sensor = Sensor.create(URISensor::create, parms);
         
         assertNotNull(sensor);
-        assertNotNull(sensor.getParams());
+        assertNotNull(sensor.getSensorParams());
         
         assertEquals(4391, sensor.getInputStream().count());
     }

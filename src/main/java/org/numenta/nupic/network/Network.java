@@ -251,10 +251,25 @@ public class Network {
      * @param returnNew
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
+        return serializer(config, returnNew, true);
+    }
+    
+    /**
+     * Factory method to return a configured {@link NetworkSerializer}
+     * 
+     * If the "returnNew" flag is true, this method returns a new instance of 
+     * {@link NetworkSerializer} and stores it for subsequent invocations of this
+     * method. If false, the previously stored NetworkSerializer is returned.
+     * 
+     * @param type
+     * @param returnNew
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew, boolean autoRegisterSerializers) {
         return (returnNew || storedSerializer == null || (storedConfig != null && !config.equals(storedConfig))) ?  
-            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config)) : 
+            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config, autoRegisterSerializers)) : 
                 (NetworkSerializerImpl<T>)storedSerializer;
     }
 

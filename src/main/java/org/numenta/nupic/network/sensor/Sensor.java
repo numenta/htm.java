@@ -22,6 +22,7 @@
 package org.numenta.nupic.network.sensor;
 
 import java.io.File;
+import java.io.Serializable;
 import java.net.URI;
 import java.util.stream.Stream;
 
@@ -46,7 +47,7 @@ import rx.Observable;
  * @see Network
  * @param <T>       the resource type to retrieve (i.e. {@link File}, {@link URI}, {@link Observable}
  */
-public interface Sensor<T> {
+public interface Sensor<T> extends Serializable {
     
     /**
      * <p>
@@ -82,7 +83,7 @@ public interface Sensor<T> {
      * 
      * @return a {@link SensorParams} object.
      */
-    public SensorParams getParams();
+    public SensorParams getSensorParams();
     
     /**
      * Returns the configured {@link Stream} if this is of

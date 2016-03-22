@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ import rx.functions.Func1;
  * 
  * @author David Ray
  */
-public interface Inference {
+public interface Inference extends Serializable {
     /**
      * Returns the input record sequence number associated with 
      * the state of a {@link Layer} which this {@code Inference}

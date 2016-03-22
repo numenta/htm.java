@@ -16,6 +16,9 @@ package org.numenta.nupic.util;
  * @see #setParam(Object, int)
  */
 public class MethodSignature extends MutableTuple {
+    
+    private static final long serialVersionUID = 1L;
+
     public MethodSignature(int maxFields) {
         super(maxFields);
     }

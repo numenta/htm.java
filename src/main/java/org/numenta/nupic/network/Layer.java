@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.URISensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
@@ -167,7 +169,8 @@ import rx.subjects.PublishSubject;
  * 
  * @author David Ray
  */
-public class Layer<T> {
+public class Layer<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
 
@@ -175,6 +178,7 @@ public class Layer<T> {
     protected Region parentRegion;
 
     protected Parameters params;
+    protected SensorParams sensorParams;
     protected Connections connections;
     protected HTMSensor<?> sensor;
     protected MultiEncoder encoder;
@@ -183,9 +187,9 @@ public class Layer<T> {
     private Boolean autoCreateClassifiers;
     private Anomaly anomalyComputer;
 
-    private PublishSubject<T> publisher = null;
+    private transient PublishSubject<T> publisher = null;
     private Subscription subscription;
-    private Observable<Inference> userObservable;
+    private transient Observable<Inference> userObservable;
     private Inference currentInference;
 
     FunctionFactory factory;
@@ -229,7 +233,7 @@ public class Layer<T> {
      */
     private List<EncoderTuple> encoderTuples;
 
-    private Map<Class<T>, Observable<ManualInput>> observableDispatch = Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
+    private transient Map<Class<T>, Observable<ManualInput>> observableDispatch = Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
 
     /** This layer's thread */
     private Thread LAYER_THREAD;
@@ -317,7 +321,8 @@ public class Layer<T> {
 
         // Check to see if the Parameters include the encoder configuration.
         if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null && e != null) {
-            throw new IllegalArgumentException("The passed in Parameters must contain a field encoding map " + "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
+            throw new IllegalArgumentException("The passed in Parameters must contain a field encoding map " + 
+                "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
         }
 
         this.params = params;
@@ -335,8 +340,12 @@ public class Layer<T> {
         initializeMask();
 
         if(LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Layer successfully created containing: {}{}{}{}{}", (encoder == null ? "" : "MultiEncoder,"), (spatialPooler == null ? "" : "SpatialPooler,"), (temporalMemory == null ? ""
-                            : "TemporalMemory,"), (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."), (anomalyComputer == null ? "" : "Anomaly"));
+            LOGGER.debug("Layer successfully created containing: {}{}{}{}{}", 
+                (encoder == null ? "" : "MultiEncoder,"), 
+                (spatialPooler == null ? "" : "SpatialPooler,"), 
+                (temporalMemory == null ? "" : "TemporalMemory,"), 
+                (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."), 
+                (anomalyComputer == null ? "" : "Anomaly"));
         }
     }
 
@@ -402,7 +411,6 @@ public class Layer<T> {
                 params.setInputDimensions(inferredDims);
                 connections.setInputDimensions(inferredDims);
             }
-
         }
 
         autoCreateClassifiers = autoCreateClassifiers != null && (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
@@ -650,9 +658,15 @@ public class Layer<T> {
         }
 
         this.sensor = (HTMSensor<?>)sensor;
+        
+        // Configure the parent Network's reference to its sensor Region.
         if(parentNetwork != null && parentRegion != null) {
             parentNetwork.setSensorRegion(parentRegion);
         }
+        
+        // Store the SensorParams for Sensor rebuild after deserialization
+        this.sensorParams = this.sensor.getSensorParams();
+        
         return this;
     }
 
@@ -1780,8 +1794,9 @@ public class Layer<T> {
      * @see Layer#resolveObservableSequence(Object)
      * @see Layer#fillInSequence(Observable)
      */
-    class FunctionFactory {
-
+    class FunctionFactory implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
         ManualInput inference = new ManualInput();
 
         //////////////////////////////////////////////////////////////////////////////

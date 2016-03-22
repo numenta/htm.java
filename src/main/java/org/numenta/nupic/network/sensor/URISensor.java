@@ -39,6 +39,8 @@ import org.numenta.nupic.ValueList;
  * @see Sensor#create(SensorFactory, SensorParams)
  */
 public class URISensor implements Sensor<URI>  {
+    private static final long serialVersionUID = 1L;
+    
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
     private static final boolean DEFAULT_PARALLEL_MODE = false;
@@ -91,7 +93,7 @@ public class URISensor implements Sensor<URI>  {
      * Returns the {@link SensorParams} used to configure this {@code URISensor}
      */
     @Override
-    public SensorParams getParams() {
+    public SensorParams getSensorParams() {
         return params;
     }
     

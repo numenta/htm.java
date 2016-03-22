@@ -38,10 +38,12 @@ import org.numenta.nupic.util.Tuple;
  */
 public class RangeList extends RangeTuple<List<MinMax>, String>{
 
-	/**
+	private static final long serialVersionUID = 1L;
+
+    /**
 	 * Constructs and new {@code Ranges} object.
 	 * @param l		the {@link List} of {@link MinMax} objects which are the 
-	 * 				minimum and maximum postions of 1's
+	 * 				minimum and maximum positions of 1's
 	 * @param s
 	 */
 	public RangeList(List<MinMax> l, String s) {

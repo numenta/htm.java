@@ -602,6 +602,8 @@ public class AnomalyLikelihood extends Anomaly {
      * @author David Ray
      */
     public static class AnomalyParams extends NamedTuple {
+        private static final long serialVersionUID = 1L;
+
         /** Cached Json formatting. Possible because Objects of this class is immutable */
         private ObjectNode cachedNode;
         

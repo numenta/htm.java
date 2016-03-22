@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 
 public class SDRPassThroughEncoder extends PassThroughEncoder<int[]> {
+    private static final long serialVersionUID = 1L;
+    
     protected final Logger LOGGER = LoggerFactory.getLogger(SDRPassThroughEncoder.class);
     
     protected SDRPassThroughEncoder() { }

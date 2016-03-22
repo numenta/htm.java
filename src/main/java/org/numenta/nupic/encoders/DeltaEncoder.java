@@ -30,6 +30,8 @@ import org.numenta.nupic.Connections;
 
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	
+	private static final long serialVersionUID = 1L;
+    
 	public double prevAbsolute = 0;
 	public double prevDelta = 0;
 	public boolean stateLock = false;

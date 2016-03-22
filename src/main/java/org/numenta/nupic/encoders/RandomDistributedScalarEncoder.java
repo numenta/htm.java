@@ -87,7 +87,9 @@ import org.slf4j.LoggerFactory;
 
 public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RandomDistributedScalarEncoder.class);
+	private static final long serialVersionUID = 1L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(RandomDistributedScalarEncoder.class);
 
 	public static final long DEFAULT_SEED = 42;
 
@@ -200,7 +202,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		for (int i = 0; i < getN(); i++)
 			temp.add(i, i);
 		java.util.Collections.shuffle(temp, rng);
-		bucketMap.put(getMinIndex(), temp.subList(0, getW()));
+		bucketMap.put(getMinIndex(), new ArrayList<Integer>(temp.subList(0, getW())));
 
 		// How often we need to retry when generating valid encodings
 		setNumRetry(0);

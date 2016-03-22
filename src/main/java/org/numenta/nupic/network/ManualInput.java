@@ -64,6 +64,8 @@ import rx.functions.Func1;
  *
  */
 public class ManualInput implements Inference {
+    private static final long serialVersionUID = 1L;
+    
     private int recordNum;
     /** Tuple = { Name, inputValue, bucketIndex, encoding } */
     private Map<String, NamedTuple> classifierInput;

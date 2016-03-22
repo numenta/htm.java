@@ -49,7 +49,7 @@
 			<groupId>com.chaschev</groupId>
 			<artifactId>chutils</artifactId>
 			<version>1.4</version>
-			<!--WE ONLY INTERESTED IN ASCIITable from this library, so exclude all 
+			<!--We're only interested in ASCIITable from this library, so exclude all 
 				transitive dependencies -->
 			<exclusions>
 				<exclusion>

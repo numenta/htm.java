@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -295,8 +294,7 @@ public class Parameters implements Serializable {
         DATEFIELD_HOLIDAY("holiday", Tuple.class),
         DATEFIELD_TOFD("timeOfDay", Tuple.class),
         DATEFIELD_CUSTOM("customDays", Tuple.class), // e.g. Tuple(bits:int, List<String>:"mon,tue,fri")
-        DATEFIELD_PATTERN("formatPattern", String.class),
-        DATEFIELD_FORMATTER("dateFormatter", DateTimeFormatter.class);
+        DATEFIELD_PATTERN("formatPattern", String.class);
         
 
         private static final Map<String, KEY> fieldMap = new HashMap<>();
