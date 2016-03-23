@@ -932,4 +932,41 @@ public class NetworkTest {
         int width = layer1.calculateInputWidth();
         assertEquals(2048, width);
     }
+
+    @Test
+    public void closeTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Region region1 = Network.createRegion("region1");
+        Layer layer1 = Network.createLayer("layer1", p);
+        region1.add(layer1);
+
+        Region region2 = Network.createRegion("region2");
+        Layer layer2 = Network.createLayer("layer2", p);
+        region2.add(layer2);
+
+        Network network = Network.create("test network", p);
+
+        // Calling close on an empty Network should not throw any Exceptions
+        network.close();
+
+        // Calling close on a Network with a single unclosed Region
+        network.add(region1);
+        network.close();
+
+        assertTrue("Region 1 did not close, after closing Network", region1.isClosed());
+        assertTrue("Layer 1 did not close, after closing Network", layer1.isClosed());
+
+        // Calling close on a Network with two regions, one of which is closed
+        network.add(region2);
+        network.close();
+
+        assertTrue("Region 1 did not close, after closing Network with 2 Regions", region1.isClosed());
+        assertTrue("Layer 1 did not close, after closing Network with 2 Regions", layer1.isClosed());
+        assertTrue("Region 2 did not close, after closing Network with 2 Regions", region2.isClosed());
+        assertTrue("Layer 2 did not close, after closing Network with 2 Regions", layer2.isClosed());
+
+    }
 }

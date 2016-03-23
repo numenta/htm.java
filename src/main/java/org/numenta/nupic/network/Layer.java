@@ -1103,6 +1103,15 @@ public class Layer<T> {
     }
 
     /**
+     * Returns a flag indicating whether this {@code Layer} has had
+     * its {@link #close} method called, or not.
+     * @return
+     */
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    /**
      * Resets the internal record count to zero
      * 
      * @return this {@code LayerImpl}

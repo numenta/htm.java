@@ -497,6 +497,14 @@ public class Network {
     }
 
     /**
+     * Closes all the {@link Region} objects, in this {@link Network}
+     */
+    public Network close() {
+        regions.forEach(region -> region.close());
+        return this;
+    }
+
+    /**
      * Returns a {@link List} view of the contained {@link Region}s.
      * @return
      */
