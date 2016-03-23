@@ -19,6 +19,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #397](https://github.com/numenta/htm.java/pull/397)] Added close() method to the Network class to bring it inline with Region & Layer - Added Tests for new functionality. (@Mandarx)
+* [[PR #396](https://github.com/numenta/htm.java/pull/396)] Added Local.US to MetricsTrace to ensure (expected) dots.
 * [[PR #386](https://github.com/numenta/htm.java/pull/386)] Added test for close() method in LayerTest
 * [[PR #378](https://github.com/numenta/htm.java/pull/378)] Added more utility methods to ArrayUtils in prep for KNNClassifier development
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Added new override of rightVecSumAtNZ() method to Matrix classes.
