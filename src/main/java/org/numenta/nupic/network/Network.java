@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -154,7 +155,9 @@ import rx.Subscriber;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public class Network {
+public class Network implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public enum Mode { MANUAL, AUTO, REACTIVE };
 
     private String name;

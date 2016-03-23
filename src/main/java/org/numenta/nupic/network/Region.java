@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -64,7 +65,9 @@ import rx.Subscriber;
  * @author cogmission
  *
  */
-public class Region {
+public class Region implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
     
     private Network network;

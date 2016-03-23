@@ -582,14 +582,14 @@ public class JavaFstNetworkSerializationTest {
             .add(new SpatialPooler())
             .add(sensor);
         
-        layer.subscribe(new Observer<Inference>() {
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(Inference spatialPoolerOutput) {
-                System.out.println("in onNext()");
-            }
-        });
+//        layer.subscribe(new Observer<Inference>() {
+//            @Override public void onCompleted() {}
+//            @Override public void onError(Throwable e) { e.printStackTrace(); }
+//            @Override
+//            public void onNext(Inference spatialPoolerOutput) {
+//                System.out.println("in onNext()");
+//            }
+//        });
         
         SerialConfig config = new SerialConfig("testSerializeLayer", Scheme.FST);
         
