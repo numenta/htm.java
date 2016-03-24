@@ -21,12 +21,13 @@
  */
 package org.numenta.nupic.network.sensor;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
 import org.numenta.nupic.network.Region;
@@ -72,9 +73,11 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         Observable<String> obs = null;
         Object publisher = params.get("ONSUB");
         if(publisher instanceof Publisher) {
-            obs = ((Publisher)params.get("ONSUB")).observable();
-        }else{
-            obs = (Observable<String>)params.get("ONSUB"); 
+            obs = ((Publisher)publisher).observable();
+        } else if(publisher instanceof Supplier<?>) {
+            obs = ((Supplier<Observable<String>>)publisher).get();
+        } else {
+            obs = (Observable<String>)publisher; 
         }
         Iterator<String> observerator = obs.toBlocking().getIterator();
         

@@ -40,7 +40,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
@@ -187,9 +187,11 @@ public class Layer<T> implements Serializable {
     private Boolean autoCreateClassifiers;
     private Anomaly anomalyComputer;
 
+    private transient ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
     private transient PublishSubject<T> publisher = null;
-    private Subscription subscription;
     private transient Observable<Inference> userObservable;
+    
+    private Subscription subscription;
     private Inference currentInference;
 
     FunctionFactory factory;
@@ -217,8 +219,7 @@ public class Layer<T> implements Serializable {
     private Layer<Inference> previous;
 
     private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
-
+    
     /**
      * Retains the order of added items - for use with interposed
      * {@link Observable}
@@ -576,7 +577,6 @@ public class Layer<T> implements Serializable {
     public Observable<Inference> observe() {
         if(userObservable == null) {
             userObservable = Observable.create(new Observable.OnSubscribe<Inference>() {
-
                 @Override
                 public void call(Subscriber<? super Inference> t1) {
                     observers.add((Observer<Inference>)t1);
@@ -662,6 +662,7 @@ public class Layer<T> implements Serializable {
         // Configure the parent Network's reference to its sensor Region.
         if(parentNetwork != null && parentRegion != null) {
             parentNetwork.setSensorRegion(parentRegion);
+            parentNetwork.setSensor(this.sensor);
         }
         
         // Store the SensorParams for Sensor rebuild after deserialization
@@ -1225,7 +1226,7 @@ public class Layer<T> implements Serializable {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1250,7 +1251,7 @@ public class Layer<T> implements Serializable {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1272,7 +1273,7 @@ public class Layer<T> implements Serializable {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1293,7 +1294,7 @@ public class Layer<T> implements Serializable {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -2022,7 +2023,7 @@ public class Layer<T> implements Serializable {
                         actValue = inputs.get("inputValue");
 
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
-                        ClassifierResult<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
+                        Classification<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
 
                         t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
@@ -2050,12 +2051,107 @@ public class Layer<T> implements Serializable {
 
     }
 
+//    /* (non-Javadoc)
+//     * @see java.lang.Object#hashCode()
+//     */
+//    @Override
+//    public int hashCode() {
+//        final int prime = 31;
+//        int result = 1;
+//        result = prime * result + algo_content_mask;
+//        result = prime * result + ((connections == null) ? 0 : connections.hashCode());
+//        result = prime * result + ((currentInference == null) ? 0 : currentInference.hashCode());
+//        result = prime * result + Arrays.hashCode(feedForwardSparseActives);
+//        result = prime * result + (hasGenericProcess ? 1231 : 1237);
+//        result = prime * result + (isClosed ? 1231 : 1237);
+//        result = prime * result + (isHalted ? 1231 : 1237);
+//        result = prime * result + (isLearn ? 1231 : 1237);
+//        result = prime * result + ((name == null) ? 0 : name.hashCode());
+//        result = prime * result + ((params == null) ? 0 : params.hashCode());
+//        result = prime * result + recordNum;
+//        //result = prime * result + ((sensorParams == null) ? 0 : sensorParams.hashCode());
+//        return result;
+//    }
+//
+//    /* (non-Javadoc)
+//     * @see java.lang.Object#equals(java.lang.Object)
+//     */
+//    @SuppressWarnings("rawtypes")
+//    @Override
+//    public boolean equals(Object obj) {
+//        if(this == obj)
+//            return true;
+//        if(obj == null)
+//            return false;
+//        if(getClass() != obj.getClass())
+//            return false;
+//        Layer other = (Layer)obj;
+//        if(algo_content_mask != other.algo_content_mask)
+//            return false;
+//        if(connections == null) {
+//            if(other.connections != null)
+//                return false;
+//        } else if(!connections.equals(other.connections))
+//            return false;
+//        if(currentInference == null) {
+//            if(other.currentInference != null)
+//                return false;
+//        } else if(!currentInference.equals(other.currentInference))
+//            return false;
+//        if(!Arrays.equals(feedForwardSparseActives, other.feedForwardSparseActives))
+//            return false;
+//        if(hasGenericProcess != other.hasGenericProcess)
+//            return false;
+//        if(isClosed != other.isClosed)
+//            return false;
+//        if(isHalted != other.isHalted)
+//            return false;
+//        if(isLearn != other.isLearn)
+//            return false;
+//        if(name == null) {
+//            if(other.name != null)
+//                return false;
+//        } else if(!name.equals(other.name))
+//            return false;
+//        if(params == null) {
+//            if(other.params != null)
+//                return false;
+//        } else if(!params.equals(other.params))
+//            return false;
+//        if(recordNum != other.recordNum)
+//            return false;
+//        if(parentNetwork == null) {
+//            if(other.parentNetwork != null)
+//                return false;
+//        } else if(!parentNetwork.equals(other.parentNetwork))
+//            return false;
+//        if(parentRegion == null) {
+//            if(other.parentRegion != null)
+//                return false;
+//        } else if(!parentRegion.equals(other.parentRegion))
+//            return false;
+//        if(sensorParams == null) {
+//            if(other.sensorParams != null)
+//                return false;
+//        } else if(!sensorParams.equals(other.sensorParams))
+//            return false;
+//        return true;
+//    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + recordNum;
+        result = prime * result + algo_content_mask;
+        result = prime * result + ((currentInference == null) ? 0 : currentInference.hashCode());
+        result = prime * result + (hasGenericProcess ? 1231 : 1237);
+        result = prime * result + (isClosed ? 1231 : 1237);
+        result = prime * result + (isHalted ? 1231 : 1237);
+        result = prime * result + (isLearn ? 1231 : 1237);
         result = prime * result + ((parentRegion == null) ? 0 : parentRegion.hashCode());
+        result = prime * result + ((sensorParams == null) ? 0 : sensorParams.hashCode());
         return result;
     }
 
@@ -2073,11 +2169,37 @@ public class Layer<T> implements Serializable {
                 return false;
         } else if(!name.equals(other.name))
             return false;
+        if(algo_content_mask != other.algo_content_mask)
+            return false;
+        if(currentInference == null) {
+            if(other.currentInference != null)
+                return false;
+        } else if(!currentInference.equals(other.currentInference))
+            return false;
+        if(recordNum != other.recordNum)
+          return false;
+        if(hasGenericProcess != other.hasGenericProcess)
+            return false;
+        if(isClosed != other.isClosed)
+            return false;
+        if(isHalted != other.isHalted)
+            return false;
+        if(isLearn != other.isLearn)
+            return false;
         if(parentRegion == null) {
             if(other.parentRegion != null)
                 return false;
         } else if(!parentRegion.equals(other.parentRegion))
             return false;
+        if(sensorParams == null) {
+            if(other.sensorParams != null)
+                return false;
+        } else if(!sensorParams.equals(other.sensorParams))
+            return false;
+        
         return true;
     }
+
+
+    
 }

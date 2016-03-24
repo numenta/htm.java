@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.util.NamedTuple;
@@ -45,9 +45,9 @@ public class ManualInputTest {
         Set<Cell> activeCells = new LinkedHashSet<>(); activeCells.add(new Cell(new Column(4, 0), 1));
         Set<Cell> previousPrediction = new LinkedHashSet<>(); previousPrediction.add(new Cell(new Column(4, 0), 2));
         Set<Cell> currentPrediction = new LinkedHashSet<>(); currentPrediction.add(new Cell(new Column(4, 0), 3));
-        ClassifierResult<Object> classification = new ClassifierResult<>();
+        Classification<Object> classification = new Classification<>();
         double anomalyScore = 0.48d;
-        Object customObject = new Network("", NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        Object customObject = new Network("CopyTest", NetworkTestHarness.getNetworkDemoTestEncoderParams());
         
         ManualInput mi = new ManualInput()
         .classifierInput(classifierInput)

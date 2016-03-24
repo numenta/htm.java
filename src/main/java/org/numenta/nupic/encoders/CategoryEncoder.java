@@ -73,7 +73,7 @@ import java.util.Map;
  * @author David Ray
  * @see ScalarEncoder
  * @see Encoder
- * @see EncoderResult
+ * @see Encoding
  * @see Parameters
  */
 public class CategoryEncoder extends Encoder<String> {
@@ -296,14 +296,14 @@ public class CategoryEncoder extends Encoder<String> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
+	public List<Encoding> getBucketInfo(int[] buckets) {
 		// For the category encoder, the bucket index is the category index
-		List<EncoderResult> bucketInfo = scalarEncoder.getBucketInfo(buckets);
+		List<Encoding> bucketInfo = scalarEncoder.getBucketInfo(buckets);
 
 		int categoryIndex = (int)Math.round((double)bucketInfo.get(0).getValue());
 		String category = indexToCategory.get(categoryIndex);
 
-		bucketInfo.set(0, new EncoderResult(category, categoryIndex, bucketInfo.get(0).getEncoding()));
+		bucketInfo.set(0, new Encoding(category, categoryIndex, bucketInfo.get(0).getEncoding()));
 		return bucketInfo;
 	}
 
@@ -311,7 +311,7 @@ public class CategoryEncoder extends Encoder<String> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> topDownCompute(int[] encoded) {
+	public List<Encoding> topDownCompute(int[] encoded) {
 		//Get/generate the topDown mapping table
 		SparseObjectMatrix<int[]> topDownMapping = scalarEncoder.getTopDownMapping();
 		// See which "category" we match the closest.

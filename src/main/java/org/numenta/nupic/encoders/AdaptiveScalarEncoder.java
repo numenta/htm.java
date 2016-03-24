@@ -104,12 +104,12 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> topDownCompute(int[] encoded) {
+	public List<Encoding> topDownCompute(int[] encoded) {
 		if (this.getMinVal() == 0 || this.getMaxVal() == 0) {
-			List<EncoderResult> res = new ArrayList<EncoderResult>();
+			List<Encoding> res = new ArrayList<Encoding>();
 			int[] enArray = new int[this.getN()];
 			Arrays.fill(enArray, 0);
-			EncoderResult ecResult = new EncoderResult(0, 0, enArray);
+			Encoding ecResult = new Encoding(0, 0, enArray);
 			res.add(ecResult);
 			return res;
 		}
@@ -222,12 +222,12 @@ public class AdaptiveScalarEncoder extends ScalarEncoder {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
+	public List<Encoding> getBucketInfo(int[] buckets) {
 		if (this.minVal == 0 || this.maxVal == 0) {
 			int[] initialBuckets = new int[this.n];
 			Arrays.fill(initialBuckets, 0);
-			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
-			EncoderResult encoderResult = new EncoderResult(0, 0, initialBuckets);
+			List<Encoding> encoderResultList = new ArrayList<Encoding>();
+			Encoding encoderResult = new Encoding(0, 0, initialBuckets);
 			encoderResultList.add(encoderResult);
 			return encoderResultList;
 		}

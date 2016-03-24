@@ -32,7 +32,7 @@ import java.util.Arrays;
  * @author metaware
  * @see {@link Encoder}
  */
-public class EncoderResult extends Tuple {
+public class Encoding extends Tuple {
 
     private static final long serialVersionUID = 1L;
 
@@ -46,7 +46,7 @@ public class EncoderResult extends Tuple {
      *                 (e.g. for categories, this is the internal index used by the encoder)
      * @param encoding The bit-string representation of the value
      */
-    public EncoderResult(Object value, Number scalar, int[] encoding) {
+    public Encoding(Object value, Number scalar, int[] encoding) {
         super("EncoderResult", value, scalar, encoding);
     }
 
@@ -91,10 +91,10 @@ public class EncoderResult extends Tuple {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof EncoderResult)) {
+        if (!(obj instanceof Encoding)) {
             return false;
         }
-        EncoderResult other = (EncoderResult)obj;
+        Encoding other = (Encoding)obj;
         if (!this.getScalar().equals(other.getScalar())) {
             return false;
         }

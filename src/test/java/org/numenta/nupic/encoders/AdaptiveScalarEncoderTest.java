@@ -177,14 +177,14 @@ public class AdaptiveScalarEncoderTest {
 			
 			assertTrue(Math.abs(fields.get(fields.keySet().iterator().next()).getRange(0).min() - minVal) < ase.getResolution());
 			
-			java.util.List<EncoderResult> topDown = ase.topDownCompute(output);
+			java.util.List<Encoding> topDown = ase.topDownCompute(output);
 			assertTrue(topDown.size() == 1);
 			System.out.println("\nTopDown => " + topDown.toString());
 			
 			int[] bucketIndices = ase.getBucketIndices(minVal);
 			assertTrue("The bucket indice size is not matching", bucketIndices.length == 1);
 			System.out.println("Bucket indices => " + Arrays.toString(bucketIndices));
-			List<EncoderResult> bucketInfoList = ase.getBucketInfo(bucketIndices);
+			List<Encoding> bucketInfoList = ase.getBucketInfo(bucketIndices);
 			assertTrue((Math.abs((double)bucketInfoList.get(0).getValue() - minVal)) <= (ase.getResolution() / 2));
 			System.out.println("Bucket info value: " + bucketInfoList.get(0).getValue());
 			System.out.println("Minval: " + minVal + " Abs(BucketVal - Minval): " + Math.abs((double)bucketInfoList.get(0).getValue() - minVal));

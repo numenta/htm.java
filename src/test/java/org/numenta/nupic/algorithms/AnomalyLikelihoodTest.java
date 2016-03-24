@@ -53,7 +53,7 @@ public class AnomalyLikelihoodTest {
      * @param variance
      * @return
      */
-    private double[] sampleDistribution(Random random, double mean, double variance, int size) {
+    public static double[] sampleDistribution(Random random, double mean, double variance, int size) {
         SampleDistribution sampler = new SampleDistribution(mean, Math.sqrt(variance), size);
         return sampler.getSample(random);
     }
@@ -68,7 +68,7 @@ public class AnomalyLikelihoodTest {
      * @param metricVariance
      * @return
      */
-    private List<Sample> generateSampleData(double mean, double variance, double metricMean, double metricVariance) {
+    public static List<Sample> generateSampleData(double mean, double variance, double metricMean, double metricVariance) {
         List<Sample> retVal = new ArrayList<>();
         
         Random random = new MersenneTwister(42);
@@ -89,11 +89,11 @@ public class AnomalyLikelihoodTest {
         return retVal;
     }
     
-    private boolean assertWithinEpsilon(double a, double b) {
+    public static boolean assertWithinEpsilon(double a, double b) {
         return assertWithinEpsilon(a, b, 0.001);
     }
     
-    private boolean assertWithinEpsilon(double a, double b, double epsilon) {
+    public static boolean assertWithinEpsilon(double a, double b, double epsilon) {
         if(Math.abs(a - b) <= epsilon) {
             return true;
         }
@@ -237,7 +237,7 @@ public class AnomalyLikelihoodTest {
      */
     @Test
     public void testEstimateAnomalyLikelihoodsMalformedRecords() {
-        // Skipped due to impossibility of forming bad Sample objects
+        // Skipped due to impossibility of forming bad Sample objects in Java
     }
     
     /**

@@ -1076,19 +1076,19 @@ public abstract class Encoder<T>  implements Serializable {
 	public abstract <S> List<S> getBucketValues(Class<S> returnType);
 
 	/**
-	 * Returns a list of {@link EncoderResult}s describing the inputs for
+	 * Returns a list of {@link Encoding}s describing the inputs for
      * each sub-field that correspond to the bucket indices passed in 'buckets'.
      * To get the associated field names for each of the values, call getScalarNames().
 	 * @param buckets 	The list of bucket indices, one for each sub-field encoder.
      *              	These bucket indices for example may have been retrieved
      *              	from the getBucketIndices() call.
 	 *
-     * @return A list of {@link EncoderResult}s. Each EncoderResult has
+     * @return A list of {@link Encoding}s. Each EncoderResult has
 	 */
 	@SuppressWarnings("unchecked")
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
+	public List<Encoding> getBucketInfo(int[] buckets) {
 		//Concatenate the results from bucketInfo on each child encoder
-		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
+		List<Encoding> retVals = new ArrayList<Encoding>();
 		int bucketOffset = 0;
 		for(EncoderTuple encoderTuple : getEncoders(this)) {
 			int nextBucketOffset = -1;
@@ -1099,7 +1099,7 @@ public abstract class Encoder<T>  implements Serializable {
 				nextBucketOffset = bucketOffset + 1;
 			}
 			int[] bucketIndices = ArrayUtils.sub(buckets, ArrayUtils.range(bucketOffset, nextBucketOffset));
-			List<EncoderResult> values = encoderTuple.getEncoder().getBucketInfo(bucketIndices);
+			List<Encoding> values = encoderTuple.getEncoder().getBucketInfo(bucketIndices);
 
 			retVals.addAll(values);
 
@@ -1140,8 +1140,8 @@ public abstract class Encoder<T>  implements Serializable {
      *                          returned.
 	 */
 	@SuppressWarnings("unchecked")
-	public List<EncoderResult> topDownCompute(int[] encoded) {
-		List<EncoderResult> retVals = new ArrayList<EncoderResult>();
+	public List<Encoding> topDownCompute(int[] encoded) {
+		List<Encoding> retVals = new ArrayList<Encoding>();
 
 		List<EncoderTuple> encoders = getEncoders(this);
 		int len = encoders.size();
@@ -1158,7 +1158,7 @@ public abstract class Encoder<T>  implements Serializable {
 			}
 
 			int[] fieldOutput = ArrayUtils.sub(encoded, ArrayUtils.range(offset, nextOffset));
-			List<EncoderResult> values = encoder.topDownCompute(fieldOutput);
+			List<Encoding> values = encoder.topDownCompute(fieldOutput);
 
 			retVals.addAll(values);
 		}

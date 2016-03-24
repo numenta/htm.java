@@ -22,9 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +36,9 @@ import org.numenta.nupic.util.Tuple;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * A CLA classifier accepts a binary input from the level below (the
@@ -69,8 +70,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 @JsonSerialize(using=CLAClassifierSerializer.class)
 @JsonDeserialize(using=CLAClassifierDeserializer.class)
-public class CLAClassifier {
-	int verbosity = 0;
+public class CLAClassifier implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
+    int verbosity = 0;
 	/**
 	 * The alpha used to compute running averages of the bucket duty
      * cycles for each activation pattern bit. A lower alpha results
@@ -178,8 +181,8 @@ public class CLAClassifier {
      *             				}
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> ClassifierResult<T> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
-		ClassifierResult<T> retVal = new ClassifierResult<T>();
+	public <T> Classification<T> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
+		Classification<T> retVal = new Classification<T>();
 		List<T> actualValues = (List<T>)this.actualValues;
 		
 		// Save the offset between recordNum and learnIteration if this is the first

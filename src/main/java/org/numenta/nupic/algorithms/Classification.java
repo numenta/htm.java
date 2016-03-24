@@ -13,7 +13,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
  *
  * @param <T>
  */
-public class ClassifierResult<T> {
+public class Classification<T> {
     /** Array of actual values */
     private T[] actualValues;
 
@@ -26,8 +26,8 @@ public class ClassifierResult<T> {
      * @return  a copy of this {@code ClassifierResult} which will not be affected
      * by changes to the original.
      */
-    public ClassifierResult<T> copy() {
-        ClassifierResult<T> retVal = new ClassifierResult<T>();
+    public Classification<T> copy() {
+        Classification<T> retVal = new Classification<T>();
         retVal.actualValues = Arrays.copyOf(actualValues, actualValues.length);
         retVal.probabilities = new TIntObjectHashMap<double[]>(probabilities);
         
@@ -183,7 +183,7 @@ public class ClassifierResult<T> {
         if(getClass() != obj.getClass())
             return false;
         @SuppressWarnings("rawtypes")
-        ClassifierResult other = (ClassifierResult)obj;
+        Classification other = (Classification)obj;
         if(!Arrays.equals(actualValues, other.actualValues))
             return false;
         if(probabilities == null) {

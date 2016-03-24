@@ -23,6 +23,7 @@ package org.numenta.nupic.network.sensor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -89,7 +90,9 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 public class HTMSensor<T> implements Sensor<T>, Serializable {
     private static final long serialVersionUID = 1L;
     
+    private boolean encodersInitted;
     private Sensor<T> delegate;
+    private SensorParams sensorParams;
     private Header header;
     private Parameters localParameters;
     private MultiEncoder encoder;
@@ -116,6 +119,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
      */
     public HTMSensor(Sensor<T> sensor) {
         this.delegate = sensor;
+        this.sensorParams = sensor.getSensorParams();
         header = new Header(sensor.getInputStream().getMeta());
         if(header == null || header.size() < 3) {
             throw new IllegalStateException("Header must always be present; and have 3 lines.");
@@ -214,7 +218,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
      */
     @Override
     public SensorParams getSensorParams() {
-        return delegate.getSensorParams();
+        return sensorParams;
     }
 
     /**
@@ -551,8 +555,8 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
     }
 
     /**
-     * Sets the local parameters used to configure the major
-     * algorithmic components.
+     * Initializes this {@code HTMSensor}'s internal encoders if and 
+     * only if the encoders have not been previously initialized.
      */
     @SuppressWarnings("unchecked")
     public void initEncoder(Parameters p) {
@@ -560,12 +564,23 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
         
         Map<String, Map<String, Object>> encoderSettings;
         if((encoderSettings = (Map<String, Map<String, Object>>)p.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null &&
-            encoder.getEncoders().isEmpty() && 
-                indexToEncoderMap == null) {
+            !encodersInitted) {
             
             initEncoders(encoderSettings);
             makeIndexEncoderMap();
+            
+            encodersInitted = true;
         }
+    }
+    
+    /**
+     * Returns a flag indicating whether the internal encoders of this
+     * sensor have been initialized. 
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean encodersInitted() {
+        return encodersInitted;
     }
     
     /**
@@ -606,6 +621,43 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
      */
     public <K> MultiEncoder getEncoder() {
         return (MultiEncoder)encoder;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((indexFieldMap == null) ? 0 : indexFieldMap.hashCode());
+        result = prime * result + ((sensorParams == null) ? 0 : Arrays.deepHashCode(sensorParams.keys()));
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        HTMSensor<?> other = (HTMSensor<?>)obj;
+        if(indexFieldMap == null) {
+            if(other.indexFieldMap != null)
+                return false;
+        } else if(!indexFieldMap.equals(other.indexFieldMap))
+            return false;
+        if(sensorParams == null) {
+            if(other.sensorParams != null)
+                return false;
+        } else if(!sensorParams.keys().equals(other.sensorParams.keys()))
+            return false;
+        return true;
     }
 
 }

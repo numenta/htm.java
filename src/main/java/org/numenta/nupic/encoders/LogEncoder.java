@@ -329,24 +329,24 @@ public class LogEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
-		EncoderResult scaledResult = encoder.getBucketInfo(buckets).get(0);
+	public List<Encoding> getBucketInfo(int[] buckets) {
+		Encoding scaledResult = encoder.getBucketInfo(buckets).get(0);
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
 
-		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
+		return Arrays.asList(new Encoding(value, value, scaledResult.getEncoding()));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> topDownCompute(int[] encoded) {
-		EncoderResult scaledResult = encoder.topDownCompute(encoded).get(0);
+	public List<Encoding> topDownCompute(int[] encoded) {
+		Encoding scaledResult = encoder.topDownCompute(encoded).get(0);
 		double scaledValue = (Double)scaledResult.getValue();
 		double value = Math.pow(10, scaledValue);
 
-		return Arrays.asList(new EncoderResult(value, value, scaledResult.getEncoding()));
+		return Arrays.asList(new Encoding(value, value, scaledResult.getEncoding()));
 	}
 
 	/**

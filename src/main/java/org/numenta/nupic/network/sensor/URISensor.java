@@ -27,8 +27,6 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 
-import org.numenta.nupic.ValueList;
-
 /**
  * Sensor which creates its source stream from a {@link URI}
  * Instances of this class should be obtained via the factory
@@ -45,7 +43,7 @@ public class URISensor implements Sensor<URI>  {
     private static final int BATCH_SIZE = 20;
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
-    private BatchedCsvStream<String[]> stream;
+    private transient BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
     

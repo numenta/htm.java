@@ -22,6 +22,8 @@
 
 package org.numenta.nupic.algorithms;
 
+import java.io.Serializable;
+
 import org.joda.time.DateTime;
 
 /**
@@ -29,7 +31,9 @@ import org.joda.time.DateTime;
  * This class is used as an input value to methods in the {@link AnomalyLikelihood}
  * class.
  */
-public class Sample {
+public class Sample implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     public final DateTime date;
     /** Same thing as average */
     public final double score;

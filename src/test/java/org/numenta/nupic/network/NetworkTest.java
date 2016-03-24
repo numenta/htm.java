@@ -63,7 +63,7 @@ public class NetworkTest {
     public void testResetMethod() {
         
         Parameters p = NetworkTestHarness.getParameters();
-        Network network = new Network("", p)
+        Network network = new Network("ResetTestNetwork", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("l1", p).add(new TemporalMemory())));
         try {
@@ -73,7 +73,7 @@ public class NetworkTest {
             fail();
         }
         
-        network = new Network("", p)
+        network = new Network("ResetMethodTestNetwork", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("l1", p).add(new SpatialPooler())));
         try {
@@ -87,7 +87,7 @@ public class NetworkTest {
     @Test
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters();
-        Network network = new Network("", p)
+        Network network = new Network("ResetRecordNumNetwork", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("l1", p).add(new TemporalMemory())));
         network.observe().subscribe(new Observer<Inference>() {

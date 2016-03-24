@@ -83,7 +83,7 @@ public class CategoryEncoderTest {
 		// Test topdown compute
 		for(String v : categories) {
 			output = ce.encode(v);
-			EncoderResult topDown = ce.topDownCompute(output).get(0);
+			Encoding topDown = ce.topDownCompute(output).get(0);
 			assertEquals(v, topDown.getValue());
 			assertEquals((int)ce.getScalars(v).get(0), (int)topDown.getScalar().doubleValue());
 
@@ -111,7 +111,7 @@ public class CategoryEncoderTest {
 		assertTrue(minMax.min() == 0 && minMax.max() == 0);
 		LOGGER.info("decodedToStr of " + minMax + "=>" + ce.decodedToStr(decoded));
 
-		EncoderResult topDown = ce.topDownCompute(output).get(0);
+		Encoding topDown = ce.topDownCompute(output).get(0);
 		assertEquals(topDown.getValue(), "<UNKNOWN>");
 		assertEquals(topDown.getScalar(), 0);
 

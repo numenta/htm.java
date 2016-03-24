@@ -180,10 +180,17 @@ public class Network implements Serializable {
 
     /**
      * Creates a new {@link Network}
+     * 
+     * Warning: name cannot be null or empty
+     * 
      * @param name
      * @param parameters
      */
     public Network(String name, Parameters parameters) {
+        if(name == null || name.isEmpty()) {
+            throw new IllegalStateException("All Networks must have a name. " +
+                "Increases digestion, and overall happiness!");
+        }
         this.name = name;
         this.parameters = parameters;
         if(parameters == null) {
@@ -193,6 +200,8 @@ public class Network implements Serializable {
     
     /**
      * Creates and returns an implementation of {@link Network}
+     * 
+     * Warning: name cannot be null or empty
      * 
      * @param name
      * @param parameters
@@ -641,6 +650,58 @@ public class Network implements Serializable {
         if(name.indexOf(":") != -1) {
             throw new IllegalArgumentException("\":\" is a reserved character.");
         }
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (isLearn ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
+        result = prime * result + ((regions == null) ? 0 : regions.hashCode());
+        result = prime * result + ((sensor == null) ? 0 : sensor.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Network other = (Network)obj;
+        if(isLearn != other.isLearn)
+            return false;
+        if(name == null) {
+            if(other.name != null)
+                return false;
+        } else if(!name.equals(other.name))
+            return false;
+        if(parameters == null) {
+            if(other.parameters != null)
+                return false;
+        } else if(!parameters.equals(other.parameters))
+            return false;
+        if(regions == null) {
+            if(other.regions != null)
+                return false;
+        } else if(!regions.equals(other.regions))
+            return false;
+        if(sensor == null) {
+            if(other.sensor != null)
+                return false;
+        } else if(!sensor.equals(other.sensor))
+            return false;
+        return true;
     }
 
 }

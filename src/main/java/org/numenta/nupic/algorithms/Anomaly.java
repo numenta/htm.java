@@ -22,14 +22,15 @@
 
 package org.numenta.nupic.algorithms;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TDoubleArrayList;
-
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.numenta.nupic.util.ArrayUtils;
+
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.array.TDoubleArrayList;
 
 
 /**
@@ -84,7 +85,10 @@ import org.numenta.nupic.util.ArrayUtils;
  * @see AnomalyTest
  * @see AnomalyLikelihoodTest
  */
-public abstract class Anomaly {
+public abstract class Anomaly implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+
     /** Modes to use for factory creation method */
     public enum Mode { PURE, LIKELIHOOD, WEIGHTED };
     
@@ -172,25 +176,28 @@ public abstract class Anomaly {
         }
         
         switch(mode) {
-           case PURE: return new Anomaly(useMovingAvg, windowSize) {
-            @Override
-            public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
-               double retVal = computeRawAnomalyScore(activeColumns, predictedColumns);
-               if(this.useMovingAverage) {
-                   retVal = movingAverage.next(retVal);
-               }
-               return retVal;
-            }};
-           case LIKELIHOOD: 
-           case WEIGHTED: {
-               boolean isWeighted = (boolean)params.getOrDefault(KEY_IS_WEIGHTED, false);
-               int claLearningPeriod = (int)params.getOrDefault(KEY_LEARNING_PERIOD, VALUE_NONE);
-               int estimationSamples = (int)params.getOrDefault(KEY_ESTIMATION_SAMPLES, VALUE_NONE);
+            case PURE: return new Anomaly(useMovingAvg, windowSize) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
+                    double retVal = computeRawAnomalyScore(activeColumns, predictedColumns);
+                    if(this.useMovingAverage) {
+                        retVal = movingAverage.next(retVal);
+                    }
+                    return retVal;
+                }
+            };
+            case LIKELIHOOD: 
+            case WEIGHTED: {
+                boolean isWeighted = (boolean)params.getOrDefault(KEY_IS_WEIGHTED, false);
+                int claLearningPeriod = (int)params.getOrDefault(KEY_LEARNING_PERIOD, VALUE_NONE);
+                int estimationSamples = (int)params.getOrDefault(KEY_ESTIMATION_SAMPLES, VALUE_NONE);
                
-               return new AnomalyLikelihood(useMovingAvg, windowSize, isWeighted, claLearningPeriod, estimationSamples);
-           }
-           default: return null;
-       }
+                return new AnomalyLikelihood(useMovingAvg, windowSize, isWeighted, claLearningPeriod, estimationSamples);
+            }
+            default: return null;
+        }
     }
     
     /**
@@ -246,10 +253,12 @@ public abstract class Anomaly {
      * @see AnomalyLikelihood
      * @see MovingAverage
      */
-    public class AveragedAnomalyRecordList {
-        List<Sample> averagedRecords;
-        TDoubleList historicalValues;
-        double total;
+    public class AveragedAnomalyRecordList implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
+        public List<Sample> averagedRecords;
+        public TDoubleList historicalValues;
+        public double total;
         
         /**
          * Constructs a new {@code AveragedAnomalyRecordList}

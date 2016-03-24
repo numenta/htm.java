@@ -1,22 +1,29 @@
 package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -24,6 +31,14 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.SDR;
+import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Anomaly.Mode;
+import org.numenta.nupic.algorithms.AnomalyLikelihood;
+import org.numenta.nupic.algorithms.AnomalyLikelihoodMetrics;
+import org.numenta.nupic.algorithms.AnomalyLikelihoodTest;
+import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.algorithms.Classification;
+import org.numenta.nupic.algorithms.Sample;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
@@ -39,6 +54,8 @@ import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.util.ArrayUtils;
+import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.FastRandom;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.MinMax;
@@ -51,6 +68,8 @@ import org.nustaq.serialization.FSTObjectOutput;
 
 import com.cedarsoftware.util.DeepEquals;
 
+import gnu.trove.list.array.TIntArrayList;
+import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 
@@ -243,7 +262,9 @@ public class JavaFstNetworkSerializationTest {
     //     First, Test Serialization of Each Object Individually    //
     //////////////////////////////////////////////////////////////////
     
-    // Parameters
+    /////////////////////
+    //    Parameters   //
+    /////////////////////
     @Test
     public void testSerializeParameters() {
         Parameters p = getParameters();
@@ -271,7 +292,9 @@ public class JavaFstNetworkSerializationTest {
         }
     }
     
-    // Connections
+    /////////////////////
+    //   Connections   //
+    /////////////////////
     @Test
     public void testSerializeConnections() {
         Parameters p = getParameters();
@@ -490,7 +513,10 @@ public class JavaFstNetworkSerializationTest {
     }
     /////////////////////////// End Connections Serialization Testing //////////////////////////////////
     
-    
+    /////////////////////
+    //    HTMSensor    //
+    /////////////////////
+    // Serialize HTMSensors though they'll probably be reconstituted rather than serialized
     @SuppressWarnings("unchecked")
     @Test
     public void testHTMSensor_DaysOfWeek() {
@@ -546,17 +572,221 @@ public class JavaFstNetworkSerializationTest {
         ObservableSensor<String[]> serializedOSensor = serializer.deSerialize((Class<ObservableSensor>)oSensor.getClass(), null); // (null=get from file)
         System.out.println("container = " + serializedOSensor);
     }
+    ////////////////////////////////// End HTMSensors ////////////////////////////////////
     
+    /////////////////////
+    //    Anomaly      //
+    /////////////////////
+    // Serialize Anomaly, AnomalyLikelihood and its support classes
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializeAnomaly() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        Anomaly anomalyComputer = Anomaly.create(params);
+        
+        // Serialize the Anomaly Computer without errors
+        SerialConfig config = new SerialConfig("testSerializeAnomaly1", Scheme.FST);
+        NetworkSerializer<Anomaly> serializer = Network.serializer(config, false);
+        serializer.serialize(anomalyComputer);
+        
+        // Deserialize the Anomaly Computer and make sure its usable (same tests as AnomalyTest.java)
+        Anomaly serializedAnomalyComputer = serializer.deSerialize((Class<Anomaly>)anomalyComputer.getClass(), null); // (null=get from file)
+        double score = serializedAnomalyComputer.compute(new int[0], new int[0], 0, 0);
+        assertEquals(0.0, score, 0);
+        
+        score = serializedAnomalyComputer.compute(new int[0], new int[] {3,5}, 0, 0);
+        assertEquals(1.0, score, 0);
+        
+        score = serializedAnomalyComputer.compute(new int[] { 3, 5, 7 }, new int[] { 3, 5, 7 }, 0, 0);
+        assertEquals(0.0, score, 0);
+        
+        score = serializedAnomalyComputer.compute(new int[] { 2, 3, 6 }, new int[] { 3, 5, 7 }, 0, 0);
+        assertEquals(2.0 / 3.0, score, 0);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializeCumulativeAnomaly() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        params.put(KEY_WINDOW_SIZE, 3);
+        params.put(KEY_USE_MOVING_AVG, true);
+        
+        Anomaly anomalyComputer = Anomaly.create(params);
+        
+        // Serialize the Anomaly Computer without errors
+        SerialConfig config = new SerialConfig("testSerializeCumulativeAnomaly", Scheme.FST);
+        NetworkSerializer<Anomaly> serializer = Network.serializer(config, false);
+        serializer.serialize(anomalyComputer);
+        
+        // Deserialize the Anomaly Computer and make sure its usable (same tests as AnomalyTest.java)
+        Anomaly serializedAnomalyComputer = serializer.deSerialize((Class<Anomaly>)anomalyComputer.getClass(), null); // (null=get from file)
+        assertNotNull(serializedAnomalyComputer);        
+        
+        Object[] predicted = {
+            new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 },
+            new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 },
+            new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }
+        };
+        Object[] actual = {
+            new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }, new int[] { 1, 4, 6 },
+            new int[] { 10, 11, 6 }, new int[] { 10, 11, 12 }, new int[] { 10, 11, 12 },
+            new int[] { 10, 11, 12 }, new int[] { 1, 2, 6 }, new int[] { 1, 2, 6 }
+        };
+        
+        double[] anomalyExpected = { 0.0, 0.0, 1.0/9.0, 3.0/9.0, 2.0/3.0, 8.0/9.0, 1.0, 2.0/3.0, 1.0/3.0 };
+        for(int i = 0;i < 9;i++) {
+            double score = serializedAnomalyComputer.compute((int[])actual[i], (int[])predicted[i], 0, 0);
+            assertEquals(anomalyExpected[i], score, 0.01);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializeAnomalyLikelihood() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.LIKELIHOOD);
+        AnomalyLikelihood an = (AnomalyLikelihood)Anomaly.create(params);
+        
+        // Serialize the Anomaly Computer without errors
+        SerialConfig config = new SerialConfig("testSerializeAnomalyLikelihood", Scheme.FST);
+        NetworkSerializer<AnomalyLikelihood> serializer = Network.serializer(config, false);
+        serializer.serialize(an);
+        
+        // Deserialize the Anomaly Computer and make sure its usable (same tests as AnomalyTest.java)
+        Anomaly serializedAn = serializer.deSerialize((Class<AnomalyLikelihood>)an.getClass(), null); // (null=get from file)
+        assertNotNull(serializedAn);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializeAnomalyLikelihoodForUpdates() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.LIKELIHOOD);
+        AnomalyLikelihood an = (AnomalyLikelihood)Anomaly.create(params);
+        
+        // Serialize the Anomaly Computer without errors
+        SerialConfig config = new SerialConfig("testSerializeAnomalyLikelihood", Scheme.FST);
+        NetworkSerializer<AnomalyLikelihood> serializer = Network.serializer(config, false);
+        serializer.serialize(an);
+        
+        // Deserialize the Anomaly Computer and make sure its usable (same tests as AnomalyTest.java)
+        AnomalyLikelihood serializedAn = serializer.deSerialize((Class<AnomalyLikelihood>)an.getClass(), null); // (null=get from file)
+        assertNotNull(serializedAn);
+        
+        //----------------------------------------
+        // Step 1. Generate an initial estimate using fake distribution of anomaly scores.
+        List<Sample> data1 = AnomalyLikelihoodTest.generateSampleData(0.2, 0.2, 0.2, 0.2).subList(0, 1000);
+        AnomalyLikelihoodMetrics metrics1 = serializedAn.estimateAnomalyLikelihoods(data1, 5, 0);
+        
+        //----------------------------------------
+        // Step 2. Generate some new data with a higher average anomaly
+        // score. Using the estimator from step 1, to compute likelihoods. Now we
+        // should see a lot more anomalies.
+        List<Sample> data2 = AnomalyLikelihoodTest.generateSampleData(0.6, 0.2, 0.2, 0.2).subList(0, 300);
+        AnomalyLikelihoodMetrics metrics2 = serializedAn.updateAnomalyLikelihoods(data2, metrics1.getParams());
+        
+        // Serialize the Metrics too just to be sure everything can be serialized
+        SerialConfig metricsConfig = new SerialConfig("testSerializeMetrics", Scheme.FST);
+        NetworkSerializer<AnomalyLikelihoodMetrics> metricsSerializer = Network.serializer(metricsConfig, true);
+        metricsSerializer.serialize(metrics2);
+        
+        // Deserialize the Metrics
+        AnomalyLikelihoodMetrics serializedMetrics = metricsSerializer.deSerialize((Class<AnomalyLikelihoodMetrics>)metrics2.getClass(), null); // (null=get from file)
+        assertNotNull(serializedMetrics);
+        
+        assertEquals(serializedMetrics.getLikelihoods().length, data2.size());
+        assertEquals(serializedMetrics.getAvgRecordList().size(), data2.size());
+        assertTrue(serializedAn.isValidEstimatorParams(serializedMetrics.getParams()));
+        
+        // The new running total should be different
+        assertFalse(metrics1.getAvgRecordList().total == serializedMetrics.getAvgRecordList().total);
+        
+        // We should have many more samples where likelihood is < 0.01, but not all
+        Condition<Double> cond = new Condition.Adapter<Double>() {
+            public boolean eval(double d) { return d < 0.01; }
+        };
+        int conditionCount = ArrayUtils.where(serializedMetrics.getLikelihoods(), cond).length;
+        assertTrue(conditionCount >= 25);
+        assertTrue(conditionCount <= 250);
+    }
+    ///////////////////////   End Serialize Anomaly //////////////////////////
+    
+    ///////////////////////////
+    //      CLAClassifier    //
+    ///////////////////////////
+    // Test Serialize CLAClassifier
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializeCLAClassifier() {
+        CLAClassifier classifier = new CLAClassifier(new TIntArrayList(new int[] { 1 }), 0.1, 0.1, 0);
+        int recordNum = 0;
+        Map<String, Object> classification = new LinkedHashMap<String, Object>();
+        classification.put("bucketIdx", 4);
+        classification.put("actValue", 34.7);
+        Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+        recordNum += 1;
+        
+        classification.put("bucketIdx", 5);
+        classification.put("actValue", 41.7);
+        result = classifier.compute(recordNum, classification, new int[] { 0, 6, 9, 11 }, true, true);
+        recordNum += 1;
+        
+        classification.put("bucketIdx", 5);
+        classification.put("actValue", 44.9);
+        result = classifier.compute(recordNum, classification, new int[] { 6, 9 }, true, true);
+        recordNum += 1;
+        
+        classification.put("bucketIdx", 4);
+        classification.put("actValue", 42.9);
+        result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+        recordNum += 1;
+        
+        // Serialize the Metrics too just to be sure everything can be serialized
+        SerialConfig config = new SerialConfig("testSerializeCLAClassifier", Scheme.FST);
+        NetworkSerializer<CLAClassifier> serializer = Network.serializer(config, true);
+        serializer.serialize(classifier);
+        
+        // Deserialize the Metrics
+        CLAClassifier serializedClassifier = serializer.deSerialize((Class<CLAClassifier>)classifier.getClass(), null); // (null=get from file)
+        assertNotNull(serializedClassifier);
+        
+        //Using the deserialized classifier, continue test
+        classification.put("bucketIdx", 4);
+        classification.put("actValue", 34.7);
+        result = serializedClassifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+        recordNum += 1;
+        
+        assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
+        assertEquals(35.520000457763672, result.getActualValue(4), 0.00001);
+        assertEquals(42.020000457763672, result.getActualValue(5), 0.00001);
+        assertEquals(6, result.getStatCount(1));
+        assertEquals(0.0, result.getStat(1, 0), 0.00001);
+        assertEquals(0.0, result.getStat(1, 1), 0.00001);
+        assertEquals(0.0, result.getStat(1, 2), 0.00001);
+        assertEquals(0.0, result.getStat(1, 3), 0.00001);
+        assertEquals(0.12300123, result.getStat(1, 4), 0.00001);
+        assertEquals(0.87699877, result.getStat(1, 5), 0.00001);
+    }
+    ////////////////////////  End CLAClassifier ///////////////////////
+    
+    ///////////////////////////
+    //         Layers        //
+    ///////////////////////////
+    // Serialize a Layer
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testSerializeLayer() {
-        Publisher manual = Publisher.builder()
-            .addHeader("dayOfWeek")
-            .addHeader("darr")
-            .addHeader("B").build();
+        Supplier<Observable> supplier = (Supplier<Observable> & Serializable) () -> {
+            return Publisher.builder()
+                .addHeader("dayOfWeek")
+                .addHeader("darr")
+                .addHeader("B").build().observable();
+        };
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", manual}));
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", supplier}));
         
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -579,164 +809,40 @@ public class JavaFstNetworkSerializationTest {
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
         
         Layer<?> layer = Network.createLayer("1", p)
+            .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(new SpatialPooler())
             .add(sensor);
         
-//        layer.subscribe(new Observer<Inference>() {
-//            @Override public void onCompleted() {}
-//            @Override public void onError(Throwable e) { e.printStackTrace(); }
-//            @Override
-//            public void onNext(Inference spatialPoolerOutput) {
-//                System.out.println("in onNext()");
-//            }
-//        });
+        Observer obs = new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference spatialPoolerOutput) {
+                System.out.println("in onNext()");
+            }
+        };
+        layer.subscribe(obs);
+        layer.close();
         
         SerialConfig config = new SerialConfig("testSerializeLayer", Scheme.FST);
-        
         NetworkSerializer<Layer> serializer = Network.serializer(config, false);
         serializer.serialize(layer);
         
         //Serialize above Connections for comparison with same run but unserialized below...
         Layer<?> serializedLayer = serializer.deSerialize((Class<Layer>)layer.getClass(), null); // (null=get from file)
-        System.out.println("container = " + serializedLayer);
+        assertEquals(serializedLayer, layer);
+        deepCompare(layer, serializedLayer);
+    
+        // Now change one attribute and see that they are not equal
+        serializedLayer.resetRecordNum();
+        assertNotEquals(serializedLayer, layer);
     }
+    //////////////////////  End Layer ///////////////////////
     
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testObjectSerializers() {
-        TestSerializeContainer tsc = new TestSerializeContainer();
-        tsc.setMinMax(new MinMax(7,9));
-        
-        TestSerializeContainer tsc2 = new TestSerializeContainer();
-        tsc2.setMinMax(new MinMax(4,5));
-        
-//        SerialConfig config = new SerialConfig("testObjectSerializers", Scheme.FST, null, 
-//            new StandardOpenOption[] { 
-//                StandardOpenOption.CREATE,
-//                StandardOpenOption.APPEND 
-//            });
-        SerialConfig config = new SerialConfig("testObjectSerializers", Scheme.FST);
-        
-        NetworkSerializer<List<TestSerializeContainer>> serializer = Network.serializer(config, false);
-        //serializer.serialize(tsc);
-        //serializer.serialize(tsc2);
-        List<TestSerializeContainer> contList = Arrays.asList(tsc, tsc2);
-        serializer.serialize(contList);
-        
-        //Serialize above Connections for comparison with same run but unserialized below...
-        List<TestSerializeContainer> serializedContainer = serializer.deSerialize((Class<List<TestSerializeContainer>>)contList.getClass(), null); // (null=get from file)
-        System.out.println("container = " + serializedContainer);
-    }
     
-    @Test
-    public void testObjectSerializersPureFST() {
-        FSTConfiguration cnf = FSTConfiguration.createDefaultConfiguration();
-        cnf.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), false);
-        
-        SerialConfig config = new SerialConfig("testObjectSerializersPureFST", Scheme.FST);
-        
-        TestSerializeContainer tsc = new TestSerializeContainer();
-        tsc.setMinMax(new MinMax());
-        
-        //////////////////////////
-        //    Write Object      //
-        //////////////////////////
-        
-        // Setup target path
-        String path = System.getProperty("user.home") + File.separator + "HTMNetwork";
-        File customDir = new File(path);
-        customDir.mkdirs();
-        
-        File serialPath = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
-        
-        byte[] bytes = cnf.asByteArray(tsc);
-        TestSerializeContainer serializedContainer = (TestSerializeContainer)cnf.asObject(bytes);
-        System.out.println("inner first check = " + serializedContainer.getMinMax());
-        
-        try {
-            if(!serialPath.exists()) {
-                serialPath.createNewFile();
-            }
-            
-            Files.write(serialPath.toPath(), bytes, config.getOpenOptions());
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-        
-        //////////////////////////
-        //     Read Object      //
-        //////////////////////////
-        
-        TestSerializeContainer serializedContainer2 = null;
-        try {
-            bytes = Files.readAllBytes(serialPath.toPath());
-            serializedContainer2 = (TestSerializeContainer)cnf.asObject(bytes);
-        } catch(IOException e) {
-            throw new RuntimeException(e);
-        }
-    
-        System.out.println("inner = " + serializedContainer2.getMinMax());
-        
-    }
-    
-    @Test
-    public void testObjectSerializersFSTStreams() {
-        FSTConfiguration cnf = FSTConfiguration.createDefaultConfiguration();
-//        cnf.setShareReferences(false);
-//        cnf.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), false);
-        
-        SerialConfig config = new SerialConfig("testObjectSerializersFSTStreams", Scheme.FST);
-        
-        TestSerializeContainer tsc = new TestSerializeContainer();
-        tsc.setMinMax(new MinMax(3,9));
-        
-        //////////////////////////
-        //    Write Object      //
-        //////////////////////////
-        
-        // Setup target path
-        String path = System.getProperty("user.home") + File.separator + "HTMNetwork";
-        File customDir = new File(path);
-        customDir.mkdirs();
-        
-        File serialPath = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
-        
-        byte[] bytes = cnf.asByteArray(tsc);
-        TestSerializeContainer serializedContainer = (TestSerializeContainer)cnf.asObject(bytes);
-        System.out.println("inner first check = " + serializedContainer.getMinMax());
-        
-        try {
-            if(!serialPath.exists()) {
-                serialPath.createNewFile();
-            }
-            
-            FileOutputStream stream = new FileOutputStream(serialPath);
-            FSTObjectOutput out = cnf.getObjectOutput(stream);
-            out.writeObject(tsc, TestSerializeContainer.class);
-            // DON'T out.close() when using factory method;
-            out.flush();
-            stream.close();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-        
-        //////////////////////////
-        //     Read Object      //
-        //////////////////////////
-        
-        TestSerializeContainer serializedContainer2 = null;
-        try {
-            FileInputStream stream = new FileInputStream(serialPath);
-            FSTObjectInput in = cnf.getObjectInput(stream);
-            serializedContainer2 = (TestSerializeContainer)in.readObject(TestSerializeContainer.class);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        }
-    
-        System.out.println("inner = " + serializedContainer2.getMinMax());
-        
-    }
-  
+    ///////////////////////////
+    //      Full Network     //
+    ///////////////////////////
     
     //////////////////////////////
     //     Utility Methods      //
@@ -748,6 +854,10 @@ public class JavaFstNetworkSerializationTest {
         }catch(AssertionError ae) {
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }
+    }
+    
+    private Network createAndRunFullyLoadedNetwork(int start, int runTo) {
+        return null;
     }
     
     private Network createAndRunTestSpatialPoolerNetwork(int start, int runTo) {
@@ -843,7 +953,7 @@ public class JavaFstNetworkSerializationTest {
         
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
             null, // map
-            20,    // n
+            20,   // n
             0,    // w
             0,    // min
             0,    // max

@@ -70,7 +70,7 @@ public class Region implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
     
-    private Network network;
+    private Network parentNetwork;
     private Region upstreamRegion;
     private Region downstreamRegion;
     private Map<String, Layer<Inference>> layers = new HashMap<>();
@@ -104,16 +104,19 @@ public class Region implements Serializable {
     /**
      * Constructs a new {@code Region}
      * 
+     * Warning: name cannot be null or empty
+     * 
      * @param name          A unique identifier for this Region (uniqueness is enforced)
      * @param network       The containing {@link Network} 
      */
     public Region(String name, Network network) {
         if(name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name may not be null or empty");
+            throw new IllegalArgumentException("Name may not be null or empty. " +
+                "...not that anyone here advocates name calling!");
         }
         
         this.name = name;
-        this.network = network;
+        this.parentNetwork = network;
     }
     
     /**
@@ -121,7 +124,7 @@ public class Region implements Serializable {
      * @param network
      */
     public void setNetwork(Network network) {
-        this.network = network;
+        this.parentNetwork = network;
         for(Layer<?> l : layers.values()) {
             l.setNetwork(network);
             // Set the sensor & encoder reference for global access.
@@ -234,9 +237,9 @@ public class Region implements Serializable {
         }
         
         // Set the sensor reference for global access.
-        if(l.hasSensor() && network != null) {
-            network.setSensor(l.getSensor());
-            network.setEncoder(l.getSensor().getEncoder());
+        if(l.hasSensor() && parentNetwork != null) {
+            parentNetwork.setSensor(l.getSensor());
+            parentNetwork.setEncoder(l.getSensor().getEncoder());
         }
         
         String layerName = name.concat(":").concat(l.getName());
@@ -247,7 +250,7 @@ public class Region implements Serializable {
         l.name(layerName);
         layers.put(l.getName(), (Layer<Inference>)l);
         l.setRegion(this);
-        l.setNetwork(network);
+        l.setNetwork(parentNetwork);
         
         return this;
     }
@@ -533,6 +536,49 @@ public class Region implements Serializable {
                 }
             }
         });
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (assemblyClosed ? 1231 : 1237);
+        result = prime * result + (isLearn ? 1231 : 1237);
+        result = prime * result + ((layers == null) ? 0 : layers.size());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Region other = (Region)obj;
+        if(assemblyClosed != other.assemblyClosed)
+            return false;
+        if(isLearn != other.isLearn)
+            return false;
+        if(layers == null) {
+            if(other.layers != null)
+                return false;
+        } else if(!layers.equals(other.layers))
+            return false;
+        if(name == null) {
+            if(other.name != null)
+                return false;
+        } else if(!name.equals(other.name))
+            return false;
+        return true;
     }
     
 }

@@ -39,7 +39,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
  * of sub-encoders, each of which encodes a separate component.
  *
  * @see Encoder
- * @see EncoderResult
+ * @see Encoding
  * @see Parameters
  *
  * @author wlmiller

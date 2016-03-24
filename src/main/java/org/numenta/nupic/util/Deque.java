@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -40,7 +41,9 @@ import java.util.concurrent.LinkedBlockingDeque;
  *
  * @param <E>
  */
-public class Deque<E> implements Iterable<E> {
+public class Deque<E> implements Iterable<E>, Serializable {
+	private static final long serialVersionUID = 1L;
+    
 	/** Backing array list */
 	private LinkedBlockingDeque<E> backingList = new LinkedBlockingDeque<E>();
 	/** Originating size of this {@code Deque} */

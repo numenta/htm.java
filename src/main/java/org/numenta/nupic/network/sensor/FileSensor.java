@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.network.Network;
 
 /**

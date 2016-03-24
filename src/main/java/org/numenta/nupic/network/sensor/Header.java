@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.util.Tuple;
 
 

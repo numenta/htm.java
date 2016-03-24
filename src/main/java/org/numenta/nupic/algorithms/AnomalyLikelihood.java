@@ -109,6 +109,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @see MovingAverage
  */
 public class AnomalyLikelihood extends Anomaly {
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOG = LoggerFactory.getLogger(AnomalyLikelihood.class);
     
     private int claLearningPeriod = 300;

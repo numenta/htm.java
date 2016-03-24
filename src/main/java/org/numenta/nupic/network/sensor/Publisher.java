@@ -22,7 +22,6 @@
 package org.numenta.nupic.network.sensor;
 
 import java.io.Serializable;
-import java.util.List;
 
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
@@ -89,6 +88,7 @@ public class Publisher implements Serializable {
 
     private static final int HEADER_SIZE = 3;
     
+    /** "Replays" the header lines for all new subscribers */
     private transient ReplaySubject<String> subject;
     
     private String[] headerLines;
@@ -98,6 +98,7 @@ public class Publisher implements Serializable {
         
         // The 3 lines of the header
         String[] lines = new String[3];
+        
         int cursor = 0;
         
         
@@ -205,7 +206,7 @@ public class Publisher implements Serializable {
      * Called within package to access this {@link Publisher}'s wrapped {@link Observable}
      * @return
      */
-    Observable<String> observable() {
+    public Observable<String> observable() {
         return subject;
     }
 }

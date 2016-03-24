@@ -32,9 +32,7 @@ public strictfp class FastRandom extends java.util.Random implements Serializabl
     public FastRandom(long seed) {
         this.seed = seed;
     }
-    public FastRandom(int[] seed) {
-        this.seed = seed[0];
-    }
+    
     /**
      * Returns the current state of the seed, can be used to clone the object
      *

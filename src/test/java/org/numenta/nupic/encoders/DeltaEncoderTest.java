@@ -51,7 +51,7 @@ public class DeltaEncoderTest {
 		for (int i = 5; i < 7; i++) {
 			de.encodeIntoArray(Double.valueOf(i), intArray);
 		}
-		List<EncoderResult> res = de.topDownCompute(intArray);
+		List<Encoding> res = de.topDownCompute(intArray);
 		Assert.assertEquals("The value is not matching with expected", res.get(0).getValue(), 9.962025316455696);
 		Assert.assertEquals("The value is not matching with expected", res.get(0).getScalar(), 9.962025316455696);
 	}

@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
@@ -103,12 +103,12 @@ public interface Inference extends Serializable {
      */
     public int[] getEncoding();
     /**
-     * Returns the most recent {@link ClassifierResult}
+     * Returns the most recent {@link Classification}
      * 
      * @param fieldName
      * @return
      */
-    public ClassifierResult<Object> getClassification(String fieldName);
+    public Classification<Object> getClassification(String fieldName);
     /**
      * Returns the most recent anomaly calculation.
      * @return

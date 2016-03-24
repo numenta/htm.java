@@ -1,4 +1,4 @@
-package org.numenta.nupic;
+package org.numenta.nupic.network.sensor;
 
 import org.numenta.nupic.util.Tuple;
 
