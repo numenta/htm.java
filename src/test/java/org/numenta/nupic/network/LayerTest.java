@@ -21,22 +21,12 @@
  */
 package org.numenta.nupic.network;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.spi.FilterReply;
+import ch.qos.logback.core.util.StatusPrinter;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -59,17 +49,26 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
-
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.turbo.TurboFilter;
-import ch.qos.logback.core.spi.FilterReply;
-import ch.qos.logback.core.util.StatusPrinter;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -1449,6 +1448,46 @@ public class LayerTest {
         assertEquals("Close called on Layer r1:2 which is already closed.", filterMessage);
         // Make sure not to slow the entire test phase down by removing the filter
         lc.resetTurboFilterList();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddSensorTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer l = Network.createLayer("l", p);
+        l.close();
+
+        Sensor<File> sensor = Sensor.create(
+                FileSensor::create,
+                SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
+        l.add(sensor);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddMultiEncoderTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer l = Network.createLayer("l", p);
+        l.close();
+
+        l.add(MultiEncoder.builder().name("").build());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddSpatialPoolerTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer l = Network.createLayer("l", p);
+        l.close();
+
+        l.add(new SpatialPooler());
     }
     
 }

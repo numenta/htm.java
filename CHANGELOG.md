@@ -19,6 +19,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #397](https://github.com/numenta/htm.java/pull/397)] Added close() method to the Network class to bring it inline with Region & Layer - Added Tests for new functionality. (@Mandarx)
+* [[PR #396](https://github.com/numenta/htm.java/pull/396)] Added Local.US to MetricsTrace to ensure (expected) dots.
 * [[PR #386](https://github.com/numenta/htm.java/pull/386)] Added test for close() method in LayerTest
 * [[PR #378](https://github.com/numenta/htm.java/pull/378)] Added more utility methods to ArrayUtils in prep for KNNClassifier development
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Added new override of rightVecSumAtNZ() method to Matrix classes.
@@ -29,6 +31,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* (3-1-2016) Updated htm.java-examples for change to GLOBAL_INHIBITION parameter (sync)
+* [[PR #391](https://github.com/numenta/htm.java/pull/391)] Incremented the Gradle Shade Plugin version to 1.2.3
 * [[PR #379](https://github.com/numenta/htm.java/pull/379)] Changed SYN_PERM_THRESHOLD to be in line with SYN_PERM_CONNECTED
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Optimized SpatialPooler.calculateOverlaps by adding the stimulus threshold to the rightVecSumAtNZ() method so we only loop once instead of twice.
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Changed Matrix class hierarchy naming from XXXSupport to AbstractXXX - more conventional
