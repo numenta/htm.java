@@ -375,12 +375,13 @@ public class NetworkTest {
         assertEquals("On completed reached!", onCompleteStr2);
     }
     
+    boolean expectedDataFlag = true;
+    String failMessage;
     @Test
     public void testBasicNetworkHalt_ThenRestartHasSameOutput() {
         final int NUM_CYCLES = 600;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
-        int TOTAL = 0;
-
+        
         ///////////////////////////////////////
         //   Run until CYCLE 284, then halt  //
         ///////////////////////////////////////
@@ -445,13 +446,19 @@ public class NetworkTest {
             @Override
             public void onNext(Inference inf) {
                 /** see {@link #createDayOfWeekInferencePrintout()} */
-                int cycle = dayOfWeekPrintout.apply(inf, cellsPerCol);
-                if(cycle == 285 && inf.getRecordNum() == 1989) {
+                
+                dayOfWeekPrintout.apply(inf, cellsPerCol);
+               
+                ////////////////////////////////////////////////////////////
+                // Ensure the records pick up precisely where we left off //
+                ////////////////////////////////////////////////////////////
+                if(inf.getRecordNum() == 1975) {
                     Classification<Object> result = inf.getClassification("dayOfWeek");
-                    if(! "Sunday (5)".equals(stringValue((Double)result.getMostProbableValue(1)))) {
-                        Thread.currentThread().interrupt();
+                    if(! "Sunday (7)".equals(stringValue((Double)result.getMostProbableValue(1)))) {
+                        expectedDataFlag = false;
+                        
                         network.halt();
-                        throw new IllegalStateException("test failed: expected value: \"Sunday (5)\" was: \"" +
+                        fail(failMessage = "test failed: expected value: \"Sunday (7)\" was: \"" +
                             stringValue((Double)result.getMostProbableValue(1)) + "\"");
                     }
                 }
@@ -461,6 +468,7 @@ public class NetworkTest {
         network.restart();
         
         Publisher newPub = network.getNewPublisher();
+        // Assert that we have a new Publisher being created in the background upon restart()
         assertNotEquals(pub, newPub);
         
         for(;cycleCount < NUM_CYCLES;cycleCount++) {
@@ -477,6 +485,10 @@ public class NetworkTest {
             r1.lookup("1").getLayerThread().join();
         }catch(Exception e) {
             e.printStackTrace();
+        }
+        
+        if(!expectedDataFlag) {
+            fail(failMessage);
         }
     }
     
@@ -1249,29 +1261,29 @@ public class NetworkTest {
             private int cycles = 1;
               
             public Integer apply(Inference inf, Integer cellsPerColumn) {
-                Classification<Object> result = inf.getClassification("dayOfWeek");
+//                Classification<Object> result = inf.getClassification("dayOfWeek");
                 double day = mapToInputData((int[])inf.getLayerInput());
                 if(day == 1.0) {
-                    System.out.println("\n=========================");
-                    System.out.println("CYCLE: " + cycles);
+//                    System.out.println("\n=========================");
+//                    System.out.println("CYCLE: " + cycles);
                     cycles++;
                 }
                 
-                System.out.println("RECORD_NUM: " + inf.getRecordNum());
-                System.out.println("ScalarEncoder Input = " + day);
-                System.out.println("ScalarEncoder Output = " + Arrays.toString(inf.getEncoding()));
-                System.out.println("SpatialPooler Output = " + Arrays.toString(inf.getFeedForwardActiveColumns()));
-                
-                if(inf.getPreviousPredictiveCells() != null)
-                    System.out.println("TemporalMemory Previous Prediction = " + 
-                        Arrays.toString(SDR.cellsAsColumnIndices(inf.getPreviousPredictiveCells(), cellsPerColumn)));
-                
-                System.out.println("TemporalMemory Actives = " + Arrays.toString(SDR.asColumnIndices(inf.getSDR(), cellsPerColumn)));
-                
-                System.out.print("CLAClassifier prediction = " + 
-                    stringValue((Double)result.getMostProbableValue(1)) + " --> " + ((Double)result.getMostProbableValue(1)));
-                
-                System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
+//                System.out.println("RECORD_NUM: " + inf.getRecordNum());
+//                System.out.println("ScalarEncoder Input = " + day);
+//                System.out.println("ScalarEncoder Output = " + Arrays.toString(inf.getEncoding()));
+//                System.out.println("SpatialPooler Output = " + Arrays.toString(inf.getFeedForwardActiveColumns()));
+//                
+//                if(inf.getPreviousPredictiveCells() != null)
+//                    System.out.println("TemporalMemory Previous Prediction = " + 
+//                        Arrays.toString(SDR.cellsAsColumnIndices(inf.getPreviousPredictiveCells(), cellsPerColumn)));
+//                
+//                System.out.println("TemporalMemory Actives = " + Arrays.toString(SDR.asColumnIndices(inf.getSDR(), cellsPerColumn)));
+//                
+//                System.out.print("CLAClassifier prediction = " + 
+//                    stringValue((Double)result.getMostProbableValue(1)) + " --> " + ((Double)result.getMostProbableValue(1)));
+//                
+//                System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
                 
                 return cycles;
             }

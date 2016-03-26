@@ -2,8 +2,6 @@ package org.numenta.nupic.network;
 
 import java.io.File;
 
-import org.numenta.nupic.network.NetworkSerializer.Scheme;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;

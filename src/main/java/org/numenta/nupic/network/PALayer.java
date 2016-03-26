@@ -46,6 +46,7 @@ import org.numenta.nupic.model.Column;
  * @author Fergal Byrne
  */
 public class PALayer<T> extends Layer<T> {
+    private static final long serialVersionUID = 1L;
 
     /** Set to 0.0 to default to parent behavior */
     double paDepolarize = 1.0;

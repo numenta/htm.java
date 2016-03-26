@@ -11,7 +11,6 @@ import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -59,7 +58,6 @@ import org.numenta.nupic.util.Tuple;
 import com.cedarsoftware.util.DeepEquals;
 
 import gnu.trove.list.array.TIntArrayList;
-import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 

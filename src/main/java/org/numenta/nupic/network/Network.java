@@ -35,12 +35,11 @@ import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.Header;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
-import org.numenta.nupic.network.sensor.SensorParams;
-import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
 import rx.Subscriber;
