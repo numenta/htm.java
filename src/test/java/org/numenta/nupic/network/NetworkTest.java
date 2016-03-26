@@ -940,11 +940,11 @@ public class NetworkTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         Region region1 = Network.createRegion("region1");
-        Layer layer1 = Network.createLayer("layer1", p);
+        Layer<?> layer1 = Network.createLayer("layer1", p);
         region1.add(layer1);
 
         Region region2 = Network.createRegion("region2");
-        Layer layer2 = Network.createLayer("layer2", p);
+        Layer<?> layer2 = Network.createLayer("layer2", p);
         region2.add(layer2);
 
         Network network = Network.create("test network", p);
