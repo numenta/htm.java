@@ -85,6 +85,15 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
 Please refer to the [Network API Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
 
+## Build Instructions
+
+In brief:
+```
+gradle -Pskipbench check
+```
+
+Full instructions for building **HTM.java** are available here: [Build Instructions](https://github.com/numenta/htm.java/wiki/Build-Instructions)
+
 ## Development Environment Installation
 
 The following instructions are for setting up a development environment (which is the only installation required)
@@ -96,67 +105,6 @@ The following instructions are for setting up a development environment (which i
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
 In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
-
-## After download by clone or fork:    
-
-Execute a quick sanity check by running all the tests from within the \<path to git repo\>/htm.java
-```
-gradle check  # Executes the tests and runs the benchmarks
-
---or--
-
-gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
-```
-**Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
-
-**Linux Gradle Issues?** [see the wiki here.](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
-
-
-## Reference Build Environment
-As a convenience to developers, we provide a docker image with the needed software to build the HTM.java library from sources.  This approach relies on the [Docker Toolbox](https://www.docker.com/products/docker-toolbox), which is installable on Mac and Windows.
-
-Below we'll use a technique to share your cloned HTM.java sources from your project folder into a docker container, then build the library with `gradle`.    The build outputs are written back to your project folder, not isolated within the container.
-
-### Install Docker Toolbox
-Follow the instructions on the toolbox site, then open the quickstart terminal.   You should adjust the memory settings on the toolbox VM, because the default (2GB) is insufficient for the HTM.java test suite.
-
-```
-[htm.java]$ docker-machine rm default
-About to remove default
-Are you sure? (y/n): y
-
-[htm.java]$ docker-machine create -d virtualbox --virtualbox-memory 4096 default
-...
-```
-
-### Build the Docker Image
-The docker image, which you simply build once, contains OpenJDK 8 and Gradle.   It doesn't contain any HTM.java source code; when we later run the container, the source code is read directly from your project folder.
-
-```
-[htm.java]$ docker build -t $USER/htm.java .
-...
-Successfully built <IMAGE ID>
-```
-
-### Run the Container
-Run a container based on the docker image, which launches a bash shell where you'll fire up gradle.
-
-```
-[htm.java]$ docker run -it --rm -v `pwd`:/home/vagrant/htm.java $USER/htm.java
-```
-
-Notice that the current directory (which should be your HTM.java project folder) is shared into the container, as `/home/vagrant/htm.java`.
-
-### Build
-Build the project as usual.
-```
-vagrant@96e54fd78012:~$ cd /home/vagrant/htm.java
-vagrant@96e54fd78012:~/htm.java$ gradle -Pskipbench check
-...
-BUILD SUCCESSFUL
-
-vagrant@96e54fd78012:~/htm.java$ exit
-```
 
 ## Project Integration (New)
 For tips and insights on how to use the Network API to add HTM's into your own applications, see:
