@@ -864,6 +864,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
             "7/2/10 19:00,38.2",
             "7/2/10 20:00,14.1");
 
+        @SuppressWarnings("resource")
         BatchedCsvStream<String> csv = new BatchedCsvStream<>(stream, 3);
         System.out.println("Header: " + csv.getHeader());
         csv.continuation(false).forEach(l -> System.out.println("line: " + Arrays.toString(l)));
