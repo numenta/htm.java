@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.numenta.nupic.util.TestSerializeContainer;
-import org.numenta.nupic.util.TestSerializeContainerSerializer;
 import org.nustaq.serialization.FSTConfiguration;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -40,7 +38,7 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * 
      * @param config      the configuration to use
      */
-    NetworkSerializerImpl(SerialConfig config, boolean autoRegisterSerializers) {
+    NetworkSerializerImpl(SerialConfig config) {
         this.config = config;
         this.scheme = config.getScheme();
         
@@ -54,15 +52,6 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
             this.kryo = createKryo();
         }
         
-        if(autoRegisterSerializers) {
-            registerSerializers();
-        }
-    }
-    
-    public void registerSerializers() {
-        //fastSerialConfig.registerClass(DateEncoder.class);
-        //fastSerialConfig.registerSerializer(DateEncoder.class, new DateEncoderSerializer(), false);
-        fastSerialConfig.registerSerializer(TestSerializeContainer.class, new TestSerializeContainerSerializer(), true);
     }
     
     /**
@@ -219,7 +208,7 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
                 conf = new SerialConfig(
                     config.getFileName(), Scheme.FST, 
                         config.getRegistry(), config.getOpenOptions());
-                ser = Network.serializer(conf, true, true);
+                ser = Network.serializer(conf, true);
             }
             
             @SuppressWarnings("rawtypes")

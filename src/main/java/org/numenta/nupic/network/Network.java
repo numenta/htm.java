@@ -263,29 +263,16 @@ public class Network implements Serializable {
      * {@link NetworkSerializer} and stores it for subsequent invocations of this
      * method. If false, the previously stored NetworkSerializer is returned.
      * 
-     * @param type
-     * @param returnNew
-     * @return
-     */
-    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
-        return serializer(config, returnNew, true);
-    }
-    
-    /**
-     * Factory method to return a configured {@link NetworkSerializer}
-     * 
-     * If the "returnNew" flag is true, this method returns a new instance of 
-     * {@link NetworkSerializer} and stores it for subsequent invocations of this
-     * method. If false, the previously stored NetworkSerializer is returned.
-     * 
-     * @param type
-     * @param returnNew
-     * @return
+     * @param config        the SerialConfig storing file storage parameters etc.
+     * @param returnNew     NetworkSerializers are expensive to instantiate so specify
+     *                      if the previous should be re-used or if you want a new one.
+     * @return      a NetworkSerializer
+     * @see SerialConfig
      */
     @SuppressWarnings("unchecked")
-    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew, boolean autoRegisterSerializers) {
+    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
         return (returnNew || storedSerializer == null || (storedConfig != null && !config.equals(storedConfig))) ?  
-            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config, autoRegisterSerializers)) : 
+            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config)) : 
                 (NetworkSerializerImpl<T>)storedSerializer;
     }
     
@@ -308,6 +295,7 @@ public class Network implements Serializable {
      * of this {@code Network}, when a new Publisher must be created.
      * 
      * @return      the new Publisher created after deserialization or halt.
+     * @see #getPublisherSupplier()
      */
     public Publisher getNewPublisher() {
         if(publisher == null) {
