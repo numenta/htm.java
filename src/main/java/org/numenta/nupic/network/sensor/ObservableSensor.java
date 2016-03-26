@@ -21,7 +21,6 @@
  */
 package org.numenta.nupic.network.sensor;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -75,7 +74,7 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         if(publisher instanceof Publisher) {
             obs = ((Publisher)publisher).observable();
         } else if(publisher instanceof Supplier<?>) {
-            obs = ((Supplier<Observable<String>>)publisher).get();
+            obs = ((Supplier<Publisher>)publisher).get().observable();
         } else {
             obs = (Observable<String>)publisher; 
         }

@@ -35,8 +35,12 @@ import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.ObservableSensor;
+import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -167,6 +171,7 @@ public class Network implements Serializable {
     private Region head;
     private Region tail;
     private Region sensorRegion;
+    private Publisher publisher;
     
     private boolean isLearn = true;
     private boolean isThreadRunning;
@@ -284,6 +289,61 @@ public class Network implements Serializable {
             (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config, autoRegisterSerializers)) : 
                 (NetworkSerializerImpl<T>)storedSerializer;
     }
+    
+    /**
+     * <p>
+     * DO NOT CALL THIS METHOD!
+     * </p><p>
+     * Called internally by an {@link ObservableSensor}'s factory method's creation of a new 
+     * {@code ObservableSensor}. This would usually happen following a halt or
+     * deserialization.
+     * </p>
+     * @param p  the new Publisher created upon reconstitution of a new ObservableSensor  
+     */
+    void setPublisher(Publisher p) {
+        this.publisher = p;
+    }
+    
+    /**
+     * Returns the new {@link Publisher} created after halt or deserialization
+     * of this {@code Network}, when a new Publisher must be created.
+     * 
+     * @return      the new Publisher created after deserialization or halt.
+     */
+    public Publisher getNewPublisher() {
+        if(publisher == null) {
+            throw new NullPointerException("A Supplier must be built first. " +
+                "please see Network.getPublisherSupplier()");
+        }
+        return publisher;
+    }
+    
+    /**
+     * <p>
+     * Returns a {@link PublisherSupplier.Builder} which is used to build up 
+     * a {@link Header} and then create a supplier. An example is:
+     * </p>
+     * <pre>
+     *  Network network = ...
+     *  
+     *  Supplier<Publisher> supplier = network.getPublisherSupplier()
+     *      .addHeader("dayOfWeek, timestamp")
+     *      .addHeader("number, date")
+     *      .addHeader("B, T")
+     *      .build();
+     *  
+     *  // Since Suppliers are always added to Sensors we do...
+     *  
+     *  Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+     *      ObservableSensor::create, SensorParams.create(
+     *          Keys::obs, new Object[] {"name", supplier})); // <-- supplier created above
+     * </pre>
+     * 
+     * @return  a builder with which to create a {@link PublisherSupplier}
+     */
+    public PublisherSupplier.Builder getPublisherSupplier() {
+        return PublisherSupplier.builder(this);
+    }
 
     /**
      * Returns the String identifier for this {@code Network}
@@ -318,6 +378,24 @@ public class Network implements Serializable {
     }
     
     /**
+     * Restarts this {@code Network}
+     */
+    public void restart() {
+        if(regions.size() < 1) {
+            throw new IllegalStateException("Nothing to start - 0 regions");
+        }
+
+        Region tail = regions.get(0);
+        Region upstream = tail;
+        while((upstream = upstream.getUpstreamRegion()) != null) {
+            tail = upstream;
+        }
+
+        // Record thread start
+        this.isThreadRunning = tail.restart();
+    }
+    
+    /**
      * Returns a flag indicating that the {@code Network} has an {@link Observable}
      * running on a thread.
      * 
@@ -337,6 +415,18 @@ public class Network implements Serializable {
             this.tail = regions.get(0);
         }
         tail.halt();
+    }
+    
+    /**
+     * Returns a flag indicating whether this Network has a Region
+     * whose tail (input {@link Layer}) is halted.
+     * @return  true if so, false if not
+     */
+    public boolean isHalted() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.isHalted();
     }
 
     /**

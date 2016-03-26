@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Supplier;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.ComputeCycle;
@@ -53,6 +54,7 @@ import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.network.sensor.URISensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
@@ -207,7 +209,10 @@ public class Layer<T> implements Serializable {
     /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
     private Set<Cell> activeCells;
 
+    /** Used to track and document the # of records processed */
     private int recordNum = -1;
+    /** Keeps track of number of records to skip on restart */
+    private int skip = -1;
 
     private String name;
 
@@ -245,6 +250,9 @@ public class Layer<T> implements Serializable {
     static final byte ANOMALY_COMPUTER = 8;
 
     private byte algo_content_mask = 0;
+    
+    
+    
 
     /**
      * Creates a new {@code Layer} using the {@link Network} level
@@ -575,6 +583,12 @@ public class Layer<T> implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public Observable<Inference> observe() {
+        // This will be called again after the Network is halted so we have to prepair
+        // for rebuild of the Observer chain
+        if(isHalted) {
+            clearSubscriberObserverLists();
+        }
+        
         if(userObservable == null) {
             userObservable = Observable.create(new Observable.OnSubscribe<Inference>() {
                 @Override
@@ -595,6 +609,12 @@ public class Layer<T> implements Serializable {
      * @return  a {@link Subscription}
      */
     public Subscription subscribe(final Observer<Inference> subscriber) {
+        // This will be called again after the Network is halted so we have to prepair
+        // for rebuild of the Observer chain
+        if(isHalted) {
+            clearSubscriberObserverLists();
+        }
+        
         if(subscriber == null) {
             throw new IllegalArgumentException("Subscriber cannot be null.");
         }
@@ -861,6 +881,7 @@ public class Layer<T> implements Serializable {
                 next.halt();
             }
         }
+        
         this.isHalted = true;
     }
 
@@ -923,41 +944,59 @@ public class Layer<T> implements Serializable {
             notifyError(e);
         }
 
-        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
-
-            public void run() {
-                LOGGER.debug("Layer [" + getName() + "] started Sensor output stream processing.");
-
-                // Applies "terminal" function, at this point the input stream
-                // is "sealed".
-                sensor.getOutputStream().filter(i -> {
-                    if(isHalted) {
-                        notifyComplete();
-                        if(next != null) {
-                            next.halt();
-                        }
-                        return false;
-                    }
-
-                    if(Thread.currentThread().isInterrupted()) {
-                        notifyError(new RuntimeException("Unknown Exception while filtering input"));
-                    }
-
-                    return true;
-                }).forEach(intArray -> {
-                    ((ManualInput)Layer.this.factory.inference).encoding(intArray);
-
-                    Layer.this.compute((T)intArray);
-
-                    // Notify all downstream observers that the stream is closed
-                    if(!sensor.hasNext()) {
-                        notifyComplete();
-                    }
-                });
-            }
-        }).start();
+        startLayerThread();
 
         LOGGER.debug("Start called on Layer thread {}", LAYER_THREAD);
+    }
+    
+    /**
+     * Restarts this {@code Layer}
+     */
+    @SuppressWarnings("unchecked")
+    public void restart() {
+        isHalted = false;
+        
+        if(!isClosed) {
+            start();
+        }else{
+            if(sensor == null) {
+                throw new IllegalStateException("A sensor must be added when the mode is not Network.Mode.MANUAL");
+            }
+            
+            // Recreate the Sensor and its underlying Stream
+            Class<?> sensorKlass = sensor.getSensorClass();
+            if(sensorKlass.toString().indexOf("File") != -1) {
+                Object path = sensor.getSensorParams().get("PATH");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    FileSensor::create, SensorParams.create(Keys::path, "", path));
+            }else if(sensorKlass.toString().indexOf("Observ") != -1) {
+                Object supplierOfObservable = sensor.getSensorParams().get("ONSUB");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    ObservableSensor::create, SensorParams.create(Keys::obs, "", supplierOfObservable));
+            }
+                    
+            if(parentNetwork != null) {
+                parentNetwork.setSensor(sensor);
+            }
+            
+            //factory = new FunctionFactory();
+
+            observableDispatch = createDispatchMap();
+            
+            this.encoder = encoder == null ? sensor.getEncoder() : encoder;
+
+            try {
+                completeDispatch((T)new int[] {});
+            } catch(Exception e) {
+                notifyError(e);
+            }
+            
+            skip = recordNum;
+            
+            startLayerThread();
+
+            LOGGER.debug("Re-Start called on Layer thread {}", LAYER_THREAD);
+        }
     }
     
     /**
@@ -1127,7 +1166,6 @@ public class Layer<T> implements Serializable {
             LOGGER.debug("Attempt to reset Layer: " + getName() + "without TemporalMemory");
         } else {
             temporalMemory.reset(connections);
-            resetRecordNum();
         }
     }
 
@@ -1145,18 +1183,11 @@ public class Layer<T> implements Serializable {
      * Increments the current record sequence number.
      */
     public Layer<T> increment() {
-        ++recordNum;
-        return this;
-    }
-
-    /**
-     * Skips the specified count of records and internally alters the record
-     * sequence number.
-     * 
-     * @param count
-     */
-    public Layer<T> skip(int count) {
-        recordNum += count;
+        if(skip > -1) {
+            --skip;
+        } else {
+            ++recordNum;
+        }
         return this;
     }
 
@@ -1453,6 +1484,7 @@ public class Layer<T> implements Serializable {
                 }
                 return sequence;
             }
+            
             sequence = sequence.map(m -> {
                 doEncoderBucketMapping(m, getSensor().getInputMap());
                 return m;
@@ -1491,6 +1523,10 @@ public class Layer<T> implements Serializable {
                     sequenceStart = observableDispatch.get(int[].class);
                 }
             }
+        }
+        
+        if(recordNum > 0) {
+            sequenceStart = sequenceStart.skip(recordNum + 1);
         }
 
         return sequenceStart;
@@ -1707,6 +1743,16 @@ public class Layer<T> implements Serializable {
             }
         };
     }
+    
+    /**
+     * Clears the subscriber and observer lists so they can be rebuilt
+     * during restart or deserialization.
+     */
+    private void clearSubscriberObserverLists() {
+        observers.clear();
+        subscribers.clear();
+        userObservable = null;
+    }
 
     /**
      * Creates the {@link NamedTuple} of names to encoders used in the
@@ -1772,7 +1818,47 @@ public class Layer<T> implements Serializable {
         mi.activeCells(activeCells = cc.activeCells());
         // Store the Compute Cycle
         mi.computeCycle = cc;
-        return SDR.asCellIndices(activeCells = cc.activeCells());
+        return SDR.asCellIndices(activeCells);
+    }
+    
+    /**
+     * Starts this {@code Layer}'s thread
+     */
+    protected void startLayerThread() {
+        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
+
+            @SuppressWarnings("unchecked")
+            public void run() {
+                LOGGER.debug("Layer [" + getName() + "] started Sensor output stream processing.");
+
+                // Applies "terminal" function, at this point the input stream
+                // is "sealed".
+                sensor.getOutputStream().filter(i -> {
+                    if(isHalted) {
+                        notifyComplete();
+                        if(next != null) {
+                            next.halt();
+                        }
+                        return false;
+                    }
+
+                    if(Thread.currentThread().isInterrupted()) {
+                        notifyError(new RuntimeException("Unknown Exception while filtering input"));
+                    }
+
+                    return true;
+                }).forEach(intArray -> {
+                    ((ManualInput)Layer.this.factory.inference).encoding(intArray);
+
+                    Layer.this.compute((T)intArray);
+
+                    // Notify all downstream observers that the stream is closed
+                    if(!sensor.hasNext()) {
+                        notifyComplete();
+                    }
+                });
+            }
+        }).start();
     }
 
     //////////////////////////////////////////////////////////////
@@ -2050,93 +2136,6 @@ public class Layer<T> implements Serializable {
         }
 
     }
-
-//    /* (non-Javadoc)
-//     * @see java.lang.Object#hashCode()
-//     */
-//    @Override
-//    public int hashCode() {
-//        final int prime = 31;
-//        int result = 1;
-//        result = prime * result + algo_content_mask;
-//        result = prime * result + ((connections == null) ? 0 : connections.hashCode());
-//        result = prime * result + ((currentInference == null) ? 0 : currentInference.hashCode());
-//        result = prime * result + Arrays.hashCode(feedForwardSparseActives);
-//        result = prime * result + (hasGenericProcess ? 1231 : 1237);
-//        result = prime * result + (isClosed ? 1231 : 1237);
-//        result = prime * result + (isHalted ? 1231 : 1237);
-//        result = prime * result + (isLearn ? 1231 : 1237);
-//        result = prime * result + ((name == null) ? 0 : name.hashCode());
-//        result = prime * result + ((params == null) ? 0 : params.hashCode());
-//        result = prime * result + recordNum;
-//        //result = prime * result + ((sensorParams == null) ? 0 : sensorParams.hashCode());
-//        return result;
-//    }
-//
-//    /* (non-Javadoc)
-//     * @see java.lang.Object#equals(java.lang.Object)
-//     */
-//    @SuppressWarnings("rawtypes")
-//    @Override
-//    public boolean equals(Object obj) {
-//        if(this == obj)
-//            return true;
-//        if(obj == null)
-//            return false;
-//        if(getClass() != obj.getClass())
-//            return false;
-//        Layer other = (Layer)obj;
-//        if(algo_content_mask != other.algo_content_mask)
-//            return false;
-//        if(connections == null) {
-//            if(other.connections != null)
-//                return false;
-//        } else if(!connections.equals(other.connections))
-//            return false;
-//        if(currentInference == null) {
-//            if(other.currentInference != null)
-//                return false;
-//        } else if(!currentInference.equals(other.currentInference))
-//            return false;
-//        if(!Arrays.equals(feedForwardSparseActives, other.feedForwardSparseActives))
-//            return false;
-//        if(hasGenericProcess != other.hasGenericProcess)
-//            return false;
-//        if(isClosed != other.isClosed)
-//            return false;
-//        if(isHalted != other.isHalted)
-//            return false;
-//        if(isLearn != other.isLearn)
-//            return false;
-//        if(name == null) {
-//            if(other.name != null)
-//                return false;
-//        } else if(!name.equals(other.name))
-//            return false;
-//        if(params == null) {
-//            if(other.params != null)
-//                return false;
-//        } else if(!params.equals(other.params))
-//            return false;
-//        if(recordNum != other.recordNum)
-//            return false;
-//        if(parentNetwork == null) {
-//            if(other.parentNetwork != null)
-//                return false;
-//        } else if(!parentNetwork.equals(other.parentNetwork))
-//            return false;
-//        if(parentRegion == null) {
-//            if(other.parentRegion != null)
-//                return false;
-//        } else if(!parentRegion.equals(other.parentRegion))
-//            return false;
-//        if(sensorParams == null) {
-//            if(other.sensorParams != null)
-//                return false;
-//        } else if(!sensorParams.equals(other.sensorParams))
-//            return false;
-//        return true;
-//    }
     
     @Override
     public int hashCode() {

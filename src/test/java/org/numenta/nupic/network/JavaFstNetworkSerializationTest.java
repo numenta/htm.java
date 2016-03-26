@@ -11,11 +11,7 @@ import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -58,13 +54,7 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.FastRandom;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.MinMax;
-import org.numenta.nupic.util.TestSerializeContainer;
-import org.numenta.nupic.util.TestSerializeContainerSerializer;
 import org.numenta.nupic.util.Tuple;
-import org.nustaq.serialization.FSTConfiguration;
-import org.nustaq.serialization.FSTObjectInput;
-import org.nustaq.serialization.FSTObjectOutput;
 
 import com.cedarsoftware.util.DeepEquals;
 
@@ -778,19 +768,8 @@ public class JavaFstNetworkSerializationTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testSerializeLayer() {
-        Supplier<Observable> supplier = (Supplier<Observable> & Serializable) () -> {
-            return Publisher.builder()
-                .addHeader("dayOfWeek")
-                .addHeader("darr")
-                .addHeader("B").build().observable();
-        };
-
-        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", supplier}));
-        
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-                    
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
             null, // map
             8,    // n
@@ -807,6 +786,16 @@ public class JavaFstNetworkSerializationTest {
             "SDRPassThroughEncoder"); // encoderType
         
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
+        
+        Network network = Network.create("testNetwork", p);
+        
+        Supplier<Publisher> supplier = network.getPublisherSupplier()
+            .addHeader("dayOfWeek")
+            .addHeader("darr")
+            .addHeader("B").build();
+
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", supplier}));
         
         Layer<?> layer = Network.createLayer("1", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)

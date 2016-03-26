@@ -208,6 +208,15 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
         }
         
     }
+    
+    /**
+     * Returns the class of the underling {@link Sensor}
+     * @return  the underlying delegate's class
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends Sensor<?>> getSensorClass() {
+        return (Class<? extends Sensor<?>>)delegate.getClass();
+    }
 
     /**
      * Returns an instance of {@link SensorParams} used 

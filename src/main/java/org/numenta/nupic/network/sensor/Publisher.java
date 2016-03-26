@@ -22,6 +22,7 @@
 package org.numenta.nupic.network.sensor;
 
 import java.io.Serializable;
+import java.util.function.Consumer;
 
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
@@ -91,10 +92,12 @@ public class Publisher implements Serializable {
     /** "Replays" the header lines for all new subscribers */
     private transient ReplaySubject<String> subject;
     
-    private String[] headerLines;
+    
     
     public static class Builder<T> {
         private ReplaySubject<String> subject;
+        
+        private Consumer<Publisher> notifier;
         
         // The 3 lines of the header
         String[] lines = new String[3];
@@ -103,11 +106,30 @@ public class Publisher implements Serializable {
         
         
         /**
+         * Creates a new {@code Builder}
+         */
+        public Builder() {
+            this(null);
+        }
+        
+        /**
+         * Instantiates a new {@code Builder} with the specified
+         * {@link Consumer} used to propagate "build" events using a
+         * plugged in function.
+         * 
+         * @param c     Consumer used to notify the {@link Network} of new
+         *              builds of a {@link Publisher}
+         */
+        public Builder(Consumer<Publisher> c) {
+            this.notifier = c;
+        }
+        
+        /**
          * Adds a header line which in the case of a multi column input 
          * is a comma separated string.
          * 
-         * @param s
-         * @return
+         * @param s     string representing one line of a header
+         * @return  this Builder
          */
         @SuppressWarnings("unchecked")
         public Builder<PublishSubject<String>> addHeader(String s) {
@@ -120,7 +142,7 @@ public class Publisher implements Serializable {
          * Builds and validates the structure of the expected header then
          * returns an {@link Observable} that can be used to submit info to the
          * {@link Network}
-         * @return
+         * @return  a new Publisher
          */
         public Publisher build() {
             subject = ReplaySubject.createWithSize(3);
@@ -133,7 +155,10 @@ public class Publisher implements Serializable {
             
             Publisher p = new Publisher();
             p.subject = subject;
-            p.headerLines = lines;
+            
+            if(notifier != null) {
+                notifier.accept(p);
+            }
             
             return p;
         }
@@ -147,6 +172,15 @@ public class Publisher implements Serializable {
      */
     public static Builder<PublishSubject<String>> builder() {
         return new Builder<>();
+    }
+    
+    /**
+     * Builder that notifies a Network on every build of a new {@link Publisher}
+     * @param c     Consumer which consumes a Publisher and executes an Network notification.
+     * @return      a new Builder
+     */
+    public static Builder<PublishSubject<String>> builder(Consumer<Publisher> c) {
+        return new Builder<>(c);
     }
     
     /**

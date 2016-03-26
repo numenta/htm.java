@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.numenta.nupic.encoders.DateEncoder;
-import org.numenta.nupic.encoders.DateEncoderSerializer;
 import org.numenta.nupic.util.TestSerializeContainer;
 import org.numenta.nupic.util.TestSerializeContainerSerializer;
 import org.nustaq.serialization.FSTConfiguration;
@@ -42,7 +40,6 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * 
      * @param config      the configuration to use
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     NetworkSerializerImpl(SerialConfig config, boolean autoRegisterSerializers) {
         this.config = config;
         this.scheme = config.getScheme();

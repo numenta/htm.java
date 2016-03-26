@@ -272,6 +272,11 @@ public class Region implements Serializable {
         if(regionObservable == null && !assemblyClosed) {
             close();
         }
+        
+        if(head.isHalted()) {
+            regionObservable = head.observe();
+        }
+        
         return regionObservable;
     }
     
@@ -298,6 +303,22 @@ public class Region implements Serializable {
         return false;
     }
     
+    public boolean restart() {
+        if(!assemblyClosed) {
+            return start();
+        }
+        
+        if(tail.hasSensor()) {
+            LOGGER.info("Re-Starting Region [" + getName() + "] input Layer thread.");
+            tail.restart();
+            return true;
+        }else{
+            LOGGER.warn("Re-Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
+        }
+        
+        return false;
+    }
+    
     /**
      * Stops each {@link Layer} contained within this {@code Region}
      */
@@ -307,6 +328,18 @@ public class Region implements Serializable {
             tail.halt();
         }
         LOGGER.debug("Region [" + getName() + "] stopped.");
+    }
+    
+    /**
+     * Returns a flag indicating whether this Region has a Layer
+     * whose Sensor thread is halted.
+     * @return  true if so, false if not
+     */
+    public boolean isHalted() {
+        if(tail != null) {
+            return tail.isHalted();
+        }
+        return false;
     }
     
     /**
