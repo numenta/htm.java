@@ -978,8 +978,6 @@ public class Layer<T> implements Serializable {
                 parentNetwork.setSensor(sensor);
             }
             
-            //factory = new FunctionFactory();
-
             observableDispatch = createDispatchMap();
             
             this.encoder = encoder == null ? sensor.getEncoder() : encoder;

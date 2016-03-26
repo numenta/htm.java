@@ -193,9 +193,8 @@ public class LayerTest {
     @Test
     public void testHalt() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
+            FileSensor::create, SensorParams.create(
+                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
