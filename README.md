@@ -85,6 +85,15 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 
 Please refer to the [Network API Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
 
+## Build Instructions
+
+In brief:
+```
+gradle -Pskipbench check
+```
+
+Full instructions for building **HTM.java** are available here: [Build Instructions](https://github.com/numenta/htm.java/wiki/Build-Instructions)
+
 ## Development Environment Installation
 
 The following instructions are for setting up a development environment (which is the only installation required)
@@ -96,20 +105,6 @@ The following instructions are for setting up a development environment (which i
 An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
 
 In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
-
-## After download by clone or fork:    
-
-Execute a quick sanity check by running all the tests from within the \<path to git repo\>/htm.java
-```
-gradle check  # Executes the tests and runs the benchmarks
-
---or--
-
-gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
-```
-**Note:** Info on installing **gradle** can be found on the wiki (look at #3.) [here](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
-
-**Linux Gradle Issues?** [see the wiki here.](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
 
 ## Project Integration (New)
 For tips and insights on how to use the Network API to add HTM's into your own applications, see:
