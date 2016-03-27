@@ -192,7 +192,7 @@ In addition, there are "launch configurations" for all of the tests and any runn
 ***
 ## The "Fancy Stuff" - Clustering and Parallelization
 
-Community members have created interesting projects which use htm.java's Network API to run Engine-Type clusters of multiple networks using streaming distributed libraries like Akka and Flink. See them here:
+Some NuPIC Community members have created interesting projects which use htm.java's Network API to run Engine-Type clusters of multiple networks using streaming distributed libraries like Akka and Flink. See them here:
 
 * [htm-moclu](https://github.com/antidata/htm-moclu) (Akka)
 * [flink-htm](https://github.com/nupic-community/flink-htm) (Flink - some say a better "Spark")  
