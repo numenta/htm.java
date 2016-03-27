@@ -195,7 +195,7 @@ In addition, there are "launch configurations" for all of the tests and any runn
 Some NuPIC Community members have created interesting projects which use htm.java's Network API to run Engine-Type clusters of multiple networks using streaming distributed libraries like [Akka](http://akka.io) and [Flink](https://flink.apache.org). See them here:
 
 * [htm-moclu](https://github.com/antidata/htm-moclu) (Akka)
-* [flink-htm](https://github.com/nupic-community/flink-htm) (Flink - some say a better "Spark")  
+* [flink-htm](https://github.com/nupic-community/flink-htm) (Flink - some say it's a better [Spark](http://spark.apache.org))  
 
 ***
 ## To Follow Our Updates On Twitter
