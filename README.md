@@ -34,7 +34,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
 
 ### [News Archives...](https://github.com/numenta/htm.java/wiki/News-Archives...)
-See a glimpse of htm.java's history and read about significant events in its development.
+* See a glimpse of htm.java's history and read about significant events in its development.  
 
 
 ### View [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2015-08-29)
