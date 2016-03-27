@@ -91,7 +91,7 @@ your_git_directory% git clone https://github.com/numenta/htm.java.git
 
 **C.** [Proceed here](https://github.com/numenta/htm.java/releases) to download the latest tagged release (or older if you like)
 
-_The instructions on the above link **(Fork the htm.java repo)** provide detail about how to fork githube repos..._  
+_The instructions on the above link **(Fork the htm.java repo)** provide detail about how to fork github repos..._  
 
 **In addition:** [a video is provided](https://www.youtube.com/watch?v=Yc3PKaT1knU) that explains Numenta's contributor rules and plenty of helpful tips on using git and other commands.
 
