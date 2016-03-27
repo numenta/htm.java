@@ -19,6 +19,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #405](https://github.com/numenta/htm.java/pull/402)] Added new [Docker File reference-build environment](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment)!
 * [[PR #397](https://github.com/numenta/htm.java/pull/397)] Added close() method to the Network class to bring it inline with Region & Layer - Added Tests for new functionality. (@Mandarx)
 * [[PR #396](https://github.com/numenta/htm.java/pull/396)] Added Local.US to MetricsTrace to ensure (expected) dots.
 * [[PR #386](https://github.com/numenta/htm.java/pull/386)] Added test for close() method in LayerTest
@@ -31,6 +32,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* [[PR #404](https://github.com/numenta/htm.java/pull/404)] LayerTest & PALayerTest, subscribe() and start() call order to eliminate Thread Race Condition and run on [OpenJDK](http://openjdk.java.net)
 * (3-1-2016) Updated htm.java-examples for change to GLOBAL_INHIBITION parameter (sync)
 * [[PR #391](https://github.com/numenta/htm.java/pull/391)] Incremented the Gradle Shade Plugin version to 1.2.3
 * [[PR #379](https://github.com/numenta/htm.java/pull/379)] Changed SYN_PERM_THRESHOLD to be in line with SYN_PERM_CONNECTED
