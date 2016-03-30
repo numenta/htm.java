@@ -21,12 +21,22 @@
  */
 package org.numenta.nupic.network;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.turbo.TurboFilter;
-import ch.qos.logback.core.spi.FilterReply;
-import ch.qos.logback.core.util.StatusPrinter;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
+import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -38,6 +48,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.Layer.FunctionFactory;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -49,26 +60,18 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.spi.FilterReply;
+import ch.qos.logback.core.util.StatusPrinter;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
-import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
+import rx.subjects.PublishSubject;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -1490,4 +1493,76 @@ public class LayerTest {
         l.add(new SpatialPooler());
     }
     
+    @Test
+    public void testProperConstructionUsingNonFluentConstructor() {
+        try {
+            new Layer<>(null, null, null, null, null, null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("No parameters specified.", e.getMessage());
+        }
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, null);
+        try {
+            new Layer<>(p, MultiEncoder.builder().build(), null, null, null, null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("The passed in Parameters must contain a field encoding map specified by " +
+             "org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testNullSubscriber() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p); 
+        
+        try {
+            l.subscribe(null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Subscriber cannot be null.", e.getMessage());
+        }
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testStringToInferenceTransformer() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p); 
+        FunctionFactory ff = l.new FunctionFactory();
+        PublishSubject publisher = PublishSubject.create();
+        Observable obs = ff.createEncoderFunc(publisher);
+        
+        String[] sa = { "42" };
+        
+        obs.subscribe(new Observer() {
+            @Override public void onCompleted() { }
+            @Override public void onError(Throwable arg0) { }
+            @Override public void onNext(Object arg0) { 
+            //    System.out.println("here");
+            }
+            
+        });
+        
+        assertEquals(0, ff.inference.getRecordNum());
+        
+        publisher.onNext(sa);
+        
+        assertEquals("[42]", (Arrays.toString((int[])ff.inference.getLayerInput())));
+        assertEquals(-1, ff.inference.getRecordNum());  // Record number gets set by the Layer which hasn't
+                                                        // Received a record yet.
+        assertEquals("[42]", (Arrays.toString((int[])ff.inference.getSDR())));
+    }
+   
 }
