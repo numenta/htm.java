@@ -15,6 +15,7 @@ import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 
 public class AnomalyLikelihoodMetricsTest {
 
+    @SuppressWarnings("serial")
     @Test
     public void testCopy() {
         double[] likelihoods = new double[] { 0.2, 0.3 };

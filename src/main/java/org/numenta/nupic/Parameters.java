@@ -23,7 +23,6 @@
 package org.numenta.nupic;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -58,7 +57,7 @@ import com.cedarsoftware.util.DeepEquals;
  * @see Connections
  * @see ComputeCycle
  */
-public class Parameters implements Serializable {
+public class Parameters implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -108,7 +107,7 @@ public class Parameters implements Serializable {
         defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
         defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
-        defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.5);
+        defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
         defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);

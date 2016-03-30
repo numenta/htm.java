@@ -22,11 +22,12 @@
 
 package org.numenta.nupic.util;
 
+import java.util.Arrays;
+
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-
-import java.io.Serializable;
-import java.util.Arrays;
 
 /**
  * Allows storage of array data in sparse form, meaning that the indexes
@@ -38,7 +39,7 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> implements Serializable {
+public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

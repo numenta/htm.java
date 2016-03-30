@@ -21,7 +21,8 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.ComputeCycle;
@@ -37,6 +39,7 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
@@ -170,7 +173,7 @@ import rx.subjects.PublishSubject;
  * 
  * @author David Ray
  */
-public class Layer<T> implements Serializable {
+public class Layer<T> implements Persistable {
     private static final long serialVersionUID = 1L;
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
@@ -191,9 +194,9 @@ public class Layer<T> implements Serializable {
     private transient ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
     private transient PublishSubject<T> publisher = null;
     private transient Observable<Inference> userObservable;
+    private transient Subscription subscription;
     
-    private Subscription subscription;
-    private Inference currentInference;
+    private volatile Inference currentInference;
 
     FunctionFactory factory;
 
@@ -215,14 +218,15 @@ public class Layer<T> implements Serializable {
 
     private String name;
 
-    private boolean isClosed;
-    private boolean isHalted;
-    protected boolean isLearn = true;
+    private volatile boolean isClosed;
+    private volatile boolean isHalted;
+    private volatile boolean isPostSerialized;
+    protected volatile boolean isLearn = true;
 
     private Layer<Inference> next;
     private Layer<Inference> previous;
 
-    private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
+    private transient List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
     
     /**
      * Retains the order of added items - for use with interposed
@@ -241,7 +245,7 @@ public class Layer<T> implements Serializable {
     private transient Map<Class<T>, Observable<ManualInput>> observableDispatch = Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
 
     /** This layer's thread */
-    private Thread LAYER_THREAD;
+    private transient Thread LAYER_THREAD;
 
     static final byte SPATIAL_POOLER = 1;
     static final byte TEMPORAL_MEMORY = 2;
@@ -295,6 +299,32 @@ public class Layer<T> implements Serializable {
         factory = new FunctionFactory();
 
         observableDispatch = createDispatchMap();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Layer<T> preSerialize() {
+        isPostSerialized = false;
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Layer<T> postSerialize() {
+        recreateSensors();
+        FunctionFactory old = factory;
+        factory = new FunctionFactory();
+        factory.inference.classifiers = old.inference.classifiers;
+        sensor.setLocalParameters(params);
+        sensor.postSerialize();
+        isPostSerialized = true;
+        return this;
     }
 
     /**
@@ -386,6 +416,14 @@ public class Layer<T> implements Serializable {
             connections.setNumInputs(encoder.getWidth());
             if(parentNetwork != null && parentRegion != null) {
                 parentNetwork.setSensorRegion(parentRegion);
+                
+                Object supplier;
+                if((supplier = sensor.getSensorParams().get("ONSUB")) != null) {
+                    if(supplier instanceof PublisherSupplier) {
+                        ((PublisherSupplier)supplier).setNetwork(parentNetwork);
+                        parentNetwork.setPublisher(((PublisherSupplier)supplier).get());
+                    }
+                }
             }
         }
 
@@ -552,16 +590,22 @@ public class Layer<T> implements Serializable {
      * 
      * @param inputWidth        the flat input width of an {@link Encoder}'s output or the
      *                          vector used as input to the {@link SpatialPooler}
-     * @param numColumnDims     a number specifying the number of column dimensions that
+     * @param numDims           a number specifying the number of dimensions that
      *                          should be returned.
      * @return
      */
-    public int[] inferInputDimensions(int inputWidth, int numColumnDims) {
+    public int[] inferInputDimensions(int inputWidth, int numDims) {
         double flatSize = inputWidth;
-        double numColDims = numColumnDims;
-        double sliceArrangement = Math.pow(flatSize, 1 / numColDims);
-        double remainder = sliceArrangement % (int)sliceArrangement;
+        double numColDims = numDims;
         int[] retVal = new int[(int)numColDims];
+        
+        BigDecimal log = new BigDecimal(Math.log10(flatSize));
+        BigDecimal dimensions = new BigDecimal(numColDims);
+        double sliceArrangement = new BigDecimal(
+            Math.pow(10, log.divide(dimensions).doubleValue()), 
+                MathContext.DECIMAL32).doubleValue();
+        double remainder = sliceArrangement % (int)sliceArrangement;
+        
         if(remainder > 0) {
             for(int i = 0;i < numColDims - 1;i++)
                 retVal[i] = 1;
@@ -582,7 +626,7 @@ public class Layer<T> implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public Observable<Inference> observe() {
-        // This will be called again after the Network is halted so we have to prepair
+        // This will be called again after the Network is halted so we have to prepare
         // for rebuild of the Observer chain
         if(isHalted) {
             clearSubscriberObserverLists();
@@ -608,7 +652,7 @@ public class Layer<T> implements Serializable {
      * @return  a {@link Subscription}
      */
     public Subscription subscribe(final Observer<Inference> subscriber) {
-        // This will be called again after the Network is halted so we have to prepair
+        // This will be called again after the Network is halted so we have to prepare
         // for rebuild of the Observer chain
         if(isHalted) {
             clearSubscriberObserverLists();
@@ -619,7 +663,7 @@ public class Layer<T> implements Serializable {
         }
 
         subscribers.add(subscriber);
-
+        
         return createSubscription(subscriber);
     }
 
@@ -873,6 +917,13 @@ public class Layer<T> implements Serializable {
      * Stops the processing of this {@code Layer}'s processing thread.
      */
     public void halt() {
+        Object supplier = null;
+        if(sensor != null && (supplier = sensor.getSensorParams().get("ONSUB")) != null) {
+            if(supplier instanceof PublisherSupplier) {
+                ((PublisherSupplier)supplier).clearSuppliedInstance();
+            }
+        }
+        
         // Signal the Observer chain to complete
         if(LAYER_THREAD == null) {
             publisher.onCompleted();
@@ -925,6 +976,11 @@ public class Layer<T> implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public void start() {
+        if(isHalted) {
+            restart();
+            return;
+        }
+        
         // Save boilerplate setup steps by automatically closing when start is
         // called.
         if(!isClosed) {
@@ -950,6 +1006,10 @@ public class Layer<T> implements Serializable {
     
     /**
      * Restarts this {@code Layer}
+     * 
+     * {@link #restart()} is to be called after a call to {@link #halt()}, to begin
+     * processing again. The {@link Network} will continue from where it previously
+     * left off after the last call to halt().
      */
     @SuppressWarnings("unchecked")
     public void restart() {
@@ -962,18 +1022,13 @@ public class Layer<T> implements Serializable {
                 throw new IllegalStateException("A sensor must be added when the mode is not Network.Mode.MANUAL");
             }
             
-            // Recreate the Sensor and its underlying Stream
-            Class<?> sensorKlass = sensor.getSensorClass();
-            if(sensorKlass.toString().indexOf("File") != -1) {
-                Object path = sensor.getSensorParams().get("PATH");
-                sensor = (HTMSensor<?>)Sensor.create(
-                    FileSensor::create, SensorParams.create(Keys::path, "", path));
-            }else if(sensorKlass.toString().indexOf("Observ") != -1) {
-                Object supplierOfObservable = sensor.getSensorParams().get("ONSUB");
-                sensor = (HTMSensor<?>)Sensor.create(
-                    ObservableSensor::create, SensorParams.create(Keys::obs, "", supplierOfObservable));
+            // Re-init the Sensor only if we're halted and haven't already been initialized
+            // following a deserialization.
+            if(!isPostSerialized) {
+                // Recreate the Sensor and its underlying Stream
+                recreateSensors();
             }
-                    
+            
             if(parentNetwork != null) {
                 parentNetwork.setSensor(sensor);
             }
@@ -1143,6 +1198,15 @@ public class Layer<T> implements Serializable {
      */
     public int getRecordNum() {
         return recordNum;
+    }
+
+    /**
+     * Returns a flag indicating whether this {@code Layer} has had
+     * its {@link #close} method called, or not.
+     * @return
+     */
+    public boolean isClosed() {
+        return isClosed;
     }
 
     /**
@@ -1424,6 +1488,7 @@ public class Layer<T> implements Serializable {
         sequence = fillInSequence(sequence);
 
         // All subscribers and observers are notified from a single delegate.
+        if(subscribers == null) subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
         subscribers.add(getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
 
@@ -1508,6 +1573,10 @@ public class Layer<T> implements Serializable {
     private Observable<ManualInput> resolveObservableSequence(T t) {
         Observable<ManualInput> sequenceStart = null;
 
+        if(observableDispatch == null) {
+            observableDispatch = createDispatchMap();
+        }
+        
         if(observableDispatch != null) {
             if(ManualInput.class.isAssignableFrom(t.getClass())) {
                 sequenceStart = observableDispatch.get(ManualInput.class);
@@ -1522,8 +1591,19 @@ public class Layer<T> implements Serializable {
             }
         }
         
+        // Insert skip observable operator if initializing with an advanced record number
+        // (i.e. Serialized Network)
         if(recordNum > 0) {
             sequenceStart = sequenceStart.skip(recordNum + 1);
+            
+            Integer skipCount;
+            if(((skipCount = (Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY)) != null)) {
+                // No need to "warm up" the SpatialPooler if we're deserializing an SP
+                // that has been running... However "skipCount - recordNum" is there so 
+                // we make sure the Network has run at least long enough to satisfy the 
+                // original requested "primer delay".
+                params.setParameterByKey(KEY.SP_PRIMER_DELAY, Math.max(0, skipCount - recordNum));
+            }
         }
 
         return sequenceStart;
@@ -1746,7 +1826,8 @@ public class Layer<T> implements Serializable {
      * during restart or deserialization.
      */
     private void clearSubscriberObserverLists() {
-        observers.clear();
+        if(observers == null) observers = new ArrayList<Observer<Inference>>(); 
+        if(subscribers == null) subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
         subscribers.clear();
         userObservable = null;
     }
@@ -1815,6 +1896,7 @@ public class Layer<T> implements Serializable {
         mi.activeCells(activeCells = cc.activeCells());
         // Store the Compute Cycle
         mi.computeCycle = cc;
+        
         return SDR.asCellIndices(activeCells);
     }
     
@@ -1878,7 +1960,7 @@ public class Layer<T> implements Serializable {
      * @see Layer#resolveObservableSequence(Object)
      * @see Layer#fillInSequence(Observable)
      */
-    class FunctionFactory implements Serializable {
+    class FunctionFactory implements Persistable {
         private static final long serialVersionUID = 1L;
         
         ManualInput inference = new ManualInput();
@@ -2134,6 +2216,26 @@ public class Layer<T> implements Serializable {
 
     }
     
+    /**
+     * Re-initializes the {@link HTMSensor} following deserialization or restart
+     * after halt.
+     */
+    private void recreateSensors() {
+        if(sensor != null) {
+            // Recreate the Sensor and its underlying Stream
+            Class<?> sensorKlass = sensor.getSensorClass();
+            if(sensorKlass.toString().indexOf("File") != -1) {
+                Object path = sensor.getSensorParams().get("PATH");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    FileSensor::create, SensorParams.create(Keys::path, "", path));
+            }else if(sensorKlass.toString().indexOf("Observ") != -1) {
+                Object supplierOfObservable = sensor.getSensorParams().get("ONSUB");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    ObservableSensor::create, SensorParams.create(Keys::obs, "", supplierOfObservable));
+            }
+        }
+    }
+        
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -2185,7 +2287,7 @@ public class Layer<T> implements Serializable {
         if(parentRegion == null) {
             if(other.parentRegion != null)
                 return false;
-        } else if(!parentRegion.equals(other.parentRegion))
+        } else if(other.parentRegion == null || !parentRegion.getName().equals(other.parentRegion.getName()))
             return false;
         if(sensorParams == null) {
             if(other.sensorParams != null)
@@ -2196,6 +2298,4 @@ public class Layer<T> implements Serializable {
         return true;
     }
 
-
-    
 }

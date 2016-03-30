@@ -21,7 +21,6 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,19 +28,20 @@ import java.util.List;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.HTMSensor;
-import org.numenta.nupic.network.sensor.Header;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
 
 import rx.Observable;
+import rx.Observer;
 import rx.Subscriber;
 
 /**
@@ -158,7 +158,7 @@ import rx.Subscriber;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public class Network implements Serializable {
+public class Network implements Persistable {
     private static final long serialVersionUID = 1L;
 
     public enum Mode { MANUAL, AUTO, REACTIVE };
@@ -170,10 +170,10 @@ public class Network implements Serializable {
     private Region head;
     private Region tail;
     private Region sensorRegion;
-    private Publisher publisher;
+    private volatile Publisher publisher;
     
-    private boolean isLearn = true;
-    private boolean isThreadRunning;
+    private volatile boolean isLearn = true;
+    private volatile boolean isThreadRunning;
     
     private List<Region> regions = new ArrayList<>();
     
@@ -181,6 +181,8 @@ public class Network implements Serializable {
     private static NetworkSerializerImpl<?> storedSerializer;
     /** The stored configuration delineating output file and scheme etc. */
     private static SerialConfig storedConfig;
+    
+
 
     /**
      * Creates a new {@link Network}
@@ -200,6 +202,27 @@ public class Network implements Serializable {
         if(parameters == null) {
             throw new IllegalArgumentException("Network Parameters were null.");
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network preSerialize() {
+        halt();
+        regions.stream().forEach(r -> r.preSerialize());
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network postSerialize() {
+        regions.stream().forEach(r -> r.postSerialize());
+        return this;
     }
     
     /**
@@ -270,7 +293,7 @@ public class Network implements Serializable {
      * @see SerialConfig
      */
     @SuppressWarnings("unchecked")
-    public static <T> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
+    public static <T extends Persistable> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
         return (returnNew || storedSerializer == null || (storedConfig != null && !config.equals(storedConfig))) ?  
             (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config)) : 
                 (NetworkSerializerImpl<T>)storedSerializer;
@@ -297,7 +320,7 @@ public class Network implements Serializable {
      * @return      the new Publisher created after deserialization or halt.
      * @see #getPublisherSupplier()
      */
-    public Publisher getNewPublisher() {
+    public Publisher getPublisher() {
         if(publisher == null) {
             throw new NullPointerException("A Supplier must be built first. " +
                 "please see Network.getPublisherSupplier()");
@@ -305,33 +328,6 @@ public class Network implements Serializable {
         return publisher;
     }
     
-    /**
-     * <p>
-     * Returns a {@link PublisherSupplier.Builder} which is used to build up 
-     * a {@link Header} and then create a supplier. An example is:
-     * </p>
-     * <pre>
-     *  Network network = ...
-     *  
-     *  Supplier<Publisher> supplier = network.getPublisherSupplier()
-     *      .addHeader("dayOfWeek, timestamp")
-     *      .addHeader("number, date")
-     *      .addHeader("B, T")
-     *      .build();
-     *  
-     *  // Since Suppliers are always added to Sensors we do...
-     *  
-     *  Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-     *      ObservableSensor::create, SensorParams.create(
-     *          Keys::obs, new Object[] {"name", supplier})); // <-- supplier created above
-     * </pre>
-     * 
-     * @return  a builder with which to create a {@link PublisherSupplier}
-     */
-    public PublisherSupplier.Builder getPublisherSupplier() {
-        return PublisherSupplier.builder(this);
-    }
-
     /**
      * Returns the String identifier for this {@code Network}
      * @return
@@ -633,6 +629,14 @@ public class Network implements Serializable {
     }
 
     /**
+     * Closes all the {@link Region} objects, in this {@link Network}
+     */
+    public Network close() {
+        regions.forEach(region -> region.close());
+        return this;
+    }
+
+    /**
      * Returns a {@link List} view of the contained {@link Region}s.
      * @return
      */
@@ -681,7 +685,7 @@ public class Network implements Serializable {
     public Parameters getParameters() {
         return parameters;
     }
-
+    
     /**
      * Sets the reference to this {@code Network}'s Sensor
      * @param sensor

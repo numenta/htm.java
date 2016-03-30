@@ -22,7 +22,6 @@
 
 package org.numenta.nupic;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +55,7 @@ import org.numenta.nupic.util.SparseObjectMatrix;
  *
  * In the separation of data from logic, this class represents the data/state.
  */
-public class Connections implements Serializable {
+public class Connections implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -210,7 +209,7 @@ public class Connections implements Serializable {
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
-    protected Random random = new MersenneTwister(42);
+    protected Random random = new MersenneTwister(seed);
 
     ///////// paCLA extensions
 

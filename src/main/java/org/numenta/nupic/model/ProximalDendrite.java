@@ -22,12 +22,12 @@
 
 package org.numenta.nupic.model;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
 
-public class ProximalDendrite extends Segment implements Serializable {
+public class ProximalDendrite extends Segment implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

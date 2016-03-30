@@ -22,11 +22,11 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.Anomaly.AveragedAnomalyRecordList;
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
 
@@ -38,7 +38,7 @@ import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
  * @see AnomalyLikelihood
  * @see AnomalyLikelihoodTest
  */
-public class AnomalyLikelihoodMetrics implements Serializable {
+public class AnomalyLikelihoodMetrics implements Persistable {
     private static final long serialVersionUID = 1L;
     
     private AnomalyParams params;

@@ -22,13 +22,13 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
@@ -70,7 +70,7 @@ import gnu.trove.list.array.TIntArrayList;
  */
 @JsonSerialize(using=CLAClassifierSerializer.class)
 @JsonDeserialize(using=CLAClassifierDeserializer.class)
-public class CLAClassifier implements Serializable {
+public class CLAClassifier implements Persistable {
     private static final long serialVersionUID = 1L;
     
     int verbosity = 0;

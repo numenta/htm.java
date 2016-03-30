@@ -76,5 +76,10 @@ public interface NetworkSerializer<T> {
      * Returns the File object that the serialization scheme writes to.
      * @return
      */
-    public File getSerializedFile();    
+    public File getSerializedFile();
+    /**
+     * Returns the underlying {@link Kryo} impl.
+     * @return the underlying {@link Kryo} impl.
+     */
+    public Kryo getKryo();    
 }

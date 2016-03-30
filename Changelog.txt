@@ -1,0 +1,8 @@
+Changes for Serialization branch (notes for CHANGELOG.md)
+
+1. Renamed class ClassifierResult to Classification
+2. Renamed class EncoderResult to Encoding
+3. Removed extraneous constructor from FastRandom
+4. a.) Added functionality to gradle build script: Ability to see standard out/err
+   b.) Changed ability to skip tests when code hasn't changed to "always run tests"
+   c.) Added ability to toggle (b) so that it will skip again.

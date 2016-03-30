@@ -21,12 +21,12 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -65,7 +65,7 @@ import rx.Subscriber;
  * @author cogmission
  *
  */
-public class Region implements Serializable {
+public class Region implements Persistable {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
@@ -73,11 +73,12 @@ public class Region implements Serializable {
     private Network parentNetwork;
     private Region upstreamRegion;
     private Region downstreamRegion;
-    private Map<String, Layer<Inference>> layers = new HashMap<>();
-    private Observable<Inference> regionObservable;
     private Layer<?> tail;
     private Layer<?> head;
     
+    private Map<String, Layer<Inference>> layers = new HashMap<>();
+    private transient Observable<Inference> regionObservable;
+        
     /** Marker flag to indicate that assembly is finished and Region initialized */
     private boolean assemblyClosed;
     
@@ -119,6 +120,26 @@ public class Region implements Serializable {
         this.parentNetwork = network;
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Region preSerialize() {
+        layers.values().stream().forEach(l -> l.preSerialize());
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Region postSerialize() {
+        layers.values().stream().forEach(l -> l.postSerialize());
+        return this;
+    }
+
     /**
      * Sets the parent {@link Network} of this {@code Region}
      * @param network
@@ -325,6 +346,9 @@ public class Region implements Serializable {
     public void halt() {
         LOGGER.debug("Stop called on Region [" + getName() + "]");
         if(tail != null) {
+            tail.halt();
+        }else{
+            close();
             tail.halt();
         }
         LOGGER.debug("Region [" + getName() + "] stopped.");

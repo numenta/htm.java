@@ -22,16 +22,15 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
-
 import org.joda.time.DateTime;
+import org.numenta.nupic.Persistable;
 
 /**
  * A sample data point or record consisting of a timestamp, value, and score.
  * This class is used as an input value to methods in the {@link AnomalyLikelihood}
  * class.
  */
-public class Sample implements Serializable {
+public class Sample implements Persistable {
     private static final long serialVersionUID = 1L;
     
     public final DateTime date;

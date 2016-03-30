@@ -22,8 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
-
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 
 import gnu.trove.list.TDoubleList;
@@ -35,7 +34,7 @@ import gnu.trove.list.array.TDoubleArrayList;
  * @author David Ray
  * @see CLAClassifier
  */
-public class BitHistory implements Serializable {
+public class BitHistory implements Persistable {
     private static final long serialVersionUID = 1L;
     
     /** Store reference to the classifier */

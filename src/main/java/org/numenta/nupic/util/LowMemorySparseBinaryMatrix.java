@@ -22,12 +22,13 @@
 
 package org.numenta.nupic.util;
 
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
-
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+
+import org.numenta.nupic.Persistable;
+
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * Low Memory implementation of {@link SparseBinaryMatrix} without 
@@ -35,7 +36,7 @@ import java.util.Arrays;
  * 
  * @author Jose Luis Martin
  */
-public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Serializable {
+public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -99,6 +100,36 @@ public class LowMemorySparseBinaryMatrix extends AbstractSparseBinaryMatrix impl
 
             for (int i = 0; i < this.dimensions[0]; i++) {
                 results[i] = results[0];
+            }
+        }
+    }
+    
+    @Override
+    public void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold) {
+        if (this.dimensions.length > 1) {
+            int[] values = getSparseIndices();
+            for (int i = 0;i < values.length;i++) {
+                int[] coordinates = computeCoordinates(values[i]);
+                
+                if(inputVector[coordinates[1]]  != 0)
+                    results[coordinates[0]] += 1;
+                
+                if(i == values.length - 1 && results[coordinates[0]] < stimulusThreshold) {
+                    results[coordinates[0]] = 0;
+                }
+            }
+        }
+        else {
+            for(int i = 0; i < this.dimensions[0]; i++) {
+                results[0] += (inputVector[i] * (int) get(i));
+            }
+
+            for (int i = 0; i < this.dimensions[0]; i++) {
+                results[i] = results[0];
+                
+                if(i == this.dimensions[0] - 1 && results[i] < stimulusThreshold) {
+                    results[i] = 0;
+                }
             }
         }
     }

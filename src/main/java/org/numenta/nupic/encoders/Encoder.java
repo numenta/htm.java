@@ -22,12 +22,6 @@
 
 package org.numenta.nupic.encoders;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,12 +31,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * <pre>
@@ -83,7 +83,7 @@ import org.slf4j.LoggerFactory;
  * @author Numenta
  * @author David Ray
  */
-public abstract class Encoder<T>  implements Serializable {
+public abstract class Encoder<T>  implements Persistable {
 
     private static final long serialVersionUID = 1L;
 

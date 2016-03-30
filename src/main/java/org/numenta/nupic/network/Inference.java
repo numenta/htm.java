@@ -21,11 +21,11 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
@@ -44,7 +44,7 @@ import rx.functions.Func1;
  * 
  * @author David Ray
  */
-public interface Inference extends Serializable {
+public interface Inference extends Persistable {
     /**
      * Returns the input record sequence number associated with 
      * the state of a {@link Layer} which this {@code Inference}

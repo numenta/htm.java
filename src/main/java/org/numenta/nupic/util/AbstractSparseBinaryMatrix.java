@@ -22,6 +22,11 @@
 
 package org.numenta.nupic.util;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
@@ -29,18 +34,14 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 /**
  * Base class for matrices containing specifically binary (0 or 1) integer values
  * 
- * @author cogmission
+ * @author David Ray
  * @author Jose Luis Martin
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix implements Serializable {
+public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -139,7 +140,16 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix im
      * @param results			the results array
      */
     public abstract void rightVecSumAtNZ(int[] inputVector, int[] results);
-
+    
+    /**
+     * Fills the specified results array with the result of the 
+     * matrix vector multiplication.
+     * 
+     * @param inputVector       the right side vector
+     * @param results           the results array
+     */
+    public abstract void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold);
+        
     /**
      * Sets the value at the specified index.
      * 

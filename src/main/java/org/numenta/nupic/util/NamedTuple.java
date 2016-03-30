@@ -22,12 +22,13 @@
 
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import org.numenta.nupic.Persistable;
 
 /**
  * Immutable tuple which adds associative lookup functionality.
@@ -199,7 +200,7 @@ public class NamedTuple extends Tuple {
     /**
      * Encapsulates the hashed key/value pair in a linked node.
      */
-    private final class Entry implements Serializable {
+    private final class Entry implements Persistable {
         private static final long serialVersionUID = 1L;
         
         String key;
@@ -274,7 +275,7 @@ public class NamedTuple extends Tuple {
      * Rudimentary (light-weight) Linked List implementation for storing
      * hash {@link Entry} collisions.
      */
-    private final class Bucket implements Serializable {
+    private final class Bucket implements Persistable {
         private static final long serialVersionUID = 1L;
         
         Entry last;

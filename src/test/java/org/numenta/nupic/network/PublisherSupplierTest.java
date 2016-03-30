@@ -26,9 +26,8 @@ public class PublisherSupplierTest {
         ////////////////
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        Network network = Network.create("testNetwork", p);
         
-        Supplier<Publisher> supplier = network.getPublisherSupplier()
+        Supplier<Publisher> supplier = PublisherSupplier.builder()
             .addHeader("dayOfWeek")
             .addHeader("number")
             .addHeader("B")
@@ -44,7 +43,7 @@ public class PublisherSupplierTest {
         //   Now Test Publisher was created  //
         ///////////////////////////////////////
         
-        Publisher pub = network.getNewPublisher();
+        Publisher pub = supplier.get();
         assertNotNull(pub);
         
         List<String> outputList = new ArrayList<>();
@@ -73,17 +72,13 @@ public class PublisherSupplierTest {
         Network network2 = Network.create("testNetwork", p);
         Publisher nullPublisher = null;
         try {
-            nullPublisher = network2.getNewPublisher();
+            nullPublisher = network2.getPublisher();
             fail(); // Should not reach here
         }catch(Exception e) {
             assertEquals("A Supplier must be built first. " +
                 "please see Network.getPublisherSupplier()", e.getMessage());
         }
         assertNull(nullPublisher);
-        
-        // Test that the previous Publisher is still available and that the Network
-        // returns the same one as before.
-        assertEquals(pub, network.getNewPublisher());
     }
 
 }

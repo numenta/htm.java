@@ -22,7 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
+import org.numenta.nupic.Persistable;
 
 import gnu.trove.list.TDoubleList;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -33,7 +33,7 @@ import gnu.trove.list.array.TDoubleArrayList;
  * @author Numenta
  * @author David Ray
  */
-public class MovingAverage implements Serializable {
+public class MovingAverage implements Persistable {
     private static final long serialVersionUID = 1L;
 
     private Calculation calc;
@@ -200,7 +200,7 @@ public class MovingAverage implements Serializable {
     /**
      * Container for calculated data
      */
-    public static class Calculation implements Serializable {
+    public static class Calculation implements Persistable {
         private static final long serialVersionUID = 1L;
         
         private  double average;

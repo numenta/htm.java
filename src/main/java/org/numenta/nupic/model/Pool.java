@@ -22,14 +22,13 @@
 
 package org.numenta.nupic.model;
 
+import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
+import org.numenta.nupic.util.ArrayUtils;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-
-import java.io.Serializable;
-
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.util.ArrayUtils;
 
 /**
  * Convenience container for "bound" {@link Synapse} values
@@ -43,7 +42,7 @@ import org.numenta.nupic.util.ArrayUtils;
  * @see Synapse
  * @see Connections
  */
-public class Pool implements Serializable {
+public class Pool implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

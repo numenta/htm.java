@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -31,6 +30,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
 
 /**
  * Represents a proximal or distal dendritic segment. Segments are owned by
@@ -41,7 +41,7 @@ import org.numenta.nupic.Connections;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class DistalDendrite extends Segment implements Serializable {
+public class DistalDendrite extends Segment implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

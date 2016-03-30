@@ -195,7 +195,7 @@ public class TemporalMemoryTest {
         int[] prevWinnerCells = new int[] { 23, 37, 49, 733 };
         
         ComputeCycle cycle = new ComputeCycle();
-        tm.burstColumns(cycle, cn, cn.getColumnSet(activeColumns), 
+        tm.burstColumns(cn, cycle, cn.getColumnSet(activeColumns), 
             cn.getColumnSet(predictedColumns), cn.getCellSet(prevActiveCells), cn.getCellSet(prevWinnerCells));
         
         List<Cell> activeCells = new ArrayList<Cell>(cycle.activeCells());
@@ -233,7 +233,7 @@ public class TemporalMemoryTest {
         int[] prevWinnerCells = new int[] { };
         
         ComputeCycle cycle = new ComputeCycle();
-        tm.burstColumns(cycle, cn, cn.getColumnSet(activeColumns), 
+        tm.burstColumns(cn, cycle, cn.getColumnSet(activeColumns), 
             cn.getColumnSet(predictedColumns), cn.getCellSet(prevActiveCells), cn.getCellSet(prevWinnerCells));
         
         assertTrue(cycle.activeCells().isEmpty());

@@ -37,6 +37,8 @@ import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
+import com.cedarsoftware.util.DeepEquals;
+
 import rx.functions.Func1;
 
 /**
@@ -474,7 +476,7 @@ public class ManualInput implements Inference {
         result = prime * result + Arrays.hashCode(encoding);
         result = prime * result + Arrays.hashCode(feedForwardActiveColumns);
         result = prime * result + Arrays.hashCode(feedForwardSparseActives);
-        result = prime * result + ((layerInput == null) ? 0 : layerInput.hashCode());
+        result = prime * result + ((layerInput == null) ? 0 : DeepEquals.deepHashCode(layerInput));
         result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
         result = prime * result + ((previousPredictiveCells == null) ? 0 : previousPredictiveCells.hashCode());
         result = prime * result + recordNum;
@@ -525,7 +527,7 @@ public class ManualInput implements Inference {
         if(layerInput == null) {
             if(other.layerInput != null)
                 return false;
-        } else if(!layerInput.equals(other.layerInput))
+        } else if(!DeepEquals.deepEquals(layerInput, other.layerInput))
             return false;
         if(predictiveCells == null) {
             if(other.predictiveCells != null)

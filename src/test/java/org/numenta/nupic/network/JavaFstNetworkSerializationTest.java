@@ -11,6 +11,8 @@ import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -18,7 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -38,6 +41,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.TemporalMemory.SegmentSearch;
 import org.numenta.nupic.datagen.ResourceLocator;
+import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
@@ -63,6 +67,8 @@ import rx.Subscriber;
 
 
 public class JavaFstNetworkSerializationTest {
+    
+    private BiFunction<Inference, Integer, Integer> dayOfWeekPrintout = createDayOfWeekInferencePrintout();
     
     @Test
     public void testRandom() {
@@ -521,7 +527,10 @@ public class JavaFstNetworkSerializationTest {
         serializer.serialize(sensor);
         //Serialize above Connections for comparison with same run but unserialized below...
         HTMSensor<File> serializedSensor = serializer.deSerialize((Class<HTMSensor<File>>)sensor.getClass(), null); // (null=get from file)
-        System.out.println("sensor = " + serializedSensor);
+        
+        boolean b = DeepEquals.deepEquals(serializedSensor, sensor);
+        deepCompare(serializedSensor, sensor);
+        assertTrue(b);
     }
     
     @SuppressWarnings("unchecked")
@@ -538,7 +547,10 @@ public class JavaFstNetworkSerializationTest {
         serializer.serialize(sensor);
         //Serialize above Connections for comparison with same run but unserialized below...
         HTMSensor<File> serializedSensor = serializer.deSerialize((Class<HTMSensor<File>>)sensor.getClass(), null); // (null=get from file)
-        System.out.println("sensor = " + serializedSensor);
+        
+        boolean b = DeepEquals.deepEquals(serializedSensor, sensor);
+        deepCompare(serializedSensor, sensor);
+        assertTrue(b);
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -558,7 +570,10 @@ public class JavaFstNetworkSerializationTest {
         
         //Serialize above Connections for comparison with same run but unserialized below...
         ObservableSensor<String[]> serializedOSensor = serializer.deSerialize((Class<ObservableSensor>)oSensor.getClass(), null); // (null=get from file)
-        System.out.println("container = " + serializedOSensor);
+        
+        boolean b = DeepEquals.deepEquals(serializedOSensor, oSensor);
+        deepCompare(serializedOSensor, oSensor);
+        assertTrue(b);
     }
     ////////////////////////////////// End HTMSensors ////////////////////////////////////
     
@@ -785,15 +800,12 @@ public class JavaFstNetworkSerializationTest {
         
         p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
         
-        Network network = Network.create("testNetwork", p);
-        
-        Supplier<Publisher> supplier = network.getPublisherSupplier()
-            .addHeader("dayOfWeek")
-            .addHeader("darr")
-            .addHeader("B").build();
-
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", supplier}));
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+                PublisherSupplier.builder()
+                    .addHeader("dayOfWeek")
+                    .addHeader("darr")
+                    .addHeader("B").build() }));
         
         Layer<?> layer = Network.createLayer("1", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
@@ -824,12 +836,394 @@ public class JavaFstNetworkSerializationTest {
         serializedLayer.resetRecordNum();
         assertNotEquals(serializedLayer, layer);
     }
-    //////////////////////  End Layer ///////////////////////
+    //////////////////////  End Layers  ///////////////////////
     
     
     ///////////////////////////
     //      Full Network     //
     ///////////////////////////
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializedUnStartedNetworkRuns() {
+        final int NUM_CYCLES = 600;
+        final int INPUT_GROUP_COUNT = 7; // Days of Week
+        
+        Network network = getLoadedDayOfWeekNetwork();
+        
+        SerialConfig config = new SerialConfig("testSerializedUnStartedNetworkRuns", Scheme.FST);
+        NetworkSerializer<Network> serializer = Network.serializer(config, false);
+        serializer.serialize(network);
+        
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetwork = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+        assertEquals(serializedNetwork, network);
+        deepCompare(network, serializedNetwork);
+        
+        int cellsPerCol = (int)serializedNetwork.getParameters().getParameterByKey(KEY.CELLS_PER_COLUMN);
+        
+        serializedNetwork.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                /** see {@link #createDayOfWeekInferencePrintout()} */
+                dayOfWeekPrintout.apply(inf, cellsPerCol);
+            }
+        });
+        
+        Publisher pub = serializedNetwork.getPublisher();
+        
+        serializedNetwork.start();
+        
+        int cycleCount = 0;
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
+                pub.onNext("" + j);
+            }
+            
+            serializedNetwork.reset();
+            
+            if(cycleCount == 284) {
+                break;
+            }
+        }
+        
+        pub.onComplete();
+        
+        try {
+            Region r1 = serializedNetwork.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * The {@link DateEncoder} presents a special challenge because its main
+     * field, 
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSerializedUnStartedNetworkRuns_DateEncoder() {
+        final int NUM_CYCLES = 100;
+        
+        Network network = getLoadedHotGymNetwork();
+        
+        SerialConfig config = new SerialConfig("testSerializedUnStartedNetworkRuns_DateEncoder", Scheme.FST);
+        NetworkSerializer<Network> serializer = Network.serializer(config, false);
+        serializer.serialize(network);
+        
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetwork = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+        assertEquals(serializedNetwork, network);
+        deepCompare(network, serializedNetwork);
+        
+        serializedNetwork.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() == 1107) {
+                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                }
+            }
+        });
+        
+        Publisher pub = serializedNetwork.getPublisher();
+        
+        serializedNetwork.start();
+        
+        int cycleCount = 0;
+        List<String> hotStream = makeStream().collect(Collectors.toList());
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(String s : hotStream) {
+                pub.onNext(s);
+            }
+            
+            serializedNetwork.reset();
+        }
+        
+        pub.onComplete();
+        
+        try {
+            Region r1 = serializedNetwork.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * The {@link DateEncoder} presents a special challenge because its main
+     * field, 
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testCanDeserializeMoreThanOnceAndRun() {
+        final int NUM_CYCLES = 100;
+        int cycleCount = 0;
+        List<String> hotStream = null;
+        
+        Network network = getLoadedHotGymNetwork();
+        
+//        network.observe().subscribe(new Observer<Inference>() { 
+//            @Override public void onCompleted() {}
+//            @Override public void onError(Throwable e) { e.printStackTrace(); }
+//            @Override
+//            public void onNext(Inference inf) {
+//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+//                if(inf.getRecordNum() == 1107) {
+//                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+//                }
+//            }
+//        });
+//        
+//        Publisher publ = network.getPublisher();
+//        
+//        network.start();
+//        
+//        cycleCount = 0;
+//        hotStream = makeStream().collect(Collectors.toList());
+//        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+//            for(String s : hotStream) {
+//                publ.onNext(s);
+//            }
+//            
+//            network.reset();
+//        }
+//        
+//        publ.onComplete();
+//        
+//        try {
+//            Region r1 = network.lookup("r1");
+//            r1.lookup("1").getLayerThread().join();
+//        }catch(Exception e) {
+//            e.printStackTrace();
+//        }
+        
+        SerialConfig config = new SerialConfig("testCanDeserializeMoreThanOnceAndRun", Scheme.FST);
+        NetworkSerializer<Network> serializer = Network.serializer(config, false);
+//        serializer.serialize(network);
+//        FastRandom fr = (FastRandom)network.lookup("r1").lookup("1").getConnections().getRandom();
+//        System.out.println("First SEED = " + fr.getSeed());
+        
+        
+        ////////////////////////////////////
+        //      First Deserialization     //
+        ////////////////////////////////////
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetworkx = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetworkx, network);
+//        deepCompare(network, serializedNetworkx);
+        
+        Network serializedNetworky = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetworky, network);
+//        deepCompare(network, serializedNetworky);
+        
+        Network serializedNetworkz = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetworkz, network);
+//        deepCompare(network, serializedNetworkz);
+        
+        Network serializedNetworka = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetworka, network);
+//        deepCompare(network, serializedNetworka);
+        
+        Network serializedNetwork = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetwork, network);
+        assertTrue(serializedNetworkx != serializedNetwork);
+//        deepCompare(network, serializedNetwork);
+        
+        FastRandom r = (FastRandom)serializedNetwork.lookup("r1").lookup("1").getConnections().getRandom();
+        System.out.println("First SEED = " + r.getSeed());
+        
+        serializedNetwork.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() == 1107) {
+                    System.out.println("First SEED 2 = " + r.getSeed());
+                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                }
+            }
+        });
+        
+        Publisher pub = serializedNetwork.getPublisher();
+        
+        serializedNetwork.start();
+        
+        cycleCount = 0;
+        hotStream = makeStream().collect(Collectors.toList());
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(String s : hotStream) {
+                pub.onNext(s);
+            }
+            
+            serializedNetwork.reset();
+        }
+        
+        pub.onComplete();
+        
+        try {
+            Region r1 = serializedNetwork.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        
+        ////////////////////////////////////
+        //      Second Deserialization    //
+        ////////////////////////////////////
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetwork2 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetwork2, network);
+//        deepCompare(network, serializedNetwork2);
+        
+        FastRandom r2 = (FastRandom)serializedNetwork2.lookup("r1").lookup("1").getConnections().getRandom();
+//        serializedNetwork2.lookup("r1").lookup("1").getConnections().setRandom(r);
+        System.out.println("Second SEED = " + r2.getSeed());
+//        assertTrue(r.equals(r2));
+
+        serializedNetwork2.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println("2: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() == 1107) {
+                    System.out.println("Second SEED 2 = " + r2.getSeed());
+                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                }
+            }
+        });
+
+        Publisher pub2 = serializedNetwork2.getPublisher();
+
+        serializedNetwork2.start();
+
+        cycleCount = 0;
+        hotStream = makeStream().collect(Collectors.toList());
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(String s : hotStream) {
+                pub2.onNext(s);
+            }
+
+            serializedNetwork2.reset();
+        }
+
+        pub2.onComplete();
+
+        try {
+            Region r1 = serializedNetwork2.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        
+        ////////////////////////////////////
+        //      Third Deserialization     //
+        ////////////////////////////////////
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetwork3 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetwork2, network);
+//        deepCompare(network, serializedNetwork2);
+        
+        FastRandom r3 = (FastRandom)serializedNetwork3.lookup("r1").lookup("1").getConnections().getRandom();
+//        serializedNetwork3.lookup("r1").lookup("1").getConnections().setRandom(r);
+        System.out.println("Third SEED = " + r3.getSeed());
+//        assertTrue(r.equals(r2));
+
+        serializedNetwork3.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println("3: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() == 1107) {
+                    System.out.println("Third SEED 2 = " + r3.getSeed());
+                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                }
+            }
+        });
+
+        Publisher pub3 = serializedNetwork3.getPublisher();
+
+        serializedNetwork3.start();
+
+        cycleCount = 0;
+        hotStream = makeStream().collect(Collectors.toList());
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(String s : hotStream) {
+                pub3.onNext(s);
+            }
+
+            serializedNetwork3.reset();
+        }
+
+        pub3.onComplete();
+
+        try {
+            Region r1 = serializedNetwork3.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        
+        ////////////////////////////////////
+        //      Fourth Deserialization    //
+        ////////////////////////////////////
+        //Serialize above Connections for comparison with same run but unserialized below...
+        Network serializedNetwork4 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+//        assertEquals(serializedNetwork2, network);
+//        deepCompare(network, serializedNetwork2);
+        
+        FastRandom r4 = (FastRandom)serializedNetwork4.lookup("r1").lookup("1").getConnections().getRandom();
+//        serializedNetwork3.lookup("r1").lookup("1").getConnections().setRandom(r);
+        System.out.println("Fourth SEED = " + r4.getSeed());
+//        assertTrue(r.equals(r2));
+
+        serializedNetwork4.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println("4: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() == 1107) {
+                    System.out.println("Fourth SEED 2 = " + r4.getSeed());
+                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                }
+            }
+        });
+
+        Publisher pub4 = serializedNetwork4.getPublisher();
+
+        serializedNetwork4.start();
+
+        cycleCount = 0;
+        hotStream = makeStream().collect(Collectors.toList());
+        for(;cycleCount < NUM_CYCLES;cycleCount++) {
+            for(String s : hotStream) {
+                pub4.onNext(s);
+            }
+
+            serializedNetwork4.reset();
+        }
+
+        pub4.onComplete();
+
+        try {
+            Region r1 = serializedNetwork4.lookup("r1");
+            r1.lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
     
     //////////////////////////////
     //     Utility Methods      //
@@ -844,7 +1238,64 @@ public class JavaFstNetworkSerializationTest {
     }
     
     private Network createAndRunFullyLoadedNetwork(int start, int runTo) {
+        Network network = getLoadedDayOfWeekNetwork();
+        
+        network.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                
+            }
+        });
+        
         return null;
+    }
+    
+    private Network getLoadedDayOfWeekNetwork() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+                PublisherSupplier.builder()
+                    .addHeader("dayOfWeek")
+                    .addHeader("number")
+                    .addHeader("B").build() }));
+        
+        Network network = Network.create("test network", p).add(Network.createRegion("r1")
+            .add(Network.createLayer("1", p)
+                .alterParameter(KEY.AUTO_CLASSIFY, true)
+                .add(Anomaly.create())
+                .add(new TemporalMemory())
+                .add(new SpatialPooler())
+                .add(sensor)));
+        
+        return network;
+    }
+    
+    private Network getLoadedHotGymNetwork() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+                PublisherSupplier.builder()
+                    .addHeader("timestamp, consumption")
+                    .addHeader("datetime, float")
+                    .addHeader("B").build() }));
+        
+        Network network = Network.create("test network", p).add(Network.createRegion("r1")
+            .add(Network.createLayer("1", p)
+                .alterParameter(KEY.AUTO_CLASSIFY, true)
+                .add(Anomaly.create())
+                .add(new TemporalMemory())
+                .add(new SpatialPooler())
+                .add(sensor)));
+        
+        return network;
     }
     
     private Network createAndRunTestSpatialPoolerNetwork(int start, int runTo) {
@@ -1003,9 +1454,6 @@ public class JavaFstNetworkSerializationTest {
     
     public Stream<String> makeStream() {
         return Stream.of(
-            "timestamp,consumption",
-            "datetime,float",
-            "T,",
             "7/2/10 0:00,21.2",
             "7/2/10 1:00,16.4",
             "7/2/10 2:00,4.7",
@@ -1084,4 +1532,71 @@ public class JavaFstNetworkSerializationTest {
         return map;
     }
     
+    private BiFunction<Inference, Integer, Integer> createDayOfWeekInferencePrintout() {
+        return new BiFunction<Inference, Integer, Integer>() {
+            private int cycles = 1;
+              
+            public Integer apply(Inference inf, Integer cellsPerColumn) {
+                Classification<Object> result = inf.getClassification("dayOfWeek");
+                double day = mapToInputData((int[])inf.getLayerInput());
+                if(day == 1.0) {
+                    System.out.println("\n=========================");
+                    System.out.println("CYCLE: " + cycles);
+                    cycles++;
+                }
+                
+                System.out.println("RECORD_NUM: " + inf.getRecordNum());
+                System.out.println("ScalarEncoder Input = " + day);
+                System.out.println("ScalarEncoder Output = " + Arrays.toString(inf.getEncoding()));
+                System.out.println("SpatialPooler Output = " + Arrays.toString(inf.getFeedForwardActiveColumns()));
+                
+                if(inf.getPreviousPredictiveCells() != null)
+                    System.out.println("TemporalMemory Previous Prediction = " + 
+                        Arrays.toString(SDR.cellsAsColumnIndices(inf.getPreviousPredictiveCells(), cellsPerColumn)));
+                
+                System.out.println("TemporalMemory Actives = " + Arrays.toString(SDR.asColumnIndices(inf.getSDR(), cellsPerColumn)));
+                
+                System.out.print("CLAClassifier prediction = " + 
+                    stringValue((Double)result.getMostProbableValue(1)) + " --> " + ((Double)result.getMostProbableValue(1)));
+                
+                System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
+                
+                return cycles;
+            }
+        };
+    }
+    
+    private double mapToInputData(int[] encoding) {
+        for(int i = 0;i < dayMap.length;i++) {
+            if(Arrays.equals(encoding, dayMap[i])) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+    
+    private int[][] dayMap = new int[][] { 
+        new int[] { 1, 1, 0, 0, 0, 0, 0, 1 },
+        new int[] { 1, 1, 1, 0, 0, 0, 0, 0 },
+        new int[] { 0, 1, 1, 1, 0, 0, 0, 0 },
+        new int[] { 0, 0, 1, 1, 1, 0, 0, 0 },
+        new int[] { 0, 0, 0, 1, 1, 1, 0, 0 },
+        new int[] { 0, 0, 0, 0, 1, 1, 1, 0 },
+        new int[] { 0, 0, 0, 0, 0, 1, 1, 1 },
+    };
+    
+    private String stringValue(Double valueIndex) {
+        String recordOut = "";
+        BigDecimal bdValue = new BigDecimal(valueIndex).setScale(3, RoundingMode.HALF_EVEN);
+        switch(bdValue.intValue()) {
+            case 1: recordOut = "Monday (1)";break;
+            case 2: recordOut = "Tuesday (2)";break;
+            case 3: recordOut = "Wednesday (3)";break;
+            case 4: recordOut = "Thursday (4)";break;
+            case 5: recordOut = "Friday (5)";break;
+            case 6: recordOut = "Saturday (6)";break;
+            case 0: recordOut = "Sunday (7)";break;
+        }
+        return recordOut;
+    }
 }

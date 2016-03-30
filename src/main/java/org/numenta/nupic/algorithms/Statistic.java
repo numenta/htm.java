@@ -22,8 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
-
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.NamedTuple;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -46,7 +45,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * </pre>
  * @author David Ray
  */
-public class Statistic implements Serializable {
+public class Statistic implements Persistable {
     private static final long serialVersionUID = 1L;
     
     public final double mean;

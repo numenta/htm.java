@@ -22,11 +22,10 @@
 
 package org.numenta.nupic.util;
 
-import gnu.trove.set.hash.TIntHashSet;
-
-import java.io.Serializable;
-
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
+
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * Fast implementation of {@link SparseBinaryMatrix} for use as ConnectedMatrix in  
@@ -34,7 +33,7 @@ import org.numenta.nupic.Connections;
  * 
  * @author Jose Luis Martin
  */
-public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix implements Serializable {
+public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -74,6 +73,21 @@ public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix implements
             for (int index : getColumnInput(i).toArray()) {
                 if (inputVector[index] != 0)
                     results[i] += 1;
+            }
+        }
+    }
+    
+    @Override
+    public void rightVecSumAtNZ(int[] inputVector, int[] results, double stimulusThreshold) {
+        for (int i = 0; i < dimensions[0]; i++) {
+            int[] columnIndexes = getColumnInput(i).toArray();
+            for (int j = 0;j < columnIndexes.length;j++) {
+                if (inputVector[columnIndexes[j]] != 0) {
+                    results[i] += 1;
+                }
+                if(j == columnIndexes.length - 1 && results[i] < stimulusThreshold) {
+                    results[i] = 0;
+                }
             }
         }
     }

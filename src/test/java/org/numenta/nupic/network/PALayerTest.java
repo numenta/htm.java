@@ -252,8 +252,6 @@ public class PALayerTest {
         final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {
                 assertTrue(l.isHalted());
@@ -262,6 +260,8 @@ public class PALayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {}
         });
+
+        l.start();
 
         try {
             l.halt();
@@ -292,8 +292,6 @@ public class PALayerTest {
         final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -303,6 +301,8 @@ public class PALayerTest {
                 }
             }
         });
+
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -332,8 +332,6 @@ public class PALayerTest {
         final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -343,6 +341,8 @@ public class PALayerTest {
                 }
             }
         });
+
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -377,8 +377,6 @@ public class PALayerTest {
         final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             int idx = 0;
             @Override public void onCompleted() {}
@@ -395,6 +393,8 @@ public class PALayerTest {
                 ++idx;
             }
         });
+
+        l.start();
 
         try {
             String[] entries = {
@@ -438,8 +438,6 @@ public class PALayerTest {
         final Layer<int[]> l = new PALayer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         String input = "[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, "
                         + "1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, "
                         + "0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
@@ -468,6 +466,8 @@ public class PALayerTest {
                 assertEquals(input, Arrays.toString((int[])output.getLayerInput()));
             }
         });
+
+        l.start();
 
         try {
             String[] entries = {

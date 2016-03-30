@@ -22,7 +22,7 @@
 
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
+import org.numenta.nupic.Persistable;
 
 /**
  * Holds two values, a min and a max. Can later be developed to
@@ -30,7 +30,7 @@ import java.io.Serializable;
  * 
  * @author David Ray
  */
-public class MinMax implements Serializable {
+public class MinMax implements Persistable {
 	private static final long serialVersionUID = 1L;
     
 	private double min;

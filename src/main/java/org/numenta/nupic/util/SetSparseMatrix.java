@@ -1,15 +1,16 @@
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.numenta.nupic.Persistable;
 
 /**
  * {@link SparseMatrix} implementation that use a {@link Set} to store indexes.
  * 
  * @author Jose Luis Martin
  */
-public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Serializable {
+public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

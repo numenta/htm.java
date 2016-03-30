@@ -22,15 +22,16 @@
 
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.util.BitSet;
+
+import org.numenta.nupic.Persistable;
 
 /**
  * {@link FlatMatrix} implementation that store booleans in a {@link BitSet}.
  * 
  * @author Jose Luis Martin
  */
-public class BitSetMatrix extends AbstractFlatMatrix<Boolean> implements Serializable {
+public class BitSetMatrix extends AbstractFlatMatrix<Boolean> implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

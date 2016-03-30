@@ -22,7 +22,6 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.ArrayUtils;
@@ -63,7 +63,7 @@ import gnu.trove.set.hash.TIntHashSet;
  * @author David Ray
  *
  */
-public class SpatialPooler implements Serializable {
+public class SpatialPooler implements Persistable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -840,8 +840,7 @@ public class SpatialPooler implements Serializable {
      */
     public int[] calculateOverlap(Connections c, int[] inputVector) {
         int[] overlaps = new int[c.getNumColumns()];
-        c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps);
-        ArrayUtils.lessThanXThanSetToY(overlaps, (int)c.getStimulusThreshold(), 0);
+        c.getConnectedCounts().rightVecSumAtNZ(inputVector, overlaps, c.getStimulusThreshold());
         return overlaps;
     }
 

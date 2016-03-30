@@ -23,7 +23,6 @@ package org.numenta.nupic.network;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -38,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import org.junit.Test;
 import org.numenta.nupic.Connections;
@@ -61,7 +59,6 @@ import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
 import org.numenta.nupic.util.MersenneTwister;
-import org.numenta.nupic.util.Tuple;
 
 import rx.Observer;
 import rx.Subscriber;
@@ -384,9 +381,7 @@ public class NetworkTest {
         ///////////////////////////////////////
         //   Run until CYCLE 284, then halt  //
         ///////////////////////////////////////
-        Tuple tuple = getLoadedDayOfWeekNetwork();
-        Network network = (Network)tuple.get(0);
-        Publisher pub = (Publisher)tuple.get(1);
+        Network network = getLoadedDayOfWeekNetwork();
         int cellsPerCol = (int)network.getParameters().getParameterByKey(KEY.CELLS_PER_COLUMN);
         
         network.observe().subscribe(new Observer<Inference>() { 
@@ -397,11 +392,13 @@ public class NetworkTest {
                 /** see {@link #createDayOfWeekInferencePrintout()} */
                 int cycle = dayOfWeekPrintout.apply(inf, cellsPerCol);
                 if(cycle == 284) {
+                    System.out.println("halting publisher = " + network.getPublisher());
                     network.halt();
-                    System.out.println(" PROCESSED 284");
                 }
             }
         });
+        
+        Publisher pub = network.getPublisher();
         
         network.start();
         
@@ -417,8 +414,6 @@ public class NetworkTest {
                 break;
             }
         }
-        
-        //try { Thread.sleep(3000); } catch(Exception e) { e.printStackTrace(); }
         
         // Test network output
         try {
@@ -454,6 +449,7 @@ public class NetworkTest {
                 if(inf.getRecordNum() == 1975) {
                     Classification<Object> result = inf.getClassification("dayOfWeek");
                     if(! "Sunday (7)".equals(stringValue((Double)result.getMostProbableValue(1)))) {
+                        
                         expectedDataFlag = false;
                         
                         network.halt();
@@ -466,9 +462,12 @@ public class NetworkTest {
         
         network.restart();
         
-        Publisher newPub = network.getNewPublisher();
+        try { network.lookup("r1").lookup("1").getLayerThread().join(3000); }catch(Exception e) { e.printStackTrace(); }
+        
+        Publisher newPub = network.getPublisher();
+        System.out.println("restarted publisher = " + newPub + ",  " + pub);
         // Assert that we have a new Publisher being created in the background upon restart()
-        assertNotEquals(pub, newPub);
+        assertFalse(pub == newPub);
         
         for(;cycleCount < NUM_CYCLES;cycleCount++) {
             for(double j = 0;j < INPUT_GROUP_COUNT;j++) {
@@ -1176,6 +1175,43 @@ public class NetworkTest {
         int width = layer1.calculateInputWidth();
         assertEquals(2048, width);
     }
+
+    @Test
+    public void closeTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Region region1 = Network.createRegion("region1");
+        Layer<?> layer1 = Network.createLayer("layer1", p);
+        region1.add(layer1);
+
+        Region region2 = Network.createRegion("region2");
+        Layer<?> layer2 = Network.createLayer("layer2", p);
+        region2.add(layer2);
+
+        Network network = Network.create("test network", p);
+
+        // Calling close on an empty Network should not throw any Exceptions
+        network.close();
+
+        // Calling close on a Network with a single unclosed Region
+        network.add(region1);
+        network.close();
+
+        assertTrue("Region 1 did not close, after closing Network", region1.isClosed());
+        assertTrue("Layer 1 did not close, after closing Network", layer1.isClosed());
+
+        // Calling close on a Network with two regions, one of which is closed
+        network.add(region2);
+        network.close();
+
+        assertTrue("Region 1 did not close, after closing Network with 2 Regions", region1.isClosed());
+        assertTrue("Layer 1 did not close, after closing Network with 2 Regions", layer1.isClosed());
+        assertTrue("Region 2 did not close, after closing Network with 2 Regions", region2.isClosed());
+        assertTrue("Layer 2 did not close, after closing Network with 2 Regions", layer2.isClosed());
+
+    }
     
     @Test
     public void testGetSerializer() {
@@ -1215,29 +1251,27 @@ public class NetworkTest {
     }
     
     Publisher pub = null;
-    private Tuple getLoadedDayOfWeekNetwork() {
+    private Network getLoadedDayOfWeekNetwork() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
         
-        Network network = Network.create("test network", p);
-                        
-        Supplier<Publisher> supplier = network.getPublisherSupplier()
-            .addHeader("dayOfWeek")
-            .addHeader("number")
-            .addHeader("B").build();
-        
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", supplier}));
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+                PublisherSupplier.builder()
+                    .addHeader("dayOfWeek")
+                    .addHeader("number")
+                    .addHeader("B").build() }));
         
-        network.add(Network.createRegion("r1")
+        Network network = Network.create("test network", p).add(Network.createRegion("r1")
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
+                .add(Anomaly.create())
                 .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
         
-        return new Tuple(network, network.getNewPublisher());
+        return network;
     }
     
     private String stringValue(Double valueIndex) {
@@ -1297,5 +1331,4 @@ public class NetworkTest {
         }
         return -1;
     }
-    
 }

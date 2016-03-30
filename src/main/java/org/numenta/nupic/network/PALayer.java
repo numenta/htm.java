@@ -45,6 +45,7 @@ import org.numenta.nupic.model.Column;
  * @author David Ray
  * @author Fergal Byrne
  */
+@SuppressWarnings("unchecked")
 public class PALayer<T> extends Layer<T> {
     private static final long serialVersionUID = 1L;
 

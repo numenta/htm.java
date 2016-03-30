@@ -2,6 +2,8 @@ package org.numenta.nupic.algorithms;
 
 import java.util.Arrays;
 
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -13,7 +15,9 @@ import gnu.trove.map.hash.TIntObjectHashMap;
  *
  * @param <T>
  */
-public class Classification<T> {
+public class Classification<T> implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     /** Array of actual values */
     private T[] actualValues;
 
@@ -189,8 +193,14 @@ public class Classification<T> {
         if(probabilities == null) {
             if(other.probabilities != null)
                 return false;
-        } else if(!probabilities.equals(other.probabilities))
-            return false;
+        } else {
+            for(int key : probabilities.keys()) {
+                if(!Arrays.equals(probabilities.get(key), (double[])other.probabilities.get(key))) {
+                    return false;
+                }
+            }
+        }
+            
         return true;
     }
 }

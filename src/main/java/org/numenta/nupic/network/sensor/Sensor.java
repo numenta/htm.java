@@ -22,10 +22,10 @@
 package org.numenta.nupic.network.sensor;
 
 import java.io.File;
-import java.io.Serializable;
 import java.net.URI;
 import java.util.stream.Stream;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.network.Network;
 
 import rx.Observable;
@@ -46,7 +46,7 @@ import rx.Observable;
  * @see Network
  * @param <T>       the resource type to retrieve (i.e. {@link File}, {@link URI}, {@link Observable}
  */
-public interface Sensor<T> extends Serializable {
+public interface Sensor<T> extends Persistable {
     
     /**
      * <p>

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.numenta.nupic.Persistable;
 import org.nustaq.serialization.FSTConfiguration;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -14,7 +15,7 @@ import com.esotericsoftware.kryo.io.Output;
 import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
 
 
-class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerializer<T> {
+class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> implements NetworkSerializer<T> {
     /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
     private final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
     
@@ -25,7 +26,7 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
     private SerialConfig config;
     private Scheme scheme;
     
-    private File serialPath;
+    private File serializedFile;
     
     private Output kryoOutput;
     private Input kryoInput;
@@ -113,16 +114,25 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * array is returned - though both schemes serialize to an underlying file.
      * 
      * @param instance      the object instance to serialize
-     * @param bytesOnly     flag indicating whether to persist to disk or permanent storage.
+     * @param bytesOnly     flag indicating whether to persist to disk or permanent storage. 
+     *                      <ul>
+     *                          <li><b>If true</b>, this
+     *                      serializer will not persist to disk and only return the serialized bytes(bytesOnly==true);</li>
+     *                          <li><b>if false</b>, the serialized bytes will still be returned, but the object will also
+     *                      be saved to disk (perm storage: bytesOnly==false).</li>
+     *                      </ul> 
      */
     public byte[] serialize(T instance, boolean bytesOnly) {
+        // Make sure any serialized Network is first halted.
+        instance.preSerialize();
+        
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
             case FST: {
                 byte[] bytes = fastSerialConfig.asByteArray(instance);
                 if(!bytesOnly) {
                     try {
-                        Files.write(serialPath.toPath(), bytes, config.getOpenOptions());
+                        Files.write(serializedFile.toPath(), bytes, config.getOpenOptions());
                     } catch(IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -142,7 +152,13 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * is retrieved from the previously configured file.
      * 
      * @param type      Class indicating which Object to deserialize
-     * @param bytes     (Optional - may be null) for use with FST underlying scheme.
+     * @param bytes     <b>(Optional - may be null)</b> 
+     *                  <ul>
+     *                      <li><b>If present (bytes!=null)</b>: simply deserialize the supplied bytes into the
+     *                      requested object</li>
+     *                      <li><b>If null (bytes==null)</b>: recover the serialized object from disk using the 
+     *                      path specified by the pre-configured {@link SerialConfig} object.</li>
+     *                  </ul>
      * @return  the deserialized object
      */
     @SuppressWarnings("unchecked")
@@ -152,12 +168,14 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
             case FST: {
                 if(bytes == null) {
                     try {
-                        bytes = Files.readAllBytes(serialPath.toPath());
+                        bytes = Files.readAllBytes(serializedFile.toPath());
                     } catch(IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
-                return (T)fastSerialConfig.asObject(bytes);
+                
+                T retVal = (T)fastSerialConfig.asObject(bytes);
+                return retVal.postSerialize();
             }
             default: {
                 return null;
@@ -169,8 +187,18 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
      * Returns the File object that the serialization scheme writes to.
      * @return
      */
+    @Override
     public File getSerializedFile() {
-        return serialPath;
+        return serializedFile;
+    }
+    
+    /**
+     * Returns the underlying {@link Kryo} impl.
+     * @return the underlying {@link Kryo} impl.
+     */
+    @Override
+    public Kryo getKryo() {
+        return kryo;
     }
     
     /**
@@ -187,16 +215,17 @@ class NetworkSerializerImpl<T> extends Serializer<T> implements NetworkSerialize
         
         customDir.mkdirs();
         
-        serialPath = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
-        if(!serialPath.exists()) {
-            serialPath.createNewFile();
+        serializedFile = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
+        if(!serializedFile.exists()) {
+            serializedFile.createNewFile();
         }
         
         return true;
     }
     
     /**
-     * Returns a {@link Kryo} implementation capable of delegating to FST :-P
+     * Returns a {@link Kryo} implementation which adheres to the Kryo interface requirements
+     * but is capable of delegating to FST :-P
      * @return
      */
     private Kryo createKryo() {

@@ -97,14 +97,14 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
     private Parameters localParameters;
     private MultiEncoder encoder;
     private transient Stream<int[]> outputStream;
-    private List<int[]> output;
-    private InputMap inputMap;
+    private transient List<int[]> output;
+    private transient InputMap inputMap;
     
     private TIntObjectMap<Encoder<?>> indexToEncoderMap;
     private TObjectIntHashMap<String> indexFieldMap = new TObjectIntHashMap<String>();
     
     
-    private Iterator<int[]> mainIterator;
+    private transient Iterator<int[]> mainIterator;
     private List<LinkedList<int[]>> fanOuts = new ArrayList<>();
     
     /** Protects {@ #mainIterator} formation and the next() call */
@@ -125,6 +125,28 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
             throw new IllegalStateException("Header must always be present; and have 3 lines.");
         }
         createEncoder();
+    }
+    
+    /**
+     * DO NOT CALL THIS METHOD! 
+     * Used internally by deserialization routines.
+     * 
+     * Sets the {@link Parameters} reconstituted from deserialization 
+     * @param localParameters   the Parameters to use.
+     */
+    public void setLocalParameters(Parameters localParameters) {
+        this.localParameters = localParameters;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public HTMSensor<?> postSerialize() {
+        initEncoder(localParameters);
+        makeIndexEncoderMap();
+        return this;
     }
     
     /**
@@ -664,7 +686,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
         if(sensorParams == null) {
             if(other.sensorParams != null)
                 return false;
-        } else if(!sensorParams.keys().equals(other.sensorParams.keys()))
+        } else if(!Arrays.equals(sensorParams.keys(), other.sensorParams.keys()))
             return false;
         return true;
     }

@@ -21,9 +21,9 @@
  */
 package org.numenta.nupic.network.sensor;
 
-import java.io.Serializable;
 import java.util.function.Consumer;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
 
@@ -84,7 +84,7 @@ import rx.subjects.ReplaySubject;
  * @author David Ray
  *
  */
-public class Publisher implements Serializable {
+public class Publisher implements Persistable {
     private static final long serialVersionUID = 1L;
 
     private static final int HEADER_SIZE = 3;

@@ -22,10 +22,11 @@
 
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import org.numenta.nupic.Persistable;
 
 /**
  * An immutable fixed data structure whose values are retrieved
@@ -34,7 +35,7 @@ import java.util.List;
  * 
  * @author David Ray
  */
-public class Tuple implements Serializable {
+public class Tuple implements Persistable {
     
     private static final long serialVersionUID = 1L;
 

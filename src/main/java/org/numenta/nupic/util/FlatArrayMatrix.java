@@ -22,15 +22,16 @@
 
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.util.Arrays;
+
+import org.numenta.nupic.Persistable;
 
 /**
  * {@link FlatMatrix} implementation that store objects in a flat object array.
  * 
  * @author Jose Luis Martin
  */
-public class FlatArrayMatrix<T> extends AbstractFlatMatrix<T> implements Serializable {
+public class FlatArrayMatrix<T> extends AbstractFlatMatrix<T> implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     

@@ -195,20 +195,6 @@ public class NetworkTestHarness {
     }
     
     /**
-     * Parameters and meta information for the "dayOfWeek" encoder
-     * @return
-     */
-    public static Map<String, Map<String, Object>> getDayDemoFieldEncodingMap2() {
-        Map<String, Map<String, Object>> fieldEncodings = setupMap(
-                null,
-                8, // n
-                3, // w
-                0.0, 8.0, 0, 1, Boolean.TRUE, null, Boolean.TRUE,
-                "dayOfWeek", "number", "ScalarEncoder");
-        return fieldEncodings;
-    }
-
-    /**
      * Returns Encoder parameters for the "dayOfWeek" test encoder.
      * @return
      */

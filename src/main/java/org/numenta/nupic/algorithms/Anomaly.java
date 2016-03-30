@@ -22,11 +22,11 @@
 
 package org.numenta.nupic.algorithms;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 
 import gnu.trove.list.TDoubleList;
@@ -85,7 +85,7 @@ import gnu.trove.list.array.TDoubleArrayList;
  * @see AnomalyTest
  * @see AnomalyLikelihoodTest
  */
-public abstract class Anomaly implements Serializable {
+public abstract class Anomaly implements Persistable {
     
     private static final long serialVersionUID = 1L;
 
@@ -253,7 +253,7 @@ public abstract class Anomaly implements Serializable {
      * @see AnomalyLikelihood
      * @see MovingAverage
      */
-    public class AveragedAnomalyRecordList implements Serializable {
+    public class AveragedAnomalyRecordList implements Persistable {
         private static final long serialVersionUID = 1L;
         
         public List<Sample> averagedRecords;

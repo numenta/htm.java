@@ -4,7 +4,7 @@
 
 	<groupId>org.numenta</groupId>
 	<artifactId>htm.java</artifactId>
-	<version>0.6.5</version>
+	<version>0.6.6-SNAPSHOT</version>
 	<name>htm.java</name>
 	<description>The Java version of Numenta's HTM technology</description>
 
@@ -141,6 +141,11 @@
 			<groupId>de.javakaffee</groupId>
 			<artifactId>kryo-serializers</artifactId>
 			<version>0.37</version>
+        </dependency>
+        <dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-core</artifactId>
+			<version>1.11.3</version>
 		</dependency>
 	</dependencies>
 
@@ -268,4 +273,5 @@
 			</build>
 		</profile>
 	</profiles>
+
 </project>
