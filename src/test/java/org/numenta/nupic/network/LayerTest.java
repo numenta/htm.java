@@ -1417,39 +1417,6 @@ public class LayerTest {
         assertTrue(Arrays.equals(new int[] { 1, 450 }, dims));
     }
     
-    String filterMessage = null;
-    @Test
-    public void testExplicitCloseFailure() {
-        Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        
-        Network network = Network.create("test network", p)
-            .add(Network.createRegion("r1")
-                .add(Network.createLayer("2", p)
-                    .add(Anomaly.create())
-                    .add(new SpatialPooler())
-                    .close()));
-        
-        // Set up a log filter to grab the next message.
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        StatusPrinter.print(lc);
-        lc.addTurboFilter(new TurboFilter() {
-            @Override
-            public FilterReply decide(Marker arg0, Logger arg1, Level arg2, String arg3, Object[] arg4, Throwable arg5) {
-                filterMessage = arg3;
-                return FilterReply.ACCEPT;
-            }
-        });
-        
-        network.lookup("r1").lookup("2").close();
-        
-        // Test that the close() method exited after logging the correct message
-        assertEquals("Close called on Layer r1:2 which is already closed.", filterMessage);
-        // Make sure not to slow the entire test phase down by removing the filter
-        lc.resetTurboFilterList();
-    }
-
     @Test(expected = IllegalStateException.class)
     public void isClosedAddSensorTest() {
         Parameters p = NetworkTestHarness.getParameters();
