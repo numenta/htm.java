@@ -1,6 +1,7 @@
 package org.numenta.nupic.network;
 
 import java.io.File;
+import java.util.List;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -46,7 +47,7 @@ public interface NetworkSerializer<T> {
     public void write(Kryo kryo, Output out, T type);
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
-     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * to serialize the specified Object instance. For both schemes, a byte
      * array is returned - though both schemes serialize to an underlying file.
      * 
      * @param instance  the object instance to serialize
@@ -54,7 +55,7 @@ public interface NetworkSerializer<T> {
     public byte[] serialize(T instance);
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
-     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * to serialize the specified Object instance. For both schemes, a byte
      * array is returned - though both schemes serialize to an underlying file.
      * 
      * @param instance      the object instance to serialize
@@ -63,7 +64,7 @@ public interface NetworkSerializer<T> {
     public byte[] serialize(T instance, boolean bytesOnly);
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
-     * to deserialize the specified Class type. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * to deserialize the specified Class type. For both schemes, a byte
      * array may be specified, from which the deserialized object will be returned. Otherwise, the object returned
      * is retrieved from the previously configured file.
      * 
@@ -78,8 +79,45 @@ public interface NetworkSerializer<T> {
      */
     public File getSerializedFile();
     /**
+     * Returns the last checkpointed file name.
+     * @return  the last checkpointed file name.
+     */
+    public String getLastCheckPointFileName();
+    /**
+     * Returns a list of the current checkpoint files.
+     * @return  checkpoint file list
+     */
+    public List<String> getCheckPointFileList();
+    /**
+     * Given part of a checkpoint file name or the whole file name,
+     * this method will attempt to find the most immediately previous
+     * check point and return its name.
+     * 
+     * @param checkPointFileName    contains the date portion of the checkpoint
+     *                              file name.
+     * @return  the most recent checkpoint file name previous to the specified
+     *          file name
+     */
+    public String getPreviousCheckPoint(String checkPointFileName);
+    /**
      * Returns the underlying {@link Kryo} impl.
      * @return the underlying {@link Kryo} impl.
      */
-    public Kryo getKryo();    
+    public Kryo getKryo();   
+    /**
+     * Writes the specified object out to the configured location on disk.
+     * @param instance  the instance to serialize.
+     * @return
+     */
+    public byte[] checkPoint(T instance);
+    /**
+     * Returns the bytes of the last serialized object or null if there was a problem.
+     * @return  the bytes of the last serialized object.
+     */
+    public byte[] getLastBytes();
+    /**
+     * Returns the {@link SerialConfig} in use currently.
+     * @return      the {@link SerialConfig} in use currently.
+     */
+    public SerialConfig getConfig();
 }

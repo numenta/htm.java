@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
+import static org.numenta.nupic.network.NetworkSerializer.SERIAL_DIR;
 
 import java.io.File;
 import java.util.Arrays;
@@ -96,7 +97,7 @@ public class JavaKryoNetworkSerializationTest {
         SerialConfig config = new SerialConfig(Scheme.KRYO);
         NetworkSerializer<?> serializer = Network.serializer(config, false);
         
-        File f1 = new File(System.getProperty("user.home") + File.separator + "HTMNetwork" + File.separator + SERIAL_FILE_NAME);
+        File f1 = new File(System.getProperty("user.home") + File.separator + SERIAL_DIR + File.separator + SERIAL_FILE_NAME);
         assertTrue(f1.exists());
         File f2 = serializer.getSerializedFile();
         assertEquals(f1.getAbsolutePath(), f2.getAbsolutePath());
@@ -336,7 +337,7 @@ public class JavaKryoNetworkSerializationTest {
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
         
-        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.KRYO);
+        SerialConfig config = new SerialConfig("testThreadedPublisher_SpatialPoolerNetwork", Scheme.KRYO);
         NetworkSerializer<Connections> serializer = Network.serializer(config, false);
         serializer.serialize(cn);
         //Serialize above Connections for comparison with same run but unserialized below...

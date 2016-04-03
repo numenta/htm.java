@@ -100,6 +100,32 @@ public class ManualInput implements Inference {
     public ManualInput() {}
     
     /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T postSerialize(T manualInput) {
+        ManualInput mi = (ManualInput)manualInput;
+        
+        ManualInput retVal = new ManualInput();
+        retVal.activeCells = mi.activeCells;
+        retVal.anomalyScore = mi.anomalyScore;
+        retVal.classification = mi.classification;
+        retVal.classifierInput = mi.classifierInput;
+        retVal.classifiers = mi.classifiers;
+        retVal.customObject = mi.customObject;
+        retVal.encoding = mi.encoding;
+        retVal.feedForwardActiveColumns = mi.feedForwardActiveColumns;
+        retVal.feedForwardSparseActives = mi.feedForwardSparseActives;
+        retVal.layerInput = mi.layerInput;
+        retVal.predictiveCells = mi.predictiveCells;
+        retVal.previousPredictiveCells = mi.previousPredictiveCells;
+        retVal.sdr = mi.sdr;
+        
+        return (T)retVal;
+    }
+    
+    /**
      * Sets the current record num associated with this {@code ManualInput}
      * instance
      * 
@@ -545,4 +571,5 @@ public class ManualInput implements Inference {
             return false;
         return true;
     }
+
 }

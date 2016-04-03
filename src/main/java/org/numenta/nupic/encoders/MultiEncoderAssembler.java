@@ -26,56 +26,56 @@ public class MultiEncoderAssembler {
      * @param encoder           the {@link MultiEncoder} to configure.
      * @param encoderSettings   the Map containing MultiEncoder settings.
      */
-    public static void assemble(MultiEncoder encoder, Map<String, Map<String, Object>> encoderSettings) {
-        if(encoder instanceof MultiEncoder) {
-            if(encoderSettings == null || encoderSettings.isEmpty()) {
-                throw new IllegalArgumentException(
-                    "Cannot initialize this Sensor's MultiEncoder with a null settings");
+    public static MultiEncoder assemble(MultiEncoder encoder, Map<String, Map<String, Object>> encoderSettings) {
+        if(encoderSettings == null || encoderSettings.isEmpty()) {
+            throw new IllegalArgumentException(
+                "Cannot initialize this Sensor's MultiEncoder with a null or empty settings");
+        }
+        
+        // Sort the encoders so that they end up in a controlled order
+        List<String> sortedFields = new ArrayList<String>(encoderSettings.keySet());
+        Collections.sort(sortedFields);
+
+        for (String field : sortedFields) {
+            Map<String, Object> params = encoderSettings.get(field);
+
+            if (!params.containsKey("fieldName")) {
+                throw new IllegalArgumentException("Missing fieldname for encoder " + field);
+            }
+            String fieldName = (String) params.get("fieldName");
+
+            if (!params.containsKey("encoderType")) {
+                throw new IllegalArgumentException("Missing type for encoder " + field);
             }
             
-            // Sort the encoders so that they end up in a controlled order
-            List<String> sortedFields = new ArrayList<String>(encoderSettings.keySet());
-            Collections.sort(sortedFields);
-
-            for (String field : sortedFields) {
-                Map<String, Object> params = encoderSettings.get(field);
-
-                if (!params.containsKey("fieldName")) {
-                    throw new IllegalArgumentException("Missing fieldname for encoder " + field);
-                }
-                String fieldName = (String) params.get("fieldName");
-
-                if (!params.containsKey("encoderType")) {
-                    throw new IllegalArgumentException("Missing type for encoder " + field);
-                }
-                
-                String encoderType = (String) params.get("encoderType");
-                Builder<?, ?> builder = ((MultiEncoder)encoder).getBuilder(encoderType);
-                
-                if(encoderType.equals("SDRCategoryEncoder")) {
-                    // Add mappings for category list
-                    configureCategoryBuilder((MultiEncoder)encoder, params, builder);
-                }else if(encoderType.equals("DateEncoder")) {
-                    // Extract date specific mappings out of the map so that we can
-                    // pre-configure the DateEncoder with its needed directives.
-                    configureDateBuilder(encoder, encoderSettings, (DateEncoder.Builder)builder);
-                }else if(encoderType.equals("GeospatialCoordinateEncoder")) {
-                    // Extract Geo specific mappings out of the map so that we can
-                    // pre-configure the GeospatialCoordinateEncoder with its needed directives.
-                    configureGeoBuilder(encoder, encoderSettings, (GeospatialCoordinateEncoder.Builder) builder);
-                }else{
-                    for (String param : params.keySet()) {
-                        if (!param.equals("fieldName") && !param.equals("encoderType") &&
-                            !param.equals("fieldType") && !param.equals("fieldEncodings")) {
-                            
-                            ((MultiEncoder)encoder).setValue(builder, param, params.get(param));
-                        }
+            String encoderType = (String) params.get("encoderType");
+            Builder<?, ?> builder = ((MultiEncoder)encoder).getBuilder(encoderType);
+            
+            if(encoderType.equals("SDRCategoryEncoder")) {
+                // Add mappings for category list
+                configureCategoryBuilder((MultiEncoder)encoder, params, builder);
+            }else if(encoderType.equals("DateEncoder")) {
+                // Extract date specific mappings out of the map so that we can
+                // pre-configure the DateEncoder with its needed directives.
+                configureDateBuilder(encoder, encoderSettings, (DateEncoder.Builder)builder);
+            }else if(encoderType.equals("GeospatialCoordinateEncoder")) {
+                // Extract Geo specific mappings out of the map so that we can
+                // pre-configure the GeospatialCoordinateEncoder with its needed directives.
+                configureGeoBuilder(encoder, encoderSettings, (GeospatialCoordinateEncoder.Builder) builder);
+            }else{
+                for (String param : params.keySet()) {
+                    if (!param.equals("fieldName") && !param.equals("encoderType") &&
+                        !param.equals("fieldType") && !param.equals("fieldEncodings")) {
+                        
+                        ((MultiEncoder)encoder).setValue(builder, param, params.get(param));
                     }
                 }
-
-                ((MultiEncoder)encoder).addEncoder(fieldName, (Encoder<?>)builder.build());
             }
+
+            encoder.addEncoder(fieldName, (Encoder<?>)builder.build());
         }
+        
+        return encoder;
     }
     
     private static void configureCategoryBuilder(MultiEncoder multiEncoder, 

@@ -5,14 +5,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
+import static org.numenta.nupic.network.NetworkSerializer.SERIAL_DIR;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CyclicBarrier;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -65,13 +70,28 @@ import gnu.trove.list.array.TIntArrayList;
 import rx.Observer;
 import rx.Subscriber;
 
-
+/**
+ * Tests the raw serialization capabilities as opposed to the actual {@link Network}
+ * serialization API. For the latter, please see {@link NetworkTest}.
+ * 
+ * @author cogmission
+ * @see JavaKryoNetworkSerializationTest
+ * @see NetworkTest
+ */
 public class JavaFstNetworkSerializationTest {
     
-    private BiFunction<Inference, Integer, Integer> dayOfWeekPrintout = createDayOfWeekInferencePrintout();
+    // TO TURN ON PRINTOUT: SET "TRUE" BELOW
+    /** Printer to visualize DayOfWeek printouts - SET TO TRUE FOR PRINTOUT */
+    private BiFunction<Inference, Integer, Integer> dayOfWeekPrintout = createDayOfWeekInferencePrintout(false);
     
+    /**
+     * Make sure that the main Random Number Generator ({@link FastRandom}) outputs
+     * the same numbers when serialized as when run without serialization. This test
+     * is critical for all other tests to work... The serialized RNG must be de-serialized
+     * with its previous state in tact.
+     */
     @Test
-    public void testRandom() {
+    public void testFastRandomSerialization() {
         int[] expected = {
             1363149450,1392426,-1321038434,178290815,1405980988,1781875497,-136869635,1868054559,-672588233,-1162151267,1720151456,-1008706495,-1365165498,915476271,-1804467553,612986230,-1256379021,-541095717,-2012950675,656634571,-45418824,1977949912,662495460,-2109045630,322871082,-2003925544,640791781,-1231402506,-721277683,-2100712695,-1362519673,2028186582,560711130,-347037183,-656185823,-47187857,-2082080606,1896440217,-2078221114,152035490,
             1828093261,1592642599,-34737991,-466000037,801626099,-1387957700,-753811349,1542243986,-1380040801,222006583,-694756685,1685865797,841017291,-279625651,-505461673,-640483855,-1553072062,-154838489,-268949482,1431256308,-937150443,-987045477,1527411637,1483789465,1706474476,-73615750,-815243696,668347339,-952146808,-460377268,-920297988,-1242230154,1507527618,-2029488663,2120685341,-471335725,-148669435,-1309852892,-2118531749,-875530488,
@@ -180,12 +200,27 @@ public class JavaFstNetworkSerializationTest {
         for(int i = 0;i < 100;i++) {
             for(int j = 0;j < 40;j++) {
                 int next = r.nextInt();
-                if(next != expected[i * 40 + j]) { 
-                    //System.out.println("repeat = " + i);
-                }
-                //System.out.print(next + ",");
+                assertTrue(next == expected[i * 40 + j]);
             }
-            //System.out.println("");
+        }
+        
+        SerialConfig config = new SerialConfig(Scheme.FST);
+        NetworkSerializer<FastRandom> serializer = Network.serializer(config, false);
+        FastRandom fr = new FastRandom(42);
+        
+        int middle = expected.length / 2;
+        for(int i = 0;i < middle;i++) {
+            assertEquals(expected[i], fr.nextInt());
+        }
+        
+        // 1. serialize
+        byte[] data = serializer.serialize(fr);
+        
+        // 2. deserialize
+        FastRandom serialized = serializer.deSerialize(FastRandom.class, data);
+        
+        for(int i = middle;i < expected.length;i++) {
+            assertEquals(expected[i], serialized.nextInt());
         }
     }
     
@@ -241,20 +276,45 @@ public class JavaFstNetworkSerializationTest {
         assertTrue(serializer == serializer2);
     }
     
+    @SuppressWarnings("rawtypes")
     @Test
     public void testEnsurePathExists() {
-        SerialConfig config = new SerialConfig(Scheme.FST);
-        NetworkSerializer<?> serializer = Network.serializer(config, false);
+        SerialConfig config = new SerialConfig("testEnsurePathExists", Scheme.FST);
+        NetworkSerializer<?> serializer = Network.serializer(config, true);
         
-        File f1 = new File(System.getProperty("user.home") + File.separator + "HTMNetwork" + File.separator + SERIAL_FILE_NAME);
+        try {
+            ((NetworkSerializerImpl)serializer).ensurePathExists(config);
+        }catch(Exception e) { fail(); }
+        
+        File f1 = new File(System.getProperty("user.home") + File.separator + SERIAL_DIR + File.separator + "testEnsurePathExists");
         assertTrue(f1.exists());
         File f2 = serializer.getSerializedFile();
+        try { Thread.sleep(2000); } catch(Exception e) {e.printStackTrace();}
         assertEquals(f1.getAbsolutePath(), f2.getAbsolutePath());
     }
     
-    //////////////////////////////////////////////////////////////////
-    //     First, Test Serialization of Each Object Individually    //
-    //////////////////////////////////////////////////////////////////
+    @Test
+    public void testSearchAndListPreviousCheckPoint() {
+        Parameters p = NetworkTestHarness.getParameters();
+        Network network = Network.create("test network", p).add(Network.createRegion("r1")
+            .add(Network.createLayer("1", p)
+                .add(Anomaly.create())
+                .add(new TemporalMemory())
+                .add(new SpatialPooler())));
+        
+        NetworkSerializer<Network> ns = Network.serializer(null, true);
+        IntStream.range(0, 5).forEach(i -> ns.checkPoint(network));
+        
+        List<String> checkPointFiles = ns.getCheckPointFileList();
+        assertTrue(checkPointFiles.size() > 4);
+        
+        assertEquals(checkPointFiles.get(checkPointFiles.size() - 2), 
+            ns.getPreviousCheckPoint(checkPointFiles.get(checkPointFiles.size() - 1)));
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////
+    //     First, Test Serialization of Each (Critical) Object Individually    //
+    /////////////////////////////////////////////////////////////////////////////
     
     /////////////////////
     //    Parameters   //
@@ -490,7 +550,7 @@ public class JavaFstNetworkSerializationTest {
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
         
-        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.FST);
+        SerialConfig config = new SerialConfig("testThreadedPublisher_SpatialPoolerNetworkFst", Scheme.FST);
         NetworkSerializer<Connections> serializer = Network.serializer(config, false);
         serializer.serialize(cn);
         //Serialize above Connections for comparison with same run but unserialized below...
@@ -842,7 +902,9 @@ public class JavaFstNetworkSerializationTest {
     ///////////////////////////
     //      Full Network     //
     ///////////////////////////
-    
+    /**
+     * Test that a serialized/de-serialized {@link Network} can be run...
+     */
     @SuppressWarnings("unchecked")
     @Test
     public void testSerializedUnStartedNetworkRuns() {
@@ -901,7 +963,8 @@ public class JavaFstNetworkSerializationTest {
     
     /**
      * The {@link DateEncoder} presents a special challenge because its main
-     * field, 
+     * field (the DateFormatter) is not serializable and requires its state (format)
+     * to be saved and re-installed following de-serialization.
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -956,274 +1019,201 @@ public class JavaFstNetworkSerializationTest {
     }
     
     /**
-     * The {@link DateEncoder} presents a special challenge because its main
-     * field, 
+     * Runs two de-serialized {@link Networks}  in lock-step using a {@link CyclicBarrier}, 
+     * checking that their RNG seeds are exactly the same after each compute cycle - which 
+     * guarantees that the output of both Networks is the same (the RNGs must be called 
+     * exactly the same amount of times for this to be true).
      */
+    long[] barrierSeeds = new long[2];
+    CyclicBarrier barrier;
+    int runCycleCount = 0;
     @SuppressWarnings("unchecked")
     @Test
-    public void testCanDeserializeMoreThanOnceAndRun() {
+    public void testDeserializedInstancesRunExactlyTheSame() {
         final int NUM_CYCLES = 100;
-        int cycleCount = 0;
         List<String> hotStream = null;
         
         Network network = getLoadedHotGymNetwork();
         
-//        network.observe().subscribe(new Observer<Inference>() { 
-//            @Override public void onCompleted() {}
-//            @Override public void onError(Throwable e) { e.printStackTrace(); }
-//            @Override
-//            public void onNext(Inference inf) {
-//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-//                if(inf.getRecordNum() == 1107) {
-//                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
-//                }
-//            }
-//        });
-//        
-//        Publisher publ = network.getPublisher();
-//        
-//        network.start();
-//        
-//        cycleCount = 0;
-//        hotStream = makeStream().collect(Collectors.toList());
-//        for(;cycleCount < NUM_CYCLES;cycleCount++) {
-//            for(String s : hotStream) {
-//                publ.onNext(s);
-//            }
-//            
-//            network.reset();
-//        }
-//        
-//        publ.onComplete();
-//        
-//        try {
-//            Region r1 = network.lookup("r1");
-//            r1.lookup("1").getLayerThread().join();
-//        }catch(Exception e) {
-//            e.printStackTrace();
-//        }
-        
-        SerialConfig config = new SerialConfig("testCanDeserializeMoreThanOnceAndRun", Scheme.FST);
+        SerialConfig config = new SerialConfig("testDeserializedInstancesRunExactlyTheSame", Scheme.FST);
         NetworkSerializer<Network> serializer = Network.serializer(config, false);
-//        serializer.serialize(network);
-//        FastRandom fr = (FastRandom)network.lookup("r1").lookup("1").getConnections().getRandom();
-//        System.out.println("First SEED = " + fr.getSeed());
+        serializer.serialize(network);
+        
+        Network serializedNetwork1 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+        Network serializedNetwork2 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
+        
+        FastRandom r1 = (FastRandom)serializedNetwork1.lookup("r1").lookup("1").getConnections().getRandom();
+//        System.out.println("First SEED = " + r1.getSeed());
+        FastRandom r2 = (FastRandom)serializedNetwork2.lookup("r1").lookup("1").getConnections().getRandom();
+//        System.out.println("First SEED = " + r2.getSeed());
+        // Assert both starting seeds are equal
+        assertEquals(r1.getSeed(), r2.getSeed());
+        
+        // CyclicBarrier which compares each Network's RNG after every compute cycle, and asserts they are equal.
+        barrier = new CyclicBarrier(3, () -> {
+            try {
+                assertEquals(barrierSeeds[0], barrierSeeds[1]);
+            }catch(Exception barrierEx) {
+                System.out.println("Seed comparison failed at: " + runCycleCount);
+                System.exit(1);
+            }
+        });
+        
+        serializedNetwork1.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                System.out.println("R1 SEED 2 = " + r1.getSeed());
+
+                barrierSeeds[0] = r1.getSeed();
+                try { barrier.await(); }catch(Exception b) { b.printStackTrace(); System.exit(1);}
+            }
+        });
+        serializedNetwork2.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                System.out.println("R2 SEED 2 = " + r1.getSeed());
+
+                barrierSeeds[1] = r2.getSeed();
+                try { barrier.await(); }catch(Exception b) { b.printStackTrace(); }
+            }
+        });
+        
+        Publisher pub1 = serializedNetwork1.getPublisher();
+        Publisher pub2 = serializedNetwork2.getPublisher();
+        
+        serializedNetwork1.start();
+        serializedNetwork2.start();
+        
+        runCycleCount = 0;
+        hotStream = makeStream().collect(Collectors.toList());
+        for(;runCycleCount < NUM_CYCLES;runCycleCount++) {
+            for(String s : hotStream) {
+                pub1.onNext(s);
+                pub2.onNext(s);
+                try { barrier.await(); }catch(Exception b) { b.printStackTrace(); fail();  }
+            }
+        }
+        
+        pub1.onComplete();
+        pub2.onComplete();
+        
+        try {
+            serializedNetwork1.lookup("r1").lookup("1").getLayerThread().join();
+            serializedNetwork2.lookup("r1").lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
+    
+    /**
+     * Ensure that a Network run uninterrupted will have the same output as a {@link Network}
+     * that has been halted; serialized, and restarted! This test runs a {@link Network}
+     * all the way through, recording 10 outputs between set indexes. Then runs a second
+     * Network, stopping in the middle of those indexes and serializing the Network. Then
+     * de-serializes that Network, and continues on - both pre and post serialized Networks
+     * record the same indexes as the first Network that ran all the way through. The outputs
+     * of both Networks from the start to finish indexes are compared and tested that they
+     * are exactly the same.
+     */
+    @Test
+    public void testRunSerializedNetworkWithFileSensor() {
+        // Stores the sample comparison outputs at the indicated record numbers.
+        List<String> sampleExpectedOutput = new ArrayList<>(10);
+        
+        // Run the network all the way, while storing a sample of 10 outputs.
+        Network net = getLoadedHotGymNetwork_FileSensor();
+        net.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                if(inf.getRecordNum() > 1105 && inf.getRecordNum() <= 1115) {
+                    sampleExpectedOutput.add("" + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                }
+//                System.out.println("PRE: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+            }
+        });
+        
+        net.start();
+        
+        try {
+            net.lookup("r1").lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
         
         
-        ////////////////////////////////////
-        //      First Deserialization     //
-        ////////////////////////////////////
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Network serializedNetworkx = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetworkx, network);
-//        deepCompare(network, serializedNetworkx);
+        // Now run the network part way through, halting in between the save points above
+        Network network = getLoadedHotGymNetwork_FileSensor();
         
-        Network serializedNetworky = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetworky, network);
-//        deepCompare(network, serializedNetworky);
+        // Store the actual outputs and the same record number indexes for comparison across pre and post serialized networks.
+        List<String> actualOutputs = new ArrayList<>();
         
-        Network serializedNetworkz = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetworkz, network);
-//        deepCompare(network, serializedNetworkz);
+        network.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                if(inf.getRecordNum() > 1105 && inf.getRecordNum() <= 1115) {
+                    actualOutputs.add("" + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                }
+                
+//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                
+                if(inf.getRecordNum() == 1109) {
+                    network.halt();
+                }
+            }
+        });
         
-        Network serializedNetworka = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetworka, network);
-//        deepCompare(network, serializedNetworka);
+        network.start();
         
-        Network serializedNetwork = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetwork, network);
-        assertTrue(serializedNetworkx != serializedNetwork);
-//        deepCompare(network, serializedNetwork);
+        try {
+            network.lookup("r1").lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
         
-        FastRandom r = (FastRandom)serializedNetwork.lookup("r1").lookup("1").getConnections().getRandom();
-        System.out.println("First SEED = " + r.getSeed());
+        SerialConfig config = new SerialConfig("testRunSerializedNetworkWithFileSensor", Scheme.FST);
+        NetworkSerializer<Network> serializer = Network.serializer(config, false);
+        serializer.serialize(network);
+        
+        /////////////////////////////////////////////////////////
+        
+        // Now run the serialized network 
+        Network serializedNetwork = serializer.deSerialize(Network.class, null);
         
         serializedNetwork.observe().subscribe(new Observer<Inference>() { 
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 1107) {
-                    System.out.println("First SEED 2 = " + r.getSeed());
-                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
+                if(inf.getRecordNum() > 1105 && inf.getRecordNum() <= 1115) {
+                    actualOutputs.add("" + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
                 }
+//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
             }
         });
-        
-        Publisher pub = serializedNetwork.getPublisher();
         
         serializedNetwork.start();
         
-        cycleCount = 0;
-        hotStream = makeStream().collect(Collectors.toList());
-        for(;cycleCount < NUM_CYCLES;cycleCount++) {
-            for(String s : hotStream) {
-                pub.onNext(s);
-            }
-            
-            serializedNetwork.reset();
-        }
-        
-        pub.onComplete();
-        
         try {
-            Region r1 = serializedNetwork.lookup("r1");
-            r1.lookup("1").getLayerThread().join();
+            serializedNetwork.lookup("r1").lookup("1").getLayerThread().join();
         }catch(Exception e) {
             e.printStackTrace();
         }
         
-        
-        ////////////////////////////////////
-        //      Second Deserialization    //
-        ////////////////////////////////////
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Network serializedNetwork2 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetwork2, network);
-//        deepCompare(network, serializedNetwork2);
-        
-        FastRandom r2 = (FastRandom)serializedNetwork2.lookup("r1").lookup("1").getConnections().getRandom();
-//        serializedNetwork2.lookup("r1").lookup("1").getConnections().setRandom(r);
-        System.out.println("Second SEED = " + r2.getSeed());
-//        assertTrue(r.equals(r2));
-
-        serializedNetwork2.observe().subscribe(new Observer<Inference>() { 
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(Inference inf) {
-                System.out.println("2: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 1107) {
-                    System.out.println("Second SEED 2 = " + r2.getSeed());
-                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
-                }
-            }
-        });
-
-        Publisher pub2 = serializedNetwork2.getPublisher();
-
-        serializedNetwork2.start();
-
-        cycleCount = 0;
-        hotStream = makeStream().collect(Collectors.toList());
-        for(;cycleCount < NUM_CYCLES;cycleCount++) {
-            for(String s : hotStream) {
-                pub2.onNext(s);
-            }
-
-            serializedNetwork2.reset();
-        }
-
-        pub2.onComplete();
-
-        try {
-            Region r1 = serializedNetwork2.lookup("r1");
-            r1.lookup("1").getLayerThread().join();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-        
-        
-        ////////////////////////////////////
-        //      Third Deserialization     //
-        ////////////////////////////////////
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Network serializedNetwork3 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetwork2, network);
-//        deepCompare(network, serializedNetwork2);
-        
-        FastRandom r3 = (FastRandom)serializedNetwork3.lookup("r1").lookup("1").getConnections().getRandom();
-//        serializedNetwork3.lookup("r1").lookup("1").getConnections().setRandom(r);
-        System.out.println("Third SEED = " + r3.getSeed());
-//        assertTrue(r.equals(r2));
-
-        serializedNetwork3.observe().subscribe(new Observer<Inference>() { 
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(Inference inf) {
-                System.out.println("3: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 1107) {
-                    System.out.println("Third SEED 2 = " + r3.getSeed());
-                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
-                }
-            }
-        });
-
-        Publisher pub3 = serializedNetwork3.getPublisher();
-
-        serializedNetwork3.start();
-
-        cycleCount = 0;
-        hotStream = makeStream().collect(Collectors.toList());
-        for(;cycleCount < NUM_CYCLES;cycleCount++) {
-            for(String s : hotStream) {
-                pub3.onNext(s);
-            }
-
-            serializedNetwork3.reset();
-        }
-
-        pub3.onComplete();
-
-        try {
-            Region r1 = serializedNetwork3.lookup("r1");
-            r1.lookup("1").getLayerThread().join();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-        
-        
-        ////////////////////////////////////
-        //      Fourth Deserialization    //
-        ////////////////////////////////////
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Network serializedNetwork4 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
-//        assertEquals(serializedNetwork2, network);
-//        deepCompare(network, serializedNetwork2);
-        
-        FastRandom r4 = (FastRandom)serializedNetwork4.lookup("r1").lookup("1").getConnections().getRandom();
-//        serializedNetwork3.lookup("r1").lookup("1").getConnections().setRandom(r);
-        System.out.println("Fourth SEED = " + r4.getSeed());
-//        assertTrue(r.equals(r2));
-
-        serializedNetwork4.observe().subscribe(new Observer<Inference>() { 
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(Inference inf) {
-                System.out.println("4: " + inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 1107) {
-                    System.out.println("Fourth SEED 2 = " + r4.getSeed());
-                    assertEquals(0.375, inf.getAnomalyScore(), 0.001);
-                }
-            }
-        });
-
-        Publisher pub4 = serializedNetwork4.getPublisher();
-
-        serializedNetwork4.start();
-
-        cycleCount = 0;
-        hotStream = makeStream().collect(Collectors.toList());
-        for(;cycleCount < NUM_CYCLES;cycleCount++) {
-            for(String s : hotStream) {
-                pub4.onNext(s);
-            }
-
-            serializedNetwork4.reset();
-        }
-
-        pub4.onComplete();
-
-        try {
-            Region r1 = serializedNetwork4.lookup("r1");
-            r1.lookup("1").getLayerThread().join();
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
+        assertEquals(sampleExpectedOutput.size(), actualOutputs.size());
+        assertTrue(DeepEquals.deepEquals(sampleExpectedOutput, actualOutputs));
     }
+    
     
     //////////////////////////////
     //     Utility Methods      //
@@ -1235,21 +1225,6 @@ public class JavaFstNetworkSerializationTest {
         }catch(AssertionError ae) {
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }
-    }
-    
-    private Network createAndRunFullyLoadedNetwork(int start, int runTo) {
-        Network network = getLoadedDayOfWeekNetwork();
-        
-        network.observe().subscribe(new Observer<Inference>() { 
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override
-            public void onNext(Inference inf) {
-                
-            }
-        });
-        
-        return null;
     }
     
     private Network getLoadedDayOfWeekNetwork() {
@@ -1286,6 +1261,26 @@ public class JavaFstNetworkSerializationTest {
                     .addHeader("timestamp, consumption")
                     .addHeader("datetime, float")
                     .addHeader("B").build() }));
+        
+        Network network = Network.create("test network", p).add(Network.createRegion("r1")
+            .add(Network.createLayer("1", p)
+                .alterParameter(KEY.AUTO_CLASSIFY, true)
+                .add(Anomaly.create())
+                .add(new TemporalMemory())
+                .add(new SpatialPooler())
+                .add(sensor)));
+        
+        return network;
+    }
+    
+    private Network getLoadedHotGymNetwork_FileSensor() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        
+        Object[] n = { "some name", ResourceLocator.path("rec-center-hourly.csv") };
+        HTMSensor<File> sensor = (HTMSensor<File>)Sensor.create(
+            FileSensor::create, SensorParams.create(Keys::path, n));
         
         Network network = Network.create("test network", p).add(Network.createRegion("r1")
             .add(Network.createLayer("1", p)
@@ -1532,7 +1527,7 @@ public class JavaFstNetworkSerializationTest {
         return map;
     }
     
-    private BiFunction<Inference, Integer, Integer> createDayOfWeekInferencePrintout() {
+    private BiFunction<Inference, Integer, Integer> createDayOfWeekInferencePrintout(boolean on) {
         return new BiFunction<Inference, Integer, Integer>() {
             private int cycles = 1;
               
@@ -1540,26 +1535,30 @@ public class JavaFstNetworkSerializationTest {
                 Classification<Object> result = inf.getClassification("dayOfWeek");
                 double day = mapToInputData((int[])inf.getLayerInput());
                 if(day == 1.0) {
-                    System.out.println("\n=========================");
-                    System.out.println("CYCLE: " + cycles);
+                    if(on) {
+                        System.out.println("\n=========================");
+                        System.out.println("CYCLE: " + cycles);
+                    }
                     cycles++;
                 }
                 
-                System.out.println("RECORD_NUM: " + inf.getRecordNum());
-                System.out.println("ScalarEncoder Input = " + day);
-                System.out.println("ScalarEncoder Output = " + Arrays.toString(inf.getEncoding()));
-                System.out.println("SpatialPooler Output = " + Arrays.toString(inf.getFeedForwardActiveColumns()));
-                
-                if(inf.getPreviousPredictiveCells() != null)
-                    System.out.println("TemporalMemory Previous Prediction = " + 
-                        Arrays.toString(SDR.cellsAsColumnIndices(inf.getPreviousPredictiveCells(), cellsPerColumn)));
-                
-                System.out.println("TemporalMemory Actives = " + Arrays.toString(SDR.asColumnIndices(inf.getSDR(), cellsPerColumn)));
-                
-                System.out.print("CLAClassifier prediction = " + 
-                    stringValue((Double)result.getMostProbableValue(1)) + " --> " + ((Double)result.getMostProbableValue(1)));
-                
-                System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
+                if(on) {
+                    System.out.println("RECORD_NUM: " + inf.getRecordNum());
+                    System.out.println("ScalarEncoder Input = " + day);
+                    System.out.println("ScalarEncoder Output = " + Arrays.toString(inf.getEncoding()));
+                    System.out.println("SpatialPooler Output = " + Arrays.toString(inf.getFeedForwardActiveColumns()));
+                    
+                    if(inf.getPreviousPredictiveCells() != null)
+                        System.out.println("TemporalMemory Previous Prediction = " + 
+                            Arrays.toString(SDR.cellsAsColumnIndices(inf.getPreviousPredictiveCells(), cellsPerColumn)));
+                    
+                    System.out.println("TemporalMemory Actives = " + Arrays.toString(SDR.asColumnIndices(inf.getSDR(), cellsPerColumn)));
+                    
+                    System.out.print("CLAClassifier prediction = " + 
+                        stringValue((Double)result.getMostProbableValue(1)) + " --> " + ((Double)result.getMostProbableValue(1)));
+                    
+                    System.out.println("  |  CLAClassifier 1 step prob = " + Arrays.toString(result.getStats(1)) + "\n");
+                }
                 
                 return cycles;
             }

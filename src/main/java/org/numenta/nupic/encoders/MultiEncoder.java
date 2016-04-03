@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.util.Tuple;
 
@@ -149,9 +151,30 @@ public class MultiEncoder extends Encoder<Object> {
      * Configures this {@code MultiEncoder} using the specified settings map.
      * 
      * @param fieldEncodings
+     * @return the assembled {@code MultiEncoder}
      */
-    public void addMultipleEncoders(Map<String, Map<String, Object>> fieldEncodings) {
-        MultiEncoderAssembler.assemble(this, fieldEncodings);
+    public MultiEncoder addMultipleEncoders(Map<String, Map<String, Object>> fieldEncodings) {
+        return MultiEncoderAssembler.assemble(this, fieldEncodings);
+    }
+    
+    /**
+     * Convenience method to return the {@code Encoder} contained within this 
+     * {@link MultiEncoder}, of a specific type.
+     * @param fmt   the {@link FieldMetaType} specifying the type to return.
+     * @return  the Encoder of the specified type or null if one isn't found.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Encoder<?>> T getEncoderOfType(FieldMetaType fmt) {
+        Encoder<?> retVal = null;
+        for(Tuple t : getEncoders(this)) {
+            Encoder<?> enc = (Encoder<?>)t.get(1);
+            Set<FieldMetaType> subTypes = enc.getDecoderOutputFieldTypes();
+            if(subTypes.contains(fmt)) {
+                retVal = enc; break;
+            }
+        }
+        
+        return (T)retVal;
     }
 
     /**

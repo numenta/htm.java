@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.ComputeCycle;
@@ -222,11 +221,15 @@ public class Layer<T> implements Persistable {
     private volatile boolean isHalted;
     private volatile boolean isPostSerialized;
     protected volatile boolean isLearn = true;
-
+    
     private Layer<Inference> next;
     private Layer<Inference> previous;
 
     private transient List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
+    private transient Observable<byte[]> checkPointer;
+    private transient List<Observer<byte[]>> checkPointObservers = new ArrayList<>();
+    
+    
     
     /**
      * Retains the order of added items - for use with interposed
@@ -253,7 +256,6 @@ public class Layer<T> implements Persistable {
     static final byte ANOMALY_COMPUTER = 8;
 
     private byte algo_content_mask = 0;
-    
     
     
 
@@ -318,15 +320,29 @@ public class Layer<T> implements Persistable {
     @Override
     public Layer<T> postSerialize() {
         recreateSensors();
+        
         FunctionFactory old = factory;
         factory = new FunctionFactory();
-        factory.inference.classifiers = old.inference.classifiers;
-        sensor.setLocalParameters(params);
-        sensor.postSerialize();
+        factory.inference = old.inference.postSerialize(old.inference);
+        
+        checkPointObservers = new ArrayList<>();
+        
+        if(sensor != null) {
+            sensor.setLocalParameters(params);
+            // Initialize encoders and recreate encoding index mapping.
+            sensor.postSerialize();
+        }else{
+            // Dispatch functions (Observables) are transient & non-serializable so they must be rebuilt.
+            observableDispatch = createDispatchMap();
+            // Dispatch chain will not propagate unless it has subscribers.
+            parentNetwork.addDummySubscriber();
+        }
+        // Flag which lets us know to skip or do certain setups during initialization.
         isPostSerialized = true;
+        
         return this;
     }
-
+    
     /**
      * Sets the parent {@link Network} on this {@code Layer}
      * 
@@ -920,6 +936,7 @@ public class Layer<T> implements Persistable {
         Object supplier = null;
         if(sensor != null && (supplier = sensor.getSensorParams().get("ONSUB")) != null) {
             if(supplier instanceof PublisherSupplier) {
+                System.out.println("SUPPLIER: CLEARING SUPPLIED PUBLISHER INSTANCE");
                 ((PublisherSupplier)supplier).clearSuppliedInstance();
             }
         }
@@ -977,7 +994,7 @@ public class Layer<T> implements Persistable {
     @SuppressWarnings("unchecked")
     public void start() {
         if(isHalted) {
-            restart();
+            restart(true);
             return;
         }
         
@@ -1010,9 +1027,12 @@ public class Layer<T> implements Persistable {
      * {@link #restart()} is to be called after a call to {@link #halt()}, to begin
      * processing again. The {@link Network} will continue from where it previously
      * left off after the last call to halt().
+     * 
+     * @param startAtIndex      flag indicating whether the Layer should be started and
+     *                          run from the previous save point or not.
      */
     @SuppressWarnings("unchecked")
-    public void restart() {
+    public void restart(boolean startAtIndex) {
         isHalted = false;
         
         if(!isClosed) {
@@ -1036,14 +1056,16 @@ public class Layer<T> implements Persistable {
             observableDispatch = createDispatchMap();
             
             this.encoder = encoder == null ? sensor.getEncoder() : encoder;
-
+            
+            skip = startAtIndex ? 
+                (sensor.getSensorParams().get("ONSUB")) != null ? -1 : recordNum : 
+                    (recordNum = -1);
+            
             try {
                 completeDispatch((T)new int[] {});
             } catch(Exception e) {
                 notifyError(e);
             }
-            
-            skip = recordNum;
             
             startLayerThread();
 
@@ -1593,7 +1615,7 @@ public class Layer<T> implements Persistable {
         
         // Insert skip observable operator if initializing with an advanced record number
         // (i.e. Serialized Network)
-        if(recordNum > 0) {
+        if(recordNum > 0 && skip != -1) {
             sequenceStart = sequenceStart.skip(recordNum + 1);
             
             Integer skipCount;
@@ -1920,6 +1942,23 @@ public class Layer<T> implements Persistable {
                         }
                         return false;
                     }
+                    
+                    if(!checkPointObservers.isEmpty() && parentNetwork != null) {
+                        byte[] bytes = parentNetwork.internalCheckPoint();
+                       
+                        if(bytes != null) {
+                            LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
+                        }else{
+                            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
+                        }
+                        
+                        for(Observer<byte[]> o : checkPointObservers) {
+                            o.onNext(bytes);
+                            o.onCompleted();
+                        }
+                        
+                        checkPointObservers.clear();
+                    }
 
                     if(Thread.currentThread().isInterrupted()) {
                         notifyError(new RuntimeException("Unknown Exception while filtering input"));
@@ -1938,6 +1977,25 @@ public class Layer<T> implements Persistable {
                 });
             }
         }).start();
+    }
+    
+    /**
+     * Signals the Layer thread to check point the current Network state to disk.
+     */
+    Observable<byte[]> checkPoint() {
+        return getCheckPointer();
+    }
+    
+    Observable<byte[]> getCheckPointer() {
+        if(checkPointer == null) {
+            return Observable.create(new Observable.OnSubscribe<byte[]>() {
+                @SuppressWarnings("unchecked")
+                @Override public void call(Subscriber<? super byte[]> t) {
+                    checkPointObservers.add((Observer<byte[]>)t);
+                }
+            });
+        }
+        return checkPointer;
     }
 
     //////////////////////////////////////////////////////////////

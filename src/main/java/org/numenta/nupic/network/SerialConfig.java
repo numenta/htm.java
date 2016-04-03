@@ -4,21 +4,39 @@ import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
 
 public class SerialConfig {
+    public static final String CHECKPOINT_FORMAT_STRING = "YYYY-MM-dd_HH-mm-ss.SSS";
+    
+    
     public static final StandardOpenOption[] PRODUCTION_OPTIONS = new StandardOpenOption[] { 
         StandardOpenOption.CREATE,
         StandardOpenOption.TRUNCATE_EXISTING 
     };
     
+    public static final StandardOpenOption[] CHECKPOINT_OPTIONS = new StandardOpenOption[] { 
+        StandardOpenOption.CREATE,
+        StandardOpenOption.TRUNCATE_EXISTING 
+    };
+    
     private static final String SERIAL_FILE = "Network.ser";
+    private static final String CHECKPOINT_FILE = "Network_Checkpoint_";
     
     private String fileName;
     private Scheme scheme;
     private List<Class<?>> registry;
     private StandardOpenOption[] options;
+    private StandardOpenOption[] checkPointOptions = CHECKPOINT_OPTIONS;
     
+    private String checkPointFileName = CHECKPOINT_FILE;
+    
+    private String checkPointFormatString = CHECKPOINT_FORMAT_STRING;
+    
+    /** Specifies that as a new CheckPoint file is written, the old one is deleted */
+    private boolean oneCheckPointOnly;
     
     
     /**
@@ -95,12 +113,50 @@ public class SerialConfig {
         this.registry = registeredTypes;
         this.options = openOptions;
     }
-
+    
     /**
      * @return the fileName
      */
     public String getFileName() {
         return fileName;
+    }
+    
+    /**
+     * Returns the name portion of the checkpoint file name. The check pointed
+     * file will have a name consisting of two parts, the "name" and the "timestamp".
+     * To set the  
+     * @return
+     */
+    public String getCheckPointFileName() {
+        return checkPointFileName;
+    }
+    
+    /**
+     * Sets the name portion of the checkpointed file's name.
+     * @param name  the name portion of the checkpointed file's name.
+     */
+    public void setCheckPointFileName(String name) {
+        this.checkPointFileName = name;
+    }
+    
+    /**
+     * Sets the format string for the date portion of the checkpoint file name.
+     * @return  the format string for the date portion of the checkpoint file name.
+     */
+    public String getCheckPointFormatString() {
+        return this.checkPointFormatString;
+    }
+    
+    /**
+     * Sets the format string for the date portion of the checkpoint file name.
+     * @param formatString  the format to use on the current timestamp.
+     */
+    public void setCheckPointTimeFormatString(String formatString) {
+        if(formatString == null || formatString.isEmpty()) {
+            throw new NullPointerException("Cannot use a null or empty format string.");
+        }
+        
+        checkPointFormatString = formatString;
     }
     
     /**
@@ -124,6 +180,30 @@ public class SerialConfig {
      */
     public StandardOpenOption[] getOpenOptions() {
         return options;
+    }
+    
+    public StandardOpenOption[] getCheckPointOpenOptions() {
+        return checkPointOptions;
+    }
+    
+    public void setCheckPointOpenOptions(StandardOpenOption[] options) {
+        this.checkPointOptions = options;
+    }
+    
+    /**
+     * Specifies that as a new CheckPoint file is written, the old one is deleted
+     * @param b     true to maintain at most one file, false to keep writing new files (default).
+     */
+    public void setOneCheckPointOnly(boolean b) {
+        this.oneCheckPointOnly = b;
+    }
+    
+    /**
+     * Returns a flag indicating whether only one check point file will exist at a time, or not.
+     * @return  the flag specifying this condition.
+     */
+    public boolean isOneCheckPointOnly() {
+        return oneCheckPointOnly;
     }
 
     /* (non-Javadoc)

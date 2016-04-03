@@ -731,7 +731,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 			return this;
 		}
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */

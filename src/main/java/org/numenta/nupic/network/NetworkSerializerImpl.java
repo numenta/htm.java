@@ -1,9 +1,17 @@
 package org.numenta.nupic.network;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.Persistable;
 import org.nustaq.serialization.FSTConfiguration;
 
@@ -14,8 +22,28 @@ import com.esotericsoftware.kryo.io.Output;
 
 import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
 
-
+/**
+ * <p>
+ * Low level serializer that wraps an FST serialization scheme in both a Kryo {@link Serializer}
+ * and an HTM.java {@link NetworkSerializer} interface.</p>
+ * <p>
+ * This implementation may be used with a Kryo serialization scheme as it implements {@link Serializer} 
+ * which is necessary to interface with systems that use Kryo as a serialization method (i.e. Flink).
+ * The {@link #getKryo()} method is used to retrieve an instance of Kryo which can be used with such
+ * frameworks and contains the required delegation to the internal serialization scheme used by the
+ * HTM.java framework. 
+ * </p><p>
+ * To obtain an instance of this serializer see {@link Network#serializer(SerialConfig, boolean)}
+ * </p>
+ *  
+ * @author cogmission
+ *
+ * @param <T>   the type which will be serialized
+ */
 class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> implements NetworkSerializer<T> {
+    /** Time stamped serialization file format */
+    public static final DateTimeFormatter CHECKPOINT_TIMESTAMP_FORMAT = DateTimeFormat.forPattern(SerialConfig.CHECKPOINT_FORMAT_STRING);
+    
     /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
     private final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
     
@@ -26,11 +54,17 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     private SerialConfig config;
     private Scheme scheme;
     
+    /** Configured from the specified {@link SerialConfig} passed in. */
     private File serializedFile;
     
-    private Output kryoOutput;
-    private Input kryoInput;
+    /** Stores the bytes of the last serialized object or null if there was a problem */
+    private byte[] lastBytes;
     
+    private DateTimeFormatter checkPointFormatter = CHECKPOINT_TIMESTAMP_FORMAT;
+    
+    private String checkPointFormatString;
+    
+    private String lastCheckPointFileName;
     
     
     /**
@@ -42,17 +76,12 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     NetworkSerializerImpl(SerialConfig config) {
         this.config = config;
         this.scheme = config.getScheme();
-        
-        try {
-            ensurePathExists(config);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
+        this.checkPointFormatString = config.getCheckPointFormatString();
+        this.checkPointFormatter = DateTimeFormat.forPattern(this.checkPointFormatString);
         
         if(config.getScheme() == Scheme.KRYO) {
             this.kryo = createKryo();
         }
-        
     }
     
     /**
@@ -66,10 +95,25 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      * @param kryo      instance of {@link Kryo} object
      * @param in        a Kryo {@link Input} 
      * @param klass     The class of the object to be read in.
-     * @return
+     * @return  an instance of type &lt;T&gt;
      */
+    @Override
     public T read(Kryo kryo, Input in, Class<T> klass) {
-        return deSerialize(klass, null);
+        InputStream is = in.getInputStream();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        try {
+            int nRead;
+            byte[] data = new byte[16384];
+            while ((nRead = is.read(data, 0, data.length)) != -1) {
+              buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+        }catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+        
+        return deSerialize(klass, buffer.toByteArray());
     }
     
     /**
@@ -83,19 +127,84 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      * @param kryo      instance of {@link Kryo} object
      * @param out       a Kryo {@link Output} object        
      * @param <T>       instance to serialize     
-     * @return
      */
+    @Override
     public void write(Kryo kryo, Output out, T type) {
-        serialize(type);
+        byte[] bytes = serialize(type);
+        out.write(bytes);
+        
+        lastBytes = bytes;
+    }
+    
+    /**
+     * Returns the {@link SerialConfig} in use currently.
+     * @return      the {@link SerialConfig} in use currently.
+     */
+    @Override
+    public SerialConfig getConfig() {
+        return config;
+    }
+    
+    /**
+     * Writes the current state of the specified object to disk. This method is intended for
+     * {@link Network} serialization to disk. For other objects, use the more general {@link #serialize(Persistable)}
+     * and {@link #deSerialize(Class, byte[])} methods.
+     * 
+     *  @param  <T>     instance of {@link Network} to check point.
+     *  @return byte[]  the serialized bytes of the specified Network.
+     */
+    @Override
+    public byte[] checkPoint(T instance) {
+        instance.preSerialize();
+        
+        String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
+        File customDir = new File(path);
+        
+        customDir.mkdirs();
+        
+        String oldCheckPointFileName = lastCheckPointFileName;
+        lastCheckPointFileName = customDir.getAbsolutePath() + File.separator +  
+            config.getCheckPointFileName() + checkPointFormatter.print(new DateTime());
+        
+        File cpFile = new File(lastCheckPointFileName);
+        try {
+            cpFile.createNewFile();
+        }catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+        
+        switch(scheme) {
+            case KRYO: // Fall through to FST Handler
+            case FST: {
+                byte[] bytes = fastSerialConfig.asByteArray(instance);
+                try {
+                    Files.write(cpFile.toPath(), bytes, config.getCheckPointOpenOptions());
+                    
+                    // If the user has specified to remove old checkpoint files, delete the last one.
+                    if(config.isOneCheckPointOnly() && oldCheckPointFileName != null) {
+                        Files.deleteIfExists(new File(oldCheckPointFileName).toPath());
+                    }
+                } catch(IOException e) {
+                    lastBytes = null;
+                    throw new RuntimeException(e);
+                }
+                return lastBytes = bytes;
+            }
+            default: {
+                return null;
+            }
+        }
     }
     
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
-     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * to serialize the specified Object instance. In all cases, a byte
      * array is returned - though both schemes serialize to an underlying file.
      * 
      * @param instance  the object instance to serialize
+     * @return  the instance of type &lt;T&gt; serialized to a byte array
      */
+    @Override
     public byte[] serialize(T instance) {
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
@@ -110,7 +219,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     
     /**
      * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
-     * to serialize the specified Object instance. If the scheme was previously set to {@link Scheme#FST}, a byte
+     * to serialize the specified Object instance. In all cases, a byte
      * array is returned - though both schemes serialize to an underlying file.
      * 
      * @param instance      the object instance to serialize
@@ -121,10 +230,19 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      *                          <li><b>if false</b>, the serialized bytes will still be returned, but the object will also
      *                      be saved to disk (perm storage: bytesOnly==false).</li>
      *                      </ul> 
+     *                      
+     * @return the instance of type &lt;T&gt; serialized to a byte array
      */
+    @Override
     public byte[] serialize(T instance, boolean bytesOnly) {
         // Make sure any serialized Network is first halted.
         instance.preSerialize();
+        
+        try {
+            ensurePathExists(config);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
         
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
@@ -134,10 +252,11 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
                     try {
                         Files.write(serializedFile.toPath(), bytes, config.getOpenOptions());
                     } catch(IOException e) {
+                        lastBytes = null;
                         throw new RuntimeException(e);
                     }
                 }
-                return bytes;
+                return lastBytes = bytes;
             }
             default: {
                 return null;
@@ -159,9 +278,10 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      *                      <li><b>If null (bytes==null)</b>: recover the serialized object from disk using the 
      *                      path specified by the pre-configured {@link SerialConfig} object.</li>
      *                  </ul>
-     * @return  the deserialized object
+     * @return  the deserialized object of type &lt;T&gt;
      */
     @SuppressWarnings("unchecked")
+    @Override
     public T deSerialize(Class<T> type, byte[] bytes) {
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
@@ -184,12 +304,77 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     }
     
     /**
+     * Returns the bytes of the last serialized object or null if there was a problem.
+     * @return  the bytes of the last serialized object.
+     */
+    @Override
+    public byte[] getLastBytes() {
+        return lastBytes;
+    }
+    
+    /**
      * Returns the File object that the serialization scheme writes to.
-     * @return
+     * @return  the {@link File} object containing the serialized object
      */
     @Override
     public File getSerializedFile() {
         return serializedFile;
+    }
+    
+    /**
+     * Returns the last check pointed file name.
+     * @return  the last check pointed file name.
+     */
+    @Override
+    public String getLastCheckPointFileName() {
+        return lastCheckPointFileName;
+    }
+    
+    @Override
+    public List<String> getCheckPointFileList() {
+        String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
+        File customDir = new File(path);
+        
+        final DateTimeFormatter f = checkPointFormatter;
+        List<String> chkPntFiles = Arrays.stream(customDir.list((d,n) -> {
+            // Return only checkpoint files before the specified checkpoint name.
+            return n.indexOf(config.getCheckPointFileName()) != -1;
+        })).sorted((o1,o2) -> {
+            // Sort the list so that the most recent previous can be selected.
+            try {
+                String n1 = o1.substring(config.getCheckPointFileName().length());
+                String n2 = o2.substring(config.getCheckPointFileName().length());
+                return f.parseDateTime(n1).compareTo(f.parseDateTime(n2));
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e);
+            }
+        }).collect(Collectors.toList());
+        
+        return chkPntFiles;
+    }
+    
+    @Override
+    public String getPreviousCheckPoint(String checkPointFileName) {
+        final DateTimeFormatter f = checkPointFormatter;
+        
+        String defaultNamePortion = config.getCheckPointFileName();
+        
+        if(checkPointFileName.indexOf(defaultNamePortion) != -1) {
+            checkPointFileName = checkPointFileName.substring(defaultNamePortion.length());
+        }
+        
+        final String cpfn = checkPointFileName;
+        
+        String[] chkPntFiles = getCheckPointFileList().stream()
+            .map(n -> n.substring(defaultNamePortion.length()))
+            .filter(n -> f.parseDateTime(n).isBefore(f.parseDateTime(cpfn)))
+            .toArray(size -> new String[size]);
+        
+        if(chkPntFiles != null && chkPntFiles.length > 0) {
+            return defaultNamePortion.concat(chkPntFiles[chkPntFiles.length - 1]);
+        }
+        
+        return null;
     }
     
     /**
@@ -226,7 +411,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     /**
      * Returns a {@link Kryo} implementation which adheres to the Kryo interface requirements
      * but is capable of delegating to FST :-P
-     * @return
+     * @return  an instance of Kryo
      */
     private Kryo createKryo() {
         return new KryoReflectionFactorySupport() {
@@ -277,5 +462,4 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
             return false;
         return true;
     }
-
 }

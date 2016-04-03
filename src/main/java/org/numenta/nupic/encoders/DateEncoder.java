@@ -25,13 +25,16 @@ package org.numenta.nupic.encoders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.Tuple;
 
 import gnu.trove.list.TDoubleList;
@@ -129,6 +132,7 @@ public class DateEncoder extends Encoder<DateTime> {
     protected transient DateTimeFormatter customFormatter;
     protected String customFormatterPattern;
     
+    protected Set<FieldMetaType> fieldTypes = new HashSet<>(Arrays.asList(FieldMetaType.DATETIME));
     
     
 
@@ -487,6 +491,14 @@ public class DateEncoder extends Encoder<DateTime> {
 
             ++fieldCounter;
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+        return fieldTypes;
     }
 
     /**

@@ -43,7 +43,7 @@ import rx.subjects.ReplaySubject;
  * consumption as designed by Numenta's input file format.
  * 
  * <b>NOTE:</b> The {@link Publisher.Builder#addHeader(String)} method must be called
- * before adding the publisher to the {@link Layer} (i.e. {@link Sensor}).
+ * before adding the Publisher to the {@link Layer} (i.e. {@link Sensor}).
  * 
  * Typical usage is as follows:
  * <pre>
@@ -92,6 +92,7 @@ public class Publisher implements Persistable {
     /** "Replays" the header lines for all new subscribers */
     private transient ReplaySubject<String> subject;
     
+    private Network parentNetwork;
     
     
     public static class Builder<T> {
@@ -181,6 +182,22 @@ public class Publisher implements Persistable {
      */
     public static Builder<PublishSubject<String>> builder(Consumer<Publisher> c) {
         return new Builder<>(c);
+    }
+    
+    /**
+     * Sets the parent {@link Network} on this {@code Publisher} for use as a convenience. 
+     * @param n     the Network to which the {@code Publisher} is connected.
+     */
+    public void setNetwork(Network n) {
+        this.parentNetwork = n;
+    }
+    
+    /**
+     * Returns the parent {@link Network} connected to this {@code Publisher} for use as a convenience. 
+     * @return  this {@code Publisher}'s parent {@link Network}
+     */
+    public Network getNetwork() {
+        return parentNetwork;
     }
     
     /**

@@ -39,6 +39,8 @@ import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Observer;
@@ -162,6 +164,8 @@ public class Network implements Persistable {
     private static final long serialVersionUID = 1L;
 
     public enum Mode { MANUAL, AUTO, REACTIVE };
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
 
     private String name;
     private Parameters parameters;
@@ -180,7 +184,7 @@ public class Network implements Persistable {
     /** Stored by the {@code Network} unless overwritten by using flag @see {@link #serializer(Scheme)} */
     private static NetworkSerializerImpl<?> storedSerializer;
     /** The stored configuration delineating output file and scheme etc. */
-    private static SerialConfig storedConfig;
+    private static SerialConfig defaultConfig = new SerialConfig(Scheme.FST);
     
 
 
@@ -202,27 +206,6 @@ public class Network implements Persistable {
         if(parameters == null) {
             throw new IllegalArgumentException("Network Parameters were null.");
         }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Network preSerialize() {
-        halt();
-        regions.stream().forEach(r -> r.preSerialize());
-        return this;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Network postSerialize() {
-        regions.stream().forEach(r -> r.postSerialize());
-        return this;
     }
     
     /**
@@ -280,6 +263,178 @@ public class Network implements Persistable {
     }
     
     /**
+     * DO NOT CALL THIS METHOD! FOR INTERNAL USE ONLY!
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network preSerialize() {
+        if(shouldDoHalt) {
+            halt();
+        }
+        regions.stream().forEach(r -> r.preSerialize());
+        return this;
+    }
+    
+    /**
+     * DO NOT CALL THIS METHOD! FOR INTERNAL USE ONLY!
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network postSerialize() {
+        regions.stream().forEach(r -> r.postSerialize());
+        return this;
+    }
+    
+    /**
+     * Stores this {@link Network} at the pre-configured location, after
+     * halting and shutting down the Network. To store the Network but keep it up
+     * and running, please see the {@link #checkpoint()} method. 
+     * 
+     * The Network, may however be {@link #restart()}ed after this method is called.
+     * 
+     * @return the serialized Network in the format specified (byte[] is the default).
+     */
+    public <T> T store() {  
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        
+        return doHalt();
+    }
+    
+    /**
+     * Internally called to {@link #halt()} the {@code Network}, call complete on any
+     * existing {@link Publisher} and serialize this {@code Network}.
+     * 
+     * @return return the serialized Network.
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T doHalt() {
+        halt();
+        // Call onComplete if using an ObservableSensor to complete the stream output.
+        if(publisher != null) {
+            publisher.onComplete();
+        }
+        
+        return (T)((NetworkSerializer<Network>)storedSerializer).serialize(this);
+    }
+    
+    boolean shouldDoHalt = true;
+    @SuppressWarnings("unchecked")
+    byte[] internalCheckPoint() {
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        shouldDoHalt = false;
+        byte[] serializedBytes = ((NetworkSerializer<Network>)storedSerializer).checkPoint(this);
+        shouldDoHalt = true;
+        return serializedBytes;
+    }
+    
+    public byte[] getCheckPoint() {
+        if(storedSerializer != null) {
+            return storedSerializer.getLastBytes();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     */
+    public Observable<byte[]> checkPoint() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.checkPoint();
+    }
+    
+    /**
+     * Serializes this {@link Network} to a byte array and returns the byte array
+     * after halting the network (see {@link #halt()}). 
+     * 
+     * The Network may however be {@link #restart()}ed after this method is called.
+     * @return the serialized Network in byte array form.
+     */
+    public byte[] serialize() { return null; }
+    
+    /**
+     * Serializes this {@link Network} to JSON format and returns the formatted JSON
+     * file as a String - following a halt of the Network. 
+     * 
+     * The Network may however be {@link #restart()}ed after this method is called.
+     * @return the serialized Network in JSON format.
+     */
+    public String toJson() { return null; }
+    
+    /**
+     * Loads a {@code Network} from the default or previously configured location and
+     * serial file, and returns it. If the "startAtStoredRecNum" flag is true, the Network
+     * will start from the last record number (plus 1) at which the Network was saved -
+     * continuing on from where it left off. The Network will achieve this by rebuilding
+     * the underlying Stream (if necessary, i.e. not for {@link ObservableSensor}s) and skipping 
+     * the number of records equal to the stored record number plus one, continuing from where it left off.
+     */
+    @SuppressWarnings("unchecked")
+    public static Network load() { 
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        
+        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, null);
+        
+        return network; 
+    }
+    
+    /**
+     * Loads a {@code Network} from the specified serialization path location and
+     * returns it.
+     *  
+     * @param pathToSerFile             the fully qualified path to the required serialization file.
+     *                                  the last save point.       
+     * @return  returns the specified Network
+     */
+    public static Network load(String pathToSerFile) { return null; }
+    
+    /**
+     * Restarts this {@code Network}. The network will run from the previous save point
+     * of the stored Network.
+     * 
+     * @see {@link #restart(boolean)} for a start at "saved-index" behavior explanation. 
+     */
+    public void restart() {
+        restart(true);
+    }
+    
+    /**
+     * Restarts this {@code Network}. If the "startAtIndex" flag is true, the Network
+     * will start from the last record number (plus 1) at which the Network was saved -
+     * continuing on from where it left off. The Network will achieve this by rebuilding
+     * the underlying Stream (if necessary, i.e. not for {@link ObservableSensor}s) and skipping 
+     * the number of records equal to the stored record number plus one, continuing from where it left off.
+     * 
+     * @param startAtIndex  flag indicating whether to start this {@code Network} from
+     *                      its previous save point.
+     */
+    public void restart(boolean startAtIndex) {
+        if(regions.size() < 1) {
+            throw new IllegalStateException("Nothing to start - 0 regions");
+        }
+
+        Region tail = regions.get(0);
+        Region upstream = tail;
+        while((upstream = upstream.getUpstreamRegion()) != null) {
+            tail = upstream;
+        }
+
+        // Record thread start
+        this.isThreadRunning = tail.restart(startAtIndex);
+    }
+    
+    /**
      * Factory method to return a configured {@link NetworkSerializer}
      * 
      * If the "returnNew" flag is true, this method returns a new instance of 
@@ -294,9 +449,9 @@ public class Network implements Persistable {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Persistable> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
-        return (returnNew || storedSerializer == null || (storedConfig != null && !config.equals(storedConfig))) ?  
-            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(config)) : 
-                (NetworkSerializerImpl<T>)storedSerializer;
+        return (returnNew || storedSerializer == null) ? 
+            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(
+                config == null ? defaultConfig : config)) : (NetworkSerializerImpl<T>)storedSerializer;
     }
     
     /**
@@ -311,6 +466,7 @@ public class Network implements Persistable {
      */
     void setPublisher(Publisher p) {
         this.publisher = p;
+        publisher.setNetwork(this);
     }
     
     /**
@@ -361,24 +517,6 @@ public class Network implements Persistable {
     }
     
     /**
-     * Restarts this {@code Network}
-     */
-    public void restart() {
-        if(regions.size() < 1) {
-            throw new IllegalStateException("Nothing to start - 0 regions");
-        }
-
-        Region tail = regions.get(0);
-        Region upstream = tail;
-        while((upstream = upstream.getUpstreamRegion()) != null) {
-            tail = upstream;
-        }
-
-        // Record thread start
-        this.isThreadRunning = tail.restart();
-    }
-    
-    /**
      * Returns a flag indicating that the {@code Network} has an {@link Observable}
      * running on a thread.
      * 
@@ -420,6 +558,18 @@ public class Network implements Persistable {
      */
     public void pause() {
         throw new UnsupportedOperationException("Pausing is not (yet) supported.");
+    }
+    
+    /**
+     * Returns the index of the last record processed.
+     * 
+     * @return  the last recordNum processed
+     */
+    public int getRecordNum() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.getTail().getRecordNum();
     }
     
     /**
@@ -571,7 +721,7 @@ public class Network implements Persistable {
      * Subscriber leads to the observable chain not being constructed, therefore
      * we must always have at least one subscriber.
      */
-    private void addDummySubscriber() {
+    void addDummySubscriber() {
         observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }

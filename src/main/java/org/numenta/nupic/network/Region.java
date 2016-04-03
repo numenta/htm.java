@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.joda.time.DateTime;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
@@ -324,14 +325,27 @@ public class Region implements Persistable {
         return false;
     }
     
-    public boolean restart() {
+    /**
+     * Calls {@link Layer#restart(boolean)} on this Region's input {@link Layer} if
+     * that layer contains a {@link Sensor}. If not, this method has no effect. If
+     * "startAtIndex" is true, the Network will start at the last saved index as 
+     * obtained from the serialized "recordNum" field; if false then the Network
+     * will restart from 0.
+     * 
+     * @param startAtIndex      flag indicating whether to start from the previous save
+     *                          point or not. If true, this region's Network will start
+     *                          at the previously stored index, if false then it will 
+     *                          start with a recordNum of zero.
+     * @return  flag indicating whether the call to restart had an effect or not.
+     */
+    public boolean restart(boolean startAtIndex) {
         if(!assemblyClosed) {
             return start();
         }
         
         if(tail.hasSensor()) {
             LOGGER.info("Re-Starting Region [" + getName() + "] input Layer thread.");
-            tail.restart();
+            tail.restart(startAtIndex);
             return true;
         }else{
             LOGGER.warn("Re-Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
@@ -341,17 +355,31 @@ public class Region implements Persistable {
     }
     
     /**
+     * 
+     */
+    Observable<byte[]> checkPoint() {
+        LOGGER.debug("Region [" + getName() + "] CheckPoint called at: " + (new DateTime()));
+        if(tail != null) {
+            return tail.checkPoint();
+            
+        }else{
+            close();
+            return tail.checkPoint();
+        }
+    }
+    
+    /**
      * Stops each {@link Layer} contained within this {@code Region}
      */
     public void halt() {
-        LOGGER.debug("Stop called on Region [" + getName() + "]");
+        LOGGER.debug("Halt called on Region [" + getName() + "]");
         if(tail != null) {
             tail.halt();
         }else{
             close();
             tail.halt();
         }
-        LOGGER.debug("Region [" + getName() + "] stopped.");
+        LOGGER.debug("Region [" + getName() + "] halted.");
     }
     
     /**

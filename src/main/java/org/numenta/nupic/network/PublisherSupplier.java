@@ -43,6 +43,7 @@ public class PublisherSupplier implements Persistable, Supplier<Publisher> {
             headers.stream().forEach(line -> builder.addHeader(line));
             
             suppliedInstance = builder.build();
+            suppliedInstance.setNetwork(network);
         }
         
         return suppliedInstance;
@@ -58,6 +59,7 @@ public class PublisherSupplier implements Persistable, Supplier<Publisher> {
      */
     public void setNetwork(Network n) {
         this.network = n;
+        this.suppliedInstance.setNetwork(n);
     }
     
     /**
