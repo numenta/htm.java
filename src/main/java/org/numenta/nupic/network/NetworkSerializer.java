@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.network;
 
 import java.io.File;
@@ -89,14 +110,16 @@ public interface NetworkSerializer<T> {
      */
     public List<String> getCheckPointFileList();
     /**
-     * Given part of a checkpoint file name or the whole file name,
-     * this method will attempt to find the most immediately previous
-     * check point and return its name.
+     * Returns the checkpointed file previous to the specified file (older), or
+     * null if one doesn't exist. The file name may be the entire filename (as
+     * configured by the {@link SerialConfig} object which establishes both the
+     * filename portion and the date portion formatting), or just the date
+     * portion of the filename.
      * 
-     * @param checkPointFileName    contains the date portion of the checkpoint
-     *                              file name.
-     * @return  the most recent checkpoint file name previous to the specified
-     *          file name
+     * @param   checkpoint filename (can be entire name or just date portion)
+     * 
+     * @return  the full filename of the file checkpointed immediately previous
+     *          to the file specified.
      */
     public String getPreviousCheckPoint(String checkPointFileName);
     /**

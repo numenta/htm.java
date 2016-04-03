@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -43,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import rx.Observable;
-import rx.Observer;
 import rx.Subscriber;
 
 /**
@@ -297,6 +297,8 @@ public class Network implements Persistable {
      * @return the serialized Network in the format specified (byte[] is the default).
      */
     public <T> T store() {  
+        LOGGER.debug("Network [" + getName() + "] called store() at: " + (new DateTime()));
+        
         if(storedSerializer == null) {
             Network.serializer(defaultConfig, true);
         }
@@ -333,6 +335,10 @@ public class Network implements Persistable {
         return serializedBytes;
     }
     
+    /**
+     * Returns the bytes of the last checkpointed {@code Network}
+     * @return      the bytes of the last checkpointed {@code Network}    
+     */
     public byte[] getCheckPoint() {
         if(storedSerializer != null) {
             return storedSerializer.getLastBytes();
@@ -346,29 +352,13 @@ public class Network implements Persistable {
      * The Network will be stored at the pre-configured location (in binary form only, not JSON).
      */
     public Observable<byte[]> checkPoint() {
+        LOGGER.debug("Network [" + getName() + "] called checkPoint() at: " + (new DateTime()));
+        
         if(regions.size() == 1) {
             this.tail = regions.get(0);
         }
         return tail.checkPoint();
     }
-    
-    /**
-     * Serializes this {@link Network} to a byte array and returns the byte array
-     * after halting the network (see {@link #halt()}). 
-     * 
-     * The Network may however be {@link #restart()}ed after this method is called.
-     * @return the serialized Network in byte array form.
-     */
-    public byte[] serialize() { return null; }
-    
-    /**
-     * Serializes this {@link Network} to JSON format and returns the formatted JSON
-     * file as a String - following a halt of the Network. 
-     * 
-     * The Network may however be {@link #restart()}ed after this method is called.
-     * @return the serialized Network in JSON format.
-     */
-    public String toJson() { return null; }
     
     /**
      * Loads a {@code Network} from the default or previously configured location and
@@ -380,6 +370,8 @@ public class Network implements Persistable {
      */
     @SuppressWarnings("unchecked")
     public static Network load() { 
+        LOGGER.debug("Network load() called ...");
+        
         if(storedSerializer == null) {
             Network.serializer(defaultConfig, true);
         }

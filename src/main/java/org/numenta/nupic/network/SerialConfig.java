@@ -1,13 +1,53 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.network;
 
 import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
 
+
+/**
+ * <p>
+ * Used to configure a {@link NetworkSerializer} with details regarding file formats, 
+ * save locations, file opening conventions, and underlying serialization library,
+ * among other things.
+ * </p><p>
+ * <b>This file however provides defaults which may confidently be used for full featured
+ * use</b>, however more experienced users may want to tweak details (the first thing 
+ * being whether checkpoints add new files or delete previous files maintaining only 
+ * one file). For explanation of this see: {@link 
+ * </p>
+ * 
+ * @see NetworkTest
+ * @see JavaFstNetworkSerializationTest
+ * @see JavaKryoNetworkSerializationTest
+ * @see NetworkSerializer
+ * @see NetworkSerializerImpl
+ * 
+ * @author cogmission
+ */
 public class SerialConfig {
     public static final String CHECKPOINT_FORMAT_STRING = "YYYY-MM-dd_HH-mm-ss.SSS";
     
@@ -182,10 +222,23 @@ public class SerialConfig {
         return options;
     }
     
+    /**
+     * Returns the NIO File options used to determine how to create files,
+     * overwrite files etc.
+     * @return  the NIO File options
+     * @see StandardOpenOption
+     */
     public StandardOpenOption[] getCheckPointOpenOptions() {
         return checkPointOptions;
     }
     
+    /**
+     * Sets the NIO File options used to determine how to create files,
+     * overwrite files etc.
+     * 
+     * @param options   the NIO File options
+     * @see StandardOpenOption
+     */
     public void setCheckPointOpenOptions(StandardOpenOption[] options) {
         this.checkPointOptions = options;
     }

@@ -30,8 +30,6 @@ import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,7 +39,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
@@ -49,7 +46,6 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
-import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
@@ -1751,21 +1747,6 @@ public class NetworkTest {
                 .add(sensor)));
         
         return network;
-    }
-    
-    private String stringValue(Double valueIndex) {
-        String recordOut = "";
-        BigDecimal bdValue = new BigDecimal(valueIndex).setScale(3, RoundingMode.HALF_EVEN);
-        switch(bdValue.intValue()) {
-            case 1: recordOut = "Monday (1)";break;
-            case 2: recordOut = "Tuesday (2)";break;
-            case 3: recordOut = "Wednesday (3)";break;
-            case 4: recordOut = "Thursday (4)";break;
-            case 5: recordOut = "Friday (5)";break;
-            case 6: recordOut = "Saturday (6)";break;
-            case 0: recordOut = "Sunday (7)";break;
-        }
-        return recordOut;
     }
     
     private BiFunction<Inference, Integer, Integer> createDayOfWeekInferencePrintout() {
