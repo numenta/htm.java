@@ -923,6 +923,15 @@ public class JavaFstNetworkSerializationTest {
     ///////////////////////////
     //      Full Network     //
     ///////////////////////////
+    @Test
+    public void testHierarchicalNetwork() {
+        Network network = getLoadedHotGymHierarchy();
+        
+        SerialConfig config = new SerialConfig("testSerializeHierarchy", Scheme.FST);
+        NetworkSerializer<Network> serializer = Network.serializer(config, false);
+        ((NetworkSerializer<Network>)serializer).checkPoint(network);
+    }
+    
     /**
      * Test that a serialized/de-serialized {@link Network} can be run...
      */
@@ -1267,6 +1276,31 @@ public class JavaFstNetworkSerializationTest {
                 .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
+        
+        return network;
+    }
+    
+    private Network getLoadedHotGymHierarchy() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("3", p)
+                    .add(new SpatialPooler()))
+                .connect("2", "3"))
+            .add(Network.createRegion("r2")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
+            .connect("r1", "r2");
         
         return network;
     }

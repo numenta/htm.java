@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -283,6 +285,7 @@ public class Network implements Persistable {
     @SuppressWarnings("unchecked")
     @Override
     public Network postSerialize() {
+        regions.stream().forEach(r -> r.setNetwork(this));
         regions.stream().forEach(r -> r.postSerialize());
         return this;
     }
@@ -382,14 +385,61 @@ public class Network implements Persistable {
     }
     
     /**
-     * Loads a {@code Network} from the specified serialization path location and
+     * Loads a {@code Network} from the specified serialized file name and
      * returns it.
      *  
-     * @param pathToSerFile             the fully qualified path to the required serialization file.
-     *                                  the last save point.       
+     * @param serializedBytes             the name of the serialization file.
+     *    
      * @return  returns the specified Network
      */
-    public static Network load(String pathToSerFile) { return null; }
+    @SuppressWarnings("unchecked")
+    public static Network load(byte[] serializedBytes) throws IOException { 
+        LOGGER.debug("Network load() called ...");
+        
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        
+        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, serializedBytes);
+        
+        return network; 
+    }
+    
+    /**
+     * Loads a {@code Network} from the specified serialized file name and
+     * returns it.
+     *  
+     * @param fileName      the name of the serialization file.
+     *    
+     * @return  returns the specified Network
+     */
+    @SuppressWarnings("unchecked")
+    public static Network load(String fileName) throws IOException { 
+        LOGGER.debug("Network load() called ...");
+        
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        
+        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerializeFromFile(Network.class, fileName);
+        
+        return network; 
+    }
+    
+    /**
+     * Returns the name of the most recently checkpointed {@code Network} file.
+     * @return  the name of the most recently checkpointed {@code Network} file.
+     */
+    @SuppressWarnings("unchecked")
+    public String getLastCheckPointFileName() {
+        if(storedSerializer == null) {
+            Network.serializer(defaultConfig, true);
+        }
+        
+        String fileName = ((NetworkSerializer<Network>)storedSerializer).getLastCheckPointFileName();
+        int nameIdx = fileName.lastIndexOf(File.separator) + 1;
+        return nameIdx != -1 ? fileName.substring(nameIdx) : fileName;
+    }
     
     /**
      * Restarts this {@code Network}. The network will run from the previous save point
@@ -649,6 +699,19 @@ public class Network implements Persistable {
             this.tail = regions.get(0);
         }
         return this.tail;
+    }
+    
+    /**
+     * For internal Use: Returns a boolean flag indicating whether
+     * the specified {@link Layer} is the tail of the Network.
+     * @param l     the layer to test   
+     * @return  true if so, false if not
+     */
+    boolean isTail(Layer<?> l) {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.getTail() == l;
     }
 
     /**

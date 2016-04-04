@@ -22,7 +22,10 @@
 package org.numenta.nupic.network;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+
+import org.numenta.nupic.Persistable;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -94,6 +97,17 @@ public interface NetworkSerializer<T> {
      * @return  the deserialized object
      */
     public T deSerialize(Class<T> type, byte[] bytes);
+    /**
+     * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
+     * to deserialize the specified Class type using the specified file name (minus path for usual case,
+     * though you may specify a "sub" path by prepending a path to the filename).
+     * 
+     * @param type          the subclass of {@link Persistable} to be deserialized.
+     * @param fileName      the name of the file containing the serialized Persistable to be returned.
+     * @return  the serialized Persistable
+     * @throws IOException      if the file doesn't exist
+     */
+    public T deSerializeFromFile(Class<T> type, String fileName) throws IOException;
     /**
      * Returns the File object that the serialization scheme writes to.
      * @return

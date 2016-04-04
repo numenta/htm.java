@@ -295,7 +295,7 @@ public class Region implements Persistable {
             close();
         }
         
-        if(head.isHalted()) {
+        if(head.isHalted() || regionObservable == null) {
             regionObservable = head.observe();
         }
         

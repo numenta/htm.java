@@ -39,6 +39,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
@@ -295,7 +296,6 @@ public class NetworkTest {
             }
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
-                System.out.println("first listener: " + i.getRecordNum());
                 lines.add(i.getRecordNum() + "," + 
                     i.getClassifierInput().get("consumption").get("inputValue") + "," + i.getAnomalyScore());
                 
@@ -1528,7 +1528,6 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-//                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
                 if(inf.getRecordNum() == 500 || inf.getRecordNum() == 750) {
                     /////////////////////////////////
                     //      Network Store Here     //
@@ -1538,7 +1537,6 @@ public class NetworkTest {
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
                             assertTrue(bytes != null && bytes.length > 10);
-//                            System.out.println("GOT BACK CHECKPOINT BYTES!! " + bytes + ",  " + Network.serializer(null, false).getCheckPointFileName());
                         }
                     });
                 }else if(inf.getRecordNum() == 1000) {
@@ -1557,6 +1555,41 @@ public class NetworkTest {
         }
         
         assertTrue(network.getCheckPoint() != null);
+        
+
+        /////////////////////// Now test the checkpointed Network /////////////////////////
+        
+        //////////////////////////////////////
+        //       CheckPoint the Network     //
+        //////////////////////////////////////
+
+        Network checkPointNetwork = null;
+        try {
+            checkPointNetwork = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(checkPointNetwork);
+        }catch(Exception e) {
+            fail();
+        }
+
+        final Network cpn = checkPointNetwork;
+        checkPointNetwork.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                // Assert that the records continue from where the checkpoint left off.
+                assertEquals(752, inf.getRecordNum());
+                cpn.halt();
+            }
+        });
+        
+        checkPointNetwork.restart();
+        
+        try {
+            checkPointNetwork.lookup("r1").lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
     }
     
     @Test
@@ -1571,17 +1604,15 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-//                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
                 if(inf.getRecordNum() == 500 || inf.getRecordNum() == 750) {
                     /////////////////////////////////
-                    //      Network Store Here     //
+                    //    Network CheckPoint Here  //
                     /////////////////////////////////
                     network.checkPoint().subscribe(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
                             assertTrue(bytes != null && bytes.length > 10);
-//                            System.out.println("GOT BACK OBSERVABLE CHECKPOINT BYTES!! " + bytes + ",  " + Network.serializer(null, false).getCheckPointFileName());
                         }
                     });
                 }else if(inf.getRecordNum() == 999) {
@@ -1611,8 +1642,55 @@ public class NetworkTest {
         
         try {
             network.lookup("r1").lookup("1").getLayerThread().join(5000);
-//            System.out.println("------------------> buffer size = " + publisher.getBufferSize());
-//            System.out.println("NETWORK TEST RECORD NUM: " + network.getRecordNum());
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        /////////////////////// Now test the checkpointed Network /////////////////////////
+        
+        //////////////////////////////////////
+        //       CheckPoint the Network     //
+        //////////////////////////////////////
+
+        Network checkPointNetwork = null;
+        try {
+            checkPointNetwork = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(checkPointNetwork);
+        }catch(Exception e) {
+            fail();
+        }
+
+        final Network cpn = checkPointNetwork;
+        checkPointNetwork.observe().subscribe(new Observer<Inference>() { 
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override
+            public void onNext(Inference inf) {
+                // Assert that the records continue from where the checkpoint left off.
+                assertEquals(752, inf.getRecordNum());
+                cpn.halt();
+            }
+        });
+        
+        checkPointNetwork.restart();
+        
+        publisher = checkPointNetwork.getPublisher();
+        
+        numRecords = 0;
+        done = false;
+        while(true) {
+            for(String s : hotStream) {
+                publisher.onNext(s);
+                numRecords++;
+                if(numRecords == 25) {
+                    done = true; break;
+                }
+            }
+            if(done) break;
+        }
+        
+        try {
+            checkPointNetwork.lookup("r1").lookup("1").getLayerThread().join(2000);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -1643,23 +1721,109 @@ public class NetworkTest {
                 String[] sa = l.get(i).split("[\\s]*\\,[\\s]*");
                 m.put("timestamp", dateEncoder.parse(sa[0]));
                 m.put("consumption", Double.parseDouble(sa[1]));
-//                System.out.println(m);
                 network.computeImmediate(m);
-//                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
                 
                 if(j == 250 && i == 0) {
-                    network.checkPoint();
+                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                        @Override public void onCompleted() {}
+                        @Override public void onError(Throwable e) { e.printStackTrace(); }
+                        @Override public void onNext(byte[] bytes) {
+                            assertTrue(bytes != null && bytes.length > 10);
+                        }
+                    });
                 }
             }
             network.reset();
         }
         
+        //////////////////////////////////////
+        //       CheckPoint the Network     //
+        //////////////////////////////////////
+        
+        Network checkPointNetwork = null;
+        try {
+            checkPointNetwork = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(checkPointNetwork);
+        }catch(Exception e) {
+            fail();
+        }
+        
+        int postCheckPointProcessCount = 0;
+        
+        for(int j = 0;j < 1;j++) {
+            for(int i = 0;i < 20;i++) {
+                String[] sa = l.get(i).split("[\\s]*\\,[\\s]*");
+                m.put("timestamp", dateEncoder.parse(sa[0]));
+                m.put("consumption", Double.parseDouble(sa[1]));
+                Inference inf = checkPointNetwork.computeImmediate(m);
+                // Test that we being processing where the checkpoint left off...
+                assertTrue(inf.getRecordNum() > 5000);
+                ++postCheckPointProcessCount;
+            }
+            checkPointNetwork.reset();
+        }
+        
+        assertTrue(postCheckPointProcessCount > 19);
+    }
+    
+    @Ignore
+    public void testCheckPointHierarchies() {
+        Network network = getLoadedHotGymHierarchy();
+        
+        Region r1 = network.lookup("r1");
+        Region r2 = network.lookup("r2");
+        
+        network.observe().subscribe(new Subscriber<Inference>() {
+            boolean checkPointCalled = false;
+            boolean extraRound = false;
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                if(r1.getHead().getInference().getPredictiveCells().size() > 0 && 
+                    r2.getHead().getInference().getPredictiveCells().size() > 0) {
+                    if(!checkPointCalled) {
+                        network.checkPoint().subscribe(new Observer<byte[]>() { 
+                            @Override public void onCompleted() {}
+                            @Override public void onError(Throwable e) { e.printStackTrace(); }
+                            @Override public void onNext(byte[] bytes) {
+                                assertTrue(bytes != null && bytes.length > 10);
+                            }
+                        });
+                    }
+                    checkPointCalled = true;
+                   
+                }
+                if(checkPointCalled) {
+                    if(!extraRound) {
+                        extraRound = true;
+                    }else{
+                        network.halt();
+                    }
+                }
+            }
+        });
+        
+        network.start();
+        
+        try {
+            r2.lookup("1").getLayerThread().join();//5000);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
         
         
         //////////////////////////////////////
-        //        Store the Network         //
+        //       CheckPoint the Network     //
         //////////////////////////////////////
-        network.store();
+        
+        Network checkPointNetwork = null;
+        try {
+            checkPointNetwork = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(checkPointNetwork);
+        }catch(Exception e) {
+            fail();
+        }
     }
     
     
@@ -1745,6 +1909,31 @@ public class NetworkTest {
                 .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
+        
+        return network;
+    }
+    
+    private Network getLoadedHotGymHierarchy() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("3", p)
+                    .add(new SpatialPooler()))
+                .connect("2", "3"))
+            .add(Network.createRegion("r2")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(Sensor.create(FileSensor::create, SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
+            .connect("r1", "r2");
         
         return network;
     }

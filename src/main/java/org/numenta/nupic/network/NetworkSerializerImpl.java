@@ -33,7 +33,19 @@ import java.util.stream.Collectors;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Persistable;
+import org.numenta.nupic.algorithms.BitHistory;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.ProximalDendrite;
+import org.numenta.nupic.model.Segment;
+import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.util.Tuple;
 import org.nustaq.serialization.FSTConfiguration;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -103,6 +115,13 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         if(config.getScheme() == Scheme.KRYO) {
             this.kryo = createKryo();
         }
+        
+        fastSerialConfig.registerClass(
+            Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
+            ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
+            ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
+            ComputeCycle.class, FieldMetaType.class, Persistable.class
+        );
     }
     
     /**
@@ -325,6 +344,41 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     }
     
     /**
+     * Delegates to the underlying serialization scheme (specified by {@link Network#serializer(Scheme, boolean)}
+     * to deserialize the specified Class type using the specified file name (minus path for usual case,
+     * though you may specify a "sub" path by prepending a path to the filename).
+     * 
+     * @param type          the subclass of {@link Persistable} to be deserialized.
+     * @param fileName      the name of the file containing the serialized Persistable to be returned.
+     * @return  the serialized Persistable
+     * @throws IOException      if the file doesn't exist
+     */
+    @SuppressWarnings("unchecked")
+    public T deSerializeFromFile(Class<T> type, String fileName) throws IOException {
+        File serializedFile = testFileExists(fileName);
+        
+        byte[] bytes = null;
+        switch(scheme) {
+            case KRYO: // Fall through to FST Handler
+            case FST: {
+                if(bytes == null) {
+                    try {
+                        bytes = Files.readAllBytes(serializedFile.toPath());
+                    } catch(IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                
+                T retVal = (T)fastSerialConfig.asObject(bytes);
+                return retVal.postSerialize();
+            }
+            default: {
+                return null;
+            }
+        }
+    }
+    
+    /**
      * Returns the bytes of the last serialized object or null if there was a problem.
      * @return  the bytes of the last serialized object.
      */
@@ -435,7 +489,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     boolean ensurePathExists(SerialConfig config) throws IOException {
         String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
         File customDir = new File(path);
-        
+        // Make sure container directory exists
         customDir.mkdirs();
         
         serializedFile = new File(customDir.getAbsolutePath() + File.separator +  config.getFileName());
@@ -444,6 +498,20 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         }
         
         return true;
+    }
+    
+    File testFileExists(String fileName) throws IOException {
+        String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
+        File customDir = new File(path);
+        // Make sure container directory exists
+        customDir.mkdirs();
+        
+        File serializedFile = new File(customDir.getAbsolutePath() + File.separator +  fileName);
+        if(!serializedFile.exists()) {
+            throw new IOException("File \"" + fileName + "\" was not found.");
+        }
+        
+        return serializedFile;
     }
     
     /**

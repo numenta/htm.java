@@ -652,6 +652,9 @@ public class Layer<T> implements Persistable {
             userObservable = Observable.create(new Observable.OnSubscribe<Inference>() {
                 @Override
                 public void call(Subscriber<? super Inference> t1) {
+                    if(observers == null) {
+                        observers = new ArrayList<Observer<Inference>>();
+                    }
                     observers.add((Observer<Inference>)t1);
                 }
             });
@@ -1123,7 +1126,10 @@ public class Layer<T> implements Persistable {
 
     /**
      * Returns the {@link Thread} from which this {@code Layer} is currently
-     * outputting data.
+     * outputting data. 
+     * 
+     * <b> Warning: This method returns the current thread if the Layer's processing
+     * thread has never been started and therefore is null!</b>
      * 
      * @return
      */
@@ -1519,9 +1525,9 @@ public class Layer<T> implements Persistable {
         observableDispatch = null;
 
         // Handle global network sensor access.
-        if(sensor == null) {
+        if(sensor == null && parentNetwork != null && parentNetwork.isTail(this)) {
             sensor = parentNetwork == null ? null : parentNetwork.getSensor();
-        } else if(parentNetwork != null) {
+        } else if(parentNetwork != null && sensor != null) {
             parentNetwork.setSensor(sensor);
         }
     }
@@ -1627,6 +1633,27 @@ public class Layer<T> implements Persistable {
                 params.setParameterByKey(KEY.SP_PRIMER_DELAY, Math.max(0, skipCount - recordNum));
             }
         }
+        
+        sequenceStart = sequenceStart.filter(m -> {
+            if(!checkPointObservers.isEmpty() && parentNetwork != null) {
+                byte[] bytes = parentNetwork.internalCheckPoint();
+               
+                if(bytes != null) {
+                    LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
+                }else{
+                    LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
+                }
+                
+                for(Observer<byte[]> o : checkPointObservers) {
+                    o.onNext(bytes);
+                    o.onCompleted();
+                }
+                
+                checkPointObservers.clear();
+            }
+            
+            return true;
+        });
 
         return sequenceStart;
     }
@@ -1943,22 +1970,22 @@ public class Layer<T> implements Persistable {
                         return false;
                     }
                     
-                    if(!checkPointObservers.isEmpty() && parentNetwork != null) {
-                        byte[] bytes = parentNetwork.internalCheckPoint();
-                       
-                        if(bytes != null) {
-                            LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
-                        }else{
-                            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
-                        }
-                        
-                        for(Observer<byte[]> o : checkPointObservers) {
-                            o.onNext(bytes);
-                            o.onCompleted();
-                        }
-                        
-                        checkPointObservers.clear();
-                    }
+//                    if(!checkPointObservers.isEmpty() && parentNetwork != null) {
+//                        byte[] bytes = parentNetwork.internalCheckPoint();
+//                       
+//                        if(bytes != null) {
+//                            LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
+//                        }else{
+//                            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
+//                        }
+//                        
+//                        for(Observer<byte[]> o : checkPointObservers) {
+//                            o.onNext(bytes);
+//                            o.onCompleted();
+//                        }
+//                        
+//                        checkPointObservers.clear();
+//                    }
 
                     if(Thread.currentThread().isInterrupted()) {
                         notifyError(new RuntimeException("Unknown Exception while filtering input"));
@@ -1988,7 +2015,7 @@ public class Layer<T> implements Persistable {
     
     Observable<byte[]> getCheckPointer() {
         if(checkPointer == null) {
-            return Observable.create(new Observable.OnSubscribe<byte[]>() {
+            checkPointer = Observable.create(new Observable.OnSubscribe<byte[]>() {
                 @SuppressWarnings("unchecked")
                 @Override public void call(Subscriber<? super byte[]> t) {
                     checkPointObservers.add((Observer<byte[]>)t);
