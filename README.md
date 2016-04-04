@@ -75,7 +75,7 @@ By working closely with Numenta and receiving their enthusiastic support and gui
 ***
 ## How Do I Get The Code? 
 
-* **(A)** Instructions for developers who would like to contribute code back to our community.  (Fork)  
+* **(A)** Instructions for developers who would like to contribute code back to the community.  (Fork)  
 * **(B)** Instructions for those who would like to "fiddle around" with the code in thier own github repo.  (Clone)  
 * **(C)** How to download Zipped or Tar'd Tagged Releases  (Download Zip or Tar)  
 
