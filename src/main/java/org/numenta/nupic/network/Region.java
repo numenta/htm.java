@@ -94,7 +94,7 @@ public class Region implements Persistable {
     byte flagAccumulator = 0;
     /** 
      * Indicates whether algorithms are repeated, if true then no, if false then yes
-     * (for {@link Inference} sharing determination) see {@link Region#connect(Layer, Layer)} 
+     * (for {@link Inference} sharing determination) see {@link Region#configureConnection(Layer, Layer)} 
      * and {@link Layer#getMask()}
      */
     boolean layersDistinct = true;
@@ -136,8 +136,18 @@ public class Region implements Persistable {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Region postSerialize() {
-        layers.values().stream().forEach(l -> l.postSerialize());
+    public Region postDeSerialize() {
+        layers.values().stream().forEach(l -> l.postDeSerialize());
+        
+        // Connect Layer Observable chains (which are transient so we must 
+        // rebuild them and their subscribers)
+        if(isMultiLayer()) {
+            Layer<Inference> curr = (Layer<Inference>)head;
+            Layer<Inference> prev = curr.getPrevious();
+            do {
+                connect(curr, prev); 
+            } while((curr = prev) != null && (prev = prev.getPrevious()) != null);
+        }
         return this;
     }
 
@@ -157,6 +167,16 @@ public class Region implements Persistable {
                 network.setEncoder(l.getEncoder());
             }
         }
+    }
+   
+    /**
+     * Returns a flag indicating whether this {@code Region} contain multiple
+     * {@link Layer}s.
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean isMultiLayer() {
+        return layers.size() > 1;
     }
     
     /**
@@ -519,6 +539,7 @@ public class Region implements Persistable {
         // Set the sink's pointer to its previous Layer --> (source : going downward)
         in.previous(out);
         // Connect out to in
+        configureConnection(in, out);
         connect(in, out);
         
         return this;
@@ -578,15 +599,15 @@ public class Region implements Persistable {
     }
     
     /**
-     * Called internally to "connect" two {@link Layer} {@link Observable}s
-     * taking care of other connection details such as passing the inference
-     * up the chain and any possible encoder.
+     * Called internally to configure the connection between two {@link Layer} 
+     * {@link Observable}s taking care of other connection details such as passing
+     * the inference up the chain and any possible encoder.
      * 
      * @param in         the sink end of the connection between two layers
      * @param out        the source end of the connection between two layers
      * @throws IllegalStateException if Region is already closed
      */
-    <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
+    <I extends Layer<Inference>, O extends Layer<Inference>> void configureConnection(I in, O out) {
         if(assemblyClosed) {
             throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
         }
@@ -606,7 +627,18 @@ public class Region implements Persistable {
         
         sources.add(out);
         sinks.add(in);
-        
+    }
+    
+    /**
+     * Called internally to actually connect two {@link Layer} 
+     * {@link Observable}s taking care of other connection details such as passing
+     * the inference up the chain and any possible encoder.
+     * 
+     * @param in         the sink end of the connection between two layers
+     * @param out        the source end of the connection between two layers
+     * @throws IllegalStateException if Region is already closed 
+     */
+    <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
         out.subscribe(new Subscriber<Inference>() {
             ManualInput localInf = new ManualInput();
             

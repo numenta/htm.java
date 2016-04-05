@@ -335,7 +335,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
                 }
                 
                 T retVal = (T)fastSerialConfig.asObject(bytes);
-                return retVal.postSerialize();
+                return retVal.postDeSerialize();
             }
             default: {
                 return null;
@@ -370,7 +370,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
                 }
                 
                 T retVal = (T)fastSerialConfig.asObject(bytes);
-                return retVal.postSerialize();
+                return retVal.postDeSerialize();
             }
             default: {
                 return null;

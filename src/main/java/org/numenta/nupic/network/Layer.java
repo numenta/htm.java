@@ -318,7 +318,7 @@ public class Layer<T> implements Persistable {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Layer<T> postSerialize() {
+    public Layer<T> postDeSerialize() {
         recreateSensors();
         
         FunctionFactory old = factory;
@@ -330,7 +330,7 @@ public class Layer<T> implements Persistable {
         if(sensor != null) {
             sensor.setLocalParameters(params);
             // Initialize encoders and recreate encoding index mapping.
-            sensor.postSerialize();
+            sensor.postDeSerialize();
         }else{
             // Dispatch functions (Observables) are transient & non-serializable so they must be rebuilt.
             observableDispatch = createDispatchMap();
@@ -339,6 +339,8 @@ public class Layer<T> implements Persistable {
         }
         // Flag which lets us know to skip or do certain setups during initialization.
         isPostSerialized = true;
+        
+        observers = new ArrayList<Observer<Inference>>();
         
         return this;
     }
@@ -681,6 +683,9 @@ public class Layer<T> implements Persistable {
             throw new IllegalArgumentException("Subscriber cannot be null.");
         }
 
+        if(subscribers == null) {
+            subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
+        }
         subscribers.add(subscriber);
         
         return createSubscription(subscriber);
@@ -1970,23 +1975,6 @@ public class Layer<T> implements Persistable {
                         return false;
                     }
                     
-//                    if(!checkPointObservers.isEmpty() && parentNetwork != null) {
-//                        byte[] bytes = parentNetwork.internalCheckPoint();
-//                       
-//                        if(bytes != null) {
-//                            LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
-//                        }else{
-//                            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
-//                        }
-//                        
-//                        for(Observer<byte[]> o : checkPointObservers) {
-//                            o.onNext(bytes);
-//                            o.onCompleted();
-//                        }
-//                        
-//                        checkPointObservers.clear();
-//                    }
-
                     if(Thread.currentThread().isInterrupted()) {
                         notifyError(new RuntimeException("Unknown Exception while filtering input"));
                     }
@@ -2013,6 +2001,12 @@ public class Layer<T> implements Persistable {
         return getCheckPointer();
     }
     
+    /**
+     * Returns the pre-built subscribe function used to add subscribers (callers of 
+     * {@link #checkPoint()}) to the check point observer notifications.
+     *  
+     * @return  the internal Observable used for post check point notifications.
+     */
     Observable<byte[]> getCheckPointer() {
         if(checkPointer == null) {
             checkPointer = Observable.create(new Observable.OnSubscribe<byte[]>() {

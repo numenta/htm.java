@@ -1766,39 +1766,26 @@ public class NetworkTest {
         assertTrue(postCheckPointProcessCount > 19);
     }
     
-    @Ignore
+    @Test
     public void testCheckPointHierarchies() {
-        Network network = getLoadedHotGymHierarchy();
-        
-        Region r1 = network.lookup("r1");
-        Region r2 = network.lookup("r2");
+        Network network = getLoadedDayOfWeekStreamHierarchy();
         
         network.observe().subscribe(new Subscriber<Inference>() {
-            boolean checkPointCalled = false;
-            boolean extraRound = false;
+            int cycles = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
-                if(r1.getHead().getInference().getPredictiveCells().size() > 0 && 
-                    r2.getHead().getInference().getPredictiveCells().size() > 0) {
-                    if(!checkPointCalled) {
-                        network.checkPoint().subscribe(new Observer<byte[]>() { 
-                            @Override public void onCompleted() {}
-                            @Override public void onError(Throwable e) { e.printStackTrace(); }
-                            @Override public void onNext(byte[] bytes) {
-                                assertTrue(bytes != null && bytes.length > 10);
-                            }
-                        });
-                    }
-                    checkPointCalled = true;
-                   
-                }
-                if(checkPointCalled) {
-                    if(!extraRound) {
-                        extraRound = true;
-                    }else{
-                        network.halt();
-                    }
+                if(cycles++ == 10) {
+                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                        @Override public void onCompleted() {}
+                        @Override public void onError(Throwable e) { e.printStackTrace(); }
+                        @Override public void onNext(byte[] bytes) {
+                            assertEquals(10, i.getRecordNum());
+                            assertTrue(bytes != null && bytes.length > 10);
+                        }
+                    });
+                }else if(cycles == 12) {
+                    network.halt();
                 }
             }
         });
@@ -1806,7 +1793,7 @@ public class NetworkTest {
         network.start();
         
         try {
-            r2.lookup("1").getLayerThread().join();//5000);
+            network.lookup("r2").lookup("1").getLayerThread().join();
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -1817,12 +1804,132 @@ public class NetworkTest {
         //       CheckPoint the Network     //
         //////////////////////////////////////
         
-        Network checkPointNetwork = null;
+        Network cpn = null;
         try {
-            checkPointNetwork = Network.load(network.getLastCheckPointFileName());
-            assertNotNull(checkPointNetwork);
+            cpn = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(cpn);
         }catch(Exception e) {
+            e.printStackTrace();
             fail();
+        }
+        
+        final Network checkPointNetwork  = cpn;
+        checkPointNetwork.observe().subscribe(new Subscriber<Inference>() {
+            int cycles = 0;
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                if(cycles++ == 10) {
+                    assertEquals(21, i.getRecordNum());
+                    checkPointNetwork.halt();
+                }
+            }
+        });
+        
+        checkPointNetwork.start();
+        
+        try {
+            checkPointNetwork.lookup("r2").lookup("1").getLayerThread().join();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @Test
+    public void testCheckPointHierarchiesDOW() {
+        Network network = getLoadedDayOfWeekHierarchy();
+        
+        network.observe().subscribe(new Subscriber<Inference>() {
+            int cycles = 0;
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                if(cycles == 11) network.halt();
+                
+                if(cycles++ == 10) {
+                    assertEquals(10, i.getRecordNum());
+                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                        @Override public void onCompleted() {}
+                        @Override public void onError(Throwable e) { e.printStackTrace(); }
+                        @Override public void onNext(byte[] bytes) {
+                            assertTrue(bytes != null && bytes.length > 10);
+                        }
+                    });
+                }
+            }
+        });
+        
+        network.start();
+        
+        Publisher publisher = network.getPublisher();
+        
+        int cycleCount = 0;
+        for(;cycleCount < 13;cycleCount++) {
+            for(double j = 0;j < 7;j++) {
+                publisher.onNext("" + j);
+            }
+            
+            network.reset();
+            
+            if(cycleCount == 12) {
+                break;
+            }
+        }
+        
+        try {
+            network.lookup("r2").lookup("1").getLayerThread().join(3000);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        
+        ///////////////// CheckPoint Network ////////////////
+        
+        Network cpn = null;
+        try {
+            cpn = Network.load(network.getLastCheckPointFileName());
+            assertNotNull(cpn);
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        
+        final Network checkPointNetwork  = cpn;
+        checkPointNetwork.observe().subscribe(new Subscriber<Inference>() {
+            int cycles = 0;
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onNext(Inference i) {
+                if(cycles == 11) network.halt();
+                
+                if(cycles++ == 10) {
+                    assertEquals(21, i.getRecordNum());
+                    checkPointNetwork.halt();
+                }
+            }
+        });
+        
+        checkPointNetwork.restart();
+        
+        publisher = checkPointNetwork.getPublisher();
+        
+        cycleCount = 0;
+        for(;cycleCount < 13;cycleCount++) {
+            for(double j = 0;j < 7;j++) {
+                publisher.onNext("" + j);
+            }
+            
+            checkPointNetwork.reset();
+            
+            if(cycleCount == 12) {
+                break;
+            }
+        }
+        
+        try {
+            checkPointNetwork.lookup("r2").lookup("1").getLayerThread().join(3000);
+        }catch(Exception e) {
+            e.printStackTrace();
         }
     }
     
@@ -1913,18 +2020,20 @@ public class NetworkTest {
         return network;
     }
     
-    private Network getLoadedHotGymHierarchy() {
+    private Network getLoadedDayOfWeekStreamHierarchy() {
         Parameters p = NetworkTestHarness.getParameters();
-        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
         
+        Layer<?> l2 = null;
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
-                .add(Network.createLayer("2", p)
+                .add(l2 = Network.createLayer("2", p)
                     .add(Anomaly.create())
                     .add(new TemporalMemory()))
                 .add(Network.createLayer("3", p)
-                    .add(new SpatialPooler()))
+                    .add(new SpatialPooler())
+                    .using(l2.getConnections()))
                 .connect("2", "3"))
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
@@ -1932,7 +2041,40 @@ public class NetworkTest {
                     .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
-                        Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
+                        Keys::path, "", ResourceLocator.path("days-of-week-stream.csv"))))))
+            .connect("r1", "r2");
+        
+        return network;
+    }
+    
+    private Network getLoadedDayOfWeekHierarchy() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        
+        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+                PublisherSupplier.builder()
+                    .addHeader("dayOfWeek")
+                    .addHeader("number")
+                    .addHeader("B").build() }));
+        
+        Layer<?> l2 = null;
+        Network network = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(l2 = Network.createLayer("2", p)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory()))
+                .add(Network.createLayer("3", p)
+                    .add(new SpatialPooler())
+                    .using(l2.getConnections()))
+                .connect("2", "3"))
+            .add(Network.createRegion("r2")
+                .add(Network.createLayer("1", p)
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
+                    .add(new TemporalMemory())
+                    .add(new SpatialPooler())
+                    .add(sensor)))
             .connect("r1", "r2");
         
         return network;

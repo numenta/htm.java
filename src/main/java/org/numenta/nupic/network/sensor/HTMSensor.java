@@ -143,7 +143,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public HTMSensor<?> postSerialize() {
+    public HTMSensor<?> postDeSerialize() {
         initEncoder(localParameters);
         makeIndexEncoderMap();
         return this;

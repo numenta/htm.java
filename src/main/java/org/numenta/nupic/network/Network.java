@@ -167,7 +167,7 @@ public class Network implements Persistable {
 
     public enum Mode { MANUAL, AUTO, REACTIVE };
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Network.class);
 
     private String name;
     private Parameters parameters;
@@ -284,9 +284,20 @@ public class Network implements Persistable {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Network postSerialize() {
+    public Network postDeSerialize() {
         regions.stream().forEach(r -> r.setNetwork(this));
-        regions.stream().forEach(r -> r.postSerialize());
+        regions.stream().forEach(r -> r.postDeSerialize());
+        
+        // Connect Layer Observable chains (which are transient so we must 
+        // rebuild them and their subscribers)
+        if(isMultiRegion()) {
+            Region curr = head;
+            Region nxt = curr.getUpstreamRegion();
+            do {
+                curr.connect(nxt);
+            } while((curr = nxt) != null && (nxt = nxt.getUpstreamRegion()) != null);
+        }
+        
         return this;
     }
     
@@ -380,6 +391,8 @@ public class Network implements Persistable {
         }
         
         Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, null);
+        
+        LOGGER.debug("Network load() returning network: \"" + (network == null ? null : network.getName()) + "\"");
         
         return network; 
     }
@@ -524,6 +537,16 @@ public class Network implements Persistable {
                 "please see Network.getPublisherSupplier()");
         }
         return publisher;
+    }
+    
+    /**
+     * Returns a flag indicating whether this {@code Network} contain multiple
+     * {@link Region}s.
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean isMultiRegion() {
+        return regions.size() > 1;
     }
     
     /**
