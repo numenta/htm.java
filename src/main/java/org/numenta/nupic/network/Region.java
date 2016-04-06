@@ -377,14 +377,14 @@ public class Region implements Persistable {
     /**
      * 
      */
-    Observable<byte[]> checkPoint() {
+    CheckPointer<byte[]> checkPointer() {
         LOGGER.debug("Region [" + getName() + "] CheckPoint called at: " + (new DateTime()));
         if(tail != null) {
-            return tail.checkPoint();
+            return tail.checkPointer();
             
         }else{
             close();
-            return tail.checkPoint();
+            return tail.checkPointer();
         }
     }
     

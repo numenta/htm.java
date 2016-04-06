@@ -37,8 +37,6 @@ import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
 
-import com.cedarsoftware.util.DeepEquals;
-
 import rx.functions.Func1;
 
 /**

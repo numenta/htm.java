@@ -162,7 +162,7 @@ import rx.Subscriber;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public class Network implements Persistable {
+public class Network implements PersistenceAPI {
     private static final long serialVersionUID = 1L;
 
     public enum Mode { MANUAL, AUTO, REACTIVE };
@@ -184,12 +184,15 @@ public class Network implements Persistable {
     private List<Region> regions = new ArrayList<>();
     
     /** Stored by the {@code Network} unless overwritten by using flag @see {@link #serializer(Scheme)} */
-    private static NetworkSerializerImpl<?> storedSerializer;
+    private volatile static NetworkSerializerImpl<?> storedSerializer;
     /** The stored configuration delineating output file and scheme etc. */
     private static SerialConfig defaultConfig = new SerialConfig(Scheme.FST);
     
-
-
+    boolean shouldDoHalt = true;
+    
+    
+    Network() {}
+    
     /**
      * Creates a new {@link Network}
      * 
@@ -310,6 +313,7 @@ public class Network implements Persistable {
      * 
      * @return the serialized Network in the format specified (byte[] is the default).
      */
+    @Override
     public <T> T store() {  
         LOGGER.debug("Network [" + getName() + "] called store() at: " + (new DateTime()));
         
@@ -337,7 +341,14 @@ public class Network implements Persistable {
         return (T)((NetworkSerializer<Network>)storedSerializer).serialize(this);
     }
     
-    boolean shouldDoHalt = true;
+    /**
+     * INTERNAL METHOD: DO NOT CALL
+     * 
+     * Called from {@link Layer} to execute a check point from within the scope of 
+     * this {@link Network}
+     * 
+     * @return  the serialized {@code Network} in byte array form.
+     */
     @SuppressWarnings("unchecked")
     byte[] internalCheckPoint() {
         if(storedSerializer == null) {
@@ -353,6 +364,7 @@ public class Network implements Persistable {
      * Returns the bytes of the last checkpointed {@code Network}
      * @return      the bytes of the last checkpointed {@code Network}    
      */
+    @Override
     public byte[] getCheckPoint() {
         if(storedSerializer != null) {
             return storedSerializer.getLastBytes();
@@ -365,13 +377,14 @@ public class Network implements Persistable {
      * Stores the state of this {@code Network} while keeping the Network up and running.
      * The Network will be stored at the pre-configured location (in binary form only, not JSON).
      */
-    public Observable<byte[]> checkPoint() {
+    @Override
+    public CheckPointer<byte[]> checkPointer() {
         LOGGER.debug("Network [" + getName() + "] called checkPoint() at: " + (new DateTime()));
         
         if(regions.size() == 1) {
             this.tail = regions.get(0);
         }
-        return tail.checkPoint();
+        return tail.checkPointer();
     }
     
     /**
@@ -406,7 +419,7 @@ public class Network implements Persistable {
      * @return  returns the specified Network
      */
     @SuppressWarnings("unchecked")
-    public static Network load(byte[] serializedBytes) throws IOException { 
+    public static Network load(byte[] serializedBytes) { 
         LOGGER.debug("Network load() called ...");
         
         if(storedSerializer == null) {
@@ -444,12 +457,17 @@ public class Network implements Persistable {
      * @return  the name of the most recently checkpointed {@code Network} file.
      */
     @SuppressWarnings("unchecked")
+    @Override
     public String getLastCheckPointFileName() {
         if(storedSerializer == null) {
             Network.serializer(defaultConfig, true);
         }
         
         String fileName = ((NetworkSerializer<Network>)storedSerializer).getLastCheckPointFileName();
+        if(fileName == null) {
+            return null;
+        }
+        
         int nameIdx = fileName.lastIndexOf(File.separator) + 1;
         return nameIdx != -1 ? fileName.substring(nameIdx) : fileName;
     }
@@ -460,6 +478,7 @@ public class Network implements Persistable {
      * 
      * @see {@link #restart(boolean)} for a start at "saved-index" behavior explanation. 
      */
+    @Override
     public void restart() {
         restart(true);
     }
@@ -474,6 +493,7 @@ public class Network implements Persistable {
      * @param startAtIndex  flag indicating whether to start this {@code Network} from
      *                      its previous save point.
      */
+    @Override
     public void restart(boolean startAtIndex) {
         if(regions.size() < 1) {
             throw new IllegalStateException("Nothing to start - 0 regions");
@@ -531,6 +551,7 @@ public class Network implements Persistable {
      * @return      the new Publisher created after deserialization or halt.
      * @see #getPublisherSupplier()
      */
+    @Override
     public Publisher getPublisher() {
         if(publisher == null) {
             throw new NullPointerException("A Supplier must be built first. " +
@@ -615,16 +636,6 @@ public class Network implements Persistable {
         return tail.isHalted();
     }
 
-    /**
-     * Pauses all underlying {@code Network} nodes, maintaining any 
-     * connections (leaving them open until they possibly time out).
-     * Does nothing to prevent any sensor connections from timing out
-     * on their own. 
-     */
-    public void pause() {
-        throw new UnsupportedOperationException("Pausing is not (yet) supported.");
-    }
-    
     /**
      * Returns the index of the last record processed.
      * 

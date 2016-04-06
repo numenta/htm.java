@@ -239,8 +239,6 @@ public class DateEncoderTest {
         //DateTime d = new DateTime(1988,5,29,20,0);
         DateTime d = new DateTime(1988,5,29,20,0);
 
-        System.out.println("DateEncoderTest.testWeekend(): e.encode(d)  = " + Arrays.toString(e.encode(d)));
-        System.out.println("DateEncoderTest.testWeekend(): e2.encode(d) = " + Arrays.toString(e2.encode(d)));
         assertArrayEquals(e.encode(d), e2.encode(d));
 
         for (int i = 0; i < 300; i++) {

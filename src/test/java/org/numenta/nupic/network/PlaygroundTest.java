@@ -26,7 +26,7 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 
-import org.junit.Test;
+import org.junit.Ignore;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.SDR;
@@ -57,7 +57,7 @@ public class PlaygroundTest {
     
     private BiFunction<Inference, Integer, Integer> dayOfWeekPrintout = createDayOfWeekInferencePrintout();
 
-    @Test
+    @Ignore
     public void testPlayground() {
         final int NUM_CYCLES = 600;
         final int INPUT_GROUP_COUNT = 7; // Days of Week

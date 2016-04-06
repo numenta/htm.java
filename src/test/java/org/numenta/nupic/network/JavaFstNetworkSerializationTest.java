@@ -1003,7 +1003,7 @@ public class JavaFstNetworkSerializationTest {
         
         Network network = getLoadedHotGymNetwork();
         
-        SerialConfig config = new SerialConfig("testSerializedUnStartedNetworkRuns_DateEncoder", Scheme.FST);
+        SerialConfig config = new SerialConfig("testSerializedUnStartedNetworkRuns_DateEncoderFST", Scheme.FST);
         NetworkSerializer<Network> serializer = Network.serializer(config, false);
         serializer.serialize(network);
         
@@ -1017,7 +1017,9 @@ public class JavaFstNetworkSerializationTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-//                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                if(inf.getRecordNum() > 1103 && inf.getRecordNum() < 1110) {
+                    System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
+                }
                 if(inf.getRecordNum() == 1107) {
                     assertEquals(0.375, inf.getAnomalyScore(), 0.001);
                 }
@@ -1073,9 +1075,7 @@ public class JavaFstNetworkSerializationTest {
         Network serializedNetwork2 = serializer.deSerialize((Class<Network>)network.getClass(), null); // (null=get from file)
         
         FastRandom r1 = (FastRandom)serializedNetwork1.lookup("r1").lookup("1").getConnections().getRandom();
-//        System.out.println("First SEED = " + r1.getSeed());
         FastRandom r2 = (FastRandom)serializedNetwork2.lookup("r1").lookup("1").getConnections().getRandom();
-//        System.out.println("First SEED = " + r2.getSeed());
         // Assert both starting seeds are equal
         assertEquals(r1.getSeed(), r2.getSeed());
         
@@ -1094,9 +1094,6 @@ public class JavaFstNetworkSerializationTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                System.out.println("R1 SEED 2 = " + r1.getSeed());
-
                 barrierSeeds[0] = r1.getSeed();
                 try { barrier.await(); }catch(Exception b) { b.printStackTrace(); System.exit(1);}
             }
@@ -1106,9 +1103,6 @@ public class JavaFstNetworkSerializationTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
-                System.out.println(inf.getRecordNum() + ":  " + Arrays.toString((int[])inf.getLayerInput()) + ", " + inf.getAnomalyScore());
-                System.out.println("R2 SEED 2 = " + r1.getSeed());
-
                 barrierSeeds[1] = r2.getSeed();
                 try { barrier.await(); }catch(Exception b) { b.printStackTrace(); }
             }

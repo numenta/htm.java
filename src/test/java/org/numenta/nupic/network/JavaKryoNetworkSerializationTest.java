@@ -3,6 +3,7 @@ package org.numenta.nupic.network;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_DIR;
 
@@ -92,14 +93,20 @@ public class JavaKryoNetworkSerializationTest {
         assertTrue(serializer == serializer2);
     }
     
+    @SuppressWarnings("rawtypes")
     @Test
     public void testEnsurePathExists() {
-        SerialConfig config = new SerialConfig(Scheme.KRYO);
-        NetworkSerializer<?> serializer = Network.serializer(config, false);
+        SerialConfig config = new SerialConfig("testEnsurePathExistsKRYO", Scheme.KRYO);
+        NetworkSerializer<?> serializer = Network.serializer(config, true);
         
-        File f1 = new File(System.getProperty("user.home") + File.separator + SERIAL_DIR + File.separator + SERIAL_FILE_NAME);
+        try {
+            ((NetworkSerializerImpl)serializer).ensurePathExists(config);
+        }catch(Exception e) { fail(); }
+        
+        File f1 = new File(System.getProperty("user.home") + File.separator + SERIAL_DIR + File.separator + "testEnsurePathExistsKRYO");
         assertTrue(f1.exists());
         File f2 = serializer.getSerializedFile();
+        try { Thread.sleep(2000); } catch(Exception e) {e.printStackTrace();}
         assertEquals(f1.getAbsolutePath(), f2.getAbsolutePath());
     }
     
@@ -356,7 +363,6 @@ public class JavaKryoNetworkSerializationTest {
     private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
-            System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }catch(AssertionError ae) {
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }

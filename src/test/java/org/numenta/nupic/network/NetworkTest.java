@@ -39,7 +39,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
@@ -1532,7 +1531,7 @@ public class NetworkTest {
                     /////////////////////////////////
                     //      Network Store Here     //
                     /////////////////////////////////
-                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                    network.checkPointer().checkPoint(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
@@ -1568,6 +1567,7 @@ public class NetworkTest {
             checkPointNetwork = Network.load(network.getLastCheckPointFileName());
             assertNotNull(checkPointNetwork);
         }catch(Exception e) {
+            e.printStackTrace();
             fail();
         }
 
@@ -1608,7 +1608,7 @@ public class NetworkTest {
                     /////////////////////////////////
                     //    Network CheckPoint Here  //
                     /////////////////////////////////
-                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                    network.checkPointer().checkPoint(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
@@ -1657,6 +1657,7 @@ public class NetworkTest {
             checkPointNetwork = Network.load(network.getLastCheckPointFileName());
             assertNotNull(checkPointNetwork);
         }catch(Exception e) {
+            e.printStackTrace();
             fail();
         }
 
@@ -1724,7 +1725,7 @@ public class NetworkTest {
                 network.computeImmediate(m);
                 
                 if(j == 250 && i == 0) {
-                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                    network.checkPointer().checkPoint(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
@@ -1776,7 +1777,10 @@ public class NetworkTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 if(cycles++ == 10) {
-                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                  ////////////////////////
+                  //   CheckPoint Here  //
+                  ////////////////////////
+                    network.checkPointer().checkPoint(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
@@ -1838,6 +1842,7 @@ public class NetworkTest {
     @Test
     public void testCheckPointHierarchiesDOW() {
         Network network = getLoadedDayOfWeekHierarchy();
+        CheckPointer<byte[]> checkPointer = network.checkPointer();
         
         network.observe().subscribe(new Subscriber<Inference>() {
             int cycles = 0;
@@ -1848,7 +1853,10 @@ public class NetworkTest {
                 
                 if(cycles++ == 10) {
                     assertEquals(10, i.getRecordNum());
-                    network.checkPoint().subscribe(new Observer<byte[]>() { 
+                    ////////////////////////
+                    //   CheckPoint Here  //
+                    ////////////////////////
+                    checkPointer.checkPoint(new Observer<byte[]>() { 
                         @Override public void onCompleted() {}
                         @Override public void onError(Throwable e) { e.printStackTrace(); }
                         @Override public void onNext(byte[] bytes) {
@@ -1877,7 +1885,7 @@ public class NetworkTest {
         }
         
         try {
-            network.lookup("r2").lookup("1").getLayerThread().join(3000);
+            network.lookup("r2").lookup("1").getLayerThread().join(1000);
         }catch(Exception e) {
             e.printStackTrace();
         }

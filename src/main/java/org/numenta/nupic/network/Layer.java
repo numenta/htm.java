@@ -226,7 +226,7 @@ public class Layer<T> implements Persistable {
     private Layer<Inference> previous;
 
     private transient List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private transient Observable<byte[]> checkPointer;
+    private transient CheckPointer<byte[]> checkPointer;
     private transient List<Observer<byte[]>> checkPointObservers = new ArrayList<>();
     
     
@@ -944,7 +944,6 @@ public class Layer<T> implements Persistable {
         Object supplier = null;
         if(sensor != null && (supplier = sensor.getSensorParams().get("ONSUB")) != null) {
             if(supplier instanceof PublisherSupplier) {
-                System.out.println("SUPPLIER: CLEARING SUPPLIED PUBLISHER INSTANCE");
                 ((PublisherSupplier)supplier).clearSuppliedInstance();
             }
         }
@@ -1642,9 +1641,10 @@ public class Layer<T> implements Persistable {
         sequenceStart = sequenceStart.filter(m -> {
             if(!checkPointObservers.isEmpty() && parentNetwork != null) {
                 byte[] bytes = parentNetwork.internalCheckPoint();
-               
+                
                 if(bytes != null) {
-                    LOGGER.debug("Layer [" + getName() + "] checkPointed at: " + (new DateTime()));
+                    LOGGER.debug("Layer [" + getName() + "] checkPointed file: " + 
+                        Network.serializer(null, false).getLastCheckPointFileName() + ",  hc = " + Network.serializer(null, false).hashCode());
                 }else{
                     LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
                 }
@@ -1995,30 +1995,56 @@ public class Layer<T> implements Persistable {
     }
     
     /**
-     * Signals the Layer thread to check point the current Network state to disk.
-     */
-    Observable<byte[]> checkPoint() {
-        return getCheckPointer();
-    }
-    
-    /**
      * Returns the pre-built subscribe function used to add subscribers (callers of 
-     * {@link #checkPoint()}) to the check point observer notifications.
+     * {@link #checkPointer()}) to the check point observer notifications.
      *  
      * @return  the internal Observable used for post check point notifications.
      */
-    Observable<byte[]> getCheckPointer() {
+    CheckPointer<byte[]> checkPointer() {
         if(checkPointer == null) {
-            checkPointer = Observable.create(new Observable.OnSubscribe<byte[]>() {
-                @SuppressWarnings("unchecked")
-                @Override public void call(Subscriber<? super byte[]> t) {
-                    checkPointObservers.add((Observer<byte[]>)t);
-                }
-            });
+            checkPointer = new CheckPointerImpl<byte[]>(Layer.this);
         }
         return checkPointer;
     }
-
+    
+    
+    //////////////////////////////////////////////////////////////
+    //   Inner Class Definition for CheckPointer (Observable)   //
+    //////////////////////////////////////////////////////////////
+    /**
+     * Implementation of the CheckPointer interface which serves to checkpoint
+     * and register a listener at the same time. The {@link rx.Observer} will be
+     * notified with the byte array of the {@link Network} being serialized.
+     * 
+     * @param <T>       {@link rx.Observer} 
+     */
+    public static class CheckPointerImpl<T> extends Observable<T> implements CheckPointer<T> {
+        private CheckPointerImpl(Layer<?> l) {
+            this(new Observable.OnSubscribe<T>() {
+                @SuppressWarnings("unchecked")
+                @Override public void call(Subscriber<? super T> t) {
+                    l.checkPointObservers.add((Observer<byte[]>)t);
+                }
+            });
+        }
+        
+        /**
+         * Constructs this {@code CheckPointerImpl}
+         * @param f     a subscriber function
+         */
+        protected CheckPointerImpl(rx.Observable.OnSubscribe<T> f) {
+            super(f);
+        }
+        
+        /**
+         * Queues
+         */
+        public Subscription checkPoint(Observer<? super T> t) {
+            return super.subscribe(t);
+        }
+    }
+        
+    
     //////////////////////////////////////////////////////////////
     //        Inner Class Definition Transformer Example        //
     //////////////////////////////////////////////////////////////
@@ -2314,7 +2340,7 @@ public class Layer<T> implements Persistable {
             }
         }
     }
-        
+    
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -28,6 +28,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
@@ -91,14 +94,20 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     private File serializedFile;
     
     /** Stores the bytes of the last serialized object or null if there was a problem */
-    private byte[] lastBytes;
+    private static AtomicReference<byte[]> lastBytes = new AtomicReference<byte[]>(null);
     
     private DateTimeFormatter checkPointFormatter = CHECKPOINT_TIMESTAMP_FORMAT;
     
     private String checkPointFormatString;
     
-    private String lastCheckPointFileName;
+    /** 
+     * All instances in this classloader will share the same atomic reference to the last checkpoint file name holder
+     * which is perfectly fine.
+     */
+    private static AtomicReference<String> lastCheckPointFileName = new AtomicReference<String>(null);
     
+    private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private Lock writeMonitor = rwl.writeLock();
     
     /**
      * Constructs a new {@code NetworkSerializerImpl} which will use the specified
@@ -173,7 +182,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         byte[] bytes = serialize(type);
         out.write(bytes);
         
-        lastBytes = bytes;
+        lastBytes.set(bytes);
     }
     
     /**
@@ -202,11 +211,11 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         
         customDir.mkdirs();
         
-        String oldCheckPointFileName = lastCheckPointFileName;
-        lastCheckPointFileName = customDir.getAbsolutePath() + File.separator +  
-            config.getCheckPointFileName() + checkPointFormatter.print(new DateTime());
-        
-        File cpFile = new File(lastCheckPointFileName);
+        String oldCheckPointFileName = lastCheckPointFileName.getAndSet(
+            customDir.getAbsolutePath() + File.separator + config.getCheckPointFileName() + 
+                checkPointFormatter.print(new DateTime()));
+
+        File cpFile = new File(lastCheckPointFileName.get());
         try {
             cpFile.createNewFile();
         }catch(Exception e) {
@@ -216,6 +225,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
             case FST: {
+                writeMonitor.lock();
                 byte[] bytes = fastSerialConfig.asByteArray(instance);
                 try {
                     Files.write(cpFile.toPath(), bytes, config.getCheckPointOpenOptions());
@@ -225,10 +235,14 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
                         Files.deleteIfExists(new File(oldCheckPointFileName).toPath());
                     }
                 } catch(IOException e) {
-                    lastBytes = null;
+                    lastBytes.set(null);
                     throw new RuntimeException(e);
+                }finally{
+                    writeMonitor.unlock();
                 }
-                return lastBytes = bytes;
+                
+                lastBytes.set(bytes);
+                return lastBytes.get();
             }
             default: {
                 return null;
@@ -287,16 +301,24 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         switch(scheme) {
             case KRYO: // Fall through to FST Handler
             case FST: {
-                byte[] bytes = fastSerialConfig.asByteArray(instance);
-                if(!bytesOnly) {
-                    try {
+                writeMonitor.lock();
+                
+                byte[] bytes = null;
+                try {
+                    bytes = fastSerialConfig.asByteArray(instance);
+                    
+                    if(!bytesOnly) {
                         Files.write(serializedFile.toPath(), bytes, config.getOpenOptions());
-                    } catch(IOException e) {
-                        lastBytes = null;
-                        throw new RuntimeException(e);
                     }
+                } catch(IOException e) {
+                    lastBytes.set(null);
+                    throw new RuntimeException(e);
+                }finally{
+                    writeMonitor.unlock();
                 }
-                return lastBytes = bytes;
+                
+                lastBytes.set(bytes);
+                return lastBytes.get();
             }
             default: {
                 return null;
@@ -384,7 +406,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      */
     @Override
     public byte[] getLastBytes() {
-        return lastBytes;
+        return lastBytes.get();
     }
     
     /**
@@ -402,7 +424,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      */
     @Override
     public String getLastCheckPointFileName() {
-        return lastCheckPointFileName;
+        return lastCheckPointFileName.get();
     }
     
     /**
