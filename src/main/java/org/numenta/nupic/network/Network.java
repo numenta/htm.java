@@ -395,19 +395,8 @@ public class Network implements PersistenceAPI {
      * the underlying Stream (if necessary, i.e. not for {@link ObservableSensor}s) and skipping 
      * the number of records equal to the stored record number plus one, continuing from where it left off.
      */
-    @SuppressWarnings("unchecked")
     public static Network load() { 
-        LOGGER.debug("Network load() called ...");
-        
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
-        
-        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, null);
-        
-        LOGGER.debug("Network load() returning network: \"" + (network == null ? null : network.getName()) + "\"");
-        
-        return network; 
+        return load((byte[])null); 
     }
     
     /**
@@ -427,6 +416,8 @@ public class Network implements PersistenceAPI {
         }
         
         Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, serializedBytes);
+        
+        LOGGER.debug("Network load() returning network: \"" + (network == null ? null : network.getName()) + "\"");
         
         return network; 
     }
@@ -468,7 +459,9 @@ public class Network implements PersistenceAPI {
             return null;
         }
         
+        // Parse out absolute path. This API only needs the simple file name.
         int nameIdx = fileName.lastIndexOf(File.separator) + 1;
+        
         return nameIdx != -1 ? fileName.substring(nameIdx) : fileName;
     }
     
@@ -515,7 +508,7 @@ public class Network implements PersistenceAPI {
      * If the "returnNew" flag is true, this method returns a new instance of 
      * {@link NetworkSerializer} and stores it for subsequent invocations of this
      * method. If false, the previously stored NetworkSerializer is returned.
-     * 
+     * PRODUCTION_OPTIONS
      * @param config        the SerialConfig storing file storage parameters etc.
      * @param returnNew     NetworkSerializers are expensive to instantiate so specify
      *                      if the previous should be re-used or if you want a new one.

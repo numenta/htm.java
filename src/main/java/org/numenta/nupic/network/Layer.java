@@ -1640,27 +1640,37 @@ public class Layer<T> implements Persistable {
         
         sequenceStart = sequenceStart.filter(m -> {
             if(!checkPointObservers.isEmpty() && parentNetwork != null) {
-                byte[] bytes = parentNetwork.internalCheckPoint();
-                
-                if(bytes != null) {
-                    LOGGER.debug("Layer [" + getName() + "] checkPointed file: " + 
-                        Network.serializer(null, false).getLastCheckPointFileName() + ",  hc = " + Network.serializer(null, false).hashCode());
-                }else{
-                    LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
-                }
-                
-                for(Observer<byte[]> o : checkPointObservers) {
-                    o.onNext(bytes);
-                    o.onCompleted();
-                }
-                
-                checkPointObservers.clear();
+                // Execute check point logic
+                doCheckPoint();
             }
             
             return true;
         });
 
         return sequenceStart;
+    }
+    
+    /**
+     * Executes the check point logic, handles the return of the serialized byte array
+     * by delegating the call to {@link rx.Observer#onNext(byte[])} of all the currently queued
+     * Observers; then clears the list of Observers.
+     */
+    private void doCheckPoint() {
+        byte[] bytes = parentNetwork.internalCheckPoint();
+        
+        if(bytes != null) {
+            LOGGER.debug("Layer [" + getName() + "] checkPointed file: " + 
+                Network.serializer(null, false).getLastCheckPointFileName() + ",  hc = " + Network.serializer(null, false).hashCode());
+        }else{
+            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
+        }
+        
+        for(Observer<byte[]> o : checkPointObservers) {
+            o.onNext(bytes);
+            o.onCompleted();
+        }
+        
+        checkPointObservers.clear();
     }
 
     /**
@@ -2012,18 +2022,31 @@ public class Layer<T> implements Persistable {
     //   Inner Class Definition for CheckPointer (Observable)   //
     //////////////////////////////////////////////////////////////
     /**
+     * <p>
      * Implementation of the CheckPointer interface which serves to checkpoint
      * and register a listener at the same time. The {@link rx.Observer} will be
      * notified with the byte array of the {@link Network} being serialized.
+     * </p><p>
+     * The layer thread automatically tests for the list of observers to 
+     * contain > 0 elements, which indicates a check point operation should
+     * be executed.
+     * </p>
      * 
      * @param <T>       {@link rx.Observer} 
      */
-    public static class CheckPointerImpl<T> extends Observable<T> implements CheckPointer<T> {
+    static class CheckPointerImpl<T> extends Observable<T> implements CheckPointer<T> {
         private CheckPointerImpl(Layer<?> l) {
             this(new Observable.OnSubscribe<T>() {
                 @SuppressWarnings("unchecked")
                 @Override public void call(Subscriber<? super T> t) {
-                    l.checkPointObservers.add((Observer<byte[]>)t);
+                    if(l.LAYER_THREAD != null) {
+                        // The layer thread automatically tests for the list of observers to 
+                        // contain > 0 elements, which indicates a check point operation should
+                        // be executed.
+                        l.checkPointObservers.add((Observer<byte[]>)t);
+                    }else{
+                        l.doCheckPoint();
+                    }
                 }
             });
         }
@@ -2037,7 +2060,8 @@ public class Layer<T> implements Persistable {
         }
         
         /**
-         * Queues
+         * Queues the specified {@link rx.Observer} for notification upon
+         * completion of a check point operation.
          */
         public Subscription checkPoint(Observer<? super T> t) {
             return super.subscribe(t);
@@ -2337,6 +2361,10 @@ public class Layer<T> implements Persistable {
                 Object supplierOfObservable = sensor.getSensorParams().get("ONSUB");
                 sensor = (HTMSensor<?>)Sensor.create(
                     ObservableSensor::create, SensorParams.create(Keys::obs, "", supplierOfObservable));
+            }else if(sensorKlass.toString().indexOf("URI") != -1) {
+                Object url = sensor.getSensorParams().get("URI");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    URISensor::create, SensorParams.create(Keys::uri, "", url));
             }
         }
     }

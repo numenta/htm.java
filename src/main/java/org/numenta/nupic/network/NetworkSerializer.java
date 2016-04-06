@@ -31,6 +31,18 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+/**
+ * <p>
+ * Low-level serialization utility methods using the <a href="https://github.com/RuedigerMoeller/fast-serialization">
+ * FST</a> framework, while simultaneously implementing the Kryo {@link Serializer} interface so that {@link Network}
+ * serializations can take place within frameworks like <a href="https://github.com/EsotericSoftware/kryo">Kryo</a>
+ * and <a href="https://flink.apache.org">Flink</a>.
+ * </p>
+ 
+ * @author cogmission
+ *
+ * @param <T>   the "type" to be serialized (most often {@link Network} or {@link Inference})
+ */
 public interface NetworkSerializer<T> {
     /** Currently there are two types of serialization implementations */
     public enum Scheme { KRYO, FST }

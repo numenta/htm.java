@@ -23,6 +23,7 @@ package org.numenta.nupic.network;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,20 +37,10 @@ import java.util.stream.Collectors;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Persistable;
-import org.numenta.nupic.algorithms.BitHistory;
-import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.ProximalDendrite;
-import org.numenta.nupic.model.Segment;
-import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.util.NamedTuple;
-import org.numenta.nupic.util.Tuple;
 import org.nustaq.serialization.FSTConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
@@ -77,6 +68,8 @@ import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
  * @param <T>   the type which will be serialized
  */
 class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> implements NetworkSerializer<T> {
+    protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
+    
     /** Time stamped serialization file format */
     public static final DateTimeFormatter CHECKPOINT_TIMESTAMP_FORMAT = DateTimeFormat.forPattern(SerialConfig.CHECKPOINT_FORMAT_STRING);
     
@@ -125,12 +118,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
             this.kryo = createKryo();
         }
         
-        fastSerialConfig.registerClass(
-            Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
-            ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
-            ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
-            ComputeCycle.class, FieldMetaType.class, Persistable.class
-        );
+        fastSerialConfig.registerClass(config.getRegistry().toArray(new Class[config.getRegistry().size()]));
     }
     
     /**
@@ -377,7 +365,12 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      */
     @SuppressWarnings("unchecked")
     public T deSerializeFromFile(Class<T> type, String fileName) throws IOException {
-        File serializedFile = testFileExists(fileName);
+        File serializedFile = null;
+        try {
+            serializedFile = testFileExists(fileName);
+        }catch(FileNotFoundException f) {
+            return null;
+        }
         
         byte[] bytes = null;
         switch(scheme) {
@@ -522,18 +515,30 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
         return true;
     }
     
-    File testFileExists(String fileName) throws IOException {
-        String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
-        File customDir = new File(path);
-        // Make sure container directory exists
-        customDir.mkdirs();
-        
-        File serializedFile = new File(customDir.getAbsolutePath() + File.separator +  fileName);
-        if(!serializedFile.exists()) {
-            throw new IOException("File \"" + fileName + "\" was not found.");
+    /**
+     * Returns the File corresponding to "fileName" if this framework is successful in locating
+     * the specified file, otherwise it throws an {@link IOException}.
+     * 
+     * @param fileName          the name of the file to search for.
+     * @return  the File if the operation is successful, otherwise an exception is thrown
+     * @throws IOException      if the specified file is not found, or there's a problem loading it.
+     */
+    File testFileExists(String fileName) throws IOException, FileNotFoundException {
+        try {
+            String path = System.getProperty("user.home") + File.separator + SERIAL_DIR;
+            File customDir = new File(path);
+            // Make sure container directory exists
+            customDir.mkdirs();
+            
+            File serializedFile = new File(customDir.getAbsolutePath() + File.separator +  fileName);
+            if(!serializedFile.exists()) {
+                throw new FileNotFoundException("File \"" + fileName + "\" was not found.");
+            }
+            
+            return serializedFile;
+        }catch(IOException io) {
+            throw io;
         }
-        
-        return serializedFile;
     }
     
     /**

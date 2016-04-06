@@ -23,9 +23,25 @@ package org.numenta.nupic.network;
 
 import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.List;
 
+import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.Parameters;
+import org.numenta.nupic.Persistable;
+import org.numenta.nupic.algorithms.BitHistory;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.ProximalDendrite;
+import org.numenta.nupic.model.Segment;
+import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.network.NetworkSerializer.Scheme;
+import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -37,8 +53,18 @@ import org.numenta.nupic.network.NetworkSerializer.Scheme;
  * <b>This file however provides defaults which may confidently be used for full featured
  * use</b>, however more experienced users may want to tweak details (the first thing 
  * being whether checkpoints add new files or delete previous files maintaining only 
- * one file). For explanation of this see: {@link 
+ * one file). For explanation of this see: {@link StandardOpenOptions} and the
+ * {@link #SerialConfig(String, Scheme, List, StandardOpenOption...)} constructor
  * </p>
+ * <p>
+ * The check point file format is highly configurable using this class. The default format
+ * contains a "name" portion and a "timestamp" portion which may be independently configured.
+ * see {@link #setCheckPointFileName(String)} and {@link #setCheckPointTimeFormatString(String)}.
+ * </p>
+ * <p>
+ * In addition, you may also call {@link #setOneCheckPointOnly(boolean)} to overwrite the 
+ * checkpoint file if you would rather not maintain multiple checkpoints.
+ * 
  * 
  * @see NetworkTest
  * @see JavaFstNetworkSerializationTest
@@ -49,26 +75,56 @@ import org.numenta.nupic.network.NetworkSerializer.Scheme;
  * @author cogmission
  */
 public class SerialConfig {
+    protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
+    
+    /** The default format for the timestamp portion of the checkpoint file name */
     public static final String CHECKPOINT_FORMAT_STRING = "YYYY-MM-dd_HH-mm-ss.SSS";
-    
-    
+
+    /** 
+     * <p>
+     * The default options for the regular {@link Network#store()} method which stores the
+     * {@link Network} under the default file name "Network.ser".
+     * </p><p>
+     * Default options are:
+     * <ul>
+     *  <li>{@link StandardOpenOption#CREATE} - creates the file if it does not exist</li>
+     *  <li>{@link StandardOpenOption#TRUNCATE_EXISTING} - Truncates the file to length 0, 
+     *  before write to it again (basically never appends to the file which is necessary)</li>
+     * </ul>
+     * </p>
+     */
     public static final StandardOpenOption[] PRODUCTION_OPTIONS = new StandardOpenOption[] { 
         StandardOpenOption.CREATE,
         StandardOpenOption.TRUNCATE_EXISTING 
     };
     
+    /** 
+     * <p>
+     * The default options for {@link CheckPointer#checkPoint(rx.Observer)} method which quick
+     * stores the {@link Network} state to a time-stamped file.
+     * </p><p>
+     * Default options are:
+     * <ul>
+     *  <li>{@link StandardOpenOption#CREATE} - creates the file if it does not exist</li>
+     *  <li>{@link StandardOpenOption#TRUNCATE_EXISTING} - Truncates the file to length 0, 
+     *  before write to it again (basically never appends to the file which is necessary)</li>
+     * </ul>
+     * </p>
+     */
     public static final StandardOpenOption[] CHECKPOINT_OPTIONS = new StandardOpenOption[] { 
         StandardOpenOption.CREATE,
         StandardOpenOption.TRUNCATE_EXISTING 
     };
     
+    /** Default serialized Network file name for the {@link Network#store()} method. */
     private static final String SERIAL_FILE = "Network.ser";
+    /** Default checkpoint Network file name for the {@link CheckPointer#checkPoint(rx.Observer)} method. */
     private static final String CHECKPOINT_FILE = "Network_Checkpoint_";
     
     private String fileName;
     private Scheme scheme;
     private List<Class<?>> registry;
-    private StandardOpenOption[] options;
+    private StandardOpenOption[] options = PRODUCTION_OPTIONS;
     private StandardOpenOption[] checkPointOptions = CHECKPOINT_OPTIONS;
     
     private String checkPointFileName = CHECKPOINT_FILE;
@@ -121,7 +177,7 @@ public class SerialConfig {
     
     /**
      * Constructs a new {@code SerialConfig} which will use the specified file name
-     * and underlying serialization scheme specified.
+     * and underlying serialization {@link NetworkSerializer.Scheme} specified.
      * 
      * Pre-registering the "known" classes which will be serialized is highly 
      * recommended. These may be specified by the list named "registeredTypes".
@@ -134,7 +190,7 @@ public class SerialConfig {
      * create new, truncate, append, read, write etc). see ({@link StandardOpenOption})
      * 
      * @param fileName          the file name to use
-     * @param scheme            indicates the underlying serialization scheme to use
+     * @param scheme            indicates the underlying serialization {@link NetworkSerializer.Scheme} to use
      * @param registeredTypes   list of classes indicating expected types to serialize 
      * @param openOptions       A list of options to use for how to work with the serialization 
      *                          file.
@@ -145,13 +201,26 @@ public class SerialConfig {
         if(fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }else if(scheme == null) {
-            throw new IllegalArgumentException("scheme cannot be null.");
+            throw new IllegalArgumentException("scheme cannot be null. Please see Network.Scheme enum...");
         }
         
         this.fileName = fileName;
         this.scheme = scheme;
-        this.registry = registeredTypes;
-        this.options = openOptions;
+        
+        if(registeredTypes == null) {
+            LOGGER.debug("List of registered serialize class types was null. Using the default...");
+        }
+        this.registry = registeredTypes == null ? Arrays.asList(new Class[] {
+            Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
+            ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
+            ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
+            ComputeCycle.class, FieldMetaType.class, Persistable.class
+        }) : registeredTypes;
+        
+        if(openOptions == null) {
+            LOGGER.debug("The OpenOptions were null. Using the default...");
+        }
+        this.options = openOptions == null ? PRODUCTION_OPTIONS : openOptions;
     }
     
     /**
