@@ -62,6 +62,19 @@ public class FileSensorTest {
         assertEquals("some name", sp.get("FILE"));
         assertEquals(null, sp.get("NAME"));
         assertEquals(ResourceLocator.path("rec-center-hourly.csv"), sp.get("PATH"));
+        
+        try {
+            String filepart = System.getProperty("user.dir") + "/src/test/resources/pathtest.jar";
+            File f = new File(filepart);
+            assertTrue(f.exists());
+            String path = filepart + "!rec-center-hourly.csv";
+            n = new Object[] { "some name", path };
+            parms = SensorParams.create(Keys::path, n);
+            sensor = Sensor.create(FileSensor::create, parms);
+        }catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
     
     @Test

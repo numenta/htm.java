@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import com.cedarsoftware.util.DeepEquals;
+
 /**
  * Double ended queue implementation which has a restricted capacity.
  * Operations may be conducted on both ends and when capacity is reached,
@@ -307,7 +309,7 @@ public class Deque<E> implements Iterable<E>, Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((backingList == null) ? 0 : backingList.hashCode());
+				+ ((backingList == null) ? 0 : DeepEquals.deepHashCode(backingList));
 		result = prime * result + capacity;
 		result = prime * result + currentSize;
 		return result;

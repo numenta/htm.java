@@ -75,7 +75,8 @@ public class FileSensor implements Sensor<File>, Serializable {
         String pathStr = (String)params.get("PATH");
 
         if(pathStr.indexOf("!") != -1) {
-            pathStr = pathStr.substring("file:".length());
+            pathStr = pathStr.indexOf("file:") != -1 ? pathStr.substring("file:".length()) :
+                pathStr;
             
             Stream<String> stream = getJarEntryStream(pathStr);
             this.stream = BatchedCsvStream.batch(
