@@ -21,11 +21,9 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -39,15 +37,15 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.Persistable;
 import org.nustaq.serialization.FSTConfiguration;
+import org.nustaq.serialization.FSTObjectInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-
-import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
 
 /**
  * <p>
@@ -67,11 +65,15 @@ import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
  *
  * @param <T>   the type which will be serialized
  */
-class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> implements NetworkSerializer<T> {
+class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> implements NetworkSerializer<T>, Persistable {
+    private static final long serialVersionUID = 1L;
+
     protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
     
     /** Time stamped serialization file format */
-    public static final DateTimeFormatter CHECKPOINT_TIMESTAMP_FORMAT = DateTimeFormat.forPattern(SerialConfig.CHECKPOINT_FORMAT_STRING);
+    public static transient DateTimeFormatter CHECKPOINT_TIMESTAMP_FORMAT = DateTimeFormat.forPattern(SerialConfig.CHECKPOINT_FORMAT_STRING);
+    private transient DateTimeFormatter checkPointFormatter = CHECKPOINT_TIMESTAMP_FORMAT;
+    private String checkPointFormatString;
     
     /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
     private final FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
@@ -89,9 +91,7 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     /** Stores the bytes of the last serialized object or null if there was a problem */
     private static AtomicReference<byte[]> lastBytes = new AtomicReference<byte[]>(null);
     
-    private DateTimeFormatter checkPointFormatter = CHECKPOINT_TIMESTAMP_FORMAT;
     
-    private String checkPointFormatString;
     
     /** 
      * All instances in this classloader will share the same atomic reference to the last checkpoint file name holder
@@ -134,23 +134,21 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      * @param klass     The class of the object to be read in.
      * @return  an instance of type &lt;T&gt;
      */
+    @SuppressWarnings("unchecked")
     @Override
     public T read(Kryo kryo, Input in, Class<T> klass) {
-        InputStream is = in.getInputStream();
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
+        FSTObjectInput reader = fastSerialConfig.getObjectInput(in);
         try {
-            int nRead;
-            byte[] data = new byte[16384];
-            while ((nRead = is.read(data, 0, data.length)) != -1) {
-              buffer.write(data, 0, nRead);
+            T t = (T) reader.readObject(klass);
+
+            if(t instanceof Persistable) {
+                ((Persistable) t).postDeSerialize();
             }
-            buffer.flush();
-        }catch(Exception e) {
-            throw new RuntimeException(e);
+            return t;
         }
-        
-        return deSerialize(klass, buffer.toByteArray());
+        catch(Exception e) {
+            throw new KryoException(e);
+        }
     }
     
     /**
@@ -166,11 +164,18 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      * @param <T>       instance to serialize     
      */
     @Override
-    public void write(Kryo kryo, Output out, T type) {
-        byte[] bytes = serialize(type);
-        out.write(bytes);
-        
-        lastBytes.set(bytes);
+    public void write(Kryo kryo, Output out, T t) {
+        try {
+            if(t instanceof Persistable) {
+                ((Persistable) t).preSerialize();
+            }
+            
+            byte[] bytes = fastSerialConfig.asByteArray(t);
+            out.write(bytes);
+        }
+        catch(Exception e) {
+            throw new KryoException(e);
+        }
     }
     
     /**
@@ -547,22 +552,14 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
      * @return  an instance of Kryo
      */
     private Kryo createKryo() {
-        return new KryoReflectionFactorySupport() {
-            private NetworkSerializer<?> ser;
-            private SerialConfig conf;
-            
-            {
-                conf = new SerialConfig(
-                    config.getFileName(), Scheme.FST, 
-                        config.getRegistry(), config.getOpenOptions());
-                ser = Network.serializer(conf, true);
-            }
-            
-            @SuppressWarnings("rawtypes")
-            @Override public Serializer<?> getDefaultSerializer(final Class clazz) {
-                return (Serializer<?>)ser;
-            }
-        };
+        Kryo.DefaultInstantiatorStrategy initStrategy = new Kryo.DefaultInstantiatorStrategy();
+
+        // use Objenesis to create classes without calling the constructor (Flink's technique)
+        //initStrategy.setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
+
+        Kryo kryo = new Kryo();
+        kryo.setInstantiatorStrategy(initStrategy);
+        return kryo;
     }
 
     /* (non-Javadoc)

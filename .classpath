@@ -22,6 +22,6 @@
 	<classpathentry kind="lib" path="libs/kryo-serializers-0.37.jar" sourcepath="/Users/cogmission/.m2/repository/de/javakaffee/kryo-serializers/0.37/kryo-serializers-0.37-sources.jar"/>
 	<classpathentry kind="lib" path="libs/objenesis-2.1.jar"/>
 	<classpathentry kind="lib" path="libs/minlog-1.3-SNAPHOT.jar"/>
-	<classpathentry kind="lib" path="libs/fst-2.45.jar" sourcepath="/Users/cogmission/.m2/repository/de/ruedigermoeller/fst/2.45/fst-2.45-sources.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/fast-serialization"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

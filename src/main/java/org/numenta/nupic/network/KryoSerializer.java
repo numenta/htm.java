@@ -1,18 +1,16 @@
 package org.numenta.nupic.network;
 
+import java.io.Serializable;
+
+import org.numenta.nupic.Persistable;
+import org.nustaq.serialization.FSTConfiguration;
+import org.nustaq.serialization.FSTObjectInput;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.numenta.nupic.Persistable;
-import org.nustaq.serialization.FSTConfiguration;
-import org.nustaq.serialization.FSTObjectInput;
-import org.nustaq.serialization.FSTObjectOutput;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 
 /**
  * Primitive Kryo serializer based on FST.
@@ -25,19 +23,15 @@ import java.io.Serializable;
  * Use instead {@link Network#serializer(SerialConfig, boolean)}
  */
 public class KryoSerializer<T> extends Serializer<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    private final Class[] classes;
+    private final Class<?>[] classes;
 
     /** Use of Fast Serialize https://github.com/RuedigerMoeller/fast-serialization */
     private transient FSTConfiguration fastSerialConfig;
 
-    public KryoSerializer(Class... c) {
+    public KryoSerializer(Class<?>... c) {
         this.classes = c;
-        initFST();
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
         initFST();
     }
 
@@ -54,15 +48,15 @@ public class KryoSerializer<T> extends Serializer<T> implements Serializable {
      */
     @Override
     public void write(Kryo kryo, Output output, T t) {
-        FSTObjectOutput writer = fastSerialConfig.getObjectOutput(output);
         try {
             if(t instanceof Persistable) {
                 ((Persistable) t).preSerialize();
             }
-
-            writer.writeObject(t, t.getClass());
+            
+            byte[] bytes = fastSerialConfig.asByteArray(t);
+            output.write(bytes);
         }
-        catch(IOException e) {
+        catch(Exception e) {
             throw new KryoException(e);
         }
     }
@@ -74,6 +68,7 @@ public class KryoSerializer<T> extends Serializer<T> implements Serializable {
      * @param aClass    The class of the object to be read in.
      * @return  an instance of type &lt;T&gt;
      */
+    @SuppressWarnings("unchecked")
     @Override
     public T read(Kryo kryo, Input input, Class<T> aClass) {
         FSTObjectInput reader = fastSerialConfig.getObjectInput(input);

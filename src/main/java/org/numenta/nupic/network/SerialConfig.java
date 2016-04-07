@@ -35,6 +35,7 @@ import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
@@ -78,11 +79,11 @@ import org.slf4j.LoggerFactory;
 public class SerialConfig {
     protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
 
-    public static final Class[] DEFAULT_REGISTERED_TYPES = new Class[] {
+    public static final Class<?>[] DEFAULT_REGISTERED_TYPES = new Class[] {
         Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
-                ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
-                ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
-                ComputeCycle.class, Classification.class, FieldMetaType.class, Persistable.class
+        ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
+        ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
+        ComputeCycle.class, Classification.class, FieldMetaType.class, Pool.class, Persistable.class
     };
 
     /** The default format for the timestamp portion of the checkpoint file name */
