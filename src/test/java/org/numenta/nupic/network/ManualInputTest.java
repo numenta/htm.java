@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -47,6 +48,7 @@ public class ManualInputTest {
         Set<Cell> currentPrediction = new LinkedHashSet<>(); currentPrediction.add(new Cell(new Column(4, 0), 3));
         Classification<Object> classification = new Classification<>();
         double anomalyScore = 0.48d;
+        ComputeCycle cc = new ComputeCycle();
         Object customObject = new Network("CopyTest", NetworkTestHarness.getNetworkDemoTestEncoderParams());
         
         ManualInput mi = new ManualInput()
@@ -62,6 +64,7 @@ public class ManualInputTest {
         .classifiers(classifiers)
         .storeClassification("foo", classification)
         .anomalyScore(anomalyScore)
+        .computeCycle(cc)
         .customObject(customObject);
         
         ManualInput copy = mi.copy();
@@ -85,6 +88,8 @@ public class ManualInputTest {
         assertTrue(copy.getPredictiveCells().equals(currentPrediction));
         assertFalse(copy.getPredictiveCells() == currentPrediction);
         
+        assertTrue(copy.getPreviousPredictiveCells().equals(previousPrediction));
+        
         assertTrue(copy.getActiveCells().equals(activeCells));
         assertFalse(copy.getActiveCells() == activeCells);
         
@@ -98,7 +103,12 @@ public class ManualInputTest {
         
         assertEquals(copy.getAnomalyScore(), anomalyScore, 0.0); // zero deviation
         
+        assertTrue(copy.getComputeCycle().equals(cc));
+        
         assertEquals(copy.getCustomObject(), customObject);
+        
+        assertTrue(mi.equals(copy));
+        assertTrue(mi.hashCode() == copy.hashCode());
     }
-
+    
 }

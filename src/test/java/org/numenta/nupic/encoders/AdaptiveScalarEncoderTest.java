@@ -22,7 +22,9 @@
 
 package org.numenta.nupic.encoders;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,6 +119,19 @@ public class AdaptiveScalarEncoderTest {
 		initASE();
 		ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
 		Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+		
+		/////////// Negative Test ///////////
+		setUp();
+		initASE();
+        Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+        try {
+            ase.setPeriodic(true); // Should cause failure during init
+            ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("Adaptive scalar encoder does not encode periodic inputs", e.getMessage());
+        }
 	}
 	
 	@Test
@@ -242,4 +257,12 @@ public class AdaptiveScalarEncoderTest {
 		
 	}
 	
+	@Test
+	public void testSkippedMinMaxCode() {
+	    setUp();
+        initASE();
+        ase.setMinVal(ase.getMaxVal());
+        ase.getBucketIndices(ase.getMaxVal());
+        assertEquals(1, ase.getRangeInternal(), 0); // ASE enforces minimum range of 1.0
+	}
 }

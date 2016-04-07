@@ -331,6 +331,7 @@ public class ManualInput implements Inference {
         retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
         retVal.customObject = this.customObject;
+        retVal.computeCycle = this.computeCycle;
         retVal.activeCells = new LinkedHashSet<Cell>(this.activeCells);
         
         return retVal;
@@ -500,7 +501,6 @@ public class ManualInput implements Inference {
         result = prime * result + Arrays.hashCode(encoding);
         result = prime * result + Arrays.hashCode(feedForwardActiveColumns);
         result = prime * result + Arrays.hashCode(feedForwardSparseActives);
-//        result = prime * result + ((layerInput == null) ? 0 : DeepEquals.deepHashCode(layerInput));
         result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
         result = prime * result + ((previousPredictiveCells == null) ? 0 : previousPredictiveCells.hashCode());
         result = prime * result + recordNum;
@@ -548,11 +548,6 @@ public class ManualInput implements Inference {
             return false;
         if(!Arrays.equals(feedForwardSparseActives, other.feedForwardSparseActives))
             return false;
-//        if(layerInput == null) {
-//            if(other.layerInput != null)
-//                return false;
-//        } else if(!DeepEquals.deepEquals(layerInput, other.layerInput))
-//            return false;
         if(predictiveCells == null) {
             if(other.predictiveCells != null)
                 return false;
