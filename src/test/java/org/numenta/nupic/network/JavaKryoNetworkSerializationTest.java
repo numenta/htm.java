@@ -7,12 +7,14 @@ import static org.junit.Assert.fail;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_FILE_NAME;
 import static org.numenta.nupic.network.NetworkSerializer.SERIAL_DIR;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
@@ -77,7 +79,32 @@ public class JavaKryoNetworkSerializationTest {
         
         return parameters;
     }
-    
+
+    public Kryo createKryo() {
+        Kryo.DefaultInstantiatorStrategy initStrategy = new Kryo.DefaultInstantiatorStrategy();
+
+        // use Objenesis to create classes without calling the constructor (Flink's technique)
+        //initStrategy.setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
+
+        Kryo kryo = new Kryo();
+        kryo.setInstantiatorStrategy(initStrategy);
+        return kryo;
+    }
+
+    private static <T> T copy(Kryo kryo, T from) {
+        ByteArrayOutputStream baout = new ByteArrayOutputStream();
+        Output output = new Output(baout);
+
+        kryo.writeObject(output, from);
+
+        output.close();
+
+        ByteArrayInputStream bain = new ByteArrayInputStream(baout.toByteArray());
+        Input input = new Input(bain);
+
+        return (T)kryo.readObject(input, from.getClass());
+    }
+
     @Test
     public void testGetSerializer() {
         SerialConfig config = new SerialConfig(SERIAL_FILE_NAME, Scheme.KRYO);
@@ -318,17 +345,20 @@ public class JavaKryoNetworkSerializationTest {
     
     @Test
     public void testThreadedPublisher_TemporalMemoryNetwork() {
-        Network network = createAndRunTestTemporalMemoryNetwork();
+        Kryo kryo = createKryo();
+        kryo.register(Network.class, new KryoSerializer<>(SerialConfig.DEFAULT_REGISTERED_TYPES));
+        kryo.register(Connections.class, new KryoSerializer<>(SerialConfig.DEFAULT_REGISTERED_TYPES));
+
+        List<Inference> inferences = new ArrayList<>();
+        Network network = createAndRunTestTemporalMemoryNetwork(inferences);
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
-        
-        SerialConfig config = new SerialConfig("testThreadedPublisher", Scheme.KRYO);
-        NetworkSerializer<Connections> serializer = Network.serializer(config, false);
-        serializer.serialize(cn);
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Connections serializedConnections = serializer.deSerialize(Connections.class, null); // (null=get from file)
-        
-        Network network2 = createAndRunTestTemporalMemoryNetwork();
+
+        Network serializedNetwork = copy(kryo, network);
+        Connections serializedConnections = copy(kryo, cn);
+
+        List<Inference> inferences2 = new ArrayList<>();
+        Network network2 = createAndRunTestTemporalMemoryNetwork(inferences2);
         Layer<?> l2 = network2.lookup("r1").lookup("1");
         Connections newCons = l2.getConnections();
         
@@ -340,17 +370,20 @@ public class JavaKryoNetworkSerializationTest {
     
     @Test
     public void testThreadedPublisher_SpatialPoolerNetwork() {
-        Network network = createAndRunTestSpatialPoolerNetwork(0, 6);
+        Kryo kryo = createKryo();
+        kryo.register(Network.class, new KryoSerializer<>(SerialConfig.DEFAULT_REGISTERED_TYPES));
+        kryo.register(Connections.class, new KryoSerializer<>(SerialConfig.DEFAULT_REGISTERED_TYPES));
+
+        List<Inference> inferences = new ArrayList<>();
+        Network network = createAndRunTestSpatialPoolerNetwork(0, 6, inferences);
         Layer<?> l = network.lookup("r1").lookup("1");
         Connections cn = l.getConnections();
-        
-        SerialConfig config = new SerialConfig("testThreadedPublisher_SpatialPoolerNetwork", Scheme.KRYO);
-        NetworkSerializer<Connections> serializer = Network.serializer(config, false);
-        serializer.serialize(cn);
-        //Serialize above Connections for comparison with same run but unserialized below...
-        Connections serializedConnections = serializer.deSerialize(Connections.class, null); // (null=get from file)
-        
-        Network network2 = createAndRunTestSpatialPoolerNetwork(0, 6);
+
+        Network serializedNetwork = copy(kryo, network);
+        Connections serializedConnections = copy(kryo, cn);
+
+        List<Inference> inferences2 = new ArrayList<>();
+        Network network2 = createAndRunTestSpatialPoolerNetwork(0, 6, inferences2);
         Layer<?> l2 = network2.lookup("r1").lookup("1");
         Connections newCons = l2.getConnections();
         
@@ -359,7 +392,22 @@ public class JavaKryoNetworkSerializationTest {
         deepCompare(newCons, serializedConnections);
         assertTrue(b);
     }
-    
+
+    @Test
+    public void testInferenceSerialization() {
+        Kryo kryo = createKryo();
+        kryo.register(Inference.class, new KryoSerializer<>(SerialConfig.DEFAULT_REGISTERED_TYPES));
+
+        List<Inference> inferences = new ArrayList<>();
+        Network network = createAndRunTestSpatialPoolerNetwork(0, 6, inferences);
+
+        List<Inference> serializedInferences = copy(kryo, inferences);
+
+        boolean b = DeepEquals.deepEquals(inferences, serializedInferences);
+        deepCompare(inferences, serializedInferences);
+        assertTrue(b);
+    }
+
     private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
@@ -368,7 +416,7 @@ public class JavaKryoNetworkSerializationTest {
         }
     }
     
-    private Network createAndRunTestSpatialPoolerNetwork(int start, int runTo) {
+    private Network createAndRunTestSpatialPoolerNetwork(int start, int runTo, List<Inference> inferences) {
         Publisher manual = Publisher.builder()
             .addHeader("dayOfWeek")
             .addHeader("darr")
@@ -431,6 +479,7 @@ public class JavaKryoNetworkSerializationTest {
             @Override
             public void onNext(Inference spatialPoolerOutput) {
                 assertTrue(Arrays.equals(expecteds[test++], spatialPoolerOutput.getSDR()));
+                inferences.add(spatialPoolerOutput);
             }
         });
 
@@ -449,7 +498,7 @@ public class JavaKryoNetworkSerializationTest {
         return network;
     }
     
-    private Network createAndRunTestTemporalMemoryNetwork() {
+    private Network createAndRunTestTemporalMemoryNetwork(List<Inference> inferences) {
         Publisher manual = Publisher.builder()
             .addHeader("dayOfWeek")
             .addHeader("darr")
@@ -488,7 +537,7 @@ public class JavaKryoNetworkSerializationTest {
         network.observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference i) {}
+            @Override public void onNext(Inference i) { inferences.add(i); }
         });
         
         final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
