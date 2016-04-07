@@ -31,6 +31,7 @@ import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.BitHistory;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -76,7 +77,14 @@ import org.slf4j.LoggerFactory;
  */
 public class SerialConfig {
     protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
-    
+
+    public static final Class[] DEFAULT_REGISTERED_TYPES = new Class[] {
+        Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
+                ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
+                ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
+                ComputeCycle.class, Classification.class, FieldMetaType.class, Persistable.class
+    };
+
     /** The default format for the timestamp portion of the checkpoint file name */
     public static final String CHECKPOINT_FORMAT_STRING = "YYYY-MM-dd_HH-mm-ss.SSS";
 
@@ -210,13 +218,8 @@ public class SerialConfig {
         if(registeredTypes == null) {
             LOGGER.debug("List of registered serialize class types was null. Using the default...");
         }
-        this.registry = registeredTypes == null ? Arrays.asList(new Class[] {
-            Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
-            ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
-            ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
-            ComputeCycle.class, FieldMetaType.class, Persistable.class
-        }) : registeredTypes;
-        
+        this.registry = registeredTypes == null ? Arrays.asList(DEFAULT_REGISTERED_TYPES) : registeredTypes;
+
         if(openOptions == null) {
             LOGGER.debug("The OpenOptions were null. Using the default...");
         }
