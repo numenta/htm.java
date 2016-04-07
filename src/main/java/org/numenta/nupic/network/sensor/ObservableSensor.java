@@ -78,6 +78,7 @@ public class ObservableSensor<T> implements Sensor<Observable<T>> {
         } else {
             obs = (Observable<String>)publisher; 
         }
+        
         Iterator<String> observerator = obs.toBlocking().getIterator();
         
         Iterator<String> iterator = new Iterator<String>() {

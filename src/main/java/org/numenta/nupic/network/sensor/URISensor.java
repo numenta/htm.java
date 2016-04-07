@@ -24,6 +24,7 @@ package org.numenta.nupic.network.sensor;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
 
@@ -54,7 +55,7 @@ public class URISensor implements Sensor<URI>  {
      * @param params
      */
     private URISensor(SensorParams params) {
-        if(!params.hasKey("URI")) {
+        if(params == null || !params.hasKey("URI")) {
             throw new IllegalArgumentException("Passed improperly formed Tuple: no key for \"URI\"");
         }
         
@@ -62,8 +63,15 @@ public class URISensor implements Sensor<URI>  {
         
         BufferedReader br = null;
         try {
-            InputStream is = new URL((String)params.get("URI")).openStream();
-            br = new BufferedReader(new InputStreamReader(is));
+            Object obj = params.get("URI");
+            InputStream is = null;
+            if(obj instanceof String) {
+                is = new URL((String)params.get("URI")).openStream();
+                br = new BufferedReader(new InputStreamReader(is));
+            }else if(obj instanceof Reader) {
+                br = new BufferedReader((Reader)obj);
+            }
+            
         }catch(Exception e) {
             e.printStackTrace();
         }

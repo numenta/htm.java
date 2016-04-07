@@ -32,7 +32,7 @@ public class SetSparseMatrix extends AbstractSparseMatrix<Integer> implements Pe
 
     @Override
     public Integer get(int index) {
-        return this.indexes.contains(index) ? 0 : 1;
+        return this.indexes.contains(index) ? 1 : 0;
     }
 
     @Override

@@ -113,6 +113,10 @@ public class FileSensor implements Sensor<File>, Serializable {
         return fs;
     }
     
+    /**
+     * Returns this {@code FileSensor}'s {@link SensorParams}
+     * @return  the SensorParams
+     */
     @Override
     public SensorParams getSensorParams() {
         return params;
@@ -148,7 +152,9 @@ public class FileSensor implements Sensor<File>, Serializable {
         String[] parts = path.split("\\!");
         try {
             JarFile jar = new JarFile(parts[0]);
-            InputStream inStream = jar.getInputStream(jar.getEntry(parts[1].substring(1)));
+            String innerPath = parts[1];
+            innerPath = innerPath.startsWith("!") ? innerPath.substring(1) : innerPath;
+            InputStream inStream = jar.getInputStream(jar.getEntry(innerPath));
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             retVal = br.lines().onClose(() -> {
                 try {
@@ -164,7 +170,10 @@ public class FileSensor implements Sensor<File>, Serializable {
         return retVal;
     }
     public static void main(String[] args) {
-        String path = "/Users/metaware/git/htm.java/NetworkAPIDemo_1.0.jar!/org/numenta/nupic/datagen/rec-center-hourly.csv";
+        String filepart = System.getProperty("user.home") + "/git/htm.java/src/test/resources/pathtest.jar";
+        File f = new File(filepart);
+        System.out.println("file exists ? " + f.exists());
+        String path = filepart + "!rec-center-hourly.csv";
         Stream<String> stream = getJarEntryStream(path);
         stream.forEach(l -> System.out.println(l));
     }

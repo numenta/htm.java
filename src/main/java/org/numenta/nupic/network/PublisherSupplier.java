@@ -31,7 +31,44 @@ import org.numenta.nupic.network.sensor.Publisher;
 
 import rx.subjects.PublishSubject;
 
-
+/**
+ * <p>
+ * Ascribes to the {@link Supplier} interface to provide a {@link Publisher} upon request.
+ * This supplier is expressed as a lambda which acts as a "lazy factory" to create Publishers
+ * and set references on the Network when {@link PublisherSupplier#get()} is called.
+ * </p><p>
+ * The old way of creating Publishers has now changed when the {@link PersistenceAPI} is used.
+ * Instead, a {@link PublisherSupplier} is used, which ascribes to the {@link Supplier} 
+ * interface which acts like a "lazy factory" and kicks off other needed settings when a new
+ * Publisher is created... 
+ * </p><p>
+ * The basic usage is:
+ * </p><p>
+ * <pre>
+ *  Supplier<Publisher> supplier = PublisherSupplier.builder()
+ *      .addHeader("dayOfWeek, timestamp")
+ *      .addHeader("number, date")
+ *      .addHeader("B, T")
+ *      .build();
+ *  
+ *  // Since Suppliers are always added to Sensors we do...
+ *  
+ *  Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+ *      ObservableSensor::create, SensorParams.create(
+ *          Keys::obs, new Object[] {"name", supplier})); // <-- supplier created above
+ *          
+ *  <b>--- OR (all inline in "Fluent" fashion) ---</b>
+ *  
+ *  Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
+ *      ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
+ *          PublisherSupplier.builder()                                                // <-- supplier created fluently
+ *              .addHeader("dayOfWeek, timestamp")
+ *              .addHeader("number")
+ *              .addHeader("B, T").build() }));
+ * </pre>
+ * @author cogmission
+ *
+ */
 public class PublisherSupplier implements Persistable, Supplier<Publisher> {
     private static final long serialVersionUID = 1L;
     
@@ -53,8 +90,14 @@ public class PublisherSupplier implements Persistable, Supplier<Publisher> {
     }
 
     /**
-     * Implementation of the {@link Supplier} interface
-     * that returns a newly created {@link Publisher}
+     * <p>
+     * Implementation of the {@link Supplier} interface that returns a newly created 
+     * {@link Publisher}. 
+     * </p><p>
+     * The {@link Publisher.Builder} is passed a {@link Consumer} in its constructor which 
+     * basically triggers a call to {@link Network#setPublisher(Publisher)} with the newly
+     * created {@link Publisher} - which must be available so that users can get a reference 
+     * to the new Publisher that is created when {@link Network#load()} is called.
      * 
      * @return a new Publisher
      */

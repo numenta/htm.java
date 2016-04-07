@@ -103,11 +103,11 @@ import com.esotericsoftware.kryo.Serializer;
  *              <pre>
  *                  {@link Network} network = ...
  *                  
- *                  network.observe().subscribe(network.checkPointer().checkPoint(new Observer<byte[]>() { 
+ *                  network.observe().subscribe(new Observer<Inference>() { 
  *                      public void onCompleted() {}
  *                      public void onError(Throwable e) { e.printStackTrace(); }
- *                      public void onNext(byte[] bytes) {
- *                          assertTrue(bytes != null && bytes.length > 10);
+ *                      public void onNext(Inference inference) {
+ *                          // Do work on Inference...
  *                      }
  *                  });
  *                  
@@ -123,6 +123,7 @@ import com.esotericsoftware.kryo.Serializer;
  *                  network.checkPoint(new Observer<byte[]>() {...});  // saves to .../<user home dir>/HTMNetwork/Network_Checkpoint_2016-04-05_17-33-48.637
  *                  ...
  *              </pre>
+ *              <b>Note:</b> The type of Observer is "byte[]" for the above checkPoint method.
  *              
  *              <b>Note:</b> Only call "Publisher publisher = network.getPublisher()" if you are using an {@link ObservableSensor} on your network.
  *              
@@ -177,8 +178,8 @@ public interface PersistenceAPI extends Persistable {
      */
     public static Network load() { return null; }
     /**
-     * Loads a {@code Network} from the specified serialized file name and
-     * returns it.
+     * Loads a {@code Network} from the specified serialized byte array and
+     * returns the de-serialized Network.
      *  
      * @param serializedBytes             the name of the serialization file.
      *    
