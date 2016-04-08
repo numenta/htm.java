@@ -1,10 +1,13 @@
 package org.numenta.nupic.network;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.numenta.nupic.Persistable;
 import org.nustaq.serialization.FSTConfiguration;
 import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
@@ -35,6 +38,11 @@ public class KryoSerializer<T> extends Serializer<T> implements Serializable {
         initFST();
     }
 
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        initFST();
+    }
+
     private void initFST() {
         fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
         fastSerialConfig.registerClass(classes);
@@ -48,15 +56,16 @@ public class KryoSerializer<T> extends Serializer<T> implements Serializable {
      */
     @Override
     public void write(Kryo kryo, Output output, T t) {
+        FSTObjectOutput writer = fastSerialConfig.getObjectOutput(output);
         try {
             if(t instanceof Persistable) {
                 ((Persistable) t).preSerialize();
             }
-            
-            byte[] bytes = fastSerialConfig.asByteArray(t);
-            output.write(bytes);
+
+            writer.writeObject(t, t.getClass());
+            writer.flush();
         }
-        catch(Exception e) {
+        catch(IOException e) {
             throw new KryoException(e);
         }
     }

@@ -52,6 +52,7 @@ import rx.Subscription;
  *
  * @param <T>  a {@link Network} 
  */
+@FunctionalInterface
 public interface CheckPointer<T> {
     /**
      * Registers the Observer for a single notification following the checkPoint

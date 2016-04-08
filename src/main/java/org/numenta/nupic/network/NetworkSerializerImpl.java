@@ -91,8 +91,6 @@ class NetworkSerializerImpl<T extends Persistable> extends Serializer<T> impleme
     /** Stores the bytes of the last serialized object or null if there was a problem */
     private static AtomicReference<byte[]> lastBytes = new AtomicReference<byte[]>(null);
     
-    
-    
     /** 
      * All instances in this classloader will share the same atomic reference to the last checkpoint file name holder
      * which is perfectly fine.
