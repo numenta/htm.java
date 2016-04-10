@@ -204,6 +204,9 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         activeColumns.removeAll(predictedColumns);
         
         for(Column column : activeColumns) {
+            if(column == null || column.getCells() == null) {
+                System.out.println("here");
+            }
             List<Cell> cells = column.getCells();
             cycle.activeCells.addAll(cells);
             

@@ -21,11 +21,10 @@
  */
 package org.numenta.nupic.network;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
@@ -36,7 +35,6 @@ import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
-import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
@@ -162,7 +160,7 @@ import rx.Subscriber;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public class Network implements PersistenceAPI {
+public class Network implements Persistable {
     private static final long serialVersionUID = 1L;
 
     public enum Mode { MANUAL, AUTO, REACTIVE };
@@ -183,10 +181,8 @@ public class Network implements PersistenceAPI {
     
     private List<Region> regions = new ArrayList<>();
     
-    /** Stored by the {@code Network} unless overwritten by using flag @see {@link #serializer(Scheme)} */
-    private volatile static NetworkSerializerImpl<?> storedSerializer;
-    /** The stored configuration delineating output file and scheme etc. */
-    private static SerialConfig defaultConfig = new SerialConfig(Scheme.FST);
+    /** Stored check pointer function */
+    private transient Function<Persistable, ?> checkPointFunction;
     
     boolean shouldDoHalt = true;
     
@@ -305,164 +301,44 @@ public class Network implements PersistenceAPI {
     }
     
     /**
-     * Stores this {@link Network} at the pre-configured location, after
-     * halting and shutting down the Network. To store the Network but keep it up
-     * and running, please see the {@link #checkpoint()} method. 
-     * 
-     * The Network, may however be {@link #restart()}ed after this method is called.
-     * 
-     * @return the serialized Network in the format specified (byte[] is the default).
-     */
-    @Override
-    public <T> T store() {  
-        LOGGER.debug("Network [" + getName() + "] called store() at: " + (new DateTime()));
-        
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
-        
-        return doHalt();
-    }
-    
-    /**
-     * Internally called to {@link #halt()} the {@code Network}, call complete on any
-     * existing {@link Publisher} and serialize this {@code Network}.
-     * 
-     * @return return the serialized Network.
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T doHalt() {
-        halt();
-        // Call onComplete if using an ObservableSensor to complete the stream output.
-        if(publisher != null) {
-            publisher.onComplete();
-        }
-        
-        return (T)((NetworkSerializer<Network>)storedSerializer).serialize(this);
-    }
-    
-    /**
      * INTERNAL METHOD: DO NOT CALL
      * 
      * Called from {@link Layer} to execute a check point from within the scope of 
      * this {@link Network}
-     * 
+     * checkPointFunction
      * @return  the serialized {@code Network} in byte array form.
      */
-    @SuppressWarnings("unchecked")
-    byte[] internalCheckPoint() {
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
+    byte[] internalCheckPointOp() {
         shouldDoHalt = false;
-        byte[] serializedBytes = ((NetworkSerializer<Network>)storedSerializer).checkPoint(this);
+        byte[] serializedBytes = (byte[])checkPointFunction.apply(this);
         shouldDoHalt = true;
         return serializedBytes;
     }
     
     /**
-     * Returns the bytes of the last checkpointed {@code Network}
-     * @return      the bytes of the last checkpointed {@code Network}    
+     * Sets the reference to the check point function.
+     * @param f function which executes check point logic.
      */
-    @Override
-    public byte[] getCheckPoint() {
-        if(storedSerializer != null) {
-            return storedSerializer.getLastBytes();
-        }
-        
-        return null;
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable, R> void setCheckPointFunction(Function<T, R> f) {
+        this.checkPointFunction = (Function<Persistable, ?>)f;
     }
     
     /**
-     * Stores the state of this {@code Network} while keeping the Network up and running.
+     * USED INTERNALLY, DO NOT CALL
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
      * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     * 
+     * @return  the {@link CheckPointOp} operator 
      */
-    @Override
-    public CheckPointer<byte[]> checkPointer() {
+    CheckPointOp<byte[]> getCheckPointOperator() {
         LOGGER.debug("Network [" + getName() + "] called checkPoint() at: " + (new DateTime()));
         
         if(regions.size() == 1) {
             this.tail = regions.get(0);
         }
-        return tail.checkPointer();
-    }
-    
-    /**
-     * Loads a {@code Network} from the default or previously configured location and
-     * serial file, and returns it. If the "startAtStoredRecNum" flag is true, the Network
-     * will start from the last record number (plus 1) at which the Network was saved -
-     * continuing on from where it left off. The Network will achieve this by rebuilding
-     * the underlying Stream (if necessary, i.e. not for {@link ObservableSensor}s) and skipping 
-     * the number of records equal to the stored record number plus one, continuing from where it left off.
-     */
-    public static Network load() { 
-        return load((byte[])null); 
-    }
-    
-    /**
-     * Loads a {@code Network} from the specified serialized file name and
-     * returns it.
-     *  
-     * @param serializedBytes             the name of the serialization file.
-     *    
-     * @return  returns the specified Network
-     */
-    @SuppressWarnings("unchecked")
-    public static Network load(byte[] serializedBytes) { 
-        LOGGER.debug("Network load() called ...");
-        
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
-        
-        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerialize(Network.class, serializedBytes);
-        
-        LOGGER.debug("Network load() returning network: \"" + (network == null ? null : network.getName()) + "\"");
-        
-        return network; 
-    }
-    
-    /**
-     * Loads a {@code Network} from the specified serialized file name and
-     * returns it.
-     *  
-     * @param fileName      the name of the serialization file.
-     *    
-     * @return  returns the specified Network
-     */
-    @SuppressWarnings("unchecked")
-    public static Network load(String fileName) throws IOException { 
-        LOGGER.debug("Network load() called ...");
-        
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
-        
-        Network network = ((NetworkSerializer<Network>)storedSerializer).deSerializeFromFile(Network.class, fileName);
-        
-        return network; 
-    }
-    
-    /**
-     * Returns the name of the most recently checkpointed {@code Network} file.
-     * @return  the name of the most recently checkpointed {@code Network} file.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public String getLastCheckPointFileName() {
-        if(storedSerializer == null) {
-            Network.serializer(defaultConfig, true);
-        }
-        
-        String fileName = ((NetworkSerializer<Network>)storedSerializer).getLastCheckPointFileName();
-        if(fileName == null) {
-            return null;
-        }
-        
-        // Parse out absolute path. This API only needs the simple file name.
-        int nameIdx = fileName.lastIndexOf(File.separator) + 1;
-        
-        return nameIdx != -1 ? fileName.substring(nameIdx) : fileName;
+        return tail.getCheckPointOperator();
     }
     
     /**
@@ -471,7 +347,6 @@ public class Network implements PersistenceAPI {
      * 
      * @see {@link #restart(boolean)} for a start at "saved-index" behavior explanation. 
      */
-    @Override
     public void restart() {
         restart(true);
     }
@@ -486,7 +361,6 @@ public class Network implements PersistenceAPI {
      * @param startAtIndex  flag indicating whether to start this {@code Network} from
      *                      its previous save point.
      */
-    @Override
     public void restart(boolean startAtIndex) {
         if(regions.size() < 1) {
             throw new IllegalStateException("Nothing to start - 0 regions");
@@ -500,26 +374,6 @@ public class Network implements PersistenceAPI {
 
         // Record thread start
         this.isThreadRunning = tail.restart(startAtIndex);
-    }
-    
-    /**
-     * Factory method to return a configured {@link NetworkSerializer}
-     * 
-     * If the "returnNew" flag is true, this method returns a new instance of 
-     * {@link NetworkSerializer} and stores it for subsequent invocations of this
-     * method. If false, the previously stored NetworkSerializer is returned.
-     * PRODUCTION_OPTIONS
-     * @param config        the SerialConfig storing file storage parameters etc.
-     * @param returnNew     NetworkSerializers are expensive to instantiate so specify
-     *                      if the previous should be re-used or if you want a new one.
-     * @return      a NetworkSerializer
-     * @see SerialConfig
-     */
-    @SuppressWarnings("unchecked")
-    public static <T extends Persistable> NetworkSerializer<T> serializer(SerialConfig config, boolean returnNew) {
-        return (returnNew || storedSerializer == null) ? 
-            (NetworkSerializerImpl<T>)(storedSerializer = new NetworkSerializerImpl<T>(
-                config == null ? defaultConfig : config)) : (NetworkSerializerImpl<T>)storedSerializer;
     }
     
     /**
@@ -544,7 +398,6 @@ public class Network implements PersistenceAPI {
      * @return      the new Publisher created after deserialization or halt.
      * @see #getPublisherSupplier()
      */
-    @Override
     public Publisher getPublisher() {
         if(publisher == null) {
             throw new NullPointerException("A Supplier must be built first. " +
@@ -611,6 +464,11 @@ public class Network implements PersistenceAPI {
      * any resources associated with the input connections.
      */
     public void halt() {
+        // Call onComplete if using an ObservableSensor to complete the stream output.
+        if(publisher != null) {
+            publisher.onComplete();
+        }
+        
         if(regions.size() == 1) {
             this.tail = regions.get(0);
         }

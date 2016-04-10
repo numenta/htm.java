@@ -23,6 +23,7 @@ package org.numenta.nupic.network;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.numenta.nupic.Persistable;
@@ -37,7 +38,7 @@ import rx.subjects.PublishSubject;
  * This supplier is expressed as a lambda which acts as a "lazy factory" to create Publishers
  * and set references on the Network when {@link PublisherSupplier#get()} is called.
  * </p><p>
- * The old way of creating Publishers has now changed when the {@link PersistenceAPI} is used.
+ * The old way of creating Publishers has now changed when the {@link PAPI} is used.
  * Instead, a {@link PublisherSupplier} is used, which ascribes to the {@link Supplier} 
  * interface which acts like a "lazy factory" and kicks off other needed settings when a new
  * Publisher is created... 

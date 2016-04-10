@@ -375,16 +375,20 @@ public class Region implements Persistable {
     }
     
     /**
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
      * 
+     * @return  the {@link CheckPointOp} operator 
      */
-    CheckPointer<byte[]> checkPointer() {
+    CheckPointOp<byte[]> getCheckPointOperator() {
         LOGGER.debug("Region [" + getName() + "] CheckPoint called at: " + (new DateTime()));
         if(tail != null) {
-            return tail.checkPointer();
+            return tail.getCheckPointOperator();
             
         }else{
             close();
-            return tail.checkPointer();
+            return tail.getCheckPointOperator();
         }
     }
     

@@ -226,8 +226,8 @@ public class Layer<T> implements Persistable {
     private Layer<Inference> previous;
 
     private transient List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private transient CheckPointer<byte[]> checkPointer;
-    private transient List<Observer<byte[]>> checkPointObservers = new ArrayList<>();
+    private transient CheckPointOperator<?> checkPointOp;
+    private transient List<Observer<byte[]>> checkPointOpObservers = new ArrayList<>();
     
     
     
@@ -325,7 +325,7 @@ public class Layer<T> implements Persistable {
         factory = new FunctionFactory();
         factory.inference = old.inference.postSerialize(old.inference);
         
-        checkPointObservers = new ArrayList<>();
+        checkPointOpObservers = new ArrayList<>();
         
         if(sensor != null) {
             sensor.setLocalParameters(params);
@@ -404,7 +404,18 @@ public class Layer<T> implements Persistable {
                 (anomalyComputer == null ? "" : "Anomaly"));
         }
     }
-
+    
+    /**
+     * USED INTERNALLY, DO NOT CALL.
+     * @return
+     */
+    public CheckPointOp<byte[]> delegateCheckPointCall() {
+        if(parentNetwork != null) {
+            return parentNetwork.getCheckPointOperator();
+        }
+        return null;
+    }
+    
     /**
      * Sets the parent region which contains this {@code Layer}
      * 
@@ -1426,9 +1437,9 @@ public class Layer<T> implements Persistable {
         return c.getMostProbableBucketIndex(step);
     }
 
-    // ////////////////////////////////////////////////////////////
-    // PRIVATE METHODS AND CLASSES BELOW HERE //
-    // ////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    //          PRIVATE METHODS AND CLASSES BELOW HERE          //
+    //////////////////////////////////////////////////////////////
     /**
      * Notify all subscribers through the delegate that stream processing has
      * been completed or halted.
@@ -1639,7 +1650,7 @@ public class Layer<T> implements Persistable {
         }
         
         sequenceStart = sequenceStart.filter(m -> {
-            if(!checkPointObservers.isEmpty() && parentNetwork != null) {
+            if(!checkPointOpObservers.isEmpty() && parentNetwork != null) {
                 // Execute check point logic
                 doCheckPoint();
             }
@@ -1656,21 +1667,21 @@ public class Layer<T> implements Persistable {
      * Observers; then clears the list of Observers.
      */
     private void doCheckPoint() {
-        byte[] bytes = parentNetwork.internalCheckPoint();
+        byte[] bytes = parentNetwork.internalCheckPointOp();
         
         if(bytes != null) {
             LOGGER.debug("Layer [" + getName() + "] checkPointed file: " + 
-                Network.serializer(null, false).getLastCheckPointFileName() + ",  hc = " + Network.serializer(null, false).hashCode());
+                Persistence.get().getLastCheckPointFileName());
         }else{
             LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
         }
         
-        for(Observer<byte[]> o : checkPointObservers) {
+        for(Observer<byte[]> o : checkPointOpObservers) {
             o.onNext(bytes);
             o.onCompleted();
         }
         
-        checkPointObservers.clear();
+        checkPointOpObservers.clear();
     }
 
     /**
@@ -2005,25 +2016,29 @@ public class Layer<T> implements Persistable {
     }
     
     /**
-     * Returns the pre-built subscribe function used to add subscribers (callers of 
-     * {@link #checkPointer()}) to the check point observer notifications.
-     *  
-     * @return  the internal Observable used for post check point notifications.
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     * 
+     * @param network   the {@link Network} to check point.
+     * @return  the {@link CheckPointOp} operator 
      */
-    CheckPointer<byte[]> checkPointer() {
-        if(checkPointer == null) {
-            checkPointer = new CheckPointerImpl<byte[]>(Layer.this);
+    @SuppressWarnings("unchecked")
+    CheckPointOp<byte[]> getCheckPointOperator() {
+        if(checkPointOp == null) {
+            checkPointOp = new CheckPointOperator<byte[]>(Layer.this);
         }
-        return checkPointer;
+        return (CheckPointOp<byte[]>)checkPointOp;
     }
     
     
     //////////////////////////////////////////////////////////////
     //   Inner Class Definition for CheckPointer (Observable)   //
     //////////////////////////////////////////////////////////////
+    
     /**
      * <p>
-     * Implementation of the CheckPointer interface which serves to checkpoint
+     * Implementation of the CheckPointOp interface which serves to checkpoint
      * and register a listener at the same time. The {@link rx.Observer} will be
      * notified with the byte array of the {@link Network} being serialized.
      * </p><p>
@@ -2032,18 +2047,18 @@ public class Layer<T> implements Persistable {
      * be executed.
      * </p>
      * 
-     * @param <T>       {@link rx.Observer} 
+     * @param <T>       {@link rx.Observer}'s return type
      */
-    static class CheckPointerImpl<T> extends Observable<T> implements CheckPointer<T> {
-        private CheckPointerImpl(Layer<?> l) {
+    static class CheckPointOperator<T> extends Observable<T> implements CheckPointOp<T> {
+        private CheckPointOperator(Layer<?> l) {
             this(new Observable.OnSubscribe<T>() {
-                @SuppressWarnings("unchecked")
-                @Override public void call(Subscriber<? super T> t) {
+                @SuppressWarnings({ "unchecked" })
+                @Override public void call(Subscriber<? super T> r) {
                     if(l.LAYER_THREAD != null) {
                         // The layer thread automatically tests for the list of observers to 
                         // contain > 0 elements, which indicates a check point operation should
                         // be executed.
-                        l.checkPointObservers.add((Observer<byte[]>)t);
+                        l.checkPointOpObservers.add((Observer<byte[]>)r);
                     }else{
                         l.doCheckPoint();
                     }
@@ -2052,10 +2067,10 @@ public class Layer<T> implements Persistable {
         }
         
         /**
-         * Constructs this {@code CheckPointerImpl}
+         * Constructs this {@code CheckPointOperator}
          * @param f     a subscriber function
          */
-        protected CheckPointerImpl(rx.Observable.OnSubscribe<T> f) {
+        protected CheckPointOperator(rx.Observable.OnSubscribe<T> f) {
             super(f);
         }
         

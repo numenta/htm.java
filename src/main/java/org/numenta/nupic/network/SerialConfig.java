@@ -21,6 +21,9 @@
  */
 package org.numenta.nupic.network;
 
+
+import java.io.File;
+import java.io.Serializable;
 import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
@@ -39,7 +42,6 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.network.NetworkSerializer.Scheme;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
@@ -76,10 +78,14 @@ import org.slf4j.LoggerFactory;
  * 
  * @author cogmission
  */
-public class SerialConfig {
-    protected static final Logger LOGGER = LoggerFactory.getLogger(NetworkSerializerImpl.class);
+public class SerialConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    public static final Class<?>[] DEFAULT_REGISTERED_TYPES = new Class[] {
+    protected static final Logger LOGGER = LoggerFactory.getLogger(SerialConfig.class);
+    
+    /** The known types we are serializing */
+    @SuppressWarnings("unchecked")
+    public static final Class<? extends Persistable>[] DEFAULT_REGISTERED_TYPES = new Class[] {
         Region.class, Layer.class, Cell.class, Column.class, Synapse.class,
         ProximalDendrite.class, DistalDendrite.class, Segment.class, Inference.class,
         ManualInput.class, BitHistory.class, Tuple.class, NamedTuple.class, Parameters.class,
@@ -125,14 +131,18 @@ public class SerialConfig {
         StandardOpenOption.TRUNCATE_EXISTING 
     };
     
+    /** Default directory to store the serialized file */
+    public static final String SERIAL_DIR = "HTMNetwork";
+    /** Default directory to store the serialized file */
+    public static final String SERIAL_TEST_DIR = "HTMNetworkTest";
     /** Default serialized Network file name for the {@link Network#store()} method. */
     private static final String SERIAL_FILE = "Network.ser";
     /** Default checkpoint Network file name for the {@link CheckPointer#checkPoint(rx.Observer)} method. */
     private static final String CHECKPOINT_FILE = "Network_Checkpoint_";
     
     private String fileName;
-    private Scheme scheme;
-    private List<Class<?>> registry;
+    private String fileDir;
+    private List<Class<? extends Persistable>> registry;
     private StandardOpenOption[] options = PRODUCTION_OPTIONS;
     private StandardOpenOption[] checkPointOptions = CHECKPOINT_OPTIONS;
     
@@ -143,31 +153,38 @@ public class SerialConfig {
     /** Specifies that as a new CheckPoint file is written, the old one is deleted */
     private boolean oneCheckPointOnly;
     
+     
     
     /**
      * Constructs a new {@code SerialConfig} which uses the default serialization
-     * file name and the specified {@link Scheme}
-     * 
-     * @param scheme        indicates the underlying serialization scheme to use
+     * file name
      */
-    public SerialConfig(Scheme scheme) {
-        this(SERIAL_FILE, scheme);
+    public SerialConfig() {
+        this(null);
     }
     
     /**
      * Constructs a new {@code SerialConfig} which will use the specified file name
-     * and underlying serialization scheme specified.
      * 
      * @param fileName  the file name to use
-     * @param scheme    indicates the underlying serialization scheme to use
      */
-    public SerialConfig(String fileName, Scheme scheme) {
-        this(fileName, scheme, null);
+    public SerialConfig(String fileName) {
+        this(fileName, (String)null);
+    }
+    
+    /**
+     * Constructs a new {@code SerialConfig} which will use the specific file name
+     * and file directory.
+     * 
+     * @param fileName      the file name to use
+     * @param fileDir       the file directory to use
+     */
+    public SerialConfig(String fileName, String fileDir) {
+        this(fileName, fileDir, null);
     }
     
     /**
      * Constructs a new {@code SerialConfig} which will use the specified file name
-     * and underlying serialization scheme specified.
      * 
      * Pre-registering the "known" classes which will be serialized is highly 
      * recommended. These may be specified by the list named "registeredTypes".
@@ -177,16 +194,15 @@ public class SerialConfig {
      * same at deserialization as it was for serialization.
      * 
      * @param fileName          the file name to use
-     * @param scheme            indicates the underlying serialization scheme to use
+     * @param fileDir           the directory to use.
      * @param registeredTypes   list of classes indicating expected types to serialize
      */
-    public SerialConfig(String fileName, Scheme scheme, List<Class<?>> registeredTypes) {
-        this(fileName, scheme, registeredTypes, PRODUCTION_OPTIONS);
+    public SerialConfig(String fileName, String fileDir, List<Class<? extends Persistable>> registeredTypes) {
+        this(fileName, fileDir, registeredTypes, PRODUCTION_OPTIONS);
     }
     
     /**
      * Constructs a new {@code SerialConfig} which will use the specified file name
-     * and underlying serialization {@link NetworkSerializer.Scheme} specified.
      * 
      * Pre-registering the "known" classes which will be serialized is highly 
      * recommended. These may be specified by the list named "registeredTypes".
@@ -199,22 +215,14 @@ public class SerialConfig {
      * create new, truncate, append, read, write etc). see ({@link StandardOpenOption})
      * 
      * @param fileName          the file name to use
-     * @param scheme            indicates the underlying serialization {@link NetworkSerializer.Scheme} to use
      * @param registeredTypes   list of classes indicating expected types to serialize 
      * @param openOptions       A list of options to use for how to work with the serialization 
      *                          file.
      */
-    public SerialConfig(String fileName, Scheme scheme, 
-        List<Class<?>> registeredTypes, StandardOpenOption... openOptions) {
+    public SerialConfig(String fileName, String fileDir, List<Class<? extends Persistable>> registeredTypes, StandardOpenOption... openOptions) {
         
-        if(fileName == null) {
-            throw new IllegalArgumentException("fileName cannot be null.");
-        }else if(scheme == null) {
-            throw new IllegalArgumentException("scheme cannot be null. Please see Network.Scheme enum...");
-        }
-        
-        this.fileName = fileName;
-        this.scheme = scheme;
+        this.fileName = fileName == null ? SERIAL_FILE : fileName;
+        this.fileDir = fileDir == null ? SERIAL_DIR : fileDir;
         
         if(registeredTypes == null) {
             LOGGER.debug("List of registered serialize class types was null. Using the default...");
@@ -224,14 +232,32 @@ public class SerialConfig {
         if(openOptions == null) {
             LOGGER.debug("The OpenOptions were null. Using the default...");
         }
+        
         this.options = openOptions == null ? PRODUCTION_OPTIONS : openOptions;
     }
     
     /**
-     * @return the fileName
+     * The file name used to store the serialized object.
+     * @return the file name to use
      */
     public String getFileName() {
         return fileName;
+    }
+    
+    /**
+     * Returns the directory within which files are saved.
+     * @return  the save directory
+     */
+    public String getFileDir() {
+        return fileDir;
+    }
+    
+    /**
+     * Return the absolute path to the serialize directory.
+     * @return  the absolute path to the serialize directory.
+     */
+    public String getAbsoluteSerialDir() {
+        return System.getProperty("user.home") + File.separator + fileDir;
     }
     
     /**
@@ -273,16 +299,9 @@ public class SerialConfig {
     }
     
     /**
-     * @return the scheme
-     */
-    public Scheme getScheme() {
-        return scheme;
-    }
-    
-    /**
      * @return the registry
      */
-    public List<Class<?>> getRegistry() {
+    public List<Class<? extends Persistable>> getRegistry() {
         return registry;
     }
     
@@ -341,7 +360,6 @@ public class SerialConfig {
         int result = 1;
         result = prime * result + ((fileName == null) ? 0 : fileName.hashCode());
         result = prime * result + ((registry == null) ? 0 : registry.hashCode());
-        result = prime * result + ((scheme == null) ? 0 : scheme.hashCode());
         return result;
     }
 
@@ -367,8 +385,7 @@ public class SerialConfig {
                 return false;
         } else if(!registry.equals(other.registry))
             return false;
-        if(scheme != other.scheme)
-            return false;
         return true;
     }
 }
+

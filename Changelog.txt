@@ -19,5 +19,3 @@ Changes for Serialization branch (notes for CHANGELOG.md)
 11. Added NetworkSerializer interface (and NetworkSerializerImpl) which executes FST serialization
     and simultaneously implements the Kryo interface also.
 12. Added the SerialConfig class which contains config information for the NetworkSerializer.
-13. Added Network.Scheme enum which has two values { FST, KRYO }, to designate underlying 
-    serialization scheme (Kryo still delegates to FST but implements Kryo Serializer interface)
