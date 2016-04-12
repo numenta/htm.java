@@ -157,8 +157,8 @@ public interface PersistenceAPI extends Serializable {
      */
     public <R extends Persistable> R read(String fileName);    
     /**
-     * Loads a {@code Network} from the specified serialized byte array and
-     * returns the de-serialized Network.
+     * Loads a {@code Persistable} from the specified serialized byte array and
+     * returns the de-serialized Persistable.
      *  
      * @param <R> the type of the returned serialized form
      * @param serializedBytes             the name of the serialization file.
