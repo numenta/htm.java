@@ -80,6 +80,7 @@ import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.serialize.SerialConfig;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.FastRandom;

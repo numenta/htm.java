@@ -8,7 +8,7 @@ import java.util.Random;
 import org.junit.Test;
 import org.numenta.nupic.network.Persistence;
 import org.numenta.nupic.network.PersistenceAPI;
-import org.numenta.nupic.network.SerialConfig;
+import org.numenta.nupic.serialize.SerialConfig;
 
 
 public class FastRandomSerializationTest {

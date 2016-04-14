@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.network;
+package org.numenta.nupic.serialize;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,9 +27,8 @@ import java.io.ObjectInputStream;
 import java.io.OutputStream;
 
 import org.numenta.nupic.Persistable;
+import org.numenta.nupic.network.PersistenceAPI;
 import org.nustaq.serialization.FSTConfiguration;
-import org.nustaq.serialization.FSTObjectInput;
-import org.nustaq.serialization.FSTObjectOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,38 +146,11 @@ public class SerializerCore implements Persistable {
         return retVal.postDeSerialize();
     }
     
-    public static class HTMObjectInput extends FSTObjectInput {
-        public HTMObjectInput(InputStream in) throws IOException {
-            super(in);
-        }
-        
-        @SuppressWarnings("rawtypes")
-        public Object readObject(Class...classes) throws Exception {
-            try {
-                Object obj = super.readObject(classes);
-                
-                if(obj instanceof Persistable) {
-                    ((Persistable) obj).postDeSerialize();
-                }
-                return obj;
-            }catch(Exception e) {
-                throw new IOException(e);
-            }
-        }
-    }
-    
-    public static class HTMObjectOutput extends FSTObjectOutput {
-        public HTMObjectOutput(OutputStream out) {
-            super(out);
-        }
-        
-        @SuppressWarnings("rawtypes")
-        public void writeObject(Object t, Class... c) throws IOException {
-            if(t instanceof Persistable) {
-                ((Persistable) t).preSerialize();
-            }
-            
-            super.writeObject(t, c);
-        }
+    /**
+     * For testing only!
+     * @return
+     */
+    FSTConfiguration getSerialScheme() {
+        return fastSerialConfig;
     }
 }

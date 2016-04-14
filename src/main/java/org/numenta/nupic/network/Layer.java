@@ -323,7 +323,7 @@ public class Layer<T> implements Persistable {
         
         FunctionFactory old = factory;
         factory = new FunctionFactory();
-        factory.inference = old.inference.postSerialize(old.inference);
+        factory.inference = old.inference.postDeSerialize(old.inference);
         
         checkPointOpObservers = new ArrayList<>();
         

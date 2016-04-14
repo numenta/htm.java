@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.numenta.nupic.Persistable;
+import org.numenta.nupic.serialize.SerialConfig;
+import org.numenta.nupic.serialize.SerializerCore;
 
 /**
  * <p>

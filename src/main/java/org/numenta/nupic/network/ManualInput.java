@@ -102,7 +102,7 @@ public class ManualInput implements Inference {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T postSerialize(T manualInput) {
+    public <T> T postDeSerialize(T manualInput) {
         ManualInput mi = (ManualInput)manualInput;
         
         ManualInput retVal = new ManualInput();
@@ -517,7 +517,7 @@ public class ManualInput implements Inference {
             return true;
         if(obj == null)
             return false;
-        if(getClass() != obj.getClass())
+        if(!Inference.class.isAssignableFrom(obj.getClass()))
             return false;
         ManualInput other = (ManualInput)obj;
         if(activeCells == null) {

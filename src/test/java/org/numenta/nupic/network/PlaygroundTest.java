@@ -21,6 +21,9 @@
  */
 package org.numenta.nupic.network;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -39,6 +42,7 @@ import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
+import org.numenta.nupic.serialize.HTMObjectInput;
 import org.numenta.nupic.util.FastRandom;
 
 import rx.Observer;
@@ -186,5 +190,17 @@ public class PlaygroundTest {
             case 0: recordOut = "Sunday (7)";break;
         }
         return recordOut;
+    }
+    
+    public <T> T main(String[] args) throws Exception {
+        InputStream input = new FileInputStream(new File("myfile"));
+        //HTMObjectInput reader = Persistence.get().serializer().getObjectInput(input);
+        try (HTMObjectInput reader = Persistence.get().serializer().getObjectInput(input)) {
+            Class<?> aClass = null;//...  // Persistable subclass
+            T t = (T) reader.readObject(aClass); // Where T is the Persistable subclass type (HTM.java object).
+            return t;
+        } catch(Exception e) {
+            throw e;
+        }
     }
 }

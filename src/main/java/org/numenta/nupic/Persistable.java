@@ -25,7 +25,7 @@ public interface Persistable extends Serializable {
      * reified.
      */
     @SuppressWarnings("unchecked")
-    public default <T> T postDeSerialize() { return (T)this; }
+    public default <T> T postDeSerialize() { return postDeSerialize((T)this); }
     /**
      * <em>FOR INTERNAL USE ONLY</em><p>
      * Called to implement a full or partial copy of an object 
@@ -34,6 +34,6 @@ public interface Persistable extends Serializable {
      * @param t     the instance of type &lt;T&gt;
      * @return  a post serialized custom form of T
      */
-    public default <T> T postSerialize(T t) { return t; }
+    public default <T> T postDeSerialize(T t) { return t; }
     
 }
