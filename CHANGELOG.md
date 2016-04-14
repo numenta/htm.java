@@ -13,12 +13,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.6-SNAPSHOT]
+## Unreleased [0.6.7-SNAPSHOT]
+#### Removed
+#### Added
+#### Changed
+#### Fixed
+
+***
+
+## [v0.6.6-alpha] - 2016-04-14
 #### Removed
 * [[PR #384](https://github.com/numenta/htm.java/pull/384)] Removed obsolete demo jars which are in htm.java-examples and don't need to be here.
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)]  Added new PersistenceAPI (includes serialization; stream handling; new classes and new "serialize" package)
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Added changes to build script for forcing tests to run when source hasn't changed
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Added changes to build script for easy turn on of debug output
 * [[PR #405](https://github.com/numenta/htm.java/pull/402)] Added new [Docker File reference-build environment](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment)!
 * [[PR #397](https://github.com/numenta/htm.java/pull/397)] Added close() method to the Network class to bring it inline with Region & Layer - Added Tests for new functionality. (@Mandarx)
 * [[PR #396](https://github.com/numenta/htm.java/pull/396)] Added Local.US to MetricsTrace to ensure (expected) dots.
@@ -32,6 +43,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Renamed class EncoderResult to Encoding
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Renamed class ClassifierResult to Classification
 * [[PR #404](https://github.com/numenta/htm.java/pull/404)] LayerTest & PALayerTest, subscribe() and start() call order to eliminate Thread Race Condition and run on [OpenJDK](http://openjdk.java.net)
 * (3-1-2016) Updated htm.java-examples for change to GLOBAL_INHIBITION parameter (sync)
 * [[PR #391](https://github.com/numenta/htm.java/pull/391)] Incremented the Gradle Shade Plugin version to 1.2.3
