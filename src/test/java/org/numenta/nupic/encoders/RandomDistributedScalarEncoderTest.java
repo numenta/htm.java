@@ -365,7 +365,7 @@ public class RandomDistributedScalarEncoderTest {
 	}
 	
 	@Test
-	public void testCountOverlapIndeciesWithWrongIndices_i_j() {
+	public void testCountOverlapIndicesWithWrongIndices_i_j() {
 		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)
@@ -390,7 +390,7 @@ public class RandomDistributedScalarEncoderTest {
 	}
 	
 	@Test
-	public void testCountOverlapIndeciesWithWrongIndices_i() {
+	public void testCountOverlapIndicesWithWrongIndices_i() {
 		builder = RandomDistributedScalarEncoder.builder()
 				.name("enc")
 				.resolution(1)

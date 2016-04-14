@@ -30,6 +30,8 @@ import org.numenta.nupic.Connections;
 
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	
+	private static final long serialVersionUID = 1L;
+    
 	public double prevAbsolute = 0;
 	public double prevDelta = 0;
 	public boolean stateLock = false;
@@ -147,7 +149,7 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#getBucketInfo(int[])
 	 */
 	@Override
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
+	public List<Encoding> getBucketInfo(int[] buckets) {
 		return super.getBucketInfo(buckets);
 	}
 
@@ -156,21 +158,21 @@ public class DeltaEncoder extends AdaptiveScalarEncoder {
 	 * @see org.numenta.nupic.encoders.AdaptiveScalarEncoder#topDownCompute(int[])
 	 */
 	@Override
-	public List<EncoderResult> topDownCompute(int[] encoded) {
+	public List<Encoding> topDownCompute(int[] encoded) {
 		if (this.prevAbsolute == 0 || this.prevDelta == 0) {
 			int[] initialBuckets = new int[this.n];
 			Arrays.fill(initialBuckets, 0);
-			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
-			EncoderResult encoderResult = new EncoderResult(0, 0, initialBuckets);
+			List<Encoding> encoderResultList = new ArrayList<Encoding>();
+			Encoding encoderResult = new Encoding(0, 0, initialBuckets);
 			encoderResultList.add(encoderResult);
 			return encoderResultList;
 		}
-		List<EncoderResult> erList = super.topDownCompute(encoded);
+		List<Encoding> erList = super.topDownCompute(encoded);
 		if (this.prevAbsolute != 0) {
 			double objVal = (double)(erList.get(0).getValue()) + this.prevAbsolute;
 			double objScalar = erList.get(0).getScalar().doubleValue() + this.prevAbsolute;
-			List<EncoderResult> encoderResultList = new ArrayList<EncoderResult>();
-			EncoderResult encoderResult = new EncoderResult(objVal, objScalar, erList.get(0).getEncoding());
+			List<Encoding> encoderResultList = new ArrayList<Encoding>();
+			Encoding encoderResult = new Encoding(objVal, objScalar, erList.get(0).getEncoding());
 			encoderResultList.add(encoderResult);
 			return encoderResultList;
 		}

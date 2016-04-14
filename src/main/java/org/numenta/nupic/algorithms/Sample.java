@@ -23,13 +23,16 @@
 package org.numenta.nupic.algorithms;
 
 import org.joda.time.DateTime;
+import org.numenta.nupic.Persistable;
 
 /**
  * A sample data point or record consisting of a timestamp, value, and score.
  * This class is used as an input value to methods in the {@link AnomalyLikelihood}
  * class.
  */
-public class Sample {
+public class Sample implements Persistable {
+    private static final long serialVersionUID = 1L;
+    
     public final DateTime date;
     /** Same thing as average */
     public final double score;

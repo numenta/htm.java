@@ -33,7 +33,10 @@ import org.numenta.nupic.util.Tuple;
  * @see Tuple
  */
 public class EncoderTuple extends Tuple {
-	/**
+	
+    private static final long serialVersionUID = 1L;
+
+    /**
 	 * Constructs a new {@code EncoderTuple}
 	 * 
 	 * @param name		the {@link Encoder}'s name

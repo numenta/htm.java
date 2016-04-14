@@ -35,7 +35,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.Tuple;

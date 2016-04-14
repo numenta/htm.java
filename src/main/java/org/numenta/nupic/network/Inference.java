@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
  * with Numenta, Inc., for a separate license for this software code, the
  * following terms and conditions apply:
  *
@@ -25,8 +25,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
@@ -43,7 +44,7 @@ import rx.functions.Func1;
  * 
  * @author David Ray
  */
-public interface Inference {
+public interface Inference extends Persistable {
     /**
      * Returns the input record sequence number associated with 
      * the state of a {@link Layer} which this {@code Inference}
@@ -102,12 +103,12 @@ public interface Inference {
      */
     public int[] getEncoding();
     /**
-     * Returns the most recent {@link ClassifierResult}
+     * Returns the most recent {@link Classification}
      * 
      * @param fieldName
      * @return
      */
-    public ClassifierResult<Object> getClassification(String fieldName);
+    public Classification<Object> getClassification(String fieldName);
     /**
      * Returns the most recent anomaly calculation.
      * @return

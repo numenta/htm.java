@@ -25,6 +25,8 @@ package org.numenta.nupic.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
@@ -39,7 +41,10 @@ import gnu.trove.set.hash.TIntHashSet;
  * @author Jose Luis Martin
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix {
+public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private int[] trueCounts;
 
     /**
@@ -418,5 +423,33 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix {
             if(keySet.contains(i)) return true;
         }
         return false;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + Arrays.hashCode(trueCounts);
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!super.equals(obj))
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        AbstractSparseBinaryMatrix other = (AbstractSparseBinaryMatrix)obj;
+        if(!Arrays.equals(trueCounts, other.trueCounts))
+            return false;
+        return true;
     }
 }

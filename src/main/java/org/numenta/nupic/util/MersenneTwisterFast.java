@@ -3,7 +3,8 @@ package org.numenta.nupic.util;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
+
+import org.numenta.nupic.Persistable;
 
 /** 
  * <h3>MersenneTwister and MersenneTwisterFast</h3>
@@ -178,7 +179,7 @@ import java.io.Serializable;
 // on the code, I strongly suggest looking at MersenneTwister.java first.
 // -- Sean
 
-public strictfp class MersenneTwisterFast implements Serializable, Cloneable
+public strictfp class MersenneTwisterFast implements Persistable, Cloneable
     {
     // Serialization
     private static final long serialVersionUID = -8219700664442619525L;  // locked as of Version 15

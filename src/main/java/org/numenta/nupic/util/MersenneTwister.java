@@ -5,7 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
+
+import org.numenta.nupic.Persistable;
 
 /** 
  * <h3>MersenneTwister and MersenneTwisterFast</h3>
@@ -173,7 +174,7 @@ import java.io.Serializable;
  @version 20
 */
 
-public strictfp class MersenneTwister extends java.util.Random implements Serializable, Cloneable
+public strictfp class MersenneTwister extends java.util.Random implements Persistable, Cloneable
     {
     // Serialization
     private static final long serialVersionUID = -4035832775130174188L;  // locked as of Version 15

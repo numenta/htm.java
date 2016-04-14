@@ -139,7 +139,7 @@ public class LogEncoderTest {
 		
 		while (value < le.getMaxVal()) {
 			int[] output = le.encode(value);
-			EncoderResult topDown = le.topDownCompute(output).get(0);
+			Encoding topDown = le.topDownCompute(output).get(0);
 			
 			// Do the scaling by hand here.
 			double scaledVal=  Math.log10(value);

@@ -55,9 +55,11 @@ import java.util.Set;
  * Unknown categories are encoded as a single
  *
  * @see Encoder
- * @see EncoderResult
+ * @see Encoding
  */
 public class SDRCategoryEncoder extends Encoder<String> {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(SDRCategoryEncoder.class);
 
@@ -339,7 +341,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
      * {@inheritDoc}
      */
     @Override
-    public List<EncoderResult> topDownCompute(int[] encoded) {
+    public List<Encoding> topDownCompute(int[] encoded) {
         if (sdrByCategory.size() == 0) {
             return new ArrayList<>();
         }
@@ -352,7 +354,7 @@ public class SDRCategoryEncoder extends Encoder<String> {
      * {@inheritDoc}
      */
     @Override
-    public List<EncoderResult> getBucketInfo(int[] buckets) {
+    public List<Encoding> getBucketInfo(int[] buckets) {
         if (sdrByCategory.size() == 0) {
             return new ArrayList<>();
         }
@@ -403,11 +405,11 @@ public class SDRCategoryEncoder extends Encoder<String> {
     }
 
 
-    private List<EncoderResult> getEncoderResultsByIndex(SparseObjectMatrix<int[]> topDownMapping, int categoryIndex) {
-        List<EncoderResult> result = new ArrayList<>();
+    private List<Encoding> getEncoderResultsByIndex(SparseObjectMatrix<int[]> topDownMapping, int categoryIndex) {
+        List<Encoding> result = new ArrayList<>();
         String category = sdrByCategory.getCategory(categoryIndex);
         int[] encoding = topDownMapping.getObject(categoryIndex);
-        result.add(new EncoderResult(category, categoryIndex, encoding));
+        result.add(new Encoding(category, categoryIndex, encoding));
         return result;
     }
 

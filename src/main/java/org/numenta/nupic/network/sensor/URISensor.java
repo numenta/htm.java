@@ -24,10 +24,9 @@ package org.numenta.nupic.network.sensor;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
-
-import org.numenta.nupic.ValueList;
 
 /**
  * Sensor which creates its source stream from a {@link URI}
@@ -39,11 +38,13 @@ import org.numenta.nupic.ValueList;
  * @see Sensor#create(SensorFactory, SensorParams)
  */
 public class URISensor implements Sensor<URI>  {
+    private static final long serialVersionUID = 1L;
+    
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
-    private BatchedCsvStream<String[]> stream;
+    private transient BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
     
@@ -54,7 +55,7 @@ public class URISensor implements Sensor<URI>  {
      * @param params
      */
     private URISensor(SensorParams params) {
-        if(!params.hasKey("URI")) {
+        if(params == null || !params.hasKey("URI")) {
             throw new IllegalArgumentException("Passed improperly formed Tuple: no key for \"URI\"");
         }
         
@@ -62,8 +63,15 @@ public class URISensor implements Sensor<URI>  {
         
         BufferedReader br = null;
         try {
-            InputStream is = new URL((String)params.get("URI")).openStream();
-            br = new BufferedReader(new InputStreamReader(is));
+            Object obj = params.get("URI");
+            InputStream is = null;
+            if(obj instanceof String) {
+                is = new URL((String)params.get("URI")).openStream();
+                br = new BufferedReader(new InputStreamReader(is));
+            }else if(obj instanceof Reader) {
+                br = new BufferedReader((Reader)obj);
+            }
+            
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -91,7 +99,7 @@ public class URISensor implements Sensor<URI>  {
      * Returns the {@link SensorParams} used to configure this {@code URISensor}
      */
     @Override
-    public SensorParams getParams() {
+    public SensorParams getSensorParams() {
         return params;
     }
     

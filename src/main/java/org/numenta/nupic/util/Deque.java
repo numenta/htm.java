@@ -22,8 +22,11 @@
 
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import com.cedarsoftware.util.DeepEquals;
 
 /**
  * Double ended queue implementation which has a restricted capacity.
@@ -40,7 +43,9 @@ import java.util.concurrent.LinkedBlockingDeque;
  *
  * @param <E>
  */
-public class Deque<E> implements Iterable<E> {
+public class Deque<E> implements Iterable<E>, Serializable {
+	private static final long serialVersionUID = 1L;
+    
 	/** Backing array list */
 	private LinkedBlockingDeque<E> backingList = new LinkedBlockingDeque<E>();
 	/** Originating size of this {@code Deque} */
@@ -304,7 +309,7 @@ public class Deque<E> implements Iterable<E> {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((backingList == null) ? 0 : backingList.hashCode());
+				+ ((backingList == null) ? 0 : DeepEquals.deepHashCode(backingList));
 		result = prime * result + capacity;
 		result = prime * result + currentSize;
 		return result;

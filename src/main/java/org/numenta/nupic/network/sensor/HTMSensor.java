@@ -21,11 +21,9 @@
  */
 package org.numenta.nupic.network.sensor;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -59,6 +57,10 @@ import org.numenta.nupic.encoders.SDRCategoryEncoder;
 import org.numenta.nupic.encoders.SDRPassThroughEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
 
 /**
  * <p>
@@ -85,20 +87,24 @@ import org.numenta.nupic.encoders.ScalarEncoder;
  *
  * @param <T>   the input type (i.e. File, URL, etc.)
  */
-public class HTMSensor<T> implements Sensor<T> {
+public class HTMSensor<T> implements Sensor<T>, Serializable {
+    private static final long serialVersionUID = 1L;
+    
+    private boolean encodersInitted;
     private Sensor<T> delegate;
+    private SensorParams sensorParams;
     private Header header;
     private Parameters localParameters;
     private MultiEncoder encoder;
-    private Stream<int[]> outputStream;
-    private List<int[]> output;
-    private InputMap inputMap;
+    private transient Stream<int[]> outputStream;
+    private transient List<int[]> output;
+    private transient InputMap inputMap;
     
     private TIntObjectMap<Encoder<?>> indexToEncoderMap;
     private TObjectIntHashMap<String> indexFieldMap = new TObjectIntHashMap<String>();
     
     
-    private Iterator<int[]> mainIterator;
+    private transient Iterator<int[]> mainIterator;
     private List<LinkedList<int[]>> fanOuts = new ArrayList<>();
     
     /** Protects {@ #mainIterator} formation and the next() call */
@@ -113,11 +119,34 @@ public class HTMSensor<T> implements Sensor<T> {
      */
     public HTMSensor(Sensor<T> sensor) {
         this.delegate = sensor;
+        this.sensorParams = sensor.getSensorParams();
         header = new Header(sensor.getInputStream().getMeta());
         if(header == null || header.size() < 3) {
             throw new IllegalStateException("Header must always be present; and have 3 lines.");
         }
         createEncoder();
+    }
+    
+    /**
+     * DO NOT CALL THIS METHOD! 
+     * Used internally by deserialization routines.
+     * 
+     * Sets the {@link Parameters} reconstituted from deserialization 
+     * @param localParameters   the Parameters to use.
+     */
+    public void setLocalParameters(Parameters localParameters) {
+        this.localParameters = localParameters;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public HTMSensor<?> postDeSerialize() {
+        initEncoder(localParameters);
+        makeIndexEncoderMap();
+        return this;
     }
     
     /**
@@ -201,6 +230,15 @@ public class HTMSensor<T> implements Sensor<T> {
         }
         
     }
+    
+    /**
+     * Returns the class of the underling {@link Sensor}
+     * @return  the underlying delegate's class
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends Sensor<?>> getSensorClass() {
+        return (Class<? extends Sensor<?>>)delegate.getClass();
+    }
 
     /**
      * Returns an instance of {@link SensorParams} used 
@@ -210,8 +248,8 @@ public class HTMSensor<T> implements Sensor<T> {
      * @return a {@link SensorParams} object.
      */
     @Override
-    public SensorParams getParams() {
-        return delegate.getParams();
+    public SensorParams getSensorParams() {
+        return sensorParams;
     }
 
     /**
@@ -254,8 +292,8 @@ public class HTMSensor<T> implements Sensor<T> {
     
     /**
      * Specialized {@link Map} for the avoidance of key hashing. This
-     * optimization overrides {@link Map#get(Object)directly accesses the input arrays providing input
-     * and should be extremely faster.
+     * optimization overrides {@link Map#get(Object)} and directly accesses the 
+     * input arrays providing input and should be extremely faster.
      */
     class InputMap extends HashMap<String, Object> {
         private static final long serialVersionUID = 1L;
@@ -548,8 +586,8 @@ public class HTMSensor<T> implements Sensor<T> {
     }
 
     /**
-     * Sets the local parameters used to configure the major
-     * algorithmic components.
+     * Initializes this {@code HTMSensor}'s internal encoders if and 
+     * only if the encoders have not been previously initialized.
      */
     @SuppressWarnings("unchecked")
     public void initEncoder(Parameters p) {
@@ -557,12 +595,23 @@ public class HTMSensor<T> implements Sensor<T> {
         
         Map<String, Map<String, Object>> encoderSettings;
         if((encoderSettings = (Map<String, Map<String, Object>>)p.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null &&
-            encoder.getEncoders().isEmpty() && 
-                indexToEncoderMap == null) {
+            !encodersInitted) {
             
             initEncoders(encoderSettings);
             makeIndexEncoderMap();
+            
+            encodersInitted = true;
         }
+    }
+    
+    /**
+     * Returns a flag indicating whether the internal encoders of this
+     * sensor have been initialized. 
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean encodersInitted() {
+        return encodersInitted;
     }
     
     /**
@@ -603,6 +652,43 @@ public class HTMSensor<T> implements Sensor<T> {
      */
     public <K> MultiEncoder getEncoder() {
         return (MultiEncoder)encoder;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((indexFieldMap == null) ? 0 : indexFieldMap.hashCode());
+        result = prime * result + ((sensorParams == null) ? 0 : Arrays.deepHashCode(sensorParams.keys()));
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        HTMSensor<?> other = (HTMSensor<?>)obj;
+        if(indexFieldMap == null) {
+            if(other.indexFieldMap != null)
+                return false;
+        } else if(!indexFieldMap.equals(other.indexFieldMap))
+            return false;
+        if(sensorParams == null) {
+            if(other.sensorParams != null)
+                return false;
+        } else if(!Arrays.equals(sensorParams.keys(), other.sensorParams.keys()))
+            return false;
+        return true;
     }
 
 }

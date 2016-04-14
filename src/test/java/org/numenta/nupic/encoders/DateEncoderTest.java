@@ -154,12 +154,12 @@ public class DateEncoderTest {
         setUp();
         initDE();
 
-        List<EncoderResult> topDown = de.topDownCompute(bits);
+        List<Encoding> topDown = de.topDownCompute(bits);
 
         List<Double> expectedList = Arrays.asList(320.25, 3.5, .167, 14.8);
 
         for (int i = 0; i < topDown.size(); i++) {
-            EncoderResult r = topDown.get(i);
+            Encoding r = topDown.get(i);
             double actual = (double)r.getValue();
             double expected = expectedList.get(i);
             assertEquals(expected, actual, 4.0);
@@ -177,14 +177,14 @@ public class DateEncoderTest {
 
         int[] bucketIndices = de.getBucketIndices(dt);
         System.out.println(String.format("bucket indices: %s", Arrays.toString(bucketIndices)));
-        List<EncoderResult> bucketInfo = de.getBucketInfo(bucketIndices);
+        List<Encoding> bucketInfo = de.getBucketInfo(bucketIndices);
 
         List<Double> expectedList = Arrays.asList(320.25, 3.5, .167, 14.8);
 
         TIntList encodings = new TIntArrayList();
 
         for (int i = 0; i < bucketInfo.size(); i++) {
-            EncoderResult r = bucketInfo.get(i);
+            Encoding r = bucketInfo.get(i);
             double actual = (double)r.getValue();
             double expected = expectedList.get(i);
             assertEquals(expected, actual, 4.0);
@@ -239,8 +239,6 @@ public class DateEncoderTest {
         //DateTime d = new DateTime(1988,5,29,20,0);
         DateTime d = new DateTime(1988,5,29,20,0);
 
-        System.out.println("DateEncoderTest.testWeekend(): e.encode(d)  = " + Arrays.toString(e.encode(d)));
-        System.out.println("DateEncoderTest.testWeekend(): e2.encode(d) = " + Arrays.toString(e2.encode(d)));
         assertArrayEquals(e.encode(d), e2.encode(d));
 
         for (int i = 0; i < 300; i++) {

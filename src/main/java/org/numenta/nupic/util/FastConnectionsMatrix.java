@@ -23,6 +23,7 @@
 package org.numenta.nupic.util;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
 
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -32,7 +33,9 @@ import gnu.trove.set.hash.TIntHashSet;
  * 
  * @author Jose Luis Martin
  */
-public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix {
+public class FastConnectionsMatrix extends AbstractSparseBinaryMatrix implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
     
     private TIntHashSet[] columns;
    

@@ -111,6 +111,14 @@ public class SDR {
      * @return
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
+        try { 
+            // This ugliness is inserted because, while there is no sharing by different threads and
+            // and no reentrant access, JUnit tests involving many tests make this throw a 
+            // ConcurrentModificationException even though this code is isolated???? 
+            // In that case, running it twice corrects the internal modCount. :-(
+            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
+        }catch(Exception e) {
+            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
+        }
     }
 }

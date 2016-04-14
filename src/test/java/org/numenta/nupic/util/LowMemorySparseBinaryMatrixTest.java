@@ -54,5 +54,5 @@ public class LowMemorySparseBinaryMatrixTest {
 
         Assert.assertArrayEquals(expected, sp.getTrueCounts());
     }
-
+    
 }

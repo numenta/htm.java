@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder {
+	private static final long serialVersionUID = 1L;
+    
 	private static MersenneTwister random = new MersenneTwister();
 
 	/**

@@ -46,7 +46,7 @@ public class CLAClassifierTest {
 	public void testSingleValue() {
 		setUp();
 		
-		ClassifierResult<Double> retVal = null;
+		Classification<Double> retVal = null;
 		for(int recordNum = 0;recordNum < 10;recordNum++) {
 			retVal = compute(classifier, recordNum, new int[] { 1, 5 }, 0, 10);
 		}
@@ -63,7 +63,7 @@ public class CLAClassifierTest {
 		classifier = new CLAClassifier(new TIntArrayList(new int[] { 0 }), 0.001, 0.3, 0);
 		
 		// Enough times to perform Inference and learn associations
-		ClassifierResult<Double> retVal = null;
+		Classification<Double> retVal = null;
 		for(int recordNum = 0;recordNum < 10;recordNum++) {
 			retVal = compute(classifier, recordNum, new int[] { 1, 5 }, 0, 10);
 		}
@@ -82,7 +82,7 @@ public class CLAClassifierTest {
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", 34.7);
-		ClassifierResult<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals(1, result.getActualValueCount());
@@ -95,7 +95,7 @@ public class CLAClassifierTest {
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", 34.7);
-		ClassifierResult<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals(1, result.getActualValueCount());
@@ -110,7 +110,7 @@ public class CLAClassifierTest {
 		classification.put("actValue", 34.7);
 		classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
-		ClassifierResult<Double> result = classifier.compute(1, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(1, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals(5, result.getActualValueCount());
@@ -124,7 +124,7 @@ public class CLAClassifierTest {
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", 34.7);
-		ClassifierResult<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		recordNum += 1;
 		
 		classification.put("bucketIdx", 5);
@@ -165,7 +165,7 @@ public class CLAClassifierTest {
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();
 		classification.put("bucketIdx", null);
 		classification.put("actValue", null);
-		ClassifierResult<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals(1, result.getActualValueCount());
@@ -179,7 +179,7 @@ public class CLAClassifierTest {
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", "D");
 		classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
-		ClassifierResult<String> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<String> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals("D", result.getActualValue(4));
@@ -193,7 +193,7 @@ public class CLAClassifierTest {
 		classification.put("actValue", "D");
 		classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		classification.put("actValue", "E");
-		ClassifierResult<String> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<String> result = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
 		assertEquals("D", result.getActualValue(4));
@@ -206,7 +206,7 @@ public class CLAClassifierTest {
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", 34.7);
-		ClassifierResult<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		recordNum += 1;
 		
 		classification.put("bucketIdx", 5);
@@ -225,7 +225,6 @@ public class CLAClassifierTest {
 		recordNum += 1;
 		
 		String json = classifier.serialize();
-		System.out.println(json);
 		
 		//Using the deserialized classifier, continue test
 		CLAClassifier c = CLAClassifier.deSerialize(json);
@@ -250,7 +249,7 @@ public class CLAClassifierTest {
 	public void testOverlapPattern() {
 		setUp();
 		
-		ClassifierResult<Double> result = compute(classifier, 0, new int[] { 1, 5 }, 9, 9);
+		Classification<Double> result = compute(classifier, 0, new int[] { 1, 5 }, 9, 9);
 		result = compute(classifier, 1, new int[] { 1, 5 }, 9, 9);
 		result = compute(classifier, 1, new int[] { 1, 5 }, 9, 9);
 		result = compute(classifier, 2, new int[] { 3, 5 }, 2, 2);
@@ -285,7 +284,7 @@ public class CLAClassifierTest {
 		classifier.steps = new TIntArrayList(new int[] { 1, 2 });
 		
 		// Only should return one actual value bucket.
-		ClassifierResult<Double> result = null;
+		Classification<Double> result = null;
 		int recordNum = 0;
 		for(int i = 0;i < 10;i++, recordNum++) {
 			result = compute(classifier, recordNum, new int[] { 1, 5 }, 0, 10);
@@ -301,7 +300,7 @@ public class CLAClassifierTest {
 	public void testMultistepSimple() {
 		classifier = new CLAClassifier(new TIntArrayList(new int[] { 1, 2 }), 0.001, 0.3, 0);
 		
-		ClassifierResult<Double> result = null;
+		Classification<Double> result = null;
 		int recordNum = 0;
 		for(int i = 0;i < 100;i++, recordNum++) {
 			result = compute(classifier, recordNum, new int[] { i % 10 }, i % 10, (i % 10) * 10);
@@ -357,7 +356,7 @@ public class CLAClassifierTest {
 		//                                       [2, 4, 6] => bucket 2
 		classification.put("bucketIdx", 2);
 		classification.put("actValue", 2);
-		ClassifierResult<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 3, 5 }, true, true);
+		Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 3, 5 }, true, true);
 		recordNum += 1;
 		assertEquals(0.0, result.getStat(1, 0), 0.00001);
 		assertEquals(1.0, result.getStat(1, 1), 0.00001);
@@ -427,19 +426,19 @@ public class CLAClassifierTest {
 		classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		recordNum = 2;
-		ClassifierResult<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+		Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		
 		assertTrue(Arrays.equals(new int[] { 2 }, result.stepSet()));
 		assertEquals(1, result.getActualValueCount());
 		assertEquals(34.7, result.getActualValue(0), 0.01);
 	}
 
-	public void checkValue(ClassifierResult<?> retVal, int index, Object value, double probability) {
+	public void checkValue(Classification<?> retVal, int index, Object value, double probability) {
 		assertEquals(retVal.getActualValue(index), value);
 		assertEquals(probability, retVal.getStat(1, index), 0.01);
 	}
 	
-	public <T> ClassifierResult<T> compute(CLAClassifier classifier, int recordNum, int[] pattern,
+	public <T> Classification<T> compute(CLAClassifier classifier, int recordNum, int[] pattern,
 		int bucket, Object value) {
 		
 		Map<String, Object> classification = new LinkedHashMap<String, Object>();

@@ -1,29 +1,26 @@
-package org.numenta.nupic.network;
+package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Random;
 
 import org.junit.Test;
-import org.numenta.nupic.Parameters;
-import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.network.sensor.ObservableSensor;
-import org.numenta.nupic.network.sensor.Publisher;
-import org.numenta.nupic.network.sensor.Sensor;
-import org.numenta.nupic.network.sensor.SensorParams;
-import org.numenta.nupic.network.sensor.SensorParams.Keys;
-import org.numenta.nupic.util.FastRandom;
-
-import rx.Subscriber;
+import org.numenta.nupic.network.Persistence;
+import org.numenta.nupic.network.PersistenceAPI;
+import org.numenta.nupic.serialize.SerialConfig;
 
 
-public class JavaNetworkSerializationTest {
-    
+public class FastRandomSerializationTest {
+
+    /**
+     * Make sure that the main Random Number Generator ({@link FastRandom}) outputs
+     * the same numbers when serialized as when run without serialization. This test
+     * is critical for all other tests to work... The serialized RNG must be de-serialized
+     * with its previous state in tact.
+     */
     @Test
-    public void testRandom() {
+    public void testFastRandomSerialization() {
         int[] expected = {
             1363149450,1392426,-1321038434,178290815,1405980988,1781875497,-136869635,1868054559,-672588233,-1162151267,1720151456,-1008706495,-1365165498,915476271,-1804467553,612986230,-1256379021,-541095717,-2012950675,656634571,-45418824,1977949912,662495460,-2109045630,322871082,-2003925544,640791781,-1231402506,-721277683,-2100712695,-1362519673,2028186582,560711130,-347037183,-656185823,-47187857,-2082080606,1896440217,-2078221114,152035490,
             1828093261,1592642599,-34737991,-466000037,801626099,-1387957700,-753811349,1542243986,-1380040801,222006583,-694756685,1685865797,841017291,-279625651,-505461673,-640483855,-1553072062,-154838489,-268949482,1431256308,-937150443,-987045477,1527411637,1483789465,1706474476,-73615750,-815243696,668347339,-952146808,-460377268,-920297988,-1242230154,1507527618,-2029488663,2120685341,-471335725,-148669435,-1309852892,-2118531749,-875530488,
@@ -132,120 +129,28 @@ public class JavaNetworkSerializationTest {
         for(int i = 0;i < 100;i++) {
             for(int j = 0;j < 40;j++) {
                 int next = r.nextInt();
-                if(next != expected[i * 40 + j]) { 
-                    //System.out.println("repeat = " + i);
-                }
-                //System.out.print(next + ",");
+                assertTrue(next == expected[i * 40 + j]);
             }
-            //System.out.println("");
+        }
+        
+        SerialConfig config = new SerialConfig("FastRandomSerializerTest");
+        PersistenceAPI api = Persistence.get(config);
+        FastRandom fr = new FastRandom(42);
+        
+        int middle = expected.length / 2;
+        for(int i = 0;i < middle;i++) {
+            assertEquals(expected[i], fr.nextInt());
+        }
+        
+        // 1. serialize
+        byte[] data = api.write(fr);
+        
+        // 2. deserialize
+        FastRandom serialized = api.read(data);
+        
+        for(int i = middle;i < expected.length;i++) {
+            assertEquals(expected[i], serialized.nextInt());
         }
     }
-    
-    public Parameters getParameters() {
-        Parameters parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 8 });
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
-        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
-        
-        //SpatialPooler specific
-        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
-        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
-        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
-        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
-        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        parameters.setParameterByKey(KEY.SEED, 42);
-        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
-        
-        //Temporal Memory specific
-        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.8);
-        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 5);
-        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
-        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.05);
-        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
-        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 4);
-        parameters.setParameterByKey(KEY.RANDOM, new FastRandom(42));
-        
-        return parameters;
-    }
-    
-    @Test
-    public void testThreadedPublisher() {
-        Publisher manual = Publisher.builder()
-            .addHeader("dayOfWeek")
-            .addHeader("darr")
-            .addHeader("B").build();
 
-        Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", manual}));
-                    
-        Parameters p = getParameters();
-        
-        Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
-                        null, // map
-                        20,    // n
-                        0,    // w
-                        0,    // min
-                        0,    // max
-                        0,    // radius
-                        0,    // resolution
-                        null, // periodic
-                        null,                 // clip
-                        Boolean.TRUE,         // forced
-                        "dayOfWeek",          // fieldName
-                        "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
-                        "SDRPassThroughEncoder"); // encoderType
-        
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
-        
-        Network network = Network.create("test network", p)
-            .add(Network.createRegion("r1")
-                .add(Network.createLayer("1", p)
-                    .add(new TemporalMemory())
-                    .add(sensor)));
-                    
-        network.start();
-        
-        network.observe().subscribe(new Subscriber<Inference>() {
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference i) {}
-        });
-        
-        final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        final int[] input2 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
-        final int[] input3 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-        final int[] input4 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
-        final int[] input5 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
-        final int[] input6 = new int[] { 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
-        final int[] input7 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
-        final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
-        
-        // Now push some warm up data through so that "onNext" is called above
-        int timeUntilStable = 602;
-        for(int j = 0;j < timeUntilStable;j++) {
-            for(int i = 0;i < inputs.length;i++) {
-                manual.onNext(Arrays.toString(inputs[i]));
-            }
-        }
-        
-        manual.onComplete();
-        
-        Layer<?> l = network.lookup("r1").lookup("1");
-        try {
-            l.getLayerThread().join();
-        }catch(Exception e) {
-            assertEquals(InterruptedException.class, e.getClass());
-        }
-    }
-    
 }

@@ -1,6 +1,6 @@
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
+import org.numenta.nupic.Persistable;
 
 
 /**
@@ -8,8 +8,9 @@ import java.io.Serializable;
  * 30% faster and better quality than the built-in java.util.random see also
  * see http://www.javamex.com/tutorials/random_numbers/xorshift.shtml
  */
-public strictfp class FastRandom extends java.util.Random implements Serializable, Cloneable {
-    private static final long serialVersionUID = 6208727693524452904L;
+public strictfp class FastRandom extends java.util.Random implements Persistable, Cloneable {
+    private static final long serialVersionUID = 1L;
+    
     protected long seed;
 
     /**
@@ -31,9 +32,7 @@ public strictfp class FastRandom extends java.util.Random implements Serializabl
     public FastRandom(long seed) {
         this.seed = seed;
     }
-    public FastRandom(int[] seed) {
-        this.seed = seed[0];
-    }
+    
     /**
      * Returns the current state of the seed, can be used to clone the object
      *

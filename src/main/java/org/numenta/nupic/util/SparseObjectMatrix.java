@@ -22,10 +22,12 @@
 
 package org.numenta.nupic.util;
 
+import java.util.Arrays;
+
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-
-import java.util.Arrays;
 
 /**
  * Allows storage of array data in sparse form, meaning that the indexes
@@ -37,7 +39,10 @@ import java.util.Arrays;
  *
  * @param <T>
  */
-public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> {
+public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private TIntObjectMap<T> sparseMap = new TIntObjectHashMap<T>();
 
     /**
@@ -128,6 +133,38 @@ public class SparseObjectMatrix<T> extends AbstractSparseMatrix<T> {
     @Override
     public String toString() {
         return Arrays.toString(getDimensions());
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((sparseMap == null) ? 0 : sparseMap.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!super.equals(obj))
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        SparseObjectMatrix other = (SparseObjectMatrix)obj;
+        if(sparseMap == null) {
+            if(other.sparseMap != null)
+                return false;
+        } else if(!sparseMap.equals(other.sparseMap))
+            return false;
+        return true;
     }
 
 }

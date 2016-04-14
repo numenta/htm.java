@@ -26,12 +26,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.network.Network;
 
 /**
@@ -48,13 +48,15 @@ import org.numenta.nupic.network.Network;
  * @see SensorFactory
  * @see Sensor#create(SensorFactory, SensorParams)
  */
-public class FileSensor implements Sensor<File> {
+public class FileSensor implements Sensor<File>, Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private static final int HEADER_SIZE = 3;
     private static final int BATCH_SIZE = 20;
     // This is OFF until Encoders are made concurrency safe
     private static final boolean DEFAULT_PARALLEL_MODE = false;
     
-    private BatchedCsvStream<String[]> stream;
+    private transient BatchedCsvStream<String[]> stream;
     private SensorParams params;
     
     /**
@@ -73,7 +75,8 @@ public class FileSensor implements Sensor<File> {
         String pathStr = (String)params.get("PATH");
 
         if(pathStr.indexOf("!") != -1) {
-            pathStr = pathStr.substring("file:".length());
+            pathStr = pathStr.indexOf("file:") != -1 ? pathStr.substring("file:".length()) :
+                pathStr;
             
             Stream<String> stream = getJarEntryStream(pathStr);
             this.stream = BatchedCsvStream.batch(
@@ -111,8 +114,12 @@ public class FileSensor implements Sensor<File> {
         return fs;
     }
     
+    /**
+     * Returns this {@code FileSensor}'s {@link SensorParams}
+     * @return  the SensorParams
+     */
     @Override
-    public SensorParams getParams() {
+    public SensorParams getSensorParams() {
         return params;
     }
     
@@ -146,7 +153,9 @@ public class FileSensor implements Sensor<File> {
         String[] parts = path.split("\\!");
         try {
             JarFile jar = new JarFile(parts[0]);
-            InputStream inStream = jar.getInputStream(jar.getEntry(parts[1].substring(1)));
+            String innerPath = parts[1];
+            innerPath = innerPath.startsWith("!") ? innerPath.substring(1) : innerPath;
+            InputStream inStream = jar.getInputStream(jar.getEntry(innerPath));
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             retVal = br.lines().onClose(() -> {
                 try {
@@ -162,7 +171,10 @@ public class FileSensor implements Sensor<File> {
         return retVal;
     }
     public static void main(String[] args) {
-        String path = "/Users/metaware/git/htm.java/NetworkAPIDemo_1.0.jar!/org/numenta/nupic/datagen/rec-center-hourly.csv";
+        String filepart = System.getProperty("user.home") + "/git/htm.java/src/test/resources/pathtest.jar";
+        File f = new File(filepart);
+        System.out.println("file exists ? " + f.exists());
+        String path = filepart + "!rec-center-hourly.csv";
         Stream<String> stream = getJarEntryStream(path);
         stream.forEach(l -> System.out.println(l));
     }

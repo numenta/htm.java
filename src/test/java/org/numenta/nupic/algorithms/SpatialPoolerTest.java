@@ -109,6 +109,7 @@ public class SpatialPoolerTest {
      * Checks that feeding in the same input vector leads to polarized
      * permanence values: either zeros or ones, but no fractions
      */
+    @SuppressWarnings("serial")
     @Test
     public void testCompute1() {
         setupParameters();
@@ -163,6 +164,7 @@ public class SpatialPoolerTest {
      * Checks that columns only change the permanence values for 
      * inputs that are within their potential pool
      */
+    @SuppressWarnings("serial")
     @Test
     public void testCompute2() {
         setupParameters();
@@ -197,8 +199,8 @@ public class SpatialPoolerTest {
         }
 
         for(int i = 0;i < mem.getNumColumns();i++) {
-            //     		System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
-            //     		System.out.println(Arrays.toString(mem.getPotentialPools().getObject(i).getDensePermanences(mem)));
+            System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
+            System.out.println(Arrays.toString(mem.getPotentialPools().get(i).getDensePermanences(mem)));
             int[] permanences = ArrayUtils.toIntArray(mem.getPotentialPools().get(i).getDensePermanences(mem));
             int[] potential = (int[])mem.getConnectedCounts().getSlice(i);
             assertTrue(Arrays.equals(permanences, potential));
@@ -484,6 +486,7 @@ public class SpatialPoolerTest {
     }
     //////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("serial")
     @Test
     public void testInhibitColumns() {
         setupParameters();
@@ -820,6 +823,7 @@ public class SpatialPoolerTest {
         }
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testUpdateMinDutyCycleLocal() {
         setupParameters();
@@ -1111,6 +1115,7 @@ public class SpatialPoolerTest {
         }
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testUpdateInhibitionRadius() {
         setupParameters();
@@ -1812,6 +1817,7 @@ public class SpatialPoolerTest {
      * Test initial permanence generation. ensure that permanence values
      * are only assigned to bits within a column's potential pool. 
      */
+    @SuppressWarnings("serial")
     @Test
     public void testInitPermanence2() {
         setupParameters();

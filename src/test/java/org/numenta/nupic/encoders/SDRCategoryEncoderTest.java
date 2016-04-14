@@ -66,8 +66,8 @@ public class SDRCategoryEncoderTest {
         assertTrue("foo".equals(x.getDescriptions().iterator().next()));
         assertTrue("ES".equals(x.getFields().get("foo").getDescription()));
 
-        List<EncoderResult> topDowns = sdrCategoryEncoder.topDownCompute(es);
-        EncoderResult topDown = topDowns.get(0);
+        List<Encoding> topDowns = sdrCategoryEncoder.topDownCompute(es);
+        Encoding topDown = topDowns.get(0);
         assertEquals(topDown.getValue(), "ES");
         assertEquals(topDown.getScalar(), 1);
         assertEquals(ArrayUtils.aggregateArray(topDown.getEncoding()), bitsOn);

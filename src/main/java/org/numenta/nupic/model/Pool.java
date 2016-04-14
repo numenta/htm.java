@@ -22,12 +22,13 @@
 
 package org.numenta.nupic.model;
 
+import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
+import org.numenta.nupic.util.ArrayUtils;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.util.ArrayUtils;
 
 /**
  * Convenience container for "bound" {@link Synapse} values
@@ -41,7 +42,10 @@ import org.numenta.nupic.util.ArrayUtils;
  * @see Synapse
  * @see Connections
  */
-public class Pool {
+public class Pool implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     int size;
 
     /** Allows fast removal of connected synapse indexes. */
@@ -191,5 +195,46 @@ public class Pool {
         synapsesBySourceIndex.clear();
         synapseConnections = null;
         synapsesBySourceIndex = null;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + size;
+        result = prime * result + ((synapseConnections == null) ? 0 : synapseConnections.toString().hashCode());
+        result = prime * result + ((synapsesBySourceIndex == null) ? 0 : synapsesBySourceIndex.toString().hashCode());
+        return result;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Pool other = (Pool)obj;
+        if(size != other.size)
+            return false;
+        if(synapseConnections == null) {
+            if(other.synapseConnections != null)
+                return false;
+        } else if((!synapseConnections.containsAll(other.synapseConnections) || 
+            !other.synapseConnections.containsAll(synapseConnections)))
+                return false;
+        if(synapsesBySourceIndex == null) {
+            if(other.synapsesBySourceIndex != null)
+                return false;
+        } else if(!synapsesBySourceIndex.toString().equals(other.synapsesBySourceIndex.toString()))
+            return false;
+        return true;
     }
 }

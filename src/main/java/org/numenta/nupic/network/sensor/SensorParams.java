@@ -46,6 +46,9 @@ import org.numenta.nupic.util.NamedTuple;
  * @author David Ray
  */
 public class SensorParams extends NamedTuple {
+    
+    private static final long serialVersionUID = 1L;
+
     /**
      * Convenience class to use as handle way to specify an expected
      * String array of key values for each of the 3 known input configuration

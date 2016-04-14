@@ -170,7 +170,7 @@ public class ScalarEncoderTest {
 			assertEquals(ranges.getRange(0).min(), ranges.getRange(0).max(), 0);
 			assertTrue(ranges.getRange(0).min() - v < se.getResolution());
 			
-			EncoderResult topDown = se.topDownCompute(output).get(0);
+			Encoding topDown = se.topDownCompute(output).get(0);
 			System.out.println("topdown => " + topDown);
 			assertTrue(Arrays.equals(topDown.getEncoding(),output));
 			assertTrue(Math.abs(((double)topDown.get(1)) - v) <= se.getResolution() / 2);
@@ -312,8 +312,8 @@ public class ScalarEncoderTest {
 			assertEquals(minMax.min(), minMax.max(), 0);
 			assertTrue(Math.abs(minMax.min() - v) <= se.getResolution());
 			
-			List<EncoderResult> topDowns = se.topDownCompute(output);
-			EncoderResult topDown = topDowns.get(0);
+			List<Encoding> topDowns = se.topDownCompute(output);
+			Encoding topDown = topDowns.get(0);
 			System.out.println("topDown => " + topDown);
 			assertTrue(Arrays.equals(topDown.getEncoding(),output));
 			assertTrue(Math.abs(((double)topDown.getValue()) - v) <= se.getResolution());
@@ -353,7 +353,7 @@ public class ScalarEncoderTest {
 	        .forced(true);
 		initSE();
 		
-		List<EncoderResult> decode = se.topDownCompute(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 });
+		List<Encoding> decode = se.topDownCompute(new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 });
 		assertEquals(10, (Double)decode.get(0).getScalar(), 0);
 		decode = se.topDownCompute(new int[] { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
 		assertEquals(1, (Double)decode.get(0).getScalar(), 0);

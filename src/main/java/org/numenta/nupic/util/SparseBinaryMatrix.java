@@ -25,6 +25,8 @@ package org.numenta.nupic.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
+import org.numenta.nupic.Persistable;
+
 /**
  * Implementation of a sparse matrix which contains binary integer
  * values only.
@@ -32,7 +34,10 @@ import java.util.Arrays;
  * @author cogmission
  *
  */
-public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix {
+public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private Object backingArray;
 
     /**

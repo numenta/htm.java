@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.ArrayUtils;
@@ -62,7 +63,9 @@ import gnu.trove.set.hash.TIntHashSet;
  * @author David Ray
  *
  */
-public class SpatialPooler {
+public class SpatialPooler implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructs a new {@code SpatialPooler}
      */

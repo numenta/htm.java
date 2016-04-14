@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
@@ -58,15 +59,7 @@ import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.turbo.TurboFilter;
-import ch.qos.logback.core.spi.FilterReply;
-import ch.qos.logback.core.util.StatusPrinter;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
@@ -203,9 +196,8 @@ public class LayerTest {
     @Test
     public void testHalt() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
+            FileSensor::create, SensorParams.create(
+                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
@@ -321,15 +313,13 @@ public class LayerTest {
 
     @Test
     public void testLayerWithObservableInput() {
-        Publisher manual = Publisher.builder()
-            .addHeader("timestamp,consumption")
-            .addHeader("datetime,float")
-            .addHeader("B")
-            .build();
+        PublisherSupplier manual = PublisherSupplier.builder()
+            .addHeader("timestamp, consumption")
+            .addHeader("datetime, float")
+            .addHeader("B").build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, 
-            SensorParams.create(
+            ObservableSensor::create, SensorParams.create(
                 Keys::obs, new Object[] {"name", manual}));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
@@ -339,11 +329,14 @@ public class LayerTest {
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
-        Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
-        l.add(htmSensor);
-
-        l.subscribe(new Observer<Inference>() {
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2/3", p)
+                    .add(htmSensor)));
+                
+        final Layer<?> l = n.lookup("r1").lookup("2/3");
+        
+        l.observe().subscribe(new Observer<Inference>() {
             int idx = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -361,24 +354,58 @@ public class LayerTest {
         });
         
         l.start();
-
+        
+        Publisher pub = n.getPublisher();
+        
         try {
             String[] entries = { 
                 "7/2/10 0:00,21.2",
                 "7/2/10 1:00,34.0",
                 "7/2/10 2:00,40.4",
             };
-
+            
             // Send inputs through the observable
             for(String s : entries) {
-                manual.onNext(s);
+                pub.onNext(s);
             }
+            
+            ////////////////////
+            // Very Important //
+            ////////////////////
+            pub.onComplete();
 
-            Thread.sleep(100);
+            try {
+                l.getLayerThread().join();
+            }catch(Exception e) {e.printStackTrace();}
         }catch(Exception e) {
             e.printStackTrace();
             fail();
         }
+    }
+    
+    public Stream<String> makeStream() {
+        return Stream.of(
+            "7/2/10 0:00,21.2",
+            "7/2/10 1:00,34.0",
+            "7/2/10 2:00,40.4",
+            "7/2/10 3:00,4.7",
+            "7/2/10 4:00,4.6",
+            "7/2/10 5:00,23.5",
+            "7/2/10 6:00,47.5",
+            "7/2/10 7:00,45.4",
+            "7/2/10 8:00,46.1",
+            "7/2/10 9:00,41.5",
+            "7/2/10 10:00,43.4",
+            "7/2/10 11:00,43.8",
+            "7/2/10 12:00,37.8",
+            "7/2/10 13:00,36.6",
+            "7/2/10 14:00,35.7",
+            "7/2/10 15:00,38.9",
+            "7/2/10 16:00,36.2",
+            "7/2/10 17:00,36.6",
+            "7/2/10 18:00,37.2",
+            "7/2/10 19:00,38.2",
+            "7/2/10 20:00,14.1");
     }
     
     @Test
