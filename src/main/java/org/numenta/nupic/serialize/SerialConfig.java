@@ -46,7 +46,6 @@ import org.numenta.nupic.network.Inference;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.ManualInput;
 import org.numenta.nupic.network.Network;
-import org.numenta.nupic.network.NetworkTest;
 import org.numenta.nupic.network.Region;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.Tuple;
