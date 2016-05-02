@@ -272,7 +272,13 @@ public class Network implements Persistable {
     public Network preSerialize() {
         if(shouldDoHalt && isThreadRunning) {
             halt();
+        }else{ // Make sure "close()" has been called on the Network
+            if(regions.size() == 1) {
+                this.tail = regions.get(0);
+            }
+            tail.close();
         }
+        
         regions.stream().forEach(r -> r.preSerialize());
         return this;
     }
