@@ -13,11 +13,19 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.7-SNAPSHOT]
+## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
 #### Added
 #### Changed
 #### Fixed
+
+***
+
+## [v0.6.8-alpha] - 2016-05-02
+#### Changed
+* [[PR #419](https://github.com/numenta/htm.java/pull/419)] Added additional check for running thread before calling halt during ```store()``` operation. This avoids calling ```halt()``` via the ```Persistable``` interface during serialize calls of ```HTMObjectOutput``` for our partners at [flink-htm](https://github.com/nupic-community/flink-htm)
+* [[Issue #418](https://github.com/numenta/htm.java/issues/418)] Internal change to ```HTMObjectOutput``` and ```HTMObjectInput``` constructors to pass in the ```FSTConfiguration``` to avoid creating it twice.
+* [[PR #419](https://github.com/numenta/htm.java/pull/419)] Changed default mode of Gradle build script to **not** write debug output to standard out
 
 ***
 
