@@ -270,7 +270,7 @@ public class Network implements Persistable {
     @SuppressWarnings("unchecked")
     @Override
     public Network preSerialize() {
-        if(shouldDoHalt) {
+        if(shouldDoHalt && isThreadRunning) {
             halt();
         }
         regions.stream().forEach(r -> r.preSerialize());
