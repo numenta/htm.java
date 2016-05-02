@@ -145,7 +145,7 @@ Maven:
 ```
 
 ``` 
-Hot to get the latest SNAPSHOT build:
+How to get the latest SNAPSHOT build:
 
 <dependency>
     <groupId>org.numenta</groupId>
