@@ -104,7 +104,7 @@ public class SerializerCore implements Persistable {
      * @throws IOException 
      */
     public HTMObjectInput getObjectInput(InputStream is) throws IOException {
-        return new HTMObjectInput(is);
+        return new HTMObjectInput(is, fastSerialConfig);
     }
     
     /**
@@ -113,7 +113,7 @@ public class SerializerCore implements Persistable {
      * @return  the HTMObjectOutput
      */
     public <T extends Persistable> HTMObjectOutput getObjectOutput(OutputStream os) {
-        return new HTMObjectOutput(os);
+        return new HTMObjectOutput(os, fastSerialConfig);
     }
     
     /**

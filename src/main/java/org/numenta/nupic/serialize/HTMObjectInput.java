@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.numenta.nupic.Persistable;
+import org.nustaq.serialization.FSTConfiguration;
 import org.nustaq.serialization.FSTObjectInput;
 
 public class HTMObjectInput extends FSTObjectInput {
-    public HTMObjectInput(InputStream in) throws IOException {
-        super(in);
+    public HTMObjectInput(InputStream in, FSTConfiguration config) throws IOException {
+        super(in, config);
     }
     
     @SuppressWarnings("rawtypes")

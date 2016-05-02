@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.numenta.nupic.Persistable;
+import org.nustaq.serialization.FSTConfiguration;
 import org.nustaq.serialization.FSTObjectOutput;
 
 public class HTMObjectOutput extends FSTObjectOutput {
-    public HTMObjectOutput(OutputStream out) {
-        super(out);
+    public HTMObjectOutput(OutputStream out, FSTConfiguration config) {
+        super(out, config);
     }
     
     @SuppressWarnings("rawtypes")
