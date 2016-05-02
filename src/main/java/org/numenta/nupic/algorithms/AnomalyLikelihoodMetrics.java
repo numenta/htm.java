@@ -137,8 +137,8 @@ public class AnomalyLikelihoodMetrics implements Persistable {
         if(params == null) {
             if(other.params != null)
                 return false;
-        }
-        
+        } else if(!params.equals(other.params))
+            return false;
         return true;
     }
 }
