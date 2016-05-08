@@ -38,7 +38,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 * See a glimpse of htm.java's history and read about significant events in its development.  
 
 
-### View the [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2016-03-27)
+### View the [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2016-05-02)
 * Change log itemizes the release history.
 * Contains an **"Unreleased" section** which lists changes coming in the next release as they're being worked on - (should help users keep in touch with the current evolution of htm.java)
 
