@@ -51,7 +51,7 @@ For a more detailed discussion of <b>htm.java</b> see: <BR>
 
 See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more information on where you can contribute! Extend the tests and get your name in bright lights!
 
-For answers to more detailed questions, email the [nupic-discuss](http://lists.numenta.org/mailman/listinfo/nupic_lists.numenta.org) mailing list, or chat with us on Gitter.
+For answers to more detailed questions, post to the HTM Forum or HTM.java Forum Topics [HTM Forum](http://discourse.numenta.org) (can be used via email too), or chat with us on Gitter.
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
 
