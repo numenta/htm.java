@@ -26,7 +26,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 <br>
 
 ### Recent News Items...
-* [New HTM.java Discussion Site](http://discourse.numenta.org/c/htm-java) (05/10/2016)
+* [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the [new Numenta.org Forum](http://discourse.numenta.org) (05/10/2016)
 * [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
 * HTM.java Recieves [Docker Reference-Build Implementation](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment) (03/26/2016)  
 * **HTM.java Becomes Build-able With OpenJDK** (03/26/2016)  
