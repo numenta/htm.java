@@ -51,7 +51,7 @@ import java.util.Map;
  * Internally we use a ScalarEncoder with a radius of 1, but since we only encode
  * integers, we never get mixture outputs.
  *
- * The SDRCategoryEncoder (not yet implemented in Java) uses a different method to encode categories
+ * The {@link SDRCategoryEncoder} uses a different method to encode categories.
  *
  * <P>
  * Typical usage is as follows:
