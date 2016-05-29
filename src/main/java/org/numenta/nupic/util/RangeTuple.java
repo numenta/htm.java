@@ -37,7 +37,10 @@ import org.numenta.nupic.encoders.Encoder;
  * @param <S>
  */
 public class RangeTuple<L extends List<MinMax>, S> extends Tuple {
-	protected L l;
+	
+    private static final long serialVersionUID = 1L;
+    
+    protected L l;
 	protected String desc;
 	
 	/**

@@ -2,6 +2,8 @@ package org.numenta.nupic.algorithms;
 
 import java.util.Arrays;
 
+import org.numenta.nupic.Persistable;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -13,7 +15,9 @@ import gnu.trove.map.hash.TIntObjectHashMap;
  *
  * @param <T>
  */
-public class ClassifierResult<T> {
+public class Classification<T> implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     /** Array of actual values */
     private T[] actualValues;
 
@@ -26,8 +30,8 @@ public class ClassifierResult<T> {
      * @return  a copy of this {@code ClassifierResult} which will not be affected
      * by changes to the original.
      */
-    public ClassifierResult<T> copy() {
-        ClassifierResult<T> retVal = new ClassifierResult<T>();
+    public Classification<T> copy() {
+        Classification<T> retVal = new Classification<T>();
         retVal.actualValues = Arrays.copyOf(actualValues, actualValues.length);
         retVal.probabilities = new TIntObjectHashMap<double[]>(probabilities);
         
@@ -183,14 +187,20 @@ public class ClassifierResult<T> {
         if(getClass() != obj.getClass())
             return false;
         @SuppressWarnings("rawtypes")
-        ClassifierResult other = (ClassifierResult)obj;
+        Classification other = (Classification)obj;
         if(!Arrays.equals(actualValues, other.actualValues))
             return false;
         if(probabilities == null) {
             if(other.probabilities != null)
                 return false;
-        } else if(!probabilities.equals(other.probabilities))
-            return false;
+        } else {
+            for(int key : probabilities.keys()) {
+                if(!Arrays.equals(probabilities.get(key), (double[])other.probabilities.get(key))) {
+                    return false;
+                }
+            }
+        }
+            
         return true;
     }
 }

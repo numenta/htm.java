@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,7 +42,10 @@ import org.numenta.nupic.algorithms.TemporalMemory;
  * @author David Ray
  *
  */
-public class Column implements Comparable<Column> {
+public class Column implements Comparable<Column>, Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     /** The flat non-topological index of this column */
     private final int index;
     /** Stored boxed form to eliminate need for boxing on the fly */

@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class ClassifierResultTest {
+public class ClassificationTest {
     @Test
     public void testCopy() {
         String mon = "Monday";
@@ -15,13 +15,13 @@ public class ClassifierResultTest {
         double tueVal = 0.80d;
         double wedVal = 0.30d;
         
-        ClassifierResult<String> result = new ClassifierResult<>();
+        Classification<String> result = new Classification<>();
         result.setActualValues(new String[] { mon, tue, wed });
         result.setStats(1, new double[] { monVal, tueVal, wedVal });
         assertTrue(result.getMostProbableValue(1).equals(tue));
         assertNull(result.getMostProbableValue(2));
         
-        ClassifierResult<String> result2 = result.copy();
+        Classification<String> result2 = result.copy();
         assertEquals(result, result2);
         
         result2.setStats(1, new double[] { monVal, tueVal, 0.5d });
@@ -38,7 +38,7 @@ public class ClassifierResultTest {
 		double tueVal = 0.80d;
 		double wedVal = 0.30d;
 		
-		ClassifierResult<String> result = new ClassifierResult<>();
+		Classification<String> result = new Classification<>();
 		result.setActualValues(new String[] { mon, tue, wed });
 		result.setStats(1, new double[] { monVal, tueVal, wedVal });
 		assertTrue(result.getMostProbableValue(1).equals(tue));
@@ -62,7 +62,7 @@ public class ClassifierResultTest {
 		double tueVal = 0.80d;
 		double wedVal = 0.30d;
 		
-		ClassifierResult<String> result = new ClassifierResult<>();
+		Classification<String> result = new Classification<>();
 		result.setActualValues(new String[] { mon, tue, wed });
 		result.setStats(1, new double[] { monVal, tueVal, wedVal });
 		assertTrue(result.getMostProbableBucketIndex(1) == 1);
@@ -86,7 +86,7 @@ public class ClassifierResultTest {
         double tueVal = 0.80d;
         double wedVal = 0.30d;
 
-        ClassifierResult<String> result = new ClassifierResult<>();
+        Classification<String> result = new Classification<>();
         result.setActualValues(new String[] { mon, tue, wed });
         result.setStats(1, new double[] { monVal, tueVal, wedVal });
         assertTrue(result.getMostProbableBucketIndex(1) == 1);

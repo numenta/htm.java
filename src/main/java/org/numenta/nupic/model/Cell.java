@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +34,10 @@ import org.numenta.nupic.Connections;
  * @author Chetan Surpur
  * @author David Ray
  */
-public class Cell implements Comparable<Cell> {
+public class Cell implements Comparable<Cell>, Serializable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     /** This cell's index */
     private final int index;
     /** Remove boxing where necessary */

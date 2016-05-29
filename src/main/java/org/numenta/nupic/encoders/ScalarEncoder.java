@@ -159,6 +159,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ScalarEncoder extends Encoder<Double> {
 
+	private static final long serialVersionUID = 1L;
+    
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScalarEncoder.class);
 
 	/**
@@ -735,7 +737,7 @@ public class ScalarEncoder extends Encoder<Double> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> getBucketInfo(int[] buckets) {
+	public List<Encoding> getBucketInfo(int[] buckets) {
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 
 		//The "category" is simply the bucket index
@@ -750,14 +752,14 @@ public class ScalarEncoder extends Encoder<Double> {
 			inputVal = getMinVal() + category * getResolution();
 		}
 
-		return Arrays.asList(new EncoderResult(inputVal, inputVal, encoding));
+		return Arrays.asList(new Encoding(inputVal, inputVal, encoding));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<EncoderResult> topDownCompute(int[] encoded) {
+	public List<Encoding> topDownCompute(int[] encoded) {
 		//Get/generate the topDown mapping table
 		SparseObjectMatrix<int[]> topDownMapping = getTopDownMapping();
 

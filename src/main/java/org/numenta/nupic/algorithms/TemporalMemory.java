@@ -1,8 +1,6 @@
 package org.numenta.nupic.algorithms;
 
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,14 +18,18 @@ import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.monitor.ComputeDecorator;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
+
 /**
  * Temporal Memory implementation in Java
  * 
  * @author Chetan Surpur
  * @author David Ray
  */
-public class TemporalMemory implements ComputeDecorator {
-    
+public class TemporalMemory implements ComputeDecorator, Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructs a new {@code TemporalMemory}
      */
@@ -122,7 +124,7 @@ public class TemporalMemory implements ComputeDecorator {
         
         activateCorrectlyPredictiveCells(c, cycle, prevPredictiveCells, prevMatchingCells, activeColumns);
         
-        burstColumns(cycle, c, activeColumns, cycle.successfullyPredictedColumns, prevActiveCells, prevWinnerCells);
+        burstColumns(c, cycle, activeColumns, cycle.successfullyPredictedColumns, prevActiveCells, prevWinnerCells);
         
         if(learn) {
             learnOnSegments(c, prevActiveSegments, cycle.learningSegments, prevActiveCells, 
@@ -188,15 +190,14 @@ public class TemporalMemory implements ComputeDecorator {
      *         - (optimization) if there are previous winner cells
      *           - add a segment to it
      *       - mark the segment as learning
-     * 
-     * @param cycle                         ComputeCycle interim values container
      * @param c                             Connections temporal memory state
+     * @param cycle                         ComputeCycle interim values container
      * @param activeColumns                 active columns in t
      * @param predictedColumns              predicted columns in t
      * @param prevActiveCells               active {@link Cell}s in t-1
      * @param prevWinnerCells               winner {@link Cell}s in t-1
      */
-    public void burstColumns(ComputeCycle cycle, Connections c, 
+    public void burstColumns(Connections c, ComputeCycle cycle, 
         Set<Column> activeColumns, Set<Column> predictedColumns, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells) {
         
         // Now contains only unpredicted columns
@@ -460,9 +461,9 @@ public class TemporalMemory implements ComputeDecorator {
     /**
      * Used locally to return best cell/segment pair
      */
-    class CellSearch {
-        Cell bestCell;
-        DistalDendrite bestSegment;
+    public class CellSearch {
+        public Cell bestCell;
+        public DistalDendrite bestSegment;
         
         public CellSearch() {}
         public CellSearch(Cell bestCell, DistalDendrite bestSegment) {
@@ -474,9 +475,9 @@ public class TemporalMemory implements ComputeDecorator {
     /**
      * Used locally to return best segment matching results
      */
-    class SegmentSearch {
-        DistalDendrite bestSegment;
-        int numActiveSynapses;
+    public class SegmentSearch {
+        public DistalDendrite bestSegment;
+        public int numActiveSynapses;
         
         public SegmentSearch(DistalDendrite bestSegment, int numActiveSynapses) {
             this.bestSegment = bestSegment;

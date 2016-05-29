@@ -36,7 +36,9 @@ import org.numenta.nupic.util.MinMax;
  */
 public class DecodeResult extends DecodeTuple<Map<String, RangeList>, List<String>> {
 	
-	/**
+	private static final long serialVersionUID = 1L;
+
+    /**
 	 * Constructs a new {@code Decode}
 	 * @param m		Map of field names to {@link RangeList} object
 	 * @param l		List of comma-separated descriptions for each list of ranges.

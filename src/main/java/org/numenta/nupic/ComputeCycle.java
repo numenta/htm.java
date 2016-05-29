@@ -40,7 +40,9 @@ import org.numenta.nupic.model.DistalDendrite;
  * 
  * @author David Ray
  */
-public class ComputeCycle {
+public class ComputeCycle implements Persistable {
+    private static final long serialVersionUID = 1L;
+    
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
     public Set<Cell> predictiveCells = new LinkedHashSet<>();
@@ -148,5 +150,84 @@ public class ComputeCycle {
      */
     public Set<Cell> matchingCells() {
         return matchingCells;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
+        result = prime * result + ((activeSegments == null) ? 0 : activeSegments.hashCode());
+        result = prime * result + ((learningSegments == null) ? 0 : learningSegments.hashCode());
+        result = prime * result + ((matchingCells == null) ? 0 : matchingCells.hashCode());
+        result = prime * result + ((matchingSegments == null) ? 0 : matchingSegments.hashCode());
+        result = prime * result + ((predictedInactiveCells == null) ? 0 : predictedInactiveCells.hashCode());
+        result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
+        result = prime * result + ((successfullyPredictedColumns == null) ? 0 : successfullyPredictedColumns.hashCode());
+        result = prime * result + ((winnerCells == null) ? 0 : winnerCells.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        ComputeCycle other = (ComputeCycle)obj;
+        if(activeCells == null) {
+            if(other.activeCells != null)
+                return false;
+        } else if(!activeCells.equals(other.activeCells))
+            return false;
+        if(activeSegments == null) {
+            if(other.activeSegments != null)
+                return false;
+        } else if(!activeSegments.equals(other.activeSegments))
+            return false;
+        if(learningSegments == null) {
+            if(other.learningSegments != null)
+                return false;
+        } else if(!learningSegments.equals(other.learningSegments))
+            return false;
+        if(matchingCells == null) {
+            if(other.matchingCells != null)
+                return false;
+        } else if(!matchingCells.equals(other.matchingCells))
+            return false;
+        if(matchingSegments == null) {
+            if(other.matchingSegments != null)
+                return false;
+        } else if(!matchingSegments.equals(other.matchingSegments))
+            return false;
+        if(predictedInactiveCells == null) {
+            if(other.predictedInactiveCells != null)
+                return false;
+        } else if(!predictedInactiveCells.equals(other.predictedInactiveCells))
+            return false;
+        if(predictiveCells == null) {
+            if(other.predictiveCells != null)
+                return false;
+        } else if(!predictiveCells.equals(other.predictiveCells))
+            return false;
+        if(successfullyPredictedColumns == null) {
+            if(other.successfullyPredictedColumns != null)
+                return false;
+        } else if(!successfullyPredictedColumns.equals(other.successfullyPredictedColumns))
+            return false;
+        if(winnerCells == null) {
+            if(other.winnerCells != null)
+                return false;
+        } else if(!winnerCells.equals(other.winnerCells))
+            return false;
+        return true;
     }
 }

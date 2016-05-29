@@ -19,33 +19,29 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 
 ***
 
-#### Demos & Examples: [HTM.java-examples](https://github.com/numenta/htm.java-examples) repository
+#### For Demos & Examples: see the [HTM.java-examples](https://github.com/numenta/htm.java-examples) repository
 
 ***
 
 <br>
 
 ### Recent News Items...
+* [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
+* [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
+* [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
+* [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
+* HTM.java Recieves [Docker Reference-Build Implementation](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment) (03/26/2016)  
+* **HTM.java Becomes Build-able With OpenJDK** (03/26/2016)  
 * [HTM.java Receives Speed Increase Optimizations & Roots out Indeterminacy!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2016-January/004422.html) (01/05/2016)
 * **Network API Rework** for [improved input classification!](http://www.cogmission.ai/2015/10/23/putting-out-fires-with-gasoline/) - (10/23/2015)
 * **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
 * **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
-* [HTM.java Splits off Demo repository](https://github.com/numenta/htm.java-examples) (08/19/2015)
-* [HTM.java Receives new Hot Gym Demo](https://github.com/numenta/htm.java-examples/tree/master/src/main/java/org/numenta/nupic/examples/napi/hotgym) (08/15/2015)
 
-### News Archives...
-* [HTM.java Receives new Gitter Chat Room] (https://gitter.im/numenta/htm.java) (08/12/2015)
-* [HTM.java Receives new **Cortical.io** demo video!] (https://www.youtube.com/watch?v=Y3p02cbdUas) (08/11/2015)
-* [HTM.java Receives two new **Cortical.io** demos!](https://github.com/numenta/htm.java/tree/master/src/main/java/org/numenta/nupic/examples/cortical_io) (07/26/2015)
-* [HTM.java Now versioned and up on Maven Central!](http://search.maven.org/#search%7Cga%7C1%7Chtm.java) (06/12/2015)
-* [HTM.java Recieves New Network API](http://numenta.org/blog/2015/06/08/htm-java-receives-new-network-api.html) (06/08/2015)
-* HTM.java is now [**OFFICIAL!**](https://github.com/numenta/htm.java/issues/193) See the [_**announcement**_](http://lists.numenta.org/pipermail/nupic_lists.numenta.org/2015-February/010404.html) (02/25/2015)
-* [HTM.java Now Has Anomaly Detection & Anomaly Likelihood Prediction!](https://github.com/numenta/htm.java/wiki/Anomaly-Detection-Module) (02/22/2015)
-* [HTM.java Recieves New Benchmarking Tools](http://numenta.org/blog/2015/02/10/htm-java-receives-benchmark-harness.html) (02/2015)
-* [HTM.java Reaches Functional Completion](http://numenta.org/blog/2014/12/03/htm-on-the-jvm.html) (12/2014)
+### [News Archives...](https://github.com/numenta/htm.java/wiki/News-Archives...)
+* See a glimpse of htm.java's history and read about significant events in its development.  
 
 
-### View [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2015-08-29)
+### View the [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2016-05-02)
 * Change log itemizes the release history.
 * Contains an **"Unreleased" section** which lists changes coming in the next release as they're being worked on - (should help users keep in touch with the current evolution of htm.java)
 
@@ -57,7 +53,7 @@ For a more detailed discussion of <b>htm.java</b> see: <BR>
 
 See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more information on where you can contribute! Extend the tests and get your name in bright lights!
 
-For answers to more detailed questions, email the [nupic-discuss](http://lists.numenta.org/mailman/listinfo/nupic_lists.numenta.org) mailing list, or chat with us on Gitter.
+For answers to more detailed questions, post to the [HTM Forum](http://discourse.numenta.org) (can be used via email too), or chat with us on Gitter.
 
 [![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
 
@@ -72,34 +68,42 @@ See the blog: [Join the Cogmission](http://www.cogmission.ai)
 <a name="callToArms"></a>
 ### Call to Arms: [HTM.java needs you!](https://github.com/numenta/htm.java/wiki/Call-To-Arms)
 
-## Goals
+## Project Goals
 
 The primary goal of this library development is to provide a Java version of NuPIC that has a 1-to-1 correspondence to all systems, functionality and tests provided by Numenta's open source implementation; while observing the tenets, standards and conventions of Java language best practices and development.
 
 By working closely with Numenta and receiving their enthusiastic support and guidance, it is intended that this library be maintained as a viable Java language alternative to Numenta's C++ and Python offerings. However it must be understood that "official" support is (for the time being) currently limited to community resources such as the maintainers of this library and Numenta Forums / Message Lists and IRC:
 
  * [NuPIC Community](http://numenta.org/index.html#community)
+ * [New HTM Forum](http://discourse.numenta.org)
 
-## Usage
-**NOTE:** The Java version of NuPIC **requires no installation** - just **USE** it!
+***
+## How Do I Get The Code? 
 
-Please refer to the [Network API Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+* **(A)** Instructions for developers who would like to contribute code back to the community.  (Fork)  
+* **(B)** Instructions for those who would like to "fiddle around" with the code in thier own github repo.  (Clone)  
+* **(C)** How to download Zipped or Tar'd Tagged Releases  (Download Zip or Tar)  
 
-## Development Environment Installation
+**A.** Developers who wish to make contributions are required to [Fork the htm.java repo](https://help.github.com/articles/fork-a-repo/) and then clone from their personal "Fork" of htm.java...
+```
+your_git_directory% git clone https://github.com/<your_github_username>/htm.java.git
+```
 
-The following instructions are for setting up a development environment (which is the only installation required)
+**B.** Anybody who just wants to "play" with the code...
+```
+your_git_directory% git clone https://github.com/numenta/htm.java.git
+```
 
-**NOTE:** For simple intructions see: [INSTALL.txt](https://github.com/numenta/htm.java/blob/master/INSTALL.txt) 
+**C.** [Proceed here](https://github.com/numenta/htm.java/releases) to download the latest tagged release (or older if you like)
 
-[Eclipse Environment Setup Wiki](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+_The instructions on the above link **(Fork the htm.java repo)** provide detail about how to fork github repos..._  
 
-An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
+**In addition:** [a video is provided](https://www.youtube.com/watch?v=Yc3PKaT1knU) that explains Numenta's contributor rules and plenty of helpful tips on using git and other commands.
 
-In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
+***
+## Does My Code Work?
 
-## After download by clone or fork:    
-
-Execute a quick sanity check by running all the tests from within the \<path to git repo\>/htm.java
+After download by clone or fork, execute a quick sanity check by running all the tests from within the /\<path to git repo\>/htm.java
 ```
 gradle check  # Executes the tests and runs the benchmarks
 
@@ -111,17 +115,42 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 
 **Linux Gradle Issues?** [see the wiki here.](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
 
-## Project Integration (New)
-For tips and insights on how to use the Network API to add HTM's into your own applications, see:
+**A [wiki](https://github.com/numenta/htm.java/wiki/Build-Instructions) with full build instructions for building HTM.java is available here:** [Build Instructions](https://github.com/numenta/htm.java/wiki/Build-Instructions) (This includes a no-java/gradle-guaranteed-build using the provided [Docker File](https://github.com/numenta/htm.java/blob/master/Dockerfile) as a reference build.) 
 
-[Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+***
+## For Developers: Usage & Project Integration  
+**_(use this stuff within my own stuff)_**  
 
-...and for more in-depth answers see:
+**NOTE:** The Java version of NuPIC **requires no installation** - just **USE** it!
+* I Just Want A Simple Build!
+* Using Build Managers
 
-[NAPI Overview](https://github.com/numenta/htm.java/wiki/NAPI-In-Depth-Component-Overview)
+**Simple Build:** For convenience, the [libs](https://github.com/numenta/htm.java/tree/master/libs) directory contains all the dependency jars for those who just want to have a simple build.  
 
-Here's how to include SNAPSHOT builds:
+...  
+
+**Build Managers:** Binary distributions may be included in your project using Gradle or Maven  
+```
+Gradle:  
+
+dependencies {
+    compile group: 'org.numenta', name: 'htm.java', version:'0.6.5'
+}
+```
+
+```
+Maven:  
+
+<dependency>
+    <groupId>org.numenta</groupId>
+    <artifactId>htm.java</artifactId>
+    <version>0.6.5</version>
+</dependency>
+```
+
 ``` 
+How to get the latest SNAPSHOT build:
+
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
@@ -138,11 +167,43 @@ You also may need to include a repositories entry:
         <enabled>true</enabled>
     </snapshots>
 </repository>
-```
+```  
 
+***
+## Coding With htm.java
 
+The easiest way to use the code is to use htm.java's **Network API**
 
-## For Updates Follow
+Please refer to the [Network API Quick Start Guide](https://github.com/numenta/htm.java/wiki/NAPI-Quick-Start-Guide)
+to get an idea of how to quickly and simply create your own network.
+
+...and for more in-depth answers see:
+
+[NAPI Overview](https://github.com/numenta/htm.java/wiki/NAPI-In-Depth-Component-Overview)
+
+***
+## Development Environment Installation
+
+The following instructions are for setting up a development environment.
+
+**NOTE:** For simple intructions see: [INSTALL.txt](https://github.com/numenta/htm.java/blob/master/INSTALL.txt) 
+
+[Eclipse Environment Setup Wiki](https://github.com/numenta/htm.java/wiki/Eclipse-Setup-Tips)
+
+An Eclipse IDE .project and .classpath file are provided so that the cloned project can be easily set up inside of Eclipse. For the time being, the Eclipse IDE is the only "pre-made" project configuration.
+
+In addition, there are "launch configurations" for all of the tests and any runnable entities off of the "htm.java" main directory. These may be run directly in Eclipse by right-clicking them and choosing "run".
+
+***
+## The "Fancy Stuff" - Clustering and Parallelization
+
+Some NuPIC Community members have created interesting projects which use htm.java's Network API to run Engine-Type clusters of multiple networks using streaming distributed libraries like [Akka](http://akka.io) and [Flink](https://flink.apache.org). See them here:
+
+* [htm-moclu](https://github.com/antidata/htm-moclu) (Akka)
+* [flink-htm](https://github.com/nupic-community/flink-htm) (Flink - some say it's a better [Spark](http://spark.apache.org))  
+
+***
+## To Follow Our Updates On Twitter
 
 * [#HtmJavaDevUpdates](https://twitter.com/hashtag/HtmJavaDevUpdates?src=hash)
 

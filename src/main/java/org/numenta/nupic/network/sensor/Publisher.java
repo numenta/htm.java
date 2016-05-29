@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
  * with Numenta, Inc., for a separate license for this software code, the
  * following terms and conditions apply:
  *
@@ -21,6 +21,9 @@
  */
 package org.numenta.nupic.network.sensor;
 
+import java.util.function.Consumer;
+
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
 
@@ -40,7 +43,7 @@ import rx.subjects.ReplaySubject;
  * consumption as designed by Numenta's input file format.
  * 
  * <b>NOTE:</b> The {@link Publisher.Builder#addHeader(String)} method must be called
- * before adding the publisher to the {@link Layer} (i.e. {@link Sensor}).
+ * before adding the Publisher to the {@link Layer} (i.e. {@link Sensor}).
  * 
  * Typical usage is as follows:
  * <pre>
@@ -81,22 +84,53 @@ import rx.subjects.ReplaySubject;
  * @author David Ray
  *
  */
-public class Publisher {
+public class Publisher implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     private static final int HEADER_SIZE = 3;
     
-    private ReplaySubject<String> subject;
+    /** "Replays" the header lines for all new subscribers */
+    private transient ReplaySubject<String> subject;
+    
+    private Network parentNetwork;
+    
     
     public static class Builder<T> {
         private ReplaySubject<String> subject;
         
+        private Consumer<Publisher> notifier;
+        
+        // The 3 lines of the header
         String[] lines = new String[3];
+        
         int cursor = 0;
+        
+        
+        /**
+         * Creates a new {@code Builder}
+         */
+        public Builder() {
+            this(null);
+        }
+        
+        /**
+         * Instantiates a new {@code Builder} with the specified
+         * {@link Consumer} used to propagate "build" events using a
+         * plugged in function.
+         * 
+         * @param c     Consumer used to notify the {@link Network} of new
+         *              builds of a {@link Publisher}
+         */
+        public Builder(Consumer<Publisher> c) {
+            this.notifier = c;
+        }
+        
         /**
          * Adds a header line which in the case of a multi column input 
          * is a comma separated string.
          * 
-         * @param s
-         * @return
+         * @param s     string representing one line of a header
+         * @return  this Builder
          */
         @SuppressWarnings("unchecked")
         public Builder<PublishSubject<String>> addHeader(String s) {
@@ -109,7 +143,7 @@ public class Publisher {
          * Builds and validates the structure of the expected header then
          * returns an {@link Observable} that can be used to submit info to the
          * {@link Network}
-         * @return
+         * @return  a new Publisher
          */
         public Publisher build() {
             subject = ReplaySubject.createWithSize(3);
@@ -123,6 +157,10 @@ public class Publisher {
             Publisher p = new Publisher();
             p.subject = subject;
             
+            if(notifier != null) {
+                notifier.accept(p);
+            }
+            
             return p;
         }
     }
@@ -135,6 +173,31 @@ public class Publisher {
      */
     public static Builder<PublishSubject<String>> builder() {
         return new Builder<>();
+    }
+    
+    /**
+     * Builder that notifies a Network on every build of a new {@link Publisher}
+     * @param c     Consumer which consumes a Publisher and executes an Network notification.
+     * @return      a new Builder
+     */
+    public static Builder<PublishSubject<String>> builder(Consumer<Publisher> c) {
+        return new Builder<>(c);
+    }
+    
+    /**
+     * Sets the parent {@link Network} on this {@code Publisher} for use as a convenience. 
+     * @param n     the Network to which the {@code Publisher} is connected.
+     */
+    public void setNetwork(Network n) {
+        this.parentNetwork = n;
+    }
+    
+    /**
+     * Returns the parent {@link Network} connected to this {@code Publisher} for use as a convenience. 
+     * @return  this {@code Publisher}'s parent {@link Network}
+     */
+    public Network getNetwork() {
+        return parentNetwork;
     }
     
     /**
@@ -194,7 +257,7 @@ public class Publisher {
      * Called within package to access this {@link Publisher}'s wrapped {@link Observable}
      * @return
      */
-    Observable<String> observable() {
+    public Observable<String> observable() {
         return subject;
     }
 }

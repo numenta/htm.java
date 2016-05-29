@@ -195,7 +195,7 @@ public class TemporalMemoryTest {
         int[] prevWinnerCells = new int[] { 23, 37, 49, 733 };
         
         ComputeCycle cycle = new ComputeCycle();
-        tm.burstColumns(cycle, cn, cn.getColumnSet(activeColumns), 
+        tm.burstColumns(cn, cycle, cn.getColumnSet(activeColumns), 
             cn.getColumnSet(predictedColumns), cn.getCellSet(prevActiveCells), cn.getCellSet(prevWinnerCells));
         
         List<Cell> activeCells = new ArrayList<Cell>(cycle.activeCells());
@@ -233,7 +233,7 @@ public class TemporalMemoryTest {
         int[] prevWinnerCells = new int[] { };
         
         ComputeCycle cycle = new ComputeCycle();
-        tm.burstColumns(cycle, cn, cn.getColumnSet(activeColumns), 
+        tm.burstColumns(cn, cycle, cn.getColumnSet(activeColumns), 
             cn.getColumnSet(predictedColumns), cn.getCellSet(prevActiveCells), cn.getCellSet(prevWinnerCells));
         
         assertTrue(cycle.activeCells().isEmpty());
@@ -553,10 +553,10 @@ public class TemporalMemoryTest {
         
         Set<Synapse> activeSynapses = new LinkedHashSet<Synapse>();
         activeSynapses.add(s0);
-        
+        System.out.println("so1 = " + s0.hashCode());
         dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
         assertEquals(1.0, s0.getPermanence(), 0.01);
-        
+        System.out.println("so2 = " + s0.hashCode());
         dd.adaptSegment(cn, activeSynapses, cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
         assertEquals(1.0, s0.getPermanence(), 0.01);
     }

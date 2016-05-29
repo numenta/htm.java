@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
@@ -48,6 +49,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.network.Layer.FunctionFactory;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -62,6 +64,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
+import rx.subjects.PublishSubject;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -193,9 +196,8 @@ public class LayerTest {
     @Test
     public void testHalt() {
         Sensor<File> sensor = Sensor.create(
-                        FileSensor::create, 
-                        SensorParams.create(
-                                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
+            FileSensor::create, SensorParams.create(
+                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
@@ -208,8 +210,6 @@ public class LayerTest {
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {
                 assertTrue(l.isHalted());
@@ -218,6 +218,8 @@ public class LayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {}
         });
+        
+        l.start();
 
         try {
             l.halt();
@@ -248,8 +250,6 @@ public class LayerTest {
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -259,6 +259,8 @@ public class LayerTest {
                 }
             }
         });
+        
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -288,8 +290,6 @@ public class LayerTest {
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
 
-        l.start();
-
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -299,6 +299,8 @@ public class LayerTest {
                 }
             }
         });
+        
+        l.start();
 
         try {
             l.getLayerThread().join();
@@ -311,15 +313,13 @@ public class LayerTest {
 
     @Test
     public void testLayerWithObservableInput() {
-        Publisher manual = Publisher.builder()
-            .addHeader("timestamp,consumption")
-            .addHeader("datetime,float")
-            .addHeader("B")
-            .build();
+        PublisherSupplier manual = PublisherSupplier.builder()
+            .addHeader("timestamp, consumption")
+            .addHeader("datetime, float")
+            .addHeader("B").build();
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
-            ObservableSensor::create, 
-            SensorParams.create(
+            ObservableSensor::create, SensorParams.create(
                 Keys::obs, new Object[] {"name", manual}));
 
         Parameters p = NetworkTestHarness.getParameters().copy();
@@ -329,13 +329,14 @@ public class LayerTest {
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
-        Network n = Network.create("test network", p);
-        final Layer<int[]> l = new Layer<>(n);
-        l.add(htmSensor);
-
-        l.start();
-
-        l.subscribe(new Observer<Inference>() {
+        Network n = Network.create("test network", p)
+            .add(Network.createRegion("r1")
+                .add(Network.createLayer("2/3", p)
+                    .add(htmSensor)));
+                
+        final Layer<?> l = n.lookup("r1").lookup("2/3");
+        
+        l.observe().subscribe(new Observer<Inference>() {
             int idx = 0;
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -351,24 +352,60 @@ public class LayerTest {
                 ++idx;
             }
         });
-
+        
+        l.start();
+        
+        Publisher pub = n.getPublisher();
+        
         try {
             String[] entries = { 
                 "7/2/10 0:00,21.2",
                 "7/2/10 1:00,34.0",
                 "7/2/10 2:00,40.4",
             };
-
+            
             // Send inputs through the observable
             for(String s : entries) {
-                manual.onNext(s);
+                pub.onNext(s);
             }
+            
+            ////////////////////
+            // Very Important //
+            ////////////////////
+            pub.onComplete();
 
-            Thread.sleep(100);
+            try {
+                l.getLayerThread().join();
+            }catch(Exception e) {e.printStackTrace();}
         }catch(Exception e) {
             e.printStackTrace();
             fail();
         }
+    }
+    
+    public Stream<String> makeStream() {
+        return Stream.of(
+            "7/2/10 0:00,21.2",
+            "7/2/10 1:00,34.0",
+            "7/2/10 2:00,40.4",
+            "7/2/10 3:00,4.7",
+            "7/2/10 4:00,4.6",
+            "7/2/10 5:00,23.5",
+            "7/2/10 6:00,47.5",
+            "7/2/10 7:00,45.4",
+            "7/2/10 8:00,46.1",
+            "7/2/10 9:00,41.5",
+            "7/2/10 10:00,43.4",
+            "7/2/10 11:00,43.8",
+            "7/2/10 12:00,37.8",
+            "7/2/10 13:00,36.6",
+            "7/2/10 14:00,35.7",
+            "7/2/10 15:00,38.9",
+            "7/2/10 16:00,36.2",
+            "7/2/10 17:00,36.6",
+            "7/2/10 18:00,37.2",
+            "7/2/10 19:00,38.2",
+            "7/2/10 20:00,14.1");
     }
     
     @Test
@@ -393,8 +430,6 @@ public class LayerTest {
         Network n = Network.create("test network", p);
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
-
-        l.start();
 
         String input = "[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, "
                         + "1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, "
@@ -424,6 +459,8 @@ public class LayerTest {
                 assertEquals(input, Arrays.toString((int[])output.getLayerInput()));
             }
         });
+        
+        l.start();
 
         try {
             String[] entries = { 
@@ -1393,4 +1430,133 @@ public class LayerTest {
         l2.setRegion(r2);
         assertFalse(l.equals(l2));
     }
+    
+    @Test
+    public void testInferInputDimensions() {
+        Parameters p = Parameters.getAllDefaultParameters();
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        
+        int[] dims = l.inferInputDimensions(16384, 2);
+        assertTrue(Arrays.equals(new int[] { 128, 128 }, dims));
+        
+        dims = l.inferInputDimensions(8000, 3);
+        assertTrue(Arrays.equals(new int[] { 20, 20, 20 }, dims));
+        
+        // Now test non-square dimensions
+        dims = l.inferInputDimensions(450, 2);
+        assertTrue(Arrays.equals(new int[] { 1, 450 }, dims));
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddSensorTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p);
+        l.close();
+
+        Sensor<File> sensor = Sensor.create(
+                FileSensor::create,
+                SensorParams.create(
+                        Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv")));
+        l.add(sensor);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddMultiEncoderTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p);
+        l.close();
+
+        l.add(MultiEncoder.builder().name("").build());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isClosedAddSpatialPoolerTest() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p);
+        l.close();
+
+        l.add(new SpatialPooler());
+    }
+    
+    @Test
+    public void testProperConstructionUsingNonFluentConstructor() {
+        try {
+            new Layer<>(null, null, null, null, null, null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("No parameters specified.", e.getMessage());
+        }
+        
+        Parameters p = NetworkTestHarness.getParameters();
+        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, null);
+        try {
+            new Layer<>(p, MultiEncoder.builder().build(), null, null, null, null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("The passed in Parameters must contain a field encoding map specified by " +
+             "org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testNullSubscriber() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p); 
+        
+        try {
+            l.subscribe(null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Subscriber cannot be null.", e.getMessage());
+        }
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testStringToInferenceTransformer() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Layer<?> l = Network.createLayer("l", p); 
+        FunctionFactory ff = l.new FunctionFactory();
+        PublishSubject publisher = PublishSubject.create();
+        Observable obs = ff.createEncoderFunc(publisher);
+        
+        String[] sa = { "42" };
+        
+        obs.subscribe(new Observer() {
+            @Override public void onCompleted() { }
+            @Override public void onError(Throwable arg0) { }
+            @Override public void onNext(Object arg0) { 
+            //    System.out.println("here");
+            }
+            
+        });
+        
+        assertEquals(0, ff.inference.getRecordNum());
+        
+        publisher.onNext(sa);
+        
+        assertEquals("[42]", (Arrays.toString((int[])ff.inference.getLayerInput())));
+        assertEquals(-1, ff.inference.getRecordNum());  // Record number gets set by the Layer which hasn't
+                                                        // Received a record yet.
+        assertEquals("[42]", (Arrays.toString((int[])ff.inference.getSDR())));
+    }
+   
 }

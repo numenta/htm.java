@@ -22,22 +22,25 @@
 
 package org.numenta.nupic.encoders;
 
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.util.Tuple;
+
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * DOCUMENTATION TAKEN DIRECTLY FROM THE PYTHON VERSION:
@@ -80,10 +83,12 @@ import org.numenta.nupic.util.Tuple;
  *
  * - improve wording on unspecified attributes: "Each parameter describes one extra attribute(other than the datetime
  *   object itself) to encode. By default, the unspecified attributes are not encoded."
- * - refer to DateEncoder::Builder, which where these parameters are defined.
+ * - refer to DateEncoder::Builder, which is where these parameters are defined.
  * - explain customDays here and at Python version
  */
 public class DateEncoder extends Encoder<DateTime> {
+
+    private static final long serialVersionUID = 1L;
 
     protected int width;
 
@@ -114,17 +119,22 @@ public class DateEncoder extends Encoder<DateTime> {
     protected List<Tuple> holidaysList = Arrays.asList(new Tuple(12, 25));
     
     //////////////// Convenience DateTime Formats ////////////////////
-    public static DateTimeFormatter FULL_DATE_TIME_ZONE = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSSz");
-    public static DateTimeFormatter FULL_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
-    public static DateTimeFormatter RELAXED_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss");
-    public static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
-    public static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
-    public static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
-    public static DateTimeFormatter FULL_TIME_MILLIS = DateTimeFormat.forPattern("HH:mm:ss.SSS");
-    public static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
-    public static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
+    public transient static DateTimeFormatter FULL_DATE_TIME_ZONE = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSSz");
+    public transient static DateTimeFormatter FULL_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
+    public transient static DateTimeFormatter RELAXED_DATE_TIME = DateTimeFormat.forPattern("YYYY/MM/dd HH:mm:ss");
+    public transient static DateTimeFormatter LOOSE_DATE_TIME = DateTimeFormat.forPattern("MM/dd/YY HH:mm");
+    public transient static DateTimeFormatter FULL_DATE = DateTimeFormat.forPattern("YYYY/MM/dd");
+    public transient static DateTimeFormatter FULL_TIME_ZONE = DateTimeFormat.forPattern("HH:mm:ss.SSSz");
+    public transient static DateTimeFormatter FULL_TIME_MILLIS = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+    public transient static DateTimeFormatter FULL_TIME_SECS = DateTimeFormat.forPattern("HH:mm:ss");
+    public transient static DateTimeFormatter FULL_TIME_MINS = DateTimeFormat.forPattern("HH:mm");
     
-    protected DateTimeFormatter customFormatter;
+    protected transient DateTimeFormatter customFormatter;
+    protected String customFormatterPattern;
+    
+    protected Set<FieldMetaType> fieldTypes = new HashSet<>(Arrays.asList(FieldMetaType.DATETIME));
+    
+    
 
     /**
      * Constructs a new {@code DateEncoder}
@@ -164,40 +174,40 @@ public class DateEncoder extends Encoder<DateTime> {
 
         if(isValidEncoderPropertyTuple(season)) {
             seasonEncoder = ScalarEncoder.builder()
-                    .w((int) season.get(0))
-                    .radius((double) season.get(1))
-                    .minVal(0)
-                    .maxVal(366)
-                    .periodic(true)
-                    .name("season")
-                    .forced(this.isForced())
-                    .build();
+                .w((int) season.get(0))
+                .radius((double) season.get(1))
+                .minVal(0)
+                .maxVal(366)
+                .periodic(true)
+                .name("season")
+                .forced(this.isForced())
+                .build();
             addChildEncoder(seasonEncoder);
         }
 
         if(isValidEncoderPropertyTuple(dayOfWeek)) {
             dayOfWeekEncoder = ScalarEncoder.builder()
-                    .w((int) dayOfWeek.get(0))
-                    .radius((double) dayOfWeek.get(1))
-                    .minVal(0)
-                    .maxVal(7)
-                    .periodic(true)
-                    .name("day of week")
-                    .forced(this.isForced())
-                    .build();
+                .w((int) dayOfWeek.get(0))
+                .radius((double) dayOfWeek.get(1))
+                .minVal(0)
+                .maxVal(7)
+                .periodic(true)
+                .name("day of week")
+                .forced(this.isForced())
+                .build();
             addChildEncoder(dayOfWeekEncoder);
         }
 
         if(isValidEncoderPropertyTuple(weekend)) {
             weekendEncoder = ScalarEncoder.builder()
-                    .w((int) weekend.get(0))
-                    .radius((double) weekend.get(1))
-                    .minVal(0)
-                    .maxVal(1)
-                    .periodic(false)
-                    .name("weekend")
-                    .forced(this.isForced())
-                    .build();
+                .w((int) weekend.get(0))
+                .radius((double) weekend.get(1))
+                .minVal(0)
+                .maxVal(1)
+                .periodic(false)
+                .name("weekend")
+                .forced(this.isForced())
+                .build();
             addChildEncoder(weekendEncoder);
         }
 
@@ -215,14 +225,14 @@ public class DateEncoder extends Encoder<DateTime> {
             }
 
             customDaysEncoder = ScalarEncoder.builder()
-                    .w((int) customDays.get(0))
-                    .radius(1)
-                    .minVal(0)
-                    .maxVal(1)
-                    .periodic(false)
-                    .name(customDayEncoderName.toString())
-                    .forced(this.isForced())
-                    .build();
+                .w((int) customDays.get(0))
+                .radius(1)
+                .minVal(0)
+                .maxVal(1)
+                .periodic(false)
+                .name(customDayEncoderName.toString())
+                .forced(this.isForced())
+                .build();
             //customDaysEncoder is special in naming
             addEncoder("customdays", customDaysEncoder);
             addCustomDays(days);
@@ -230,27 +240,27 @@ public class DateEncoder extends Encoder<DateTime> {
 
         if(isValidEncoderPropertyTuple(holiday)) {
             holidayEncoder = ScalarEncoder.builder()
-                    .w((int) holiday.get(0))
-                    .radius((double) holiday.get(1))
-                    .minVal(0)
-                    .maxVal(1)
-                    .periodic(false)
-                    .name("holiday")
-                    .forced(this.isForced())
-                    .build();
+                .w((int) holiday.get(0))
+                .radius((double) holiday.get(1))
+                .minVal(0)
+                .maxVal(1)
+                .periodic(false)
+                .name("holiday")
+                .forced(this.isForced())
+                .build();
             addChildEncoder(holidayEncoder);
         }
 
         if(isValidEncoderPropertyTuple(timeOfDay)) {
             timeOfDayEncoder = ScalarEncoder.builder()
-                    .w((int) timeOfDay.get(0))
-                    .radius((double) timeOfDay.get(1))
-                    .minVal(0)
-                    .maxVal(24)
-                    .periodic(true)
-                    .name("time of day")
-                    .forced(this.isForced())
-                    .build();
+                .w((int) timeOfDay.get(0))
+                .radius((double) timeOfDay.get(1))
+                .minVal(0)
+                .maxVal(24)
+                .periodic(true)
+                .name("time of day")
+                .forced(this.isForced())
+                .build();
             addChildEncoder(timeOfDayEncoder);
         }
 
@@ -401,8 +411,25 @@ public class DateEncoder extends Encoder<DateTime> {
      * Sets the custom formatter for the format field.
      * @param formatter
      */
-    public void setCustomFormat(DateTimeFormatter formatter) {
+    private void setCustomFormat(DateTimeFormatter formatter) {
         this.customFormatter = formatter;
+    }
+    
+    /**
+     * Stores the custom pattern set on the associated builder
+     * @param pattern   the pattern for the custom builder
+     */
+    private void setCustomFormatPattern(String pattern) {
+        this.customFormatterPattern = pattern;
+    }
+    
+    /**
+     * Returns the custom pattern used to establish the pattern expected for
+     * Encoder reads.
+     * @return  the custom pattern
+     */
+    public String getCustomFormatPattern() {
+        return customFormatterPattern;
     }
     
     /**
@@ -464,6 +491,14 @@ public class DateEncoder extends Encoder<DateTime> {
 
             ++fieldCounter;
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<FieldMetaType> getDecoderOutputFieldTypes() {
+        return fieldTypes;
     }
 
     /**
@@ -677,6 +712,8 @@ public class DateEncoder extends Encoder<DateTime> {
         protected Tuple timeOfDay = new Tuple(0, 4.0);
         
         protected DateTimeFormatter customFormatter;
+        
+        protected String customFormatPattern;
 
         private Builder() {}
 
@@ -702,6 +739,7 @@ public class DateEncoder extends Encoder<DateTime> {
             e.setTimeOfDay(this.timeOfDay);
             e.setCustomDays(this.customDays);
             e.setCustomFormat(this.customFormatter);
+            e.setCustomFormatPattern(this.customFormatPattern);
 
             ((DateEncoder)encoder).init();
 
@@ -710,6 +748,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode season
+         * @return  this builder
          */
         public DateEncoder.Builder season(int season, double radius) {
             this.season = new Tuple(season, radius);
@@ -718,6 +757,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode season
+         * @return  this builder
          */
         public DateEncoder.Builder season(int season) {
             return this.season(season, (double) this.season.get(1));
@@ -725,6 +765,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode dayOfWeek
+         * @return  this builder
          */
         public DateEncoder.Builder dayOfWeek(int dayOfWeek, double radius) {
             this.dayOfWeek = new Tuple(dayOfWeek, radius);
@@ -733,6 +774,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode dayOfWeek
+         * @return  this builder
          */
         public DateEncoder.Builder dayOfWeek(int dayOfWeek) {
             return this.dayOfWeek(dayOfWeek, (double) this.dayOfWeek.get(1));
@@ -740,6 +782,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode weekend
+         * @return  this builder
          */
         public DateEncoder.Builder weekend(int weekend, double radius) {
             this.weekend = new Tuple(weekend, radius);
@@ -748,6 +791,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode weekend
+         * @return  this builder
          */
         public DateEncoder.Builder weekend(int weekend) {
             return this.weekend(weekend, (double) this.weekend.get(1));
@@ -755,6 +799,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode customDays
+         * @return  this builder
          */
         public DateEncoder.Builder customDays(int customDays, List<String> customDaysList) {
             this.customDays = new Tuple(customDays, customDaysList);
@@ -763,6 +808,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode customDays
+         * @return  this builder
          */
         @SuppressWarnings("unchecked")
         public DateEncoder.Builder customDays(int customDays) {
@@ -771,6 +817,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode holiday
+         * @return  this builder
          */
         public DateEncoder.Builder holiday(int holiday, double radius) {
             this.holiday = new Tuple(holiday, radius);
@@ -779,6 +826,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode holiday
+         * @return  this builder
          */
         public DateEncoder.Builder holiday(int holiday) {
             return this.holiday(holiday, (double) this.holiday.get(1));
@@ -786,6 +834,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode timeOfDay
+         * @return  this builder
          */
         public DateEncoder.Builder timeOfDay(int timeOfDay, double radius) {
             this.timeOfDay = new Tuple(timeOfDay, radius);
@@ -794,6 +843,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set how many bits are used to encode timeOfDay
+         * @return  this builder
          */
         public DateEncoder.Builder timeOfDay(int timeOfDay) {
             return this.timeOfDay(timeOfDay, (double) this.timeOfDay.get(1));
@@ -801,6 +851,7 @@ public class DateEncoder extends Encoder<DateTime> {
 
         /**
          * Set the name of the encoder
+         * @return  this builder
          */
         public DateEncoder.Builder name(String name) {
             this.name = name;
@@ -808,22 +859,15 @@ public class DateEncoder extends Encoder<DateTime> {
         }
 
         /**
-         * Creates the pattern used to parse the date field.
-         * @param pattern
-         * @return
+         * Creates the formatter and stores the pattern used to parse the date field.
+         * @param pattern   stored pattern used to interpret data fields
+         * @return  this builder
          */
         public DateEncoder.Builder formatPattern(String pattern) {
+            // Stored in addition in order to deserialize formatter object
+            this.customFormatPattern = pattern;
+            
             this.customFormatter = DateTimeFormat.forPattern(pattern);
-            return this;
-        }
-        
-        /**
-         * Sets the {@link DateTimeFormatte} on this builder.
-         * @param formatter
-         * @return
-         */
-        public DateEncoder.Builder formatter(DateTimeFormatter formatter) {
-            this.customFormatter = formatter;
             return this;
         }
     }

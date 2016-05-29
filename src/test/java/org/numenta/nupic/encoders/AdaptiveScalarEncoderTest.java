@@ -22,7 +22,9 @@
 
 package org.numenta.nupic.encoders;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,6 +119,19 @@ public class AdaptiveScalarEncoderTest {
 		initASE();
 		ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
 		Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+		
+		/////////// Negative Test ///////////
+		setUp();
+		initASE();
+        Assert.assertNotNull("AdaptiveScalarEncoder class is null", ase);
+        try {
+            ase.setPeriodic(true); // Should cause failure during init
+            ase.initEncoder(3, 1, 8, 14, 1.5, 0.5);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("Adaptive scalar encoder does not encode periodic inputs", e.getMessage());
+        }
 	}
 	
 	@Test
@@ -177,14 +192,14 @@ public class AdaptiveScalarEncoderTest {
 			
 			assertTrue(Math.abs(fields.get(fields.keySet().iterator().next()).getRange(0).min() - minVal) < ase.getResolution());
 			
-			java.util.List<EncoderResult> topDown = ase.topDownCompute(output);
+			java.util.List<Encoding> topDown = ase.topDownCompute(output);
 			assertTrue(topDown.size() == 1);
 			System.out.println("\nTopDown => " + topDown.toString());
 			
 			int[] bucketIndices = ase.getBucketIndices(minVal);
 			assertTrue("The bucket indice size is not matching", bucketIndices.length == 1);
 			System.out.println("Bucket indices => " + Arrays.toString(bucketIndices));
-			List<EncoderResult> bucketInfoList = ase.getBucketInfo(bucketIndices);
+			List<Encoding> bucketInfoList = ase.getBucketInfo(bucketIndices);
 			assertTrue((Math.abs((double)bucketInfoList.get(0).getValue() - minVal)) <= (ase.getResolution() / 2));
 			System.out.println("Bucket info value: " + bucketInfoList.get(0).getValue());
 			System.out.println("Minval: " + minVal + " Abs(BucketVal - Minval): " + Math.abs((double)bucketInfoList.get(0).getValue() - minVal));
@@ -242,4 +257,12 @@ public class AdaptiveScalarEncoderTest {
 		
 	}
 	
+	@Test
+	public void testSkippedMinMaxCode() {
+	    setUp();
+        initASE();
+        ase.setMinVal(ase.getMaxVal());
+        ase.getBucketIndices(ase.getMaxVal());
+        assertEquals(1, ase.getRangeInternal(), 0); // ASE enforces minimum range of 1.0
+	}
 }

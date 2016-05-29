@@ -23,6 +23,7 @@
 package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -255,5 +256,35 @@ public class DequeTest {
 		assertEquals(new Integer(1), i.next());
 		assertEquals(new Integer(2), i.next());
 		assertTrue(!i.hasNext());
+	}
+	
+	@Test
+	public void testHeadTail() {
+	    Deque<Integer> deque = new Deque<Integer>(2);
+	    deque.append(1);
+        deque.append(2);
+        assertEquals(1, (int)deque.head());
+        assertEquals(2, (int)deque.tail());
+	}
+	
+	@Test
+	public void testHashCodeAndEquals() {
+	    Deque<Integer> deque = new Deque<Integer>(2);
+        deque.append(1);
+        deque.append(2);
+        
+        Deque<Integer> deque2 = new Deque<Integer>(2);
+        deque2.append(1);
+        deque2.append(2);
+        
+        assertEquals(deque, deque2);
+        assertEquals(deque.hashCode(), deque2.hashCode());
+        
+        Deque<Integer> deque3 = new Deque<Integer>(2);
+        deque3.append(3);
+        deque3.append(2);
+        
+        assertNotEquals(deque, deque3);
+        assertNotEquals(deque.hashCode(), deque3.hashCode());
 	}
 }

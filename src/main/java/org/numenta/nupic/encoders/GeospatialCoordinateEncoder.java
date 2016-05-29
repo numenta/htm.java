@@ -25,6 +25,8 @@ package org.numenta.nupic.encoders;
 import org.numenta.nupic.util.Tuple;
 
 public class GeospatialCoordinateEncoder extends CoordinateEncoder {
+	private static final long serialVersionUID = 1L;
+    
 	private int scale;
 	private int timestep;
 	

@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network.sensor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,7 +48,6 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +95,13 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> The Type of data on each line of this Stream (String[] for this implementation)
  */
-public class BatchedCsvStream<T> implements MetaStream<T> {
+public class BatchedCsvStream<T> implements MetaStream<T>, Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    
     // TOP TWO CLASSES ARE THE BatchSpliterator AND THE BatchedCsvHeader //
     // See main() at bottom for localized mini-test
     
@@ -117,7 +123,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         private int sequenceNum;
         private long est;
         private BatchedCsvStream<String[]> csv;
-        private Spliterator<String[]> spliterator;
+        private transient Spliterator<String[]> spliterator;
         
         
         /**
@@ -267,7 +273,10 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
      * @author David Ray
      * @see Header
      */
-    public static class BatchedCsvHeader implements ValueList {
+    public static class BatchedCsvHeader implements ValueList, Serializable {
+        
+        private static final long serialVersionUID = 1L;
+        
         /** Container for the field values */
         private Tuple[] headerValues;
                 
@@ -332,7 +341,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     //////////////////////////////////////////////////////////////
     //                      Main Class                          //
     //////////////////////////////////////////////////////////////
-    private static final Logger LOGGER = LoggerFactory.getLogger(BatchedCsvStream.class);
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(BatchedCsvStream.class);
     
     private Iterator<String[]> it;
     private int fence;
@@ -340,7 +349,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
     private boolean isTerminal;
     private boolean isArrayType;
     private BatchedCsvHeader header;
-    private Stream<T> delegate;
+    private transient Stream<T> delegate;
     private int headerStateTracker = 0;
 
     
@@ -448,7 +457,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
         
         return StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(
-                parallel ? it : isArrayType ? getArraySequenceIterator(it) : getSequenceIterator(it), // Return a sequencing iterator if not parallel
+                parallel ? it : isArrayType ? getArraySequenceIterator(it) : getSequenceIterator(it),   // Return a sequencing iterator if not parallel
                                                                                                         // otherwise the Spliterator handles the sequencing
                                                                                                         // through the special SequencingConsumer
                 Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), 
@@ -612,7 +621,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
      * @param batchSize             the "chunk" length to be processed by each Threaded task
      * @param isParallel            if true, batching will take place, otherwise not 
      * @param headerLength          number of header lines
-     * @param characteristics       stream configuration parameters
+     * @param characteristics       stream configuration parameters (see {@link Spliterator#characteristics()})
      * @return
      */
     public static BatchedCsvStream<String[]> batch(Stream<String> stream, int batchSize, boolean isParallel, int headerLength, int characteristics) {
@@ -864,6 +873,7 @@ public class BatchedCsvStream<T> implements MetaStream<T> {
             "7/2/10 19:00,38.2",
             "7/2/10 20:00,14.1");
 
+        @SuppressWarnings("resource")
         BatchedCsvStream<String> csv = new BatchedCsvStream<>(stream, 3);
         System.out.println("Header: " + csv.getHeader());
         csv.continuation(false).forEach(l -> System.out.println("line: " + Arrays.toString(l)));

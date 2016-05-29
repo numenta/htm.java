@@ -13,11 +13,36 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.6-SNAPSHOT]
+## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
+#### Added
+#### Changed
+#### Fixed
+
+***
+
+## [v0.6.8-alpha] - 2016-05-02
+#### Changed
+* [[PR #419](https://github.com/numenta/htm.java/pull/419)] Added additional check for running thread before calling halt during ```store()``` operation. This avoids calling ```halt()``` via the ```Persistable``` interface during serialize calls of ```HTMObjectOutput``` for our partners at [flink-htm](https://github.com/nupic-community/flink-htm)
+* [[Issue #418](https://github.com/numenta/htm.java/issues/418)] Internal change to ```HTMObjectOutput``` and ```HTMObjectInput``` constructors to pass in the ```FSTConfiguration``` to avoid creating it twice.
+* [[PR #419](https://github.com/numenta/htm.java/pull/419)] Changed default mode of Gradle build script to **not** write debug output to standard out
+
+***
+
+## [v0.6.6-alpha] - 2016-04-14
+#### Removed
+* [[PR #384](https://github.com/numenta/htm.java/pull/384)] Removed obsolete demo jars which are in htm.java-examples and don't need to be here.
 * Removed setSpVerbosity() method from Parameters.java
 
 #### Added
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)]  Added new PersistenceAPI (includes serialization; stream handling; new classes and new "serialize" package)
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Added changes to build script for forcing tests to run when source hasn't changed
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Added changes to build script for easy turn on of debug output
+* [[PR #405](https://github.com/numenta/htm.java/pull/402)] Added new [Docker File reference-build environment](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment)!
+* [[PR #397](https://github.com/numenta/htm.java/pull/397)] Added close() method to the Network class to bring it inline with Region & Layer - Added Tests for new functionality. (@Mandarx)
+* [[PR #396](https://github.com/numenta/htm.java/pull/396)] Added Local.US to MetricsTrace to ensure (expected) dots.
+* [[PR #386](https://github.com/numenta/htm.java/pull/386)] Added test for close() method in LayerTest
+* [[PR #378](https://github.com/numenta/htm.java/pull/378)] Added more utility methods to ArrayUtils in prep for KNNClassifier development
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Added new override of rightVecSumAtNZ() method to Matrix classes.
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Added "activeCells" field and to ManualInput.copy()
 * [[PR #370](https://github.com/numenta/htm.java/pull/370)] Added FastRandom implementation (yields 2x speed increase to codebase!) from MoClu's (@antidata)
@@ -26,6 +51,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #364](https://github.com/numenta/htm.java/pull/364)] Added 15min Hot Gym data file.
 
 #### Changed
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Renamed class EncoderResult to Encoding
+* [[PR #412](https://github.com/numenta/htm.java/pull/412)] Renamed class ClassifierResult to Classification
+* [[PR #404](https://github.com/numenta/htm.java/pull/404)] LayerTest & PALayerTest, subscribe() and start() call order to eliminate Thread Race Condition and run on [OpenJDK](http://openjdk.java.net)
+* (3-1-2016) Updated htm.java-examples for change to GLOBAL_INHIBITION parameter (sync)
+* [[PR #391](https://github.com/numenta/htm.java/pull/391)] Incremented the Gradle Shade Plugin version to 1.2.3
+* [[PR #379](https://github.com/numenta/htm.java/pull/379)] Changed SYN_PERM_THRESHOLD to be in line with SYN_PERM_CONNECTED
 * [[PR #375](https://github.com/numenta/htm.java/pull 375)] Optimized SpatialPooler.calculateOverlaps by adding the stimulus threshold to the rightVecSumAtNZ() method so we only loop once instead of twice.
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Changed Matrix class hierarchy naming from XXXSupport to AbstractXXX - more conventional
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Parameters.KEY_GLOBALINHIBITIONS to KEY_GLOBALINHIBITION
@@ -33,6 +64,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #370](https://github.com/numenta/htm.java/pull/370)] Changed Connections initialization to be able to specify RNG implementation from Parameters value.
 
 #### Fixed
+* [[PR #386](https://github.com/numenta/htm.java/pull/386)] Fixed floating point problem in Layer dimension inference
 * [[PR #373](https://github.com/numenta/htm.java/pull/373)] Rooted out cause of codebase indeterminacy!
 * [[PR #360](https://github.com/numenta/htm.java/pull/360)] Fixed dayOfWeek to accept fractional values.
 * [[PR #362](https://github.com/numenta/htm.java/pull/362)] Fix for Generic Observable execution order. Fixes [Issue #363](https://github.com/numenta/htm.java/issues/363)

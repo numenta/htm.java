@@ -193,7 +193,7 @@ public class NetworkTestHarness {
                 "dayOfWeek", "number", "ScalarEncoder");
         return fieldEncodings;
     }
-
+    
     /**
      * Returns Encoder parameters for the "dayOfWeek" test encoder.
      * @return

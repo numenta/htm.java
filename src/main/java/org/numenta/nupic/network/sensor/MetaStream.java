@@ -23,8 +23,6 @@ package org.numenta.nupic.network.sensor;
 
 import java.util.stream.Stream;
 
-import org.numenta.nupic.ValueList;
-
 /**
  * Adds meta information retrieval to a {@link Stream}
  * 

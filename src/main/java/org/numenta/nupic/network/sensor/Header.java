@@ -21,12 +21,12 @@
  */
 package org.numenta.nupic.network.sensor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.ValueList;
 import org.numenta.nupic.util.Tuple;
 
 
@@ -37,7 +37,9 @@ import org.numenta.nupic.util.Tuple;
  * 
  * @author David Ray
  */
-public class Header implements ValueList {
+public class Header implements ValueList, Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private ValueList rawTupleList;
     /** Name of each field */
     private List<String> fieldNames;

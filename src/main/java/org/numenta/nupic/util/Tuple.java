@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collector;
 
+import org.numenta.nupic.Persistable;
+
 /**
  * An immutable fixed data structure whose values are retrieved
  * via a given index. This data structure emulates multiple method
@@ -35,11 +37,16 @@ import java.util.stream.Collector;
  * 
  * @author David Ray
  */
-public class Tuple {
+public class Tuple implements Persistable {
+    
+    private static final long serialVersionUID = 1L;
+
     /** The internal container array */
 	protected Object[] container;
 	
 	private int hashcode;
+	
+	public Tuple() {}
 	
 	/**
 	 * Instantiates a new {@code Tuple}

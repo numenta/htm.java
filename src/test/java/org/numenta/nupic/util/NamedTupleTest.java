@@ -226,4 +226,38 @@ public class NamedTupleTest {
         assertTrue(values.size() == 3);
         assertTrue(set.containsAll(values) && values.containsAll(set));
     }
+    
+    @Test
+    public void testDuplicatesNotAllowed() {
+        try {
+            new NamedTuple(new String[] { "one", "one" }, 1, 2);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("Duplicates Not Allowed - Key: one, reinserted.", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testHashCodeEquals() {
+        NamedTuple nt0 = new NamedTuple(new String[] { "one", "two" }, 1, 2);
+        NamedTuple nt1 = new NamedTuple(new String[] { "one", "two" }, 1, 2);
+        assertEquals(nt0, nt1);
+        assertEquals(nt0.hashCode(), nt1.hashCode());
+        
+        NamedTuple nt2 = new NamedTuple(new String[] { "one", "2" }, 1, 2);
+        NamedTuple nt3 = new NamedTuple(new String[] { "one", "two" }, 1, 2);
+        assertNotEquals(nt2, nt3);
+        assertNotEquals(nt2.hashCode(), nt3.hashCode());
+        
+        String nt0String = 
+        "Bucket: 0\n" +
+        "\tkey=two, value=2, hash=0\n"+
+        "Bucket: 1\n" + 
+        "Bucket: 2\n" +
+        "\tkey=one, value=1, hash=2\n"+
+        "Bucket: 3\n";
+        
+        assertEquals(nt0String, nt0.toString());
+    }
 }

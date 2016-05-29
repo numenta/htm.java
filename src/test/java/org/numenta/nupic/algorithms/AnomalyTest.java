@@ -45,7 +45,6 @@ public class AnomalyTest {
     @Test
     public void testComputeRawAnomalyPartialNoMatch() {
         double score = Anomaly.computeRawAnomalyScore(new int[] { 2, 3, 6 }, new int[] { 3, 5, 7 });
-        System.out.println((2.0 / 3.0));
         assertEquals(score, 2.0 / 3.0, 0.001);
     }
 

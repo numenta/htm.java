@@ -9,6 +9,9 @@ package org.numenta.nupic.util;
  * @see NamedTuple
  */
 public class MutableTuple extends Tuple {
+    
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructs a new {@code MutableTuple} with the contents
      * specified. Warning, all Tuples cannot be resized.

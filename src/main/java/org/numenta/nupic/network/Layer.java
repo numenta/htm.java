@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.network;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,10 +38,11 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
@@ -51,6 +54,8 @@ import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Sensor;
+import org.numenta.nupic.network.sensor.SensorParams;
+import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.network.sensor.URISensor;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.NamedTuple;
@@ -167,7 +172,8 @@ import rx.subjects.PublishSubject;
  * 
  * @author David Ray
  */
-public class Layer<T> {
+public class Layer<T> implements Persistable {
+    private static final long serialVersionUID = 1L;
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
 
@@ -175,6 +181,7 @@ public class Layer<T> {
     protected Region parentRegion;
 
     protected Parameters params;
+    protected SensorParams sensorParams;
     protected Connections connections;
     protected HTMSensor<?> sensor;
     protected MultiEncoder encoder;
@@ -183,10 +190,12 @@ public class Layer<T> {
     private Boolean autoCreateClassifiers;
     private Anomaly anomalyComputer;
 
-    private PublishSubject<T> publisher = null;
-    private Subscription subscription;
-    private Observable<Inference> userObservable;
-    private Inference currentInference;
+    private transient ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
+    private transient PublishSubject<T> publisher = null;
+    private transient Observable<Inference> userObservable;
+    private transient Subscription subscription;
+    
+    private volatile Inference currentInference;
 
     FunctionFactory factory;
 
@@ -201,20 +210,27 @@ public class Layer<T> {
     /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
     private Set<Cell> activeCells;
 
+    /** Used to track and document the # of records processed */
     private int recordNum = -1;
+    /** Keeps track of number of records to skip on restart */
+    private int skip = -1;
 
     private String name;
 
-    private boolean isClosed;
-    private boolean isHalted;
-    protected boolean isLearn = true;
-
+    private volatile boolean isClosed;
+    private volatile boolean isHalted;
+    private volatile boolean isPostSerialized;
+    protected volatile boolean isLearn = true;
+    
     private Layer<Inference> next;
     private Layer<Inference> previous;
 
-    private List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
-    private ConcurrentLinkedQueue<Observer<Inference>> subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
-
+    private transient List<Observer<Inference>> observers = new ArrayList<Observer<Inference>>();
+    private transient CheckPointOperator<?> checkPointOp;
+    private transient List<Observer<byte[]>> checkPointOpObservers = new ArrayList<>();
+    
+    
+    
     /**
      * Retains the order of added items - for use with interposed
      * {@link Observable}
@@ -229,10 +245,10 @@ public class Layer<T> {
      */
     private List<EncoderTuple> encoderTuples;
 
-    private Map<Class<T>, Observable<ManualInput>> observableDispatch = Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
+    private transient Map<Class<T>, Observable<ManualInput>> observableDispatch = Collections.synchronizedMap(new HashMap<Class<T>, Observable<ManualInput>>());
 
     /** This layer's thread */
-    private Thread LAYER_THREAD;
+    private transient Thread LAYER_THREAD;
 
     static final byte SPATIAL_POOLER = 1;
     static final byte TEMPORAL_MEMORY = 2;
@@ -240,6 +256,8 @@ public class Layer<T> {
     static final byte ANOMALY_COMPUTER = 8;
 
     private byte algo_content_mask = 0;
+    
+    
 
     /**
      * Creates a new {@code Layer} using the {@link Network} level
@@ -284,7 +302,49 @@ public class Layer<T> {
 
         observableDispatch = createDispatchMap();
     }
-
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Layer<T> preSerialize() {
+        isPostSerialized = false;
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Layer<T> postDeSerialize() {
+        recreateSensors();
+        
+        FunctionFactory old = factory;
+        factory = new FunctionFactory();
+        factory.inference = old.inference.postDeSerialize(old.inference);
+        
+        checkPointOpObservers = new ArrayList<>();
+        
+        if(sensor != null) {
+            sensor.setLocalParameters(params);
+            // Initialize encoders and recreate encoding index mapping.
+            sensor.postDeSerialize();
+        }else{
+            // Dispatch functions (Observables) are transient & non-serializable so they must be rebuilt.
+            observableDispatch = createDispatchMap();
+            // Dispatch chain will not propagate unless it has subscribers.
+            parentNetwork.addDummySubscriber();
+        }
+        // Flag which lets us know to skip or do certain setups during initialization.
+        isPostSerialized = true;
+        
+        observers = new ArrayList<Observer<Inference>>();
+        
+        return this;
+    }
+    
     /**
      * Sets the parent {@link Network} on this {@code Layer}
      * 
@@ -317,7 +377,8 @@ public class Layer<T> {
 
         // Check to see if the Parameters include the encoder configuration.
         if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null && e != null) {
-            throw new IllegalArgumentException("The passed in Parameters must contain a field encoding map " + "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
+            throw new IllegalArgumentException("The passed in Parameters must contain a field encoding map " + 
+                "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
         }
 
         this.params = params;
@@ -335,11 +396,26 @@ public class Layer<T> {
         initializeMask();
 
         if(LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Layer successfully created containing: {}{}{}{}{}", (encoder == null ? "" : "MultiEncoder,"), (spatialPooler == null ? "" : "SpatialPooler,"), (temporalMemory == null ? ""
-                            : "TemporalMemory,"), (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."), (anomalyComputer == null ? "" : "Anomaly"));
+            LOGGER.debug("Layer successfully created containing: {}{}{}{}{}", 
+                (encoder == null ? "" : "MultiEncoder,"), 
+                (spatialPooler == null ? "" : "SpatialPooler,"), 
+                (temporalMemory == null ? "" : "TemporalMemory,"), 
+                (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."), 
+                (anomalyComputer == null ? "" : "Anomaly"));
         }
     }
-
+    
+    /**
+     * USED INTERNALLY, DO NOT CALL.
+     * @return
+     */
+    public CheckPointOp<byte[]> delegateCheckPointCall() {
+        if(parentNetwork != null) {
+            return parentNetwork.getCheckPointOperator();
+        }
+        return null;
+    }
+    
     /**
      * Sets the parent region which contains this {@code Layer}
      * 
@@ -369,6 +445,14 @@ public class Layer<T> {
             connections.setNumInputs(encoder.getWidth());
             if(parentNetwork != null && parentRegion != null) {
                 parentNetwork.setSensorRegion(parentRegion);
+                
+                Object supplier;
+                if((supplier = sensor.getSensorParams().get("ONSUB")) != null) {
+                    if(supplier instanceof PublisherSupplier) {
+                        ((PublisherSupplier)supplier).setNetwork(parentNetwork);
+                        parentNetwork.setPublisher(((PublisherSupplier)supplier).get());
+                    }
+                }
             }
         }
 
@@ -402,7 +486,6 @@ public class Layer<T> {
                 params.setInputDimensions(inferredDims);
                 connections.setInputDimensions(inferredDims);
             }
-
         }
 
         autoCreateClassifiers = autoCreateClassifiers != null && (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
@@ -536,16 +619,22 @@ public class Layer<T> {
      * 
      * @param inputWidth        the flat input width of an {@link Encoder}'s output or the
      *                          vector used as input to the {@link SpatialPooler}
-     * @param numColumnDims     a number specifying the number of column dimensions that
+     * @param numDims           a number specifying the number of dimensions that
      *                          should be returned.
      * @return
      */
-    public int[] inferInputDimensions(int inputWidth, int numColumnDims) {
+    public int[] inferInputDimensions(int inputWidth, int numDims) {
         double flatSize = inputWidth;
-        double numColDims = numColumnDims;
-        double sliceArrangement = Math.pow(flatSize, 1 / numColDims);
-        double remainder = sliceArrangement % (int)sliceArrangement;
+        double numColDims = numDims;
         int[] retVal = new int[(int)numColDims];
+        
+        BigDecimal log = new BigDecimal(Math.log10(flatSize));
+        BigDecimal dimensions = new BigDecimal(numColDims);
+        double sliceArrangement = new BigDecimal(
+            Math.pow(10, log.divide(dimensions).doubleValue()), 
+                MathContext.DECIMAL32).doubleValue();
+        double remainder = sliceArrangement % (int)sliceArrangement;
+        
         if(remainder > 0) {
             for(int i = 0;i < numColDims - 1;i++)
                 retVal[i] = 1;
@@ -566,11 +655,19 @@ public class Layer<T> {
      */
     @SuppressWarnings("unchecked")
     public Observable<Inference> observe() {
+        // This will be called again after the Network is halted so we have to prepare
+        // for rebuild of the Observer chain
+        if(isHalted) {
+            clearSubscriberObserverLists();
+        }
+        
         if(userObservable == null) {
             userObservable = Observable.create(new Observable.OnSubscribe<Inference>() {
-
                 @Override
                 public void call(Subscriber<? super Inference> t1) {
+                    if(observers == null) {
+                        observers = new ArrayList<Observer<Inference>>();
+                    }
                     observers.add((Observer<Inference>)t1);
                 }
             });
@@ -587,12 +684,21 @@ public class Layer<T> {
      * @return  a {@link Subscription}
      */
     public Subscription subscribe(final Observer<Inference> subscriber) {
+        // This will be called again after the Network is halted so we have to prepare
+        // for rebuild of the Observer chain
+        if(isHalted) {
+            clearSubscriberObserverLists();
+        }
+        
         if(subscriber == null) {
             throw new IllegalArgumentException("Subscriber cannot be null.");
         }
 
+        if(subscribers == null) {
+            subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
+        }
         subscribers.add(subscriber);
-
+        
         return createSubscription(subscriber);
     }
 
@@ -650,9 +756,16 @@ public class Layer<T> {
         }
 
         this.sensor = (HTMSensor<?>)sensor;
+        
+        // Configure the parent Network's reference to its sensor Region.
         if(parentNetwork != null && parentRegion != null) {
             parentNetwork.setSensorRegion(parentRegion);
+            parentNetwork.setSensor(this.sensor);
         }
+        
+        // Store the SensorParams for Sensor rebuild after deserialization
+        this.sensorParams = this.sensor.getSensorParams();
+        
         return this;
     }
 
@@ -839,6 +952,13 @@ public class Layer<T> {
      * Stops the processing of this {@code Layer}'s processing thread.
      */
     public void halt() {
+        Object supplier = null;
+        if(sensor != null && (supplier = sensor.getSensorParams().get("ONSUB")) != null) {
+            if(supplier instanceof PublisherSupplier) {
+                ((PublisherSupplier)supplier).clearSuppliedInstance();
+            }
+        }
+        
         // Signal the Observer chain to complete
         if(LAYER_THREAD == null) {
             publisher.onCompleted();
@@ -846,6 +966,7 @@ public class Layer<T> {
                 next.halt();
             }
         }
+        
         this.isHalted = true;
     }
 
@@ -890,6 +1011,11 @@ public class Layer<T> {
      */
     @SuppressWarnings("unchecked")
     public void start() {
+        if(isHalted) {
+            restart(true);
+            return;
+        }
+        
         // Save boilerplate setup steps by automatically closing when start is
         // called.
         if(!isClosed) {
@@ -908,41 +1034,61 @@ public class Layer<T> {
             notifyError(e);
         }
 
-        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
-
-            public void run() {
-                LOGGER.debug("Layer [" + getName() + "] started Sensor output stream processing.");
-
-                // Applies "terminal" function, at this point the input stream
-                // is "sealed".
-                sensor.getOutputStream().filter(i -> {
-                    if(isHalted) {
-                        notifyComplete();
-                        if(next != null) {
-                            next.halt();
-                        }
-                        return false;
-                    }
-
-                    if(Thread.currentThread().isInterrupted()) {
-                        notifyError(new RuntimeException("Unknown Exception while filtering input"));
-                    }
-
-                    return true;
-                }).forEach(intArray -> {
-                    ((ManualInput)Layer.this.factory.inference).encoding(intArray);
-
-                    Layer.this.compute((T)intArray);
-
-                    // Notify all downstream observers that the stream is closed
-                    if(!sensor.hasNext()) {
-                        notifyComplete();
-                    }
-                });
-            }
-        }).start();
+        startLayerThread();
 
         LOGGER.debug("Start called on Layer thread {}", LAYER_THREAD);
+    }
+    
+    /**
+     * Restarts this {@code Layer}
+     * 
+     * {@link #restart()} is to be called after a call to {@link #halt()}, to begin
+     * processing again. The {@link Network} will continue from where it previously
+     * left off after the last call to halt().
+     * 
+     * @param startAtIndex      flag indicating whether the Layer should be started and
+     *                          run from the previous save point or not.
+     */
+    @SuppressWarnings("unchecked")
+    public void restart(boolean startAtIndex) {
+        isHalted = false;
+        
+        if(!isClosed) {
+            start();
+        }else{
+            if(sensor == null) {
+                throw new IllegalStateException("A sensor must be added when the mode is not Network.Mode.MANUAL");
+            }
+            
+            // Re-init the Sensor only if we're halted and haven't already been initialized
+            // following a deserialization.
+            if(!isPostSerialized) {
+                // Recreate the Sensor and its underlying Stream
+                recreateSensors();
+            }
+            
+            if(parentNetwork != null) {
+                parentNetwork.setSensor(sensor);
+            }
+            
+            observableDispatch = createDispatchMap();
+            
+            this.encoder = encoder == null ? sensor.getEncoder() : encoder;
+            
+            skip = startAtIndex ? 
+                (sensor.getSensorParams().get("ONSUB")) != null ? -1 : recordNum : 
+                    (recordNum = -1);
+            
+            try {
+                completeDispatch((T)new int[] {});
+            } catch(Exception e) {
+                notifyError(e);
+            }
+            
+            startLayerThread();
+
+            LOGGER.debug("Re-Start called on Layer thread {}", LAYER_THREAD);
+        }
     }
     
     /**
@@ -995,7 +1141,10 @@ public class Layer<T> {
 
     /**
      * Returns the {@link Thread} from which this {@code Layer} is currently
-     * outputting data.
+     * outputting data. 
+     * 
+     * <b> Warning: This method returns the current thread if the Layer's processing
+     * thread has never been started and therefore is null!</b>
      * 
      * @return
      */
@@ -1095,6 +1244,15 @@ public class Layer<T> {
     }
 
     /**
+     * Returns a flag indicating whether this {@code Layer} has had
+     * its {@link #close} method called, or not.
+     * @return
+     */
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    /**
      * Resets the internal record count to zero
      * 
      * @return this {@code LayerImpl}
@@ -1112,7 +1270,6 @@ public class Layer<T> {
             LOGGER.debug("Attempt to reset Layer: " + getName() + "without TemporalMemory");
         } else {
             temporalMemory.reset(connections);
-            resetRecordNum();
         }
     }
 
@@ -1130,18 +1287,11 @@ public class Layer<T> {
      * Increments the current record sequence number.
      */
     public Layer<T> increment() {
-        ++recordNum;
-        return this;
-    }
-
-    /**
-     * Skips the specified count of records and internally alters the record
-     * sequence number.
-     * 
-     * @param count
-     */
-    public Layer<T> skip(int count) {
-        recordNum += count;
+        if(skip > -1) {
+            --skip;
+        } else {
+            ++recordNum;
+        }
         return this;
     }
 
@@ -1211,7 +1361,7 @@ public class Layer<T> {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1236,7 +1386,7 @@ public class Layer<T> {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1258,7 +1408,7 @@ public class Layer<T> {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1279,7 +1429,7 @@ public class Layer<T> {
             throw new IllegalStateException("Predictions not available. " + "Either classifiers unspecified or inferencing has not yet begun.");
         }
 
-        ClassifierResult<?> c = currentInference.getClassification(field);
+        Classification<?> c = currentInference.getClassification(field);
         if(c == null) {
             LOGGER.debug("No ClassifierResult exists for the specified field: {}", field);
         }
@@ -1287,9 +1437,9 @@ public class Layer<T> {
         return c.getMostProbableBucketIndex(step);
     }
 
-    // ////////////////////////////////////////////////////////////
-    // PRIVATE METHODS AND CLASSES BELOW HERE //
-    // ////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    //          PRIVATE METHODS AND CLASSES BELOW HERE          //
+    //////////////////////////////////////////////////////////////
     /**
      * Notify all subscribers through the delegate that stream processing has
      * been completed or halted.
@@ -1381,6 +1531,7 @@ public class Layer<T> {
         sequence = fillInSequence(sequence);
 
         // All subscribers and observers are notified from a single delegate.
+        if(subscribers == null) subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
         subscribers.add(getDelegateObserver());
         subscription = sequence.subscribe(getDelegateSubscriber());
 
@@ -1389,9 +1540,9 @@ public class Layer<T> {
         observableDispatch = null;
 
         // Handle global network sensor access.
-        if(sensor == null) {
+        if(sensor == null && parentNetwork != null && parentNetwork.isTail(this)) {
             sensor = parentNetwork == null ? null : parentNetwork.getSensor();
-        } else if(parentNetwork != null) {
+        } else if(parentNetwork != null && sensor != null) {
             parentNetwork.setSensor(sensor);
         }
     }
@@ -1438,6 +1589,7 @@ public class Layer<T> {
                 }
                 return sequence;
             }
+            
             sequence = sequence.map(m -> {
                 doEncoderBucketMapping(m, getSensor().getInputMap());
                 return m;
@@ -1464,6 +1616,10 @@ public class Layer<T> {
     private Observable<ManualInput> resolveObservableSequence(T t) {
         Observable<ManualInput> sequenceStart = null;
 
+        if(observableDispatch == null) {
+            observableDispatch = createDispatchMap();
+        }
+        
         if(observableDispatch != null) {
             if(ManualInput.class.isAssignableFrom(t.getClass())) {
                 sequenceStart = observableDispatch.get(ManualInput.class);
@@ -1477,8 +1633,55 @@ public class Layer<T> {
                 }
             }
         }
+        
+        // Insert skip observable operator if initializing with an advanced record number
+        // (i.e. Serialized Network)
+        if(recordNum > 0 && skip != -1) {
+            sequenceStart = sequenceStart.skip(recordNum + 1);
+            
+            Integer skipCount;
+            if(((skipCount = (Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY)) != null)) {
+                // No need to "warm up" the SpatialPooler if we're deserializing an SP
+                // that has been running... However "skipCount - recordNum" is there so 
+                // we make sure the Network has run at least long enough to satisfy the 
+                // original requested "primer delay".
+                params.setParameterByKey(KEY.SP_PRIMER_DELAY, Math.max(0, skipCount - recordNum));
+            }
+        }
+        
+        sequenceStart = sequenceStart.filter(m -> {
+            if(!checkPointOpObservers.isEmpty() && parentNetwork != null) {
+                // Execute check point logic
+                doCheckPoint();
+            }
+            
+            return true;
+        });
 
         return sequenceStart;
+    }
+    
+    /**
+     * Executes the check point logic, handles the return of the serialized byte array
+     * by delegating the call to {@link rx.Observer#onNext(byte[])} of all the currently queued
+     * Observers; then clears the list of Observers.
+     */
+    private void doCheckPoint() {
+        byte[] bytes = parentNetwork.internalCheckPointOp();
+        
+        if(bytes != null) {
+            LOGGER.debug("Layer [" + getName() + "] checkPointed file: " + 
+                Persistence.get().getLastCheckPointFileName());
+        }else{
+            LOGGER.debug("Layer [" + getName() + "] checkPoint   F A I L E D   at: " + (new DateTime()));
+        }
+        
+        for(Observer<byte[]> o : checkPointOpObservers) {
+            o.onNext(bytes);
+            o.onCompleted();
+        }
+        
+        checkPointOpObservers.clear();
     }
 
     /**
@@ -1692,6 +1895,17 @@ public class Layer<T> {
             }
         };
     }
+    
+    /**
+     * Clears the subscriber and observer lists so they can be rebuilt
+     * during restart or deserialization.
+     */
+    private void clearSubscriberObserverLists() {
+        if(observers == null) observers = new ArrayList<Observer<Inference>>(); 
+        if(subscribers == null) subscribers = new ConcurrentLinkedQueue<Observer<Inference>>();
+        subscribers.clear();
+        userObservable = null;
+    }
 
     /**
      * Creates the {@link NamedTuple} of names to encoders used in the
@@ -1757,9 +1971,119 @@ public class Layer<T> {
         mi.activeCells(activeCells = cc.activeCells());
         // Store the Compute Cycle
         mi.computeCycle = cc;
-        return SDR.asCellIndices(activeCells = cc.activeCells());
+        
+        return SDR.asCellIndices(activeCells);
     }
+    
+    /**
+     * Starts this {@code Layer}'s thread
+     */
+    protected void startLayerThread() {
+        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
 
+            @SuppressWarnings("unchecked")
+            public void run() {
+                LOGGER.debug("Layer [" + getName() + "] started Sensor output stream processing.");
+
+                // Applies "terminal" function, at this point the input stream
+                // is "sealed".
+                sensor.getOutputStream().filter(i -> {
+                    if(isHalted) {
+                        notifyComplete();
+                        if(next != null) {
+                            next.halt();
+                        }
+                        return false;
+                    }
+                    
+                    if(Thread.currentThread().isInterrupted()) {
+                        notifyError(new RuntimeException("Unknown Exception while filtering input"));
+                    }
+
+                    return true;
+                }).forEach(intArray -> {
+                    ((ManualInput)Layer.this.factory.inference).encoding(intArray);
+
+                    Layer.this.compute((T)intArray);
+
+                    // Notify all downstream observers that the stream is closed
+                    if(!sensor.hasNext()) {
+                        notifyComplete();
+                    }
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     * 
+     * @param network   the {@link Network} to check point.
+     * @return  the {@link CheckPointOp} operator 
+     */
+    @SuppressWarnings("unchecked")
+    CheckPointOp<byte[]> getCheckPointOperator() {
+        if(checkPointOp == null) {
+            checkPointOp = new CheckPointOperator<byte[]>(Layer.this);
+        }
+        return (CheckPointOp<byte[]>)checkPointOp;
+    }
+    
+    
+    //////////////////////////////////////////////////////////////
+    //   Inner Class Definition for CheckPointer (Observable)   //
+    //////////////////////////////////////////////////////////////
+    
+    /**
+     * <p>
+     * Implementation of the CheckPointOp interface which serves to checkpoint
+     * and register a listener at the same time. The {@link rx.Observer} will be
+     * notified with the byte array of the {@link Network} being serialized.
+     * </p><p>
+     * The layer thread automatically tests for the list of observers to 
+     * contain > 0 elements, which indicates a check point operation should
+     * be executed.
+     * </p>
+     * 
+     * @param <T>       {@link rx.Observer}'s return type
+     */
+    static class CheckPointOperator<T> extends Observable<T> implements CheckPointOp<T> {
+        private CheckPointOperator(Layer<?> l) {
+            this(new Observable.OnSubscribe<T>() {
+                @SuppressWarnings({ "unchecked" })
+                @Override public void call(Subscriber<? super T> r) {
+                    if(l.LAYER_THREAD != null) {
+                        // The layer thread automatically tests for the list of observers to 
+                        // contain > 0 elements, which indicates a check point operation should
+                        // be executed.
+                        l.checkPointOpObservers.add((Observer<byte[]>)r);
+                    }else{
+                        l.doCheckPoint();
+                    }
+                }
+            });
+        }
+        
+        /**
+         * Constructs this {@code CheckPointOperator}
+         * @param f     a subscriber function
+         */
+        protected CheckPointOperator(rx.Observable.OnSubscribe<T> f) {
+            super(f);
+        }
+        
+        /**
+         * Queues the specified {@link rx.Observer} for notification upon
+         * completion of a check point operation.
+         */
+        public Subscription checkPoint(Observer<? super T> t) {
+            return super.subscribe(t);
+        }
+    }
+        
+    
     //////////////////////////////////////////////////////////////
     //        Inner Class Definition Transformer Example        //
     //////////////////////////////////////////////////////////////
@@ -1780,8 +2104,9 @@ public class Layer<T> {
      * @see Layer#resolveObservableSequence(Object)
      * @see Layer#fillInSequence(Observable)
      */
-    class FunctionFactory {
-
+    class FunctionFactory implements Persistable {
+        private static final long serialVersionUID = 1L;
+        
         ManualInput inference = new ManualInput();
 
         //////////////////////////////////////////////////////////////////////////////
@@ -2007,7 +2332,7 @@ public class Layer<T> {
                         actValue = inputs.get("inputValue");
 
                         CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
-                        ClassifierResult<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
+                        Classification<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
 
                         t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
                     }
@@ -2034,13 +2359,45 @@ public class Layer<T> {
         }
 
     }
-
+    
+    /**
+     * Re-initializes the {@link HTMSensor} following deserialization or restart
+     * after halt.
+     */
+    private void recreateSensors() {
+        if(sensor != null) {
+            // Recreate the Sensor and its underlying Stream
+            Class<?> sensorKlass = sensor.getSensorClass();
+            if(sensorKlass.toString().indexOf("File") != -1) {
+                Object path = sensor.getSensorParams().get("PATH");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    FileSensor::create, SensorParams.create(Keys::path, "", path));
+            }else if(sensorKlass.toString().indexOf("Observ") != -1) {
+                Object supplierOfObservable = sensor.getSensorParams().get("ONSUB");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    ObservableSensor::create, SensorParams.create(Keys::obs, "", supplierOfObservable));
+            }else if(sensorKlass.toString().indexOf("URI") != -1) {
+                Object url = sensor.getSensorParams().get("URI");
+                sensor = (HTMSensor<?>)Sensor.create(
+                    URISensor::create, SensorParams.create(Keys::uri, "", url));
+            }
+        }
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + recordNum;
+        result = prime * result + algo_content_mask;
+        result = prime * result + ((currentInference == null) ? 0 : currentInference.hashCode());
+        result = prime * result + (hasGenericProcess ? 1231 : 1237);
+        result = prime * result + (isClosed ? 1231 : 1237);
+        result = prime * result + (isHalted ? 1231 : 1237);
+        result = prime * result + (isLearn ? 1231 : 1237);
         result = prime * result + ((parentRegion == null) ? 0 : parentRegion.hashCode());
+        result = prime * result + ((sensorParams == null) ? 0 : sensorParams.hashCode());
         return result;
     }
 
@@ -2058,11 +2415,35 @@ public class Layer<T> {
                 return false;
         } else if(!name.equals(other.name))
             return false;
+        if(algo_content_mask != other.algo_content_mask)
+            return false;
+        if(currentInference == null) {
+            if(other.currentInference != null)
+                return false;
+        } else if(!currentInference.equals(other.currentInference))
+            return false;
+        if(recordNum != other.recordNum)
+          return false;
+        if(hasGenericProcess != other.hasGenericProcess)
+            return false;
+        if(isClosed != other.isClosed)
+            return false;
+        if(isHalted != other.isHalted)
+            return false;
+        if(isLearn != other.isLearn)
+            return false;
         if(parentRegion == null) {
             if(other.parentRegion != null)
                 return false;
-        } else if(!parentRegion.equals(other.parentRegion))
+        } else if(other.parentRegion == null || !parentRegion.getName().equals(other.parentRegion.getName()))
             return false;
+        if(sensorParams == null) {
+            if(other.sensorParams != null)
+                return false;
+        } else if(!sensorParams.equals(other.sensorParams))
+            return false;
+        
         return true;
     }
+
 }

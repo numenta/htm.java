@@ -33,6 +33,8 @@ import org.numenta.nupic.util.ArrayUtils;
  *
  */
 public class PASpatialPooler extends SpatialPooler {
+    private static final long serialVersionUID = 1L;
+
     /**
      * This function determines each column's overlap with the current input
      * vector. The overlap of a column is the number of synapses for that column

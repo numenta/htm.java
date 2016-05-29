@@ -29,7 +29,7 @@ import java.util.Set;
 
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.ClassifierResult;
+import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
@@ -50,7 +50,7 @@ import rx.functions.Func1;
  *      <li>Bucket Index</li>
  *      <li>SDR</li>
  *      <li>Previous SDR</li>
- *      <li>{@link ClassifierResult}</li>
+ *      <li>{@link Classification}</li>
  *      <li>anomalyScore</li>
  * </ul>
  * 
@@ -64,6 +64,8 @@ import rx.functions.Func1;
  *
  */
 public class ManualInput implements Inference {
+    private static final long serialVersionUID = 1L;
+    
     private int recordNum;
     /** Tuple = { Name, inputValue, bucketIndex, encoding } */
     private Map<String, NamedTuple> classifierInput;
@@ -83,7 +85,7 @@ public class ManualInput implements Inference {
     /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
     private Set<Cell> activeCells;
     
-    private Map<String, ClassifierResult<Object>> classification;
+    private Map<String, Classification<Object>> classification;
     private double anomalyScore;
     private Object customObject;
     
@@ -94,6 +96,32 @@ public class ManualInput implements Inference {
      * Constructs a new {@code ManualInput}
      */
     public ManualInput() {}
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T postDeSerialize(T manualInput) {
+        ManualInput mi = (ManualInput)manualInput;
+        
+        ManualInput retVal = new ManualInput();
+        retVal.activeCells = mi.activeCells;
+        retVal.anomalyScore = mi.anomalyScore;
+        retVal.classification = mi.classification;
+        retVal.classifierInput = mi.classifierInput;
+        retVal.classifiers = mi.classifiers;
+        retVal.customObject = mi.customObject;
+        retVal.encoding = mi.encoding;
+        retVal.feedForwardActiveColumns = mi.feedForwardActiveColumns;
+        retVal.feedForwardSparseActives = mi.feedForwardSparseActives;
+        retVal.layerInput = mi.layerInput;
+        retVal.predictiveCells = mi.predictiveCells;
+        retVal.previousPredictiveCells = mi.previousPredictiveCells;
+        retVal.sdr = mi.sdr;
+        
+        return (T)retVal;
+    }
     
     /**
      * Sets the current record num associated with this {@code ManualInput}
@@ -303,19 +331,20 @@ public class ManualInput implements Inference {
         retVal.classification = new HashMap<>(this.classification);
         retVal.anomalyScore = this.anomalyScore;
         retVal.customObject = this.customObject;
+        retVal.computeCycle = this.computeCycle;
         retVal.activeCells = new LinkedHashSet<Cell>(this.activeCells);
         
         return retVal;
     }
     
     /**
-     * Returns the most recent {@link ClassifierResult}
+     * Returns the most recent {@link Classification}
      * 
      * @param fieldName
      * @return
      */
     @Override
-    public ClassifierResult<Object> getClassification(String fieldName) {
+    public Classification<Object> getClassification(String fieldName) {
         return classification.get(fieldName);
     }
     
@@ -327,9 +356,9 @@ public class ManualInput implements Inference {
      * @param classification
      * @return
      */
-    ManualInput storeClassification(String fieldName, ClassifierResult<Object> classification) {
+    ManualInput storeClassification(String fieldName, Classification<Object> classification) {
         if(this.classification == null) {
-            this.classification = new HashMap<String, ClassifierResult<Object>>();
+            this.classification = new HashMap<String, Classification<Object>>();
         }
         this.classification.put(fieldName, classification);
         return this;
@@ -454,4 +483,86 @@ public class ManualInput implements Inference {
         this.predictiveCells = cells;
         return this;
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(anomalyScore);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + ((classification == null) ? 0 : classification.hashCode());
+        result = prime * result + ((classifierInput == null) ? 0 : classifierInput.hashCode());
+        result = prime * result + ((computeCycle == null) ? 0 : computeCycle.hashCode());
+        result = prime * result + Arrays.hashCode(encoding);
+        result = prime * result + Arrays.hashCode(feedForwardActiveColumns);
+        result = prime * result + Arrays.hashCode(feedForwardSparseActives);
+        result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
+        result = prime * result + ((previousPredictiveCells == null) ? 0 : previousPredictiveCells.hashCode());
+        result = prime * result + recordNum;
+        result = prime * result + Arrays.hashCode(sdr);
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(!Inference.class.isAssignableFrom(obj.getClass()))
+            return false;
+        ManualInput other = (ManualInput)obj;
+        if(activeCells == null) {
+            if(other.activeCells != null)
+                return false;
+        } else if(!activeCells.equals(other.activeCells))
+            return false;
+        if(Double.doubleToLongBits(anomalyScore) != Double.doubleToLongBits(other.anomalyScore))
+            return false;
+        if(classification == null) {
+            if(other.classification != null)
+                return false;
+        } else if(!classification.equals(other.classification))
+            return false;
+        if(classifierInput == null) {
+            if(other.classifierInput != null)
+                return false;
+        } else if(!classifierInput.equals(other.classifierInput))
+            return false;
+        if(computeCycle == null) {
+            if(other.computeCycle != null)
+                return false;
+        } else if(!computeCycle.equals(other.computeCycle))
+            return false;
+        if(!Arrays.equals(encoding, other.encoding))
+            return false;
+        if(!Arrays.equals(feedForwardActiveColumns, other.feedForwardActiveColumns))
+            return false;
+        if(!Arrays.equals(feedForwardSparseActives, other.feedForwardSparseActives))
+            return false;
+        if(predictiveCells == null) {
+            if(other.predictiveCells != null)
+                return false;
+        } else if(!predictiveCells.equals(other.predictiveCells))
+            return false;
+        if(previousPredictiveCells == null) {
+            if(other.previousPredictiveCells != null)
+                return false;
+        } else if(!previousPredictiveCells.equals(other.previousPredictiveCells))
+            return false;
+        if(recordNum != other.recordNum)
+            return false;
+        if(!Arrays.equals(sdr, other.sdr))
+            return false;
+        return true;
+    }
+
 }

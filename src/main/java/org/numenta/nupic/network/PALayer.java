@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
  * with Numenta, Inc., for a separate license for this software code, the
  * following terms and conditions apply:
  *
@@ -45,7 +45,9 @@ import org.numenta.nupic.model.Column;
  * @author David Ray
  * @author Fergal Byrne
  */
+@SuppressWarnings("unchecked")
 public class PALayer<T> extends Layer<T> {
+    private static final long serialVersionUID = 1L;
 
     /** Set to 0.0 to default to parent behavior */
     double paDepolarize = 1.0;

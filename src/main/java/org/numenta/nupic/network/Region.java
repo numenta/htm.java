@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -64,17 +66,20 @@ import rx.Subscriber;
  * @author cogmission
  *
  */
-public class Region {
+public class Region implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Region.class);
     
-    private Network network;
+    private Network parentNetwork;
     private Region upstreamRegion;
     private Region downstreamRegion;
-    private Map<String, Layer<Inference>> layers = new HashMap<>();
-    private Observable<Inference> regionObservable;
     private Layer<?> tail;
     private Layer<?> head;
     
+    private Map<String, Layer<Inference>> layers = new HashMap<>();
+    private transient Observable<Inference> regionObservable;
+        
     /** Marker flag to indicate that assembly is finished and Region initialized */
     private boolean assemblyClosed;
     
@@ -89,7 +94,7 @@ public class Region {
     byte flagAccumulator = 0;
     /** 
      * Indicates whether algorithms are repeated, if true then no, if false then yes
-     * (for {@link Inference} sharing determination) see {@link Region#connect(Layer, Layer)} 
+     * (for {@link Inference} sharing determination) see {@link Region#configureConnection(Layer, Layer)} 
      * and {@link Layer#getMask()}
      */
     boolean layersDistinct = true;
@@ -101,24 +106,57 @@ public class Region {
     /**
      * Constructs a new {@code Region}
      * 
+     * Warning: name cannot be null or empty
+     * 
      * @param name          A unique identifier for this Region (uniqueness is enforced)
      * @param network       The containing {@link Network} 
      */
     public Region(String name, Network network) {
         if(name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name may not be null or empty");
+            throw new IllegalArgumentException("Name may not be null or empty. " +
+                "...not that anyone here advocates name calling!");
         }
         
         this.name = name;
-        this.network = network;
+        this.parentNetwork = network;
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Region preSerialize() {
+        layers.values().stream().forEach(l -> l.preSerialize());
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Region postDeSerialize() {
+        layers.values().stream().forEach(l -> l.postDeSerialize());
+        
+        // Connect Layer Observable chains (which are transient so we must 
+        // rebuild them and their subscribers)
+        if(isMultiLayer()) {
+            Layer<Inference> curr = (Layer<Inference>)head;
+            Layer<Inference> prev = curr.getPrevious();
+            do {
+                connect(curr, prev); 
+            } while((curr = prev) != null && (prev = prev.getPrevious()) != null);
+        }
+        return this;
+    }
+
     /**
      * Sets the parent {@link Network} of this {@code Region}
      * @param network
      */
     public void setNetwork(Network network) {
-        this.network = network;
+        this.parentNetwork = network;
         for(Layer<?> l : layers.values()) {
             l.setNetwork(network);
             // Set the sensor & encoder reference for global access.
@@ -129,6 +167,16 @@ public class Region {
                 network.setEncoder(l.getEncoder());
             }
         }
+    }
+   
+    /**
+     * Returns a flag indicating whether this {@code Region} contain multiple
+     * {@link Layer}s.
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean isMultiLayer() {
+        return layers.size() > 1;
     }
     
     /**
@@ -231,9 +279,9 @@ public class Region {
         }
         
         // Set the sensor reference for global access.
-        if(l.hasSensor() && network != null) {
-            network.setSensor(l.getSensor());
-            network.setEncoder(l.getSensor().getEncoder());
+        if(l.hasSensor() && parentNetwork != null) {
+            parentNetwork.setSensor(l.getSensor());
+            parentNetwork.setEncoder(l.getSensor().getEncoder());
         }
         
         String layerName = name.concat(":").concat(l.getName());
@@ -244,7 +292,7 @@ public class Region {
         l.name(layerName);
         layers.put(l.getName(), (Layer<Inference>)l);
         l.setRegion(this);
-        l.setNetwork(network);
+        l.setNetwork(parentNetwork);
         
         return this;
     }
@@ -266,6 +314,11 @@ public class Region {
         if(regionObservable == null && !assemblyClosed) {
             close();
         }
+        
+        if(head.isHalted() || regionObservable == null) {
+            regionObservable = head.observe();
+        }
+        
         return regionObservable;
     }
     
@@ -293,14 +346,76 @@ public class Region {
     }
     
     /**
+     * Calls {@link Layer#restart(boolean)} on this Region's input {@link Layer} if
+     * that layer contains a {@link Sensor}. If not, this method has no effect. If
+     * "startAtIndex" is true, the Network will start at the last saved index as 
+     * obtained from the serialized "recordNum" field; if false then the Network
+     * will restart from 0.
+     * 
+     * @param startAtIndex      flag indicating whether to start from the previous save
+     *                          point or not. If true, this region's Network will start
+     *                          at the previously stored index, if false then it will 
+     *                          start with a recordNum of zero.
+     * @return  flag indicating whether the call to restart had an effect or not.
+     */
+    public boolean restart(boolean startAtIndex) {
+        if(!assemblyClosed) {
+            return start();
+        }
+        
+        if(tail.hasSensor()) {
+            LOGGER.info("Re-Starting Region [" + getName() + "] input Layer thread.");
+            tail.restart(startAtIndex);
+            return true;
+        }else{
+            LOGGER.warn("Re-Start called on Region [" + getName() + "] with no effect due to no Sensor present.");
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     * 
+     * @return  the {@link CheckPointOp} operator 
+     */
+    CheckPointOp<byte[]> getCheckPointOperator() {
+        LOGGER.debug("Region [" + getName() + "] CheckPoint called at: " + (new DateTime()));
+        if(tail != null) {
+            return tail.getCheckPointOperator();
+            
+        }else{
+            close();
+            return tail.getCheckPointOperator();
+        }
+    }
+    
+    /**
      * Stops each {@link Layer} contained within this {@code Region}
      */
     public void halt() {
-        LOGGER.debug("Stop called on Region [" + getName() + "]");
+        LOGGER.debug("Halt called on Region [" + getName() + "]");
         if(tail != null) {
             tail.halt();
+        }else{
+            close();
+            tail.halt();
         }
-        LOGGER.debug("Region [" + getName() + "] stopped.");
+        LOGGER.debug("Region [" + getName() + "] halted.");
+    }
+    
+    /**
+     * Returns a flag indicating whether this Region has a Layer
+     * whose Sensor thread is halted.
+     * @return  true if so, false if not
+     */
+    public boolean isHalted() {
+        if(tail != null) {
+            return tail.isHalted();
+        }
+        return false;
     }
     
     /**
@@ -428,6 +543,7 @@ public class Region {
         // Set the sink's pointer to its previous Layer --> (source : going downward)
         in.previous(out);
         // Connect out to in
+        configureConnection(in, out);
         connect(in, out);
         
         return this;
@@ -487,15 +603,15 @@ public class Region {
     }
     
     /**
-     * Called internally to "connect" two {@link Layer} {@link Observable}s
-     * taking care of other connection details such as passing the inference
-     * up the chain and any possible encoder.
+     * Called internally to configure the connection between two {@link Layer} 
+     * {@link Observable}s taking care of other connection details such as passing
+     * the inference up the chain and any possible encoder.
      * 
      * @param in         the sink end of the connection between two layers
      * @param out        the source end of the connection between two layers
      * @throws IllegalStateException if Region is already closed
      */
-    <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
+    <I extends Layer<Inference>, O extends Layer<Inference>> void configureConnection(I in, O out) {
         if(assemblyClosed) {
             throw new IllegalStateException("Cannot add Layers when Region has already been closed.");
         }
@@ -515,7 +631,18 @@ public class Region {
         
         sources.add(out);
         sinks.add(in);
-        
+    }
+    
+    /**
+     * Called internally to actually connect two {@link Layer} 
+     * {@link Observable}s taking care of other connection details such as passing
+     * the inference up the chain and any possible encoder.
+     * 
+     * @param in         the sink end of the connection between two layers
+     * @param out        the source end of the connection between two layers
+     * @throws IllegalStateException if Region is already closed 
+     */
+    <I extends Layer<Inference>, O extends Layer<Inference>> void connect(I in, O out) {
         out.subscribe(new Subscriber<Inference>() {
             ManualInput localInf = new ManualInput();
             
@@ -530,6 +657,49 @@ public class Region {
                 }
             }
         });
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (assemblyClosed ? 1231 : 1237);
+        result = prime * result + (isLearn ? 1231 : 1237);
+        result = prime * result + ((layers == null) ? 0 : layers.size());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Region other = (Region)obj;
+        if(assemblyClosed != other.assemblyClosed)
+            return false;
+        if(isLearn != other.isLearn)
+            return false;
+        if(layers == null) {
+            if(other.layers != null)
+                return false;
+        } else if(!layers.equals(other.layers))
+            return false;
+        if(name == null) {
+            if(other.name != null)
+                return false;
+        } else if(!name.equals(other.name))
+            return false;
+        return true;
     }
     
 }

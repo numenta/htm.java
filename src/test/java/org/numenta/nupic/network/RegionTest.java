@@ -78,6 +78,30 @@ public class RegionTest {
     }
     
     @Test
+    public void testCheckName() {
+        Parameters p = NetworkTestHarness.getParameters();
+        
+        // Positive test
+        try {
+            Network.createRegion("r1")
+                .add(Network.createLayer("l1", p))
+                .add(Network.createLayer("l2", p));
+        }catch(Exception e) {
+            fail();
+        }
+        
+        // Negative test should fail
+        try {
+            Network.createRegion("r1")
+                .add(Network.createLayer("l1", p))
+                .add(Network.createLayer("l1", p));
+            fail(); // should not reach here
+        }catch(Exception e) {
+            assertEquals("A Layer with the name: l1 has already been added to this Region.", e.getMessage());
+        }
+    }
+    
+    @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters();
         Region r1 = Network.createRegion("r1");
@@ -327,9 +351,9 @@ public class RegionTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                System.out.println("Day: " + r1.getInput() + " - predictive cells: " + i.getPreviousPredictiveCells() +
-                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
-                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
+//                System.out.println("Day: " + r1.getInput() + " - predictive cells: " + i.getPreviousPredictiveCells() +
+//                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
+//                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });
        

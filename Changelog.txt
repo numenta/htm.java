@@ -1,0 +1,21 @@
+Changes for Serialization branch (notes for CHANGELOG.md)
+
+1. Renamed class ClassifierResult to Classification
+2. Renamed class EncoderResult to Encoding
+3. Removed extraneous constructor from FastRandom
+4. Added functionality to gradle build script: 
+   a.) Ability to see standard out/err
+   b.) Changed ability to skip tests when code hasn't changed to "always run tests"
+   c.) Added ability to toggle (b) so that it will skip again.
+5. Changed return type of assemble method of MultiEncoderAssembler from void to MultiEncoder
+6. Added getEncoderOfType(FieldMetaType type) method to MultiEncoder for convenient returning.
+7. Fixed erroneous creation of Sensors in every Layer of a multi-layer network (except the layer
+   representing the entry point or input - where it belongs)
+8. Added Persistable interface which extends Serializable and all HTM object which are serializable
+   implement.
+9. Added CheckPointer rx.Observable operator which executes check point operation and notification 
+   containing byte[] of serialized Network (can be ignored if not needed because it's save to disk)
+10. Added PersistenceAPI interface now implemented by Network.
+11. Added NetworkSerializer interface (and NetworkSerializerImpl) which executes FST serialization
+    and simultaneously implements the Kryo interface also.
+12. Added the SerialConfig class which contains config information for the NetworkSerializer.

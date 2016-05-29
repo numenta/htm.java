@@ -4,7 +4,7 @@
 
 	<groupId>org.numenta</groupId>
 	<artifactId>htm.java</artifactId>
-	<version>0.6.6-SNAPSHOT</version>
+	<version>0.6.9-SNAPSHOT</version>
 	<name>htm.java</name>
 	<description>The Java version of Numenta's HTM technology</description>
 
@@ -49,8 +49,8 @@
 			<groupId>com.chaschev</groupId>
 			<artifactId>chutils</artifactId>
 			<version>1.4</version>
-			<!--WE ONLY INTERESTED IN ASCIITable from this library, so exclude all 
-				transitive dependencies -->
+			<!--We're only interested in ASCIITable from this library, so exclude 
+				all transitive dependencies -->
 			<exclusions>
 				<exclusion>
 					<groupId>org.mockito</groupId>
@@ -116,6 +116,21 @@
 			<artifactId>rxjava</artifactId>
 			<version>1.0.10</version>
 			<scope />
+		</dependency>
+		<dependency>
+			<groupId>com.cedarsoftware</groupId>
+			<artifactId>java-util</artifactId>
+			<version>1.19.3</version>
+		</dependency>
+		<dependency>
+			<groupId>de.ruedigermoeller</groupId>
+			<artifactId>fst</artifactId>
+			<version>2.45</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjdk.jmh</groupId>
+			<artifactId>jmh-core</artifactId>
+			<version>1.11.3</version>
 		</dependency>
 	</dependencies>
 
@@ -243,4 +258,5 @@
 			</build>
 		</profile>
 	</profiles>
+
 </project>

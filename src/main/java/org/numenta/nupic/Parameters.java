@@ -22,6 +22,8 @@
 
 package org.numenta.nupic;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -40,6 +42,10 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.BeanUtil;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
+
+import com.cedarsoftware.util.DeepEquals;
 
 /**
  * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
@@ -52,7 +58,10 @@ import org.numenta.nupic.util.Tuple;
  * @see Connections
  * @see ComputeCycle
  */
-public class Parameters {
+public class Parameters implements Persistable {
+    /** keep it simple */
+    private static final long serialVersionUID = 1L;
+    
     private static final Map<KEY, Object> DEFAULTS_ALL;
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
@@ -1104,4 +1113,88 @@ public class Parameters {
         spatialInfo.append("\t\t").append(key.getFieldName()).append(":").append(value).append("\n");
     }
 
+    public Parameters readForNetwork(FSTObjectInput in) throws Exception {
+        Parameters result = (Parameters)in.readObject(Parameters.class);
+        return result;
+    }
+
+    public void writeForNetwork(FSTObjectOutput out) throws IOException {
+        out.writeObject(this, Parameters.class);
+        out.close();
+    }
+
+    /**
+     * Usage of {@link DeepEquals} in order to ensure the same hashcode
+     * for the same equal content regardless of cycles.
+     */
+    @Override
+    public int hashCode() {
+        Random rnd = (Random)paramMap.remove(KEY.RANDOM);
+        int hc = DeepEquals.deepHashCode(paramMap);
+        paramMap.put(KEY.RANDOM, rnd);
+        
+        return  hc;
+        
+    }
+
+    /**
+     * This implementation skips over any native comparisons (i.e. "==")
+     * because their hashcodes will not be equal.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Parameters other = (Parameters)obj;
+        if(paramMap == null) {
+            if(other.paramMap != null)
+                return false;
+        } else {
+            Class<?>[] classArray = new Class[] { Object.class };
+            try {
+                for(KEY key : paramMap.keySet()) {
+                    if(paramMap.get(key) == null || other.paramMap.get(key) == null) continue;
+                    
+                    Class<?> thisValueClass = paramMap.get(key).getClass();
+                    Class<?> otherValueClass = other.paramMap.get(key).getClass();
+                    boolean isSpecial = isSpecial(key, thisValueClass);
+                    if(!isSpecial && (thisValueClass.getMethod("equals", classArray).getDeclaringClass() != thisValueClass ||
+                        otherValueClass.getMethod("equals", classArray).getDeclaringClass() != otherValueClass)) {
+                            continue;
+                    }else if(isSpecial) {
+                        if(int[].class.isAssignableFrom(thisValueClass)) {
+                            if(!Arrays.equals((int[])paramMap.get(key), (int[])other.paramMap.get(key))) return false;
+                        }else if(key == KEY.FIELD_ENCODING_MAP) {
+                            if(!DeepEquals.deepEquals(paramMap.get(key), other.paramMap.get(key))) {
+                                return false;
+                            }
+                        }
+                    }else if(!other.paramMap.containsKey(key) || !paramMap.get(key).equals(other.paramMap.get(key))) {
+                        return false;
+                    }
+                }
+            }catch(Exception e) { return false; }
+        }
+        return true;
+    }
+    
+    /**
+     * Returns a flag indicating whether the type is an equality
+     * special case.
+     * @param key       the {@link KEY}
+     * @param klazz     the class of the type being considered.
+     * @return
+     */
+    private boolean isSpecial(KEY key, Class<?> klazz) {
+        if(int[].class.isAssignableFrom(klazz) ||
+            key == KEY.FIELD_ENCODING_MAP) {
+            
+            return true;
+        }
+        return false;
+    }
 }

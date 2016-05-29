@@ -39,6 +39,8 @@ import org.numenta.nupic.encoders.RangeList;
  * @param <L>	the fieldsOrder
  */
 public class DecodeTuple<M extends Map<String, RangeList>, L extends List<String>> extends Tuple {
+	private static final long serialVersionUID = 1L;
+    
 	protected M fields;
 	protected L fieldDescriptions;
 	

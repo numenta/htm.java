@@ -202,14 +202,14 @@ public class MultiEncoderTest {
 		d.put("myCat", "pass");
 		int[] output = me.encode(d);
 		
-		List<EncoderResult> topDownOut = me.topDownCompute(output);
+		List<Encoding> topDownOut = me.topDownCompute(output);
 		
 		// When encoders are added one at a time, they're kept in the order they were added,
 		// but when they're added all at once, they're sorted by name, so we need to be careful
 		// here.
 		ScalarEncoder dow= null, myval = null;
 		CategoryEncoder myCat = null;
-		EncoderResult dowActual = null, myvalActual = null, myCatActual = null;
+		Encoding dowActual = null, myvalActual = null, myCatActual = null;
 		for (int i = 0; i < me.getEncoders(me).size(); i++) {
 			EncoderTuple t = me.getEncoders(me).get(i);
 			String name = t.getName();
@@ -225,9 +225,9 @@ public class MultiEncoderTest {
 			}
 		}
 		
-		EncoderResult dowExpected = dow.topDownCompute(dow.encode(4.)).get(0);
-		EncoderResult myvalExpected = myval.topDownCompute(myval.encode(6.)).get(0);
-		EncoderResult myCatExpected = myCat.topDownCompute(myCat.encode("pass")).get(0);
+		Encoding dowExpected = dow.topDownCompute(dow.encode(4.)).get(0);
+		Encoding myvalExpected = myval.topDownCompute(myval.encode(6.)).get(0);
+		Encoding myCatExpected = myCat.topDownCompute(myCat.encode("pass")).get(0);
 		
 		assertTrue(dowActual.equals(dowExpected));
 		assertTrue(myvalActual.equals(myvalExpected));

@@ -24,17 +24,24 @@ package org.numenta.nupic.network;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
+import org.joda.time.DateTime;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.HTMSensor;
+import org.numenta.nupic.network.sensor.ObservableSensor;
+import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -153,8 +160,12 @@ import rx.Subscriber;
  * @see ManualInput
  * @see NetworkAPIDemo
  */
-public class Network {
+public class Network implements Persistable {
+    private static final long serialVersionUID = 1L;
+
     public enum Mode { MANUAL, AUTO, REACTIVE };
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(Network.class);
 
     private String name;
     private Parameters parameters;
@@ -163,27 +174,45 @@ public class Network {
     private Region head;
     private Region tail;
     private Region sensorRegion;
+    private volatile Publisher publisher;
     
-    private boolean isLearn = true;
-    private boolean isThreadRunning;
+    private volatile boolean isLearn = true;
+    private volatile boolean isThreadRunning;
     
     private List<Region> regions = new ArrayList<>();
-
+    
+    /** Stored check pointer function */
+    private transient Function<Persistable, ?> checkPointFunction;
+    
+    boolean shouldDoHalt = true;
+    
+    
+    Network() {}
+    
     /**
      * Creates a new {@link Network}
+     * 
+     * Warning: name cannot be null or empty
+     * 
      * @param name
      * @param parameters
      */
     public Network(String name, Parameters parameters) {
+        if(name == null || name.isEmpty()) {
+            throw new IllegalStateException("All Networks must have a name. " +
+                "Increases digestion, and overall happiness!");
+        }
         this.name = name;
         this.parameters = parameters;
         if(parameters == null) {
             throw new IllegalArgumentException("Network Parameters were null.");
         }
     }
-
+    
     /**
      * Creates and returns an implementation of {@link Network}
+     * 
+     * Warning: name cannot be null or empty
      * 
      * @param name
      * @param parameters
@@ -219,13 +248,180 @@ public class Network {
         Network.checkName(name);
         return new Layer(name, null, p);
     }
+    
+    /**
+     * Creates a {@link PALayer} to hold algorithmic components and returns
+     * it.
+     * 
+     * @param name  the String identifier for the specified {@link PALayer}
+     * @param p     the {@link Parameters} to use for the specified {@link PALayer}
+     * @return
+     */
     @SuppressWarnings("rawtypes")
     public static PALayer<?> createPALayer(String name, Parameters p) {
         Network.checkName(name);
         return new PALayer(name, null, p);
     }
+    
+    /**
+     * DO NOT CALL THIS METHOD! FOR INTERNAL USE ONLY!
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network preSerialize() {
+        if(shouldDoHalt && isThreadRunning) {
+            halt();
+        }else{ // Make sure "close()" has been called on the Network
+            if(regions.size() == 1) {
+                this.tail = regions.get(0);
+            }
+            tail.close();
+        }
+        
+        regions.stream().forEach(r -> r.preSerialize());
+        return this;
+    }
+    
+    /**
+     * DO NOT CALL THIS METHOD! FOR INTERNAL USE ONLY!
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Network postDeSerialize() {
+        regions.stream().forEach(r -> r.setNetwork(this));
+        regions.stream().forEach(r -> r.postDeSerialize());
+        
+        // Connect Layer Observable chains (which are transient so we must 
+        // rebuild them and their subscribers)
+        if(isMultiRegion()) {
+            Region curr = head;
+            Region nxt = curr.getUpstreamRegion();
+            do {
+                curr.connect(nxt);
+            } while((curr = nxt) != null && (nxt = nxt.getUpstreamRegion()) != null);
+        }
+        
+        return this;
+    }
+    
+    /**
+     * INTERNAL METHOD: DO NOT CALL
+     * 
+     * Called from {@link Layer} to execute a check point from within the scope of 
+     * this {@link Network}
+     * checkPointFunction
+     * @return  the serialized {@code Network} in byte array form.
+     */
+    byte[] internalCheckPointOp() {
+        shouldDoHalt = false;
+        byte[] serializedBytes = (byte[])checkPointFunction.apply(this);
+        shouldDoHalt = true;
+        return serializedBytes;
+    }
+    
+    /**
+     * Sets the reference to the check point function.
+     * @param f function which executes check point logic.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable, R> void setCheckPointFunction(Function<T, R> f) {
+        this.checkPointFunction = (Function<Persistable, ?>)f;
+    }
+    
+    /**
+     * USED INTERNALLY, DO NOT CALL
+     * Returns an {@link rx.Observable} operator that when subscribed to, invokes an operation
+     * that stores the state of this {@code Network} while keeping the Network up and running.
+     * The Network will be stored at the pre-configured location (in binary form only, not JSON).
+     * 
+     * @return  the {@link CheckPointOp} operator 
+     */
+    CheckPointOp<byte[]> getCheckPointOperator() {
+        LOGGER.debug("Network [" + getName() + "] called checkPoint() at: " + (new DateTime()));
+        
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.getCheckPointOperator();
+    }
+    
+    /**
+     * Restarts this {@code Network}. The network will run from the previous save point
+     * of the stored Network.
+     * 
+     * @see {@link #restart(boolean)} for a start at "saved-index" behavior explanation. 
+     */
+    public void restart() {
+        restart(true);
+    }
+    
+    /**
+     * Restarts this {@code Network}. If the "startAtIndex" flag is true, the Network
+     * will start from the last record number (plus 1) at which the Network was saved -
+     * continuing on from where it left off. The Network will achieve this by rebuilding
+     * the underlying Stream (if necessary, i.e. not for {@link ObservableSensor}s) and skipping 
+     * the number of records equal to the stored record number plus one, continuing from where it left off.
+     * 
+     * @param startAtIndex  flag indicating whether to start this {@code Network} from
+     *                      its previous save point.
+     */
+    public void restart(boolean startAtIndex) {
+        if(regions.size() < 1) {
+            throw new IllegalStateException("Nothing to start - 0 regions");
+        }
 
+        Region tail = regions.get(0);
+        Region upstream = tail;
+        while((upstream = upstream.getUpstreamRegion()) != null) {
+            tail = upstream;
+        }
 
+        // Record thread start
+        this.isThreadRunning = tail.restart(startAtIndex);
+    }
+    
+    /**
+     * <p>
+     * DO NOT CALL THIS METHOD!
+     * </p><p>
+     * Called internally by an {@link ObservableSensor}'s factory method's creation of a new 
+     * {@code ObservableSensor}. This would usually happen following a halt or
+     * deserialization.
+     * </p>
+     * @param p  the new Publisher created upon reconstitution of a new ObservableSensor  
+     */
+    void setPublisher(Publisher p) {
+        this.publisher = p;
+        publisher.setNetwork(this);
+    }
+    
+    /**
+     * Returns the new {@link Publisher} created after halt or deserialization
+     * of this {@code Network}, when a new Publisher must be created.
+     * 
+     * @return      the new Publisher created after deserialization or halt.
+     * @see #getPublisherSupplier()
+     */
+    public Publisher getPublisher() {
+        if(publisher == null) {
+            throw new NullPointerException("A Supplier must be built first. " +
+                "please see Network.getPublisherSupplier()");
+        }
+        return publisher;
+    }
+    
+    /**
+     * Returns a flag indicating whether this {@code Network} contain multiple
+     * {@link Region}s.
+     * 
+     * @return  true if so, false if not.
+     */
+    public boolean isMultiRegion() {
+        return regions.size() > 1;
+    }
+    
     /**
      * Returns the String identifier for this {@code Network}
      * @return
@@ -274,20 +470,39 @@ public class Network {
      * any resources associated with the input connections.
      */
     public void halt() {
+        // Call onComplete if using an ObservableSensor to complete the stream output.
+        if(publisher != null) {
+            publisher.onComplete();
+        }
+        
         if(regions.size() == 1) {
             this.tail = regions.get(0);
         }
         tail.halt();
     }
+    
+    /**
+     * Returns a flag indicating whether this Network has a Region
+     * whose tail (input {@link Layer}) is halted.
+     * @return  true if so, false if not
+     */
+    public boolean isHalted() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.isHalted();
+    }
 
     /**
-     * Pauses all underlying {@code Network} nodes, maintaining any 
-     * connections (leaving them open until they possibly time out).
-     * Does nothing to prevent any sensor connections from timing out
-     * on their own. 
+     * Returns the index of the last record processed.
+     * 
+     * @return  the last recordNum processed
      */
-    public void pause() {
-        throw new UnsupportedOperationException("Pausing is not (yet) supported.");
+    public int getRecordNum() {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.getTail().getRecordNum();
     }
     
     /**
@@ -376,6 +591,19 @@ public class Network {
         }
         return this.tail;
     }
+    
+    /**
+     * For internal Use: Returns a boolean flag indicating whether
+     * the specified {@link Layer} is the tail of the Network.
+     * @param l     the layer to test   
+     * @return  true if so, false if not
+     */
+    boolean isTail(Layer<?> l) {
+        if(regions.size() == 1) {
+            this.tail = regions.get(0);
+        }
+        return tail.getTail() == l;
+    }
 
     /**
      * Returns a {@link Iterator} capable of walking the tree of regions
@@ -439,7 +667,7 @@ public class Network {
      * Subscriber leads to the observable chain not being constructed, therefore
      * we must always have at least one subscriber.
      */
-    private void addDummySubscriber() {
+    void addDummySubscriber() {
         observe().subscribe(new Subscriber<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -497,6 +725,14 @@ public class Network {
     }
 
     /**
+     * Closes all the {@link Region} objects, in this {@link Network}
+     */
+    public Network close() {
+        regions.forEach(region -> region.close());
+        return this;
+    }
+
+    /**
      * Returns a {@link List} view of the contained {@link Region}s.
      * @return
      */
@@ -545,7 +781,7 @@ public class Network {
     public Parameters getParameters() {
         return parameters;
     }
-
+    
     /**
      * Sets the reference to this {@code Network}'s Sensor
      * @param sensor
@@ -591,6 +827,58 @@ public class Network {
         if(name.indexOf(":") != -1) {
             throw new IllegalArgumentException("\":\" is a reserved character.");
         }
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (isLearn ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
+        result = prime * result + ((regions == null) ? 0 : regions.hashCode());
+        result = prime * result + ((sensor == null) ? 0 : sensor.hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(obj == null)
+            return false;
+        if(getClass() != obj.getClass())
+            return false;
+        Network other = (Network)obj;
+        if(isLearn != other.isLearn)
+            return false;
+        if(name == null) {
+            if(other.name != null)
+                return false;
+        } else if(!name.equals(other.name))
+            return false;
+        if(parameters == null) {
+            if(other.parameters != null)
+                return false;
+        } else if(!parameters.equals(other.parameters))
+            return false;
+        if(regions == null) {
+            if(other.regions != null)
+                return false;
+        } else if(!regions.equals(other.regions))
+            return false;
+        if(sensor == null) {
+            if(other.sensor != null)
+                return false;
+        } else if(!sensor.equals(other.sensor))
+            return false;
+        return true;
     }
 
 }
