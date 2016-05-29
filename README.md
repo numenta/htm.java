@@ -26,6 +26,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 <br>
 
 ### Recent News Items...
+* [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
 * [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
 * [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
 * [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
