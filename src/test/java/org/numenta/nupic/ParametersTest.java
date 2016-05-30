@@ -160,7 +160,7 @@ public class ParametersTest {
         KNNClassifier knn = KNNClassifier.builder().apply(params);
         try {
             params.apply(knn);
-            assertTrue(knn.getNumSVDDims() == null);
+            assertTrue(knn.getNumSVDDims() == Constants.KNN.ADAPTIVE);
             assertTrue(knn.getDistanceMethod() == DistanceMethod.NORM); // the default
         }catch(Exception e) {
             fail();
