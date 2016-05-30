@@ -6,6 +6,7 @@ public class Constants {
     
     public enum KNN { 
         ADAPTIVE("adaptive");
+        
         private String description;
         private KNN(String desc) { this.description = desc; }
         /** {@inheritDoc} */

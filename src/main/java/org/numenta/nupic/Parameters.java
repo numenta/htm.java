@@ -152,7 +152,7 @@ public class Parameters implements Persistable {
         defaultKNNParams.put(KEY.RELATIVE_THRESHOLD, false);
         defaultKNNParams.put(KEY.NUM_WINNERS, 0);
         defaultKNNParams.put(KEY.NUM_SVD_SAMPLES, -1);
-        defaultKNNParams.put(KEY.NUM_SVD_DIMS, null);
+        defaultKNNParams.put(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
         defaultKNNParams.put(KEY.FRACTION_OF_MAX, -1.0);
         defaultKNNParams.put(KEY.MAX_STORED_PATTERNS, -1);
         defaultKNNParams.put(KEY.REPLACE_DUPLICATES, false);

@@ -2,9 +2,11 @@ package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import org.junit.Test;
+
+import no.uib.cipr.matrix.Matrices;
+import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 
 
 public class NearestNeighborTest {
@@ -36,7 +38,14 @@ public class NearestNeighborTest {
 //        nn.addRow(new double[] { 0, 1, 3, 7, 11 });
 //        System.out.println("rows = " + nn.size());
         
-        CompRowMatrix matrix = new CompRowMatrix(0, 40, null);
+        FlexCompRowMatrix matrix = new FlexCompRowMatrix(1, 40);
+        System.out.println("matrix = " + Matrices.cardinality(matrix));
+        matrix.add(0, 2, 1);
+        System.out.println("matrix = " + Matrices.cardinality(matrix));
+        matrix.add(0, 4, 1);
+        System.out.println("matrix = " + Matrices.cardinality(matrix));
+        matrix.add(0, 3, 0);
+        System.out.println("matrix = " + Matrices.cardinality(matrix));
     }
 
 }

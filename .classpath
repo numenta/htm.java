@@ -25,7 +25,7 @@
 	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.1.2/2d23694879c2c12f125dac5076bdfd5d771cc4cb/logback-core-1.1.2.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.1.2/502e1c764542fe747896c1dc04f023acfe0e5cbc/logback-core-1.1.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.5.3/a8b8a6dfc8a17890e4c7ff8aed810763d265b68b/jackson-core-2.5.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.5.3/8bfff00c810764fd4e0fc78959b45f8734dd0c3e/jackson-core-2.5.3-sources.jar"/>
-	<classpathentry kind="lib" path="libs/algorithmfoundry-shade-culled-1.0.jar"/>
+	<classpathentry kind="lib" path="libs/algorithmfoundry-shade-culled-1.0.jar" sourcepath="/algfoundryculled/src/main/java"/>
 	<classpathentry kind="lib" path="libs/jmh-core-1.5.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

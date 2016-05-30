@@ -1652,6 +1652,9 @@ public class PersistenceAPITest {
     private void deepCompare(Object obj1, Object obj2) {
         try {
             assertTrue(DeepEquals.deepEquals(obj1, obj2));
+            if(obj1 == null) {
+                System.out.println("obj1 = " + obj1);
+            }
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " actual: (" + obj1.getClass().getSimpleName() + "): " + obj2);
         }catch(AssertionError ae) {
             System.out.println("expected(" + obj1.getClass().getSimpleName() + "): " + obj1 + " but was: (" + obj1.getClass().getSimpleName() + "): " + obj2);
