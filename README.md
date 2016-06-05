@@ -144,7 +144,7 @@ Maven:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.5</version>
+    <version>0.6.8</version>
 </dependency>
 ```
 
@@ -154,7 +154,7 @@ How to get the latest SNAPSHOT build:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.6-SNAPSHOT</version>
+    <version>0.6.9-SNAPSHOT</version>
 </dependency>
 
 You also may need to include a repositories entry:
