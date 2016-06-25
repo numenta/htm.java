@@ -55,7 +55,7 @@ See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more in
 
 For answers to more detailed questions, post to the [HTM Forum](http://discourse.numenta.org) (can be used via email too), or chat with us on Gitter.
 
-[![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
+[![Gitter](https://img.shields.io/badge/gitter-join_chat-green.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
 
 
 For more detailed discussions regarding HTM.java specifically, come chat with us here: 
