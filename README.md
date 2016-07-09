@@ -4,7 +4,7 @@
 <br>
 
 [![htm.java awesomeness](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](http://cogmission.ai) [![AGI Probability](https://img.shields.io/badge/AGI%20Probability-97%25-blue.svg)](http://numenta.com/#hero) [![Coolness Factor](https://img.shields.io/badge/Coolness%20Factor-100%25-blue.svg)](https://github.com/numenta/htm.java-examples) [![Build Status](https://travis-ci.org/numenta/htm.java.png?branch=master)](https://travis-ci.org/numenta/htm.java) [![Coverage Status](https://coveralls.io/repos/numenta/htm.java/badge.svg?branch=master&service=github)](https://coveralls.io/github/numenta/htm.java?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.numenta/htm.java) [![][license img]][license] [![docs-badge][]][docs] [![Gitter](https://badges.gitter.im/Join  
-Chat.svg)](https://gitter.im/numenta/htm.java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+Chat.svg)](https://gitter.im/numenta/htm.java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) [![OpenHub](https://www.openhub.net/p/htm-java/widgets/project_thin_badge.gif)](https://www.openhub.net/p/htm-java)
 
 <br>
 
@@ -26,7 +26,8 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 <br>
 
 ### Recent News Items...
-* [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
+* [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
+* [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
 * [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
 * [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
 * HTM.java Recieves [Docker Reference-Build Implementation](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment) (03/26/2016)  
@@ -54,7 +55,7 @@ See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more in
 
 For answers to more detailed questions, post to the [HTM Forum](http://discourse.numenta.org) (can be used via email too), or chat with us on Gitter.
 
-[![Gitter](https://img.shields.io/badge/gitter-join_chat-blue.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
+[![Gitter](https://img.shields.io/badge/gitter-join_chat-orange.svg?style=flat)](https://gitter.im/numenta/public?utm_source=badge)
 
 
 For more detailed discussions regarding HTM.java specifically, come chat with us here: 
@@ -133,7 +134,7 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 Gradle:  
 
 dependencies {
-    compile group: 'org.numenta', name: 'htm.java', version:'0.6.5'
+    compile group: 'org.numenta', name: 'htm.java', version:'0.6.8'
 }
 ```
 
@@ -143,7 +144,7 @@ Maven:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.5</version>
+    <version>0.6.8</version>
 </dependency>
 ```
 
@@ -153,7 +154,7 @@ How to get the latest SNAPSHOT build:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.6-SNAPSHOT</version>
+    <version>0.6.9-SNAPSHOT</version>
 </dependency>
 
 You also may need to include a repositories entry:
