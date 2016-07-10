@@ -131,6 +131,7 @@ public class BitHistory implements Persistable {
             double exp = Math.pow((1.0 - classifier.alpha), (iteration - lastTotalUpdate));
             double dcT = 0;
             for(int i = 0;i < stats.size();i++) {
+				dcT = stats.get(i);
                 dcT *= exp;
                 stats.set(i, dcT);
             }
