@@ -2349,11 +2349,12 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(t1.getFeedForwardSparseActives() == null || t1.getPreviousPredictiveCells() == null) {
+                    int[] ffActiveCols = t1.getFeedForwardSparseActives();
+                    int[] prevPredictedCols = SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn);
+                    if(ffActiveCols == null || t1.getPreviousPredictiveCells() == null) {
                         return t1.anomalyScore(1.0);
                     }
-                    return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), 
-                        SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));
+                    return t1.anomalyScore(an.compute(ffActiveCols, prevPredictedCols, 0, 0));
                 }
             };
         }

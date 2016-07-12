@@ -85,9 +85,7 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsToColumns(List<Cell> cells, int cellsPerColumn) {
-        IntStream op = cells.stream().mapToInt(c -> c.getIndex());
-            
-        return op.map(cellIdx -> cellIdx / cellsPerColumn).distinct().toArray();
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex()).distinct().toArray();
     }
     
     /**
@@ -99,8 +97,8 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsAsColumnIndices(Set<Cell> cells, int cellsPerColumn) {
-        return cells.stream().mapToInt(c -> c.getIndex())
-                   .sorted().map(cellIdx -> cellIdx / cellsPerColumn).distinct().toArray();
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex())
+                .sorted().distinct().toArray();
     }
     
     /**
