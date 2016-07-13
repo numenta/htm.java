@@ -21,11 +21,7 @@
  */
 package org.numenta.nupic.network;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
@@ -66,6 +62,13 @@ import rx.Subscriber;
 import rx.functions.Func1;
 import rx.subjects.PublishSubject;
 
+class Observed {
+    public boolean flowReceived = false;
+    public int nClassifiers = -1;
+    public Object pTimestamp = null;
+    public Object pConsumption = null;
+};
+
 /**
  * Tests the "heart and soul" of the Network API
  * 
@@ -76,8 +79,6 @@ public class LayerTest {
 
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
-
-    
 
     @Test
     public void testMasking() {
@@ -1197,9 +1198,10 @@ public class LayerTest {
      * Simple test to verify data gets passed through the {@link CLAClassifier}
      * configured within the chain of components.
      */
-    boolean flowReceived = false;
+
     @Test
     public void testFullLayerFluentAssembly() {
+
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -1228,24 +1230,33 @@ public class LayerTest {
 
         l.getConnections().printParameters();
 
-        l.subscribe(new Observer<Inference>() {
+        Observed o = new Observed();
+
+        Observer<Inference> obs = new Observer<Inference>() {
+
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
-                if(flowReceived) return; // No need to set this value multiple times
+                if(o.flowReceived) return; // No need to set this value multiple times
+                o.nClassifiers = i.getClassifiers().size();
+                o.pTimestamp = i.getClassifiers().get("timestamp");
+                o.pConsumption = i.getClassifiers().get("consumption");
 
-                flowReceived = i.getClassifiers().size() == 4 &&
-                    i.getClassifiers().get("timestamp") != null &&
-                        i.getClassifiers().get("consumption") != null;
+                o.flowReceived = o.nClassifiers == 4 && o.pTimestamp != null && o.pConsumption != null;
             }
-        });
+        };
+
+        l.subscribe(obs);
 
         l.start();
 
         try {
             l.getLayerThread().join();
-            assertTrue(flowReceived);
+            assertEquals("Classifiers.size|()", 4, o.nClassifiers);
+            assertNotNull("Timestamp", o.pTimestamp);
+            assertNotNull("Consumption", o.pConsumption);
+            assertTrue(o.flowReceived);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -1253,6 +1264,11 @@ public class LayerTest {
     
     @Test
     public void testMissingEncoderMap() {
+        boolean flowReceived = false;
+        int nClassifiers = -1;
+        Object pTimestamp = null;
+        Object pConsumption = null;
+
         Parameters p = NetworkTestHarness.getParameters().copy();
         //p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -1280,20 +1296,25 @@ public class LayerTest {
                     Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))));
 
         l.getConnections().printParameters();
+        final Observed o = new Observed();
 
-        l.subscribe(new Observer<Inference>() {
+        Observer<Inference> obs = new Observer<Inference>() {
+
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
-                if(flowReceived) return; // No need to set this value multiple times
+                if(o.flowReceived) return; // No need to set this value multiple times
+                o.nClassifiers = i.getClassifiers().size();
+                o.pTimestamp = i.getClassifiers().get("timestamp");
+                o.pConsumption = i.getClassifiers().get("consumption");
 
-                flowReceived = i.getClassifiers().size() == 4 &&
-                    i.getClassifiers().get("timestamp") != null &&
-                        i.getClassifiers().get("consumption") != null;
+                o.flowReceived = o.nClassifiers == 4 && o.pTimestamp != null && o.pConsumption != null;
             }
-        });
-        
+        };
+
+        l.subscribe(obs);
+
         try {
             l.close();
             fail();
@@ -1302,7 +1323,10 @@ public class LayerTest {
         }
 
         try {
-            assertFalse(flowReceived);
+            assertNotEquals(4, o.nClassifiers);
+            assertNull(o.pTimestamp);
+            assertNull(o.pConsumption);
+            assertFalse(o.flowReceived);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -1333,18 +1357,7 @@ public class LayerTest {
         
         l.getConnections().printParameters();
 
-        l.subscribe(new Observer<Inference>() {
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
-            @Override
-            public void onNext(Inference i) {
-                if(flowReceived) return; // No need to set this value multiple times
-
-                flowReceived = i.getClassifiers().size() == 4 &&
-                    i.getClassifiers().get("timestamp") != null &&
-                        i.getClassifiers().get("consumption") != null;
-            }
-        });
+        l.subscribe(obs);
         
         try {
             l.close();
@@ -1354,7 +1367,7 @@ public class LayerTest {
         }
 
         try {
-            assertFalse(flowReceived);
+            assertFalse(o.flowReceived);
         }catch(Exception e) {
             e.printStackTrace();
         }

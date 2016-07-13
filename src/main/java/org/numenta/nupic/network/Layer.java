@@ -2356,7 +2356,7 @@ public class Layer<T> implements Persistable {
 
         public Func1<ManualInput, ManualInput> createAnomalyFunc(final Anomaly an) {
             return new Func1<ManualInput, ManualInput>() {
-                
+
                 @Override
                 public ManualInput call(ManualInput mi) {
                     int[] ffActiveCols = mi.getFeedForwardSparseActives();
