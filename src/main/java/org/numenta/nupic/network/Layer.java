@@ -2296,13 +2296,19 @@ public class Layer<T> implements Persistable {
             return new Func1<ManualInput, ManualInput>() {
 
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    if(!ArrayUtils.isSparse(t1.getSDR())) {
+                public ManualInput call(ManualInput mi) {
+                    int[] miSDR = mi.getSDR();
+                    if(!ArrayUtils.isSparse(miSDR)) {
                         // Set on Layer, then set sparse actives as the sdr,
-                        // then set on Manual Input (t1)
-                        t1 = t1.sdr(feedForwardSparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1))).feedForwardSparseActives(t1.getSDR());
+                        // then set on Manual Input (mi)
+                        miSDR = ArrayUtils.where(miSDR, ArrayUtils.WHERE_1);
+                        feedForwardSparseActives(miSDR);
+                        mi.sdr(miSDR);
+                        mi.feedForwardSparseActives(miSDR);
                     }
-                    return t1.sdr(temporalInput(t1.getSDR(), t1));
+                    miSDR = temporalInput(miSDR, mi);
+                    mi.sdr(miSDR);
+                    return mi;
                 }
             };
         }
