@@ -2279,15 +2279,19 @@ public class Layer<T> implements Persistable {
                 int inputWidth = -1;
 
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    if(t1.getSDR().length > 0 && ArrayUtils.isSparse(t1.getSDR())) {
+                public ManualInput call(ManualInput mi) {
+                    int[] miSDR = mi.getSDR();
+                    if(miSDR.length > 0 && ArrayUtils.isSparse(miSDR)) {
                         if(inputWidth == -1) {
                             inputWidth = calculateInputWidth();
                         }
-                        t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
+                        miSDR = ArrayUtils.asDense(miSDR, inputWidth);
+                        mi.sdr(miSDR);
                     }
-                    
-                    return t1.sdr(spatialInput(t1.getSDR())).feedForwardActiveColumns(t1.getSDR());
+                    int[] spSDR = spatialInput(miSDR);
+                    mi.sdr(spSDR);
+                    mi.feedForwardActiveColumns(spSDR);
+                    return mi;
                 }
             };
         }
