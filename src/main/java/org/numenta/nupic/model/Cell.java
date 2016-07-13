@@ -23,6 +23,7 @@
 package org.numenta.nupic.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -139,6 +140,18 @@ public class Cell implements Comparable<Cell>, Serializable {
      */
     public String toString() {
         return String.valueOf(index);
+    }
+
+    /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asSparseSDR(Collection<Cell> cells) {
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex())
+                .sorted().distinct().toArray();
     }
 
     /**

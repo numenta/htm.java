@@ -2281,7 +2281,9 @@ public class Layer<T> implements Persistable {
                 @Override
                 public ManualInput call(ManualInput mi) {
                     int[] miSDR = mi.getSDR();
+                    // SP needs a dense SDR.
                     if(miSDR.length > 0 && ArrayUtils.isSparse(miSDR)) {
+                        // Convert to dense SDR, update ManualInput
                         if(inputWidth == -1) {
                             inputWidth = calculateInputWidth();
                         }
@@ -2302,9 +2304,9 @@ public class Layer<T> implements Persistable {
                 @Override
                 public ManualInput call(ManualInput mi) {
                     int[] miSDR = mi.getSDR();
+                    // TM needs a sparse SDR
                     if(!ArrayUtils.isSparse(miSDR)) {
-                        // Set on Layer, then set sparse actives as the sdr,
-                        // then set on Manual Input (mi)
+                        // Convert to sparse. Update Layer and ManualInput
                         miSDR = ArrayUtils.where(miSDR, ArrayUtils.WHERE_1);
                         feedForwardSparseActives(miSDR);
                         mi.sdr(miSDR);
@@ -2354,17 +2356,15 @@ public class Layer<T> implements Persistable {
 
         public Func1<ManualInput, ManualInput> createAnomalyFunc(final Anomaly an) {
             return new Func1<ManualInput, ManualInput>() {
-
-                int cellsPerColumn = connections.getCellsPerColumn();
-
+                
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    int[] ffActiveCols = t1.getFeedForwardSparseActives();
-                    if(ffActiveCols == null || t1.getPreviousPredictiveCells() == null) {
-                        return t1.anomalyScore(1.0);
+                public ManualInput call(ManualInput mi) {
+                    int[] ffActiveCols = mi.getFeedForwardSparseActives();
+                    if(ffActiveCols == null || mi.getPreviousPredictiveCells() == null) {
+                        return mi.anomalyScore(1.0);
                     }
-                    int[] prevPredictedCols = SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn);
-                    return t1.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
+                    int[] prevPredictedCols = Cell.asSparseSDR(mi.getPreviousPredictiveCells());
+                    return mi.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
                 }
             };
         }
