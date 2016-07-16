@@ -803,14 +803,17 @@ public class LayerTest {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference output) {
-                if(seq / 7 >= timeUntilStable) {
+                assertTrue(false);
+                if(seq / inputs.length >= timeUntilStable) {
 //                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
 //                        ", \t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
                     assertTrue(output.getSDR().length >= 33); // 8);
                 }
 
                 if(test == 6) test = 0;
-                else test++;                
+                else test++;
+
+                seq++;
             }
         });
         
