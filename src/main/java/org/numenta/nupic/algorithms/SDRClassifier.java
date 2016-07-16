@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.introspect.ClassIntrospector;
+import no.uib.cipr.matrix.sparse.FlexCompColMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
@@ -219,9 +221,9 @@ classification.getStat(5, 0);
 classification.getStats(5);
 }</pre>
 	 *
-	 * The Classification also contains the average actual value for each bucket, if
-	 * the type being predicted is numerical in nature. The average values for the
-	 * buckets can be accessed individually, or altogether as a double[].
+	 * The Classification also contains the average actual value for each bucket.
+	 * The average values for the buckets can be accessed individually, or altogether
+	 * as a double[].
 	 *
 <pre>{@code
 //Get average actual val for bucket 0
@@ -270,7 +272,6 @@ classification.getMostProbableValue();
 		patternNZHistory.append(new Tuple(learnIteration, patternNZ));
 
 		//Update maxInputIdx and augment weight matrix with zero padding
-		//TODO: port lines 225-232 of python version here: !SHOULD BE DONE NOW!
 		if(ArrayUtils.max(patternNZ) > maxInputIdx) {
 			int newMaxInputIdx = Math.max(ArrayUtils.max(patternNZ), maxBucketIdx);
 			for (int nSteps : steps.toArray()) {
@@ -285,13 +286,12 @@ classification.getMostProbableValue();
 		//Inference:
 		//For each active bit in the activationPattern, get the classification votes
 		if(infer) {
-			//TODO: IMPLEMENT INFERENCE LOGIC HERE - LINE 239 IN PYTHON VERSION
+			retVal = infer(patternNZ, classification);
 		}
 
 		//------------------------------------------------------------------------
 		//Learning:
 		if(learn && classification.get("bucketIdx") != null) {
-			//TODO: IMPLEMENT LEARNING LOGIC HERE - LINES 249-280 IN PYTHON VERSION
 			// Get classification info
 			int bucketIdx = (int)classification.get("bucketIdx");
 			Object actValue = classification.get("actValue");
@@ -332,14 +332,13 @@ classification.getMostProbableValue();
 				iteration = (int)t.get(0);
 				learnPatternNZ = (int[])t.get(1);
 
-				//TODO: PORT THE FOLLOWING LINE - PYTHON VERSION LINE 275
-				double[] error = calculateError(classification);
+				Map<Integer, double[]> error = calculateError(classification);
 
 				int nSteps = learnIteration - iteration;
 				if(steps.contains(nSteps)) {
 					for(int row = 0; row <= maxBucketIdx; row++) {
 						for (int bit : learnPatternNZ) {
-							weightMatrix.get(nSteps).add(row, bit, alpha * error[nSteps]);
+							weightMatrix.get(nSteps).add(row, bit, alpha * error.get(nSteps)[row]);
 						}
 					}
 				}
@@ -348,7 +347,6 @@ classification.getMostProbableValue();
 
 		//------------------------------------------------------------------------
 		//Verbose Print
-		//TODO: implement the verbose print here - lines 285-295 in python version !SHOULD BE DONE!
 		if(infer && verbosity >= 1) {
 			System.out.println(" inference: combined bucket likelihoods:");
 			System.out.println("   actual bucket values: " + Arrays.toString((T[])retVal.getActualValues()));
@@ -368,7 +366,121 @@ classification.getMostProbableValue();
 		return retVal;
     }
 
-	//TODO: IMPLEMENT calculateError(self, classification) HERE - LINES 446-466 OF PYTHON VERSION
+	/**
+	 * Return the inference value from one input sample. The actual learning
+	 * happens in compute().
+	 *
+	 * @param patternNZ int[] of the active indices from the output below
+	 * @param classification {@link Map} of the classification information:
+	 * <p>&emsp;"bucketIdx" - index of the encoder bucket
+	 * <p>&emsp;"actValue" -  actual value doing into the encoder
+     * @return
+	 * {@link Classification} containing inference results. The Classification
+	 * contains the computed probability distribution (relative likelihood for each
+	 * bucketIdx starting from bucketIdx 0) for each step in {@code steps}. The
+	 * Classification also contains the average actual value for each bucket.
+     */
+	private <T> Classification<T> infer(int[] patternNZ, Map<String, Object> classification) {
+		Classification<T> retVal = new Classification<T>();
+		// Return Classification. For buckets which we don't have an actual
+		// value for yet, just plug in any valid actual value. It doesn't
+		// matter what we use because that bucket won't have non-zero
+		// likelihood anyways.
+
+		// NOTE: If doing 0-step predication, we shouldn't use any knowledge
+		// of the classification input during inference.
+		Object defaultValue = null;
+		if(steps.get(0) == 0 || classification == null) {
+			defaultValue = 0;
+		}
+		else {
+			defaultValue = classification.get("actValue");
+		}
+
+		T[] actValues = (T[])new Object[this.actualValues.size()];
+		for(int i = 0; i < actualValues.size(); i++) {
+			actValues[i] = (T)(actValues[i] == null ? defaultValue : actualValues.get(i));
+		}
+
+		retVal.setActualValues(actValues);
+
+		for(int nSteps : steps.toArray()) {
+			double[] predictDist = inferSingleStep(patternNZ, weightMatrix.get(nSteps));
+			retVal.setStats(nSteps, predictDist);
+		}
+
+		return retVal;
+	}
+
+	/**
+	 * Perform inference for a single step. Given an SDR input and a weight
+	 * matrix, return a predicted distribution.
+	 *
+	 * @param patternNZ int[] of the active indices from the output below
+	 * @param weightMatrix FlexCompColMatrix weight matrix
+	 * @return double[] of the predicted class label distribution
+	 */
+	private double[] inferSingleStep(int[] patternNZ, FlexCompRowMatrix weightMatrix) {
+		// Compute the output activation "level" for each bucket (matrix row)
+		// we've seen so far and store in double[]
+		double[] outputActivation = new double[maxBucketIdx + 1];
+		for(int row = 0; row <= maxBucketIdx; row++) {
+			// Output activation for this bucket is computed as the sum of
+			// the weights for the the active bits in patternNZ, for current
+			// row of matrix.
+			for(int bit : patternNZ) {
+				outputActivation[row] += weightMatrix.get(row, bit);
+			}
+		}
+
+		// Softmax normalization
+		double[] expOutputActivation = new double[outputActivation.length];
+		for(int i = 0; i < expOutputActivation.length; i++) {
+			expOutputActivation[i] = Math.exp(outputActivation[i]);
+		}
+		double[] predictDist = new double[outputActivation.length];
+		for(int i = 0; i < predictDist.length; i++) {
+			predictDist[i] = outputActivation[i]/ArrayUtils.sum(expOutputActivation);
+		}
+
+		return predictDist;
+	}
+
+	/**
+	 * Calculate error signal.
+	 *
+	 * @param classification {@link Map} of the classification information:
+	 * <p>&emsp;"bucketIdx" - index of the encoder bucket
+	 * <p>&emsp;"actValue" -  actual value doing into the encoder
+	 * @return
+	 * {@link Map} containing error. The key is the number of steps. The value
+	 * is a double[] of the error at the output layer.
+     */
+	private Map<Integer, double[]> calculateError(Map<String, Object> classification) {
+		Map<Integer, double[]> error = new HashMap<Integer, double[]>();
+		int[] targetDist = new int[maxBucketIdx + 1];
+		targetDist[(int)classification.get("bucketIdx")] = 1;
+
+		int iteration = 0;
+		int[] learnPatternNZ = null;
+		int nSteps = 0;
+		for(Tuple t : patternNZHistory) {
+			iteration = (int) t.get(0);
+			learnPatternNZ = (int[]) t.get(1);
+			nSteps = learnIteration - iteration;
+
+			if(steps.contains(nSteps)) {
+				double[] predictDist = inferSingleStep(learnPatternNZ, weightMatrix.get(nSteps));
+				double[] targetDistMinusPredictDist = new double[maxBucketIdx + 1];
+				for(int i = 0; i <= maxBucketIdx; i++) {
+					targetDistMinusPredictDist[i] = targetDist[i] - predictDist[i];
+				}
+				error.put(nSteps, targetDistMinusPredictDist);
+			}
+		}
+
+		return error;
+	}
 
 	/**
 	 * Return a string with pretty-print of an array using the given format
