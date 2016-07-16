@@ -110,6 +110,10 @@ public class SDR {
      * @return
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return Cell.asCellIndices(cells);
+        try {
+            return Cell.asCellIndices(cells);
+        } catch (Exception e) {
+            return Cell.asCellIndices(cells);
+        }
     }
 }

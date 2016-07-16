@@ -79,13 +79,6 @@ class Observed {
  */
 public class LayerTest {
 
-    public void checkObservable(TestObserver<Inference> obs) {
-        if(obs.getOnErrorEvents().size() > 0) {
-            Throwable e = (Throwable) obs.getOnErrorEvents().get(0);
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
 
@@ -828,7 +821,7 @@ public class LayerTest {
         };
 
         l.subscribe(obs);
-        
+
         // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
             for(int i = 0;i < inputs.length;i++) {
@@ -841,7 +834,7 @@ public class LayerTest {
                 l.compute(inputs[i]);
             }
         }
-        checkObservable(obs);
+        ObserverChecker.checkObservable(obs);
 
     }
 
@@ -875,7 +868,7 @@ public class LayerTest {
         int anomalyRecord = (timeUntilStable + 1) * inputs.length + 2;
         Inference seeInference = null;
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver obs = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
@@ -885,7 +878,7 @@ public class LayerTest {
                 if(seq / inputs.length >= timeUntilStable) {
 
                     System.err.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
-                        ", \n\t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
+                            ", \n\t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
                     //assertTrue(output.getSDR().length >= 8);
                 /*
                                     int[] ffActiveCols = mi.getFeedForwardSparseActives();
@@ -902,14 +895,14 @@ public class LayerTest {
                         int[] oPrevPredicted = Cell.asColumnList(output.getPreviousPredictiveCells());
                         double anomalyRaw = Anomaly.computeRawAnomalyScore(oFFActiveColumns, oPrevPredicted);
                         //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-                    System.err.println("recordNum: " + output.getRecordNum() + //"  Day: " +
-                            //((Map<String, Object>)output.getLayerInput()).get("dayOfWeek") + "  -  " +
-                            "\nl.ffActiveColumns:\t" +
-                            Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
-                            "\no.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
-                            "\nl.prevPredColumns:\t" + Arrays.toString(Cell.asColumnList(l.getPreviousPredictiveCells())) +
-                            "\no.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
-                            "\nanomalyScore:\t\t"+anomalyRaw);
+                        System.err.println("recordNum: " + output.getRecordNum() + //"  Day: " +
+                                //((Map<String, Object>)output.getLayerInput()).get("dayOfWeek") + "  -  " +
+                                "\nl.ffActiveColumns:\t" +
+                                Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
+                                "\no.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
+                                "\nl.prevPredColumns:\t" + Arrays.toString(Cell.asColumnList(l.getPreviousPredictiveCells())) +
+                                "\no.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
+                                "\nanomalyScore:\t\t"+anomalyRaw);
                         if(output.getRecordNum() != anomalyRecord) {
                             assertEquals(0.0, anomalyRaw,0.000001);
                         } else {
@@ -926,7 +919,8 @@ public class LayerTest {
                 if(test == 6) test = 0;
                 else test++;
             }
-        });
+        };
+        l.subscribe(obs);
 
         // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
@@ -944,6 +938,7 @@ public class LayerTest {
                 l.compute(inputs[i]);
             }
         }
+        ObserverChecker.checkObservable(obs);
     }
 
     @Test
@@ -962,7 +957,7 @@ public class LayerTest {
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), null, null);
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver obs = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) {}
             @Override
@@ -970,11 +965,13 @@ public class LayerTest {
                 assertNotNull(i);
                 assertEquals(0, i.getSDR().length);
             }
-        });
+        };
+        l.subscribe(obs);
 
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
+        ObserverChecker.checkObservable(obs);
     }
 
     @Test
@@ -997,7 +994,7 @@ public class LayerTest {
         // First test without prime directive :-P
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver obs = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
@@ -1012,12 +1009,14 @@ public class LayerTest {
                 }
                 ++test; 
             }
-        });
+        };
+        l.subscribe(obs);
 
         // SHOULD RECEIVE BOTH
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
+        ObserverChecker.checkObservable(obs);
 
         // --------------------------------------------------------------------------------------------
 
@@ -1027,7 +1026,7 @@ public class LayerTest {
 
         Layer<int[]> l2 = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
-        l2.subscribe(new Observer<Inference>() {
+        TestObserver obs2 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
@@ -1035,12 +1034,15 @@ public class LayerTest {
                 // should be one and only onNext() called 
                 assertTrue(Arrays.equals(expected1, i.getSDR()));
             }
-        });
+        };
+        l2.subscribe(obs2);
 
         // SHOULD RECEIVE BOTH
         // Now push some fake data through so that "onNext" is called above
         l2.compute(inputs[0]);
         l2.compute(inputs[1]);
+
+        ObserverChecker.checkObservable(obs);
     }
 
     /**
