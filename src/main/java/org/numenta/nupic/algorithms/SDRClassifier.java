@@ -28,8 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.introspect.ClassIntrospector;
-import no.uib.cipr.matrix.sparse.FlexCompColMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
@@ -42,7 +40,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-//TODO: IMPLEMENT SERIALIZATION (ANG LOGGING?) LOGIC WITHIN CLASS!!!!!
+
 /*
  * Implementation of a SDR classifier.
  * <p>
@@ -101,8 +99,12 @@ import gnu.trove.list.array.TIntArrayList;
  * @author David Ray
  * @author Andrew Dillon
  */
-public class SDRClassifier {
-    int verbosity = 0;
+@JsonSerialize(using=SDRClassifierSerializer.class)
+@JsonDeserialize(using=SDRClassifierDeserializer.class)
+public class SDRClassifier implements Persistable {
+	private static final long serialVersionUID = 1L;
+
+	int verbosity = 0;
     /**
      * The alpha used to adapt the weight matrix during
      * learning. A larger alpha results in faster adaptation to the data.
@@ -147,18 +149,20 @@ public class SDRClassifier {
      */
     Deque<Tuple> patternNZHistory;
     /**
-     * These are the bit histories. Each one is a BitHistory instance, stored in
-     * this dict, where the key is (bit, nSteps). The 'bit' is the index of the
-     * bit in the activation pattern and nSteps is the number of steps of
-     * prediction desired for that bit.
-     */
-    Map<Tuple, BitHistory> activeBitHistory = new HashMap<Tuple, BitHistory>();
-    /**
      * This keeps track of the actual value to use for each bucket index. We
      * start with 1 bucket, no actual value so that the first infer has something
      * to return
      */
     List<?> actualValues = new ArrayList<Object>();
+
+	String g_debugPrefix = "SDRClassifier";
+
+	/**
+	 * SDRClassifier no-arg constructor with defaults
+	 */
+	public SDRClassifier() {
+		this(new TIntArrayList(new int[] { 1 }), 0.001, 0.3, 0);
+	}
 
     /**
      * Constructor for the SDRClassifier
@@ -211,41 +215,41 @@ public class SDRClassifier {
 	 * likelihood can be accessed individually, or all the buckets' likelihoods can
 	 * be obtained in the form of a double array.
 	 *
-<pre>{@code
-//Get likelihood val for bucket 0, 5 steps in future
-classification.getStat(5, 0);
-
-//Get all buckets' likelihoods as double[] where each
-//index is the likelihood for that bucket
-//(e.g. [0] contains likelihood for bucketIdx 0)
-classification.getStats(5);
-}</pre>
+ 	 *	<pre>{@code
+ 	 *	//Get likelihood val for bucket 0, 5 steps in future
+	 *	classification.getStat(5, 0);
+	 *
+	 *	//Get all buckets' likelihoods as double[] where each
+	 *	//index is the likelihood for that bucket
+	 *	//(e.g. [0] contains likelihood for bucketIdx 0)
+	 *	classification.getStats(5);
+	 *	}</pre>
 	 *
 	 * The Classification also contains the average actual value for each bucket.
 	 * The average values for the buckets can be accessed individually, or altogether
 	 * as a double[].
 	 *
-<pre>{@code
-//Get average actual val for bucket 0
-classification.getActualValue(0);
-
-//Get average vals for all buckets as double[], where
-//each index is the average val for that bucket
-//(e.g. [0] contains average val for bucketIdx 0)
-classification.getActualValues();
-}</pre>
+	 * <pre>{@code
+	 * //Get average actual val for bucket 0
+	 * classification.getActualValue(0);
+	 *
+	 * //Get average vals for all buckets as double[], where
+	 * //each index is the average val for that bucket
+	 * //(e.g. [0] contains average val for bucketIdx 0)
+	 * classification.getActualValues();
+	 * }</pre>
 	 *
 	 * The Classification can also be queried for the most probable bucket (the bucket
 	 * with the highest associated likelihood value), as well as the average input value
 	 * that corresponds to that bucket.
 	 *
-<pre>{@code
-//Get index of most probable bucket
-classification.getMostProbableBucketIndex();
-
-//Get the average actual val for that bucket
-classification.getMostProbableValue();
-}</pre>
+	 * <pre>{@code
+	 * //Get index of most probable bucket
+	 * classification.getMostProbableBucketIndex();
+	 *
+	 * //Get the average actual val for that bucket
+	 * classification.getMostProbableValue();
+	 * }</pre>
 	 *
 	 */
     @SuppressWarnings("unchecked")
@@ -262,6 +266,7 @@ classification.getMostProbableValue();
 
 		//Verbose print
 		if(verbosity >= 1) {
+			System.out.println(String.format("\n%s: compute ", g_debugPrefix));
 			System.out.printf("recordNum: %d", recordNum);
 			System.out.printf("learnIteration: %d", learnIteration);
 			System.out.printf("patternNZ (%d): %d", patternNZ.length, patternNZ);
@@ -498,5 +503,30 @@ classification.getMostProbableValue();
 		}
 		sb.append(" ]");
 		return sb.toString();
+	}
+
+	public String serialize() {
+		String json = null;
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			json = mapper.writeValueAsString(this);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		return json;
+	}
+
+	public static SDRClassifier deSerialize(String jsonStrategy) {
+		ObjectMapper om = new ObjectMapper();
+		SDRClassifier c = null;
+		try {
+			Object o = om.readValue(jsonStrategy, SDRClassifier.class);
+			c = (SDRClassifier)o;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return c;
 	}
 }
