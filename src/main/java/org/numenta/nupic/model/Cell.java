@@ -155,6 +155,17 @@ public class Cell implements Comparable<Cell>, Serializable {
     }
 
     /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asCellIndices(Collection<Cell> cells) {
+        return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+    }
+
+    /**
      * {@inheritDoc}
      * 
      * <em> Note: All comparisons use the cell's index only </em>
