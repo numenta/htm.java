@@ -2363,7 +2363,7 @@ public class Layer<T> implements Persistable {
                     if(ffActiveCols == null || mi.getPreviousPredictiveCells() == null) {
                         return mi.anomalyScore(1.0);
                     }
-                    int[] prevPredictedCols = Cell.asSparseSDR(mi.getPreviousPredictiveCells());
+                    int[] prevPredictedCols = Cell.asColumnList(mi.getPreviousPredictiveCells());
                     return mi.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
                 }
             };

@@ -815,7 +815,7 @@ public class LayerTest {
                 if(seq / inputs.length >= timeUntilStable) {
 //                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
 //                        ", \t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
-                    assertTrue(output.getSDR().length >= 8); 
+                    assertTrue(output.getSDR().length >= 8);
                     // This should fail. Uncomment to test TestObserver
                     // assertEquals(33, output.getSDR().length);
                 }
@@ -892,14 +892,14 @@ public class LayerTest {
                     if(ffActiveCols == null || mi.getPreviousPredictiveCells() == null) {
                         return mi.anomalyScore(1.0);
                     }
-                    int[] prevPredictedCols = Cell.asSparseSDR(mi.getPreviousPredictiveCells());
+                    int[] prevPredictedCols = Cell.asColumnList(mi.getPreviousPredictiveCells());
                     return mi.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
 
                  */
 
                     if(l.getPreviousPredictiveCells() != null) {
                         int[] oFFActiveColumns = output.getFeedForwardSparseActives();
-                        int[] oPrevPredicted = Cell.asSparseSDR(output.getPreviousPredictiveCells());
+                        int[] oPrevPredicted = Cell.asColumnList(output.getPreviousPredictiveCells());
                         double anomalyRaw = Anomaly.computeRawAnomalyScore(oFFActiveColumns, oPrevPredicted);
                         //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
                     System.err.println("recordNum: " + output.getRecordNum() + //"  Day: " +
@@ -907,7 +907,7 @@ public class LayerTest {
                             "\nl.ffActiveColumns:\t" +
                             Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
                             "\no.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
-                            "\nl.prevPredColumns:\t" + Arrays.toString(Cell.asSparseSDR(l.getPreviousPredictiveCells())) +
+                            "\nl.prevPredColumns:\t" + Arrays.toString(Cell.asColumnList(l.getPreviousPredictiveCells())) +
                             "\no.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
                             "\nanomalyScore:\t\t"+anomalyRaw);
                         if(output.getRecordNum() != anomalyRecord) {

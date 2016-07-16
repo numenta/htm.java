@@ -149,7 +149,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      *
      * @return  sorted array of column indices.
      */
-    public static int[] asSparseSDR(Collection<Cell> cells) {
+    public static int[] asColumnList(Collection<Cell> cells) {
         return cells.stream().mapToInt(c -> c.getColumn().getIndex())
                 .sorted().distinct().toArray();
     }

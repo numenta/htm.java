@@ -78,7 +78,7 @@ public class SDR {
     
     /**
      * Converts a List of {@link Cell}s to {@link Column} indexes.
-     * NB: Use Cell.asSparseSDR(cells) instead
+     * NB: Use Cell.asColumnList(cells) instead
      * 
      * @param cells             the list of cells to convert
      * @param cellsPerColumn    the defined number of cells per column  
@@ -91,7 +91,7 @@ public class SDR {
     
     /**
      * Converts a Set of {@link Cell}s to {@link Column} indexes.
-     * NB: Use Cell.asSparseSDR(cells) instead
+     * NB: Use Cell.asColumnList(cells) instead
      * 
      * @param cells             the list of cells to convert
      * @param cellsPerColumn    the defined number of cells per column  
