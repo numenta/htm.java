@@ -61,6 +61,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
+import rx.observers.TestObserver;
 import rx.subjects.PublishSubject;
 
 class Observed {
@@ -78,6 +79,13 @@ class Observed {
  */
 public class LayerTest {
 
+    public void checkObservable(TestObserver<Inference> obs) {
+        if(obs.getOnErrorEvents().size() > 0) {
+            Throwable e = (Throwable) obs.getOnErrorEvents().get(0);
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
 
@@ -702,11 +710,11 @@ public class LayerTest {
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
-        l.subscribe(new Observer<Inference>() {
+        l.subscribe(new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            //@Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference spatialPoolerOutput) {
                 if(test == 0) {
@@ -796,18 +804,20 @@ public class LayerTest {
         
         int timeUntilStable = 600;
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver obs = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            //@Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference output) {
-                assertTrue(false);
+                //assertTrue(false);
                 if(seq / inputs.length >= timeUntilStable) {
 //                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
 //                        ", \t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
-                    assertTrue(output.getSDR().length >= 33); // 8);
+                    assertTrue(output.getSDR().length >= 8); 
+                    // This should fail. Uncomment to test TestObserver
+                    // assertEquals(33, output.getSDR().length);
                 }
 
                 if(test == 6) test = 0;
@@ -815,7 +825,9 @@ public class LayerTest {
 
                 seq++;
             }
-        });
+        };
+
+        l.subscribe(obs);
         
         // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
@@ -829,6 +841,8 @@ public class LayerTest {
                 l.compute(inputs[i]);
             }
         }
+        checkObservable(obs);
+
     }
 
     /**
