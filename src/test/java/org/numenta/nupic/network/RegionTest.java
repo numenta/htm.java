@@ -37,9 +37,9 @@ import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -50,9 +50,10 @@ import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observer;
 import rx.Subscriber;
+import rx.observers.TestObserver;
 
 
-public class RegionTest {
+public class RegionTest extends ObservableTestBase {
     
     @Test
     public void testClose() {
@@ -467,27 +468,27 @@ public class RegionTest {
         
         Region r1 = n.lookup("r1");
         // Observe the top layer
-        r1.lookup("4").observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester;
+        r1.lookup("4").observe().subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx0++], i.getEncoding()));
             }
         });
         
         // Observe the bottom layer
-        r1.lookup("2/3").observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester2;
+        r1.lookup("2/3").observe().subscribe(tester2 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx1++], i.getEncoding()));
             }
         });
         
         // Observe the Region output
-        r1.observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester3;
+        r1.observe().subscribe(tester3 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx2++], i.getEncoding()));
             }
@@ -504,6 +505,10 @@ public class RegionTest {
         assertEquals(7, idx0);
         assertEquals(7, idx1);
         assertEquals(7, idx2);
+        
+        checkObserver(tester);
+        checkObserver(tester2);
+        checkObserver(tester3);
     }
 
     /**

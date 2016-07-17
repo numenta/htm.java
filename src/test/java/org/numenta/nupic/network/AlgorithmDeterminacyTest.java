@@ -60,7 +60,7 @@ import rx.Subscriber;
  * 3 modes:</p><p>
  * <ol>
  *  <li>Straight through the TM algorithm class</li>
- *  <li>Using a Layer in with synchronous calls</li>
+ *  <li>Using a Layer with synchronous calls</li>
  *  <li>Using the full NAPI and starting the Layer's thread</li>
  * </ol>
  * <p>
