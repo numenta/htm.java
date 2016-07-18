@@ -16,8 +16,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
 #### Added
+* [[PR #435](https://github.com/numenta/htm.java/pull/435)] Added ObservableTestBase class for improved AssertFailure detection in tests using Observables
 #### Changed
 #### Fixed
+* [[PR #435](https://github.com/numenta/htm.java/pull/435)] Fixed AssertFailure detection within onNext() method in NAPI Observable tests
+* [[PR #431](https://github.com/numenta/htm.java/pull/431)] BitHistory rescaling fix (in CLAClassifier functionality)
+* [[PR #431](https://github.com/numenta/htm.java/pull/431)] Cleaned up tabs and spaces in BitHistory
 
 ***
 
