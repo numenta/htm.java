@@ -13,7 +13,7 @@ Chat.svg)](https://gitter.im/numenta/htm.java?utm_source=badge&utm_medium=badge&
 
 **Community-supported & ported from the** [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
-_**NOTE: Minimum JavaSE version is 1.8**_
+_**NOTE: Minimum JavaSE version is 8**_
 
 <br>
 
