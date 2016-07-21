@@ -192,6 +192,7 @@ public class PlaygroundTest {
         return recordOut;
     }
     
+    @SuppressWarnings("unchecked")
     public <T> T main(String[] args) throws Exception {
         InputStream input = new FileInputStream(new File("myfile"));
         //HTMObjectInput reader = Persistence.get().serializer().getObjectInput(input);
