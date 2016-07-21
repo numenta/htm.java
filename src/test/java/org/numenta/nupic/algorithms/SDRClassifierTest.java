@@ -236,56 +236,6 @@ public class SDRClassifierTest {
     }
 
     @Test
-    public void testSerialization() {
-        classifier = new SDRClassifier(new TIntArrayList(new int[] { 1 }), 1.0, 0.1, 0);
-        int recordNum = 0;
-        Map<String, Object> classification = new HashMap<String, Object>();
-        classification.put("bucketIdx", 4);
-        classification.put("actValue", 34.7);
-        classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
-        recordNum += 1;
-
-        classification.put("bucketIdx", 5);
-        classification.put("actValue", 41.7);
-        classifier.compute(recordNum, classification, new int[] { 0, 6, 9, 11 }, true, true);
-        recordNum += 1;
-
-        classification.put("bucketIdx", 5);
-        classification.put("actValue", 44.9);
-        classifier.compute(recordNum, classification, new int[] { 6, 9 }, true, true);
-        recordNum += 1;
-
-        classification.put("bucketIdx", 4);
-        classification.put("actValue", 42.9);
-        classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
-        recordNum += 1;
-
-        String json = classifier.serialize();
-
-        //Using the deserialized classifier, continue test
-        SDRClassifier c = SDRClassifier.deSerialize(json);
-        assertTrue(c.steps.contains(1));
-        assertEquals(1, c.steps.size());
-        assertEquals(1.0, c.alpha, 0.0);
-        assertEquals(0.1, c.actValueAlpha, 0.0);
-
-        classification.put("bucketIdx", 4);
-        classification.put("actValue", 34.7);
-        Classification<Double> result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
-
-        assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));
-        assertEquals(35.520000457763672, result.getActualValue(4), 0.00001);
-        assertEquals(42.020000457763672, result.getActualValue(5), 0.00001);
-        assertEquals(6, result.getStatCount(1));
-        assertEquals(0.034234, result.getStat(1, 0), 0.00001);
-        assertEquals(0.034234, result.getStat(1, 1), 0.00001);
-        assertEquals(0.034234, result.getStat(1, 2), 0.00001);
-        assertEquals(0.034234, result.getStat(1, 3), 0.00001);
-        assertEquals(0.093058, result.getStat(1, 4), 0.00001);
-        assertEquals(0.770004, result.getStat(1, 5), 0.00001);
-    }
-
-    @Test
     public void testOverlapPattern() {
         classifier = new SDRClassifier(new TIntArrayList(new int[] { 1 }), 10.0, 0.3, 0);
 

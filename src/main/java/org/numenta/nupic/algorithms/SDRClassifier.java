@@ -35,8 +35,6 @@ import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
@@ -99,8 +97,6 @@ import gnu.trove.list.array.TIntArrayList;
  * @author David Ray
  * @author Andrew Dillon
  */
-@JsonSerialize(using=SDRClassifierSerializer.class)
-@JsonDeserialize(using=SDRClassifierDeserializer.class)
 public class SDRClassifier implements Persistable {
 	private static final long serialVersionUID = 1L;
 
@@ -504,30 +500,5 @@ public class SDRClassifier implements Persistable {
 		}
 		sb.append(" ]");
 		return sb.toString();
-	}
-
-	public String serialize() {
-		String json = null;
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			json = mapper.writeValueAsString(this);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-
-		return json;
-	}
-
-	public static SDRClassifier deSerialize(String jsonStrategy) {
-		ObjectMapper om = new ObjectMapper();
-		SDRClassifier c = null;
-		try {
-			Object o = om.readValue(jsonStrategy, SDRClassifier.class);
-			c = (SDRClassifier)o;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return c;
 	}
 }
