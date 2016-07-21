@@ -1939,9 +1939,11 @@ public class Layer<T> implements Persistable {
             LOGGER.info("Layer ".concat(getName()).concat(" received zero length bit vector"));
             return input;
         }
-        spatialPooler.compute(connections, input, feedForwardActiveColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
+        
+        int[] activeColumns = new int[feedForwardActiveColumns.length];
+        spatialPooler.compute(connections, input, activeColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
       
-        return feedForwardActiveColumns;
+        return feedForwardActiveColumns = activeColumns;
     }
 
     /**
@@ -2286,7 +2288,6 @@ public class Layer<T> implements Persistable {
                         }
                         t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
                     }
-                    
                     return t1.sdr(spatialInput(t1.getSDR())).feedForwardActiveColumns(t1.getSDR());
                 }
             };
