@@ -21,6 +21,10 @@ repositories {
     // Use 'maven central' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     mavenCentral()
+
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 // COMMENT OUT TO SKIP TESTS WHEN CODE HASN'T CHANGED
@@ -52,6 +56,7 @@ dependencies {
 	compile group: 'com.cedarsoftware', name: 'java-util', version: '1.19.3'
 	testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version:'1.1.2'
+    compile name: 'algorithmfoundry-shade-culled-1.3'
 }
 
 /////////////////////////////////////////////////////////////////
