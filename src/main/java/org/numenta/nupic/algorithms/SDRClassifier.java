@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
-/*
+/**
  * Implementation of a SDR classifier.
  * <p>
  * The SDR classifier takes the form of a single layer classification network 
@@ -67,24 +67,24 @@ import gnu.trove.list.array.TIntArrayList;
  * <p>
  * Example Usage:
  *
- * c = SDRClassifier(steps=[1], alpha=0.1, actValueAlpha=0.1, verbosity=0)
+ * <pre>
+ * {@code
+ * classifier = new SDRClassifier(new TIntArrayList(new int[] { 1 }), 1.0, 0.3, 0);
  *
- * # learning
- * c.compute(recordNum=0, patternNZ=[1, 5, 9],
- *           classification={"bucketIdx": 4, "actValue": 34.7},
- *           learn=True, infer=False)
+ * // Learning:
+ * Map<String, Object> classification = new LinkedHashMap<String, Object>();
+ * classification.put("bucketIdx", 4);
+ * classification.put("actValue", 34.7);
+ * Classification<Double> result1 = classifier.compute(0, classification, new int[] { 1, 5, 9 }, true, false);
  *
- * # inference
- * result = c.compute(recordNum=1, patternNZ=[1, 5, 9],
- *                    classification={"bucketIdx": 4, "actValue": 34.7},
- *                    learn=False, infer=True)
+ * // Inference:
+ * classification.put("bucketIdx", 4);
+ * classification.put("actValue", 34.7);
+ * Classification<Double> result2 = classifier.compute(0, classification, new int[] { 1, 5, 9 }, false, true);
  *
- * # Print the top three predictions for 1 steps out.
- * topPredictions = sorted(zip(result[1],
- *                         result["actualValues"]), reverse=True)[:3]
- * for probability, value in topPredictions:
- *   print "Prediction of {} has probability of {}.".format(value,
- *                                                          probability*100.0)
+ * // Print the top prediction and its likelihood for 1 steps out:
+ * System.out.println("Top prediction: " + result.getMostProbableValue(1));
+ * }</pre>
  *
  * References:
  *   Alex Graves. Supervised Sequence Labeling with Recurrent Neural Networks
@@ -206,24 +206,25 @@ public class SDRClassifier implements Persistable {
 	 * @param learn <p>
 	 * If true, learn this sample.
 	 * @param infer <p>
-	 * If true, perform inference.
+	 * If true, perform inference. If false, null will be returned.
 	 * 
 	 * @return
-	 * {@link Classification} containing inference results. The Classification
+	 * {@link Classification} containing inference results if {@code learn} param is true,
+	 * otherwise, will return {@code null}. The Classification
 	 * contains the computed probability distribution (relative likelihood for each
 	 * bucketIdx starting from bucketIdx 0) for each step in {@code steps}. Each bucket's
 	 * likelihood can be accessed individually, or all the buckets' likelihoods can
 	 * be obtained in the form of a double array.
 	 *
- 	 *	<pre>{@code
- 	 *	//Get likelihood val for bucket 0, 5 steps in future
-	 *	classification.getStat(5, 0);
+ 	 * <pre>{@code
+ 	 * //Get likelihood val for bucket 0, 5 steps in future
+	 * classification.getStat(5, 0);
 	 *
-	 *	//Get all buckets' likelihoods as double[] where each
-	 *	//index is the likelihood for that bucket
-	 *	//(e.g. [0] contains likelihood for bucketIdx 0)
-	 *	classification.getStats(5);
-	 *	}</pre>
+ 	 * //Get all buckets' likelihoods as double[] where each
+	 * //index is the likelihood for that bucket
+	 * //(e.g. [0] contains likelihood for bucketIdx 0)
+	 * classification.getStats(5);
+	 * }</pre>
 	 *
 	 * The Classification also contains the average actual value for each bucket.
 	 * The average values for the buckets can be accessed individually, or altogether
@@ -254,7 +255,7 @@ public class SDRClassifier implements Persistable {
 	 */
     @SuppressWarnings("unchecked")
     public <T> Classification<T> compute(int recordNum, Map<String, Object> classification, int[] patternNZ, boolean learn, boolean infer) {
-        Classification<T> retVal = new Classification<T>();
+        Classification<T> retVal = null;
         List<T> actualValues = (List<T>)this.actualValues;
 
 		//Save the offset between recordNum and learnIteration if this is the first compute
@@ -267,9 +268,9 @@ public class SDRClassifier implements Persistable {
 		//Verbose print
 		if(verbosity >= 1) {
 			System.out.println(String.format("\n%s: compute ", g_debugPrefix));
-			System.out.printf("recordNum: %d", recordNum);
-			System.out.printf("learnIteration: %d", learnIteration);
-			System.out.printf("patternNZ (%d): %d", patternNZ.length, patternNZ);
+			System.out.printf("recordNum: %d\n", recordNum);
+			System.out.printf("learnIteration: %d\n", learnIteration);
+			System.out.printf("patternNZ (%d): %s\n", patternNZ.length, ArrayUtils.intArrayToString(patternNZ));
 			System.out.println("classificationIn: " + classification);
 		}
 
@@ -278,9 +279,9 @@ public class SDRClassifier implements Persistable {
 
 		//Update maxInputIdx and augment weight matrix with zero padding
 		if(ArrayUtils.max(patternNZ) > maxInputIdx) {
-			int newMaxInputIdx = Math.max(ArrayUtils.max(patternNZ), maxBucketIdx);
+			int newMaxInputIdx = ArrayUtils.max(patternNZ);
 			for (int nSteps : steps.toArray()) {
-				for(int i = maxBucketIdx; i < ArrayUtils.max(patternNZ); i++) {
+				for(int i = maxInputIdx; i < newMaxInputIdx; i++) {
 					weightMatrix.get(nSteps).addCol(new double[maxBucketIdx + 1]);
 				}
 			}
@@ -305,7 +306,7 @@ public class SDRClassifier implements Persistable {
 			if(bucketIdx > maxBucketIdx) {
 				for(int nSteps : steps.toArray()) {
 					for(int i = maxBucketIdx; i < bucketIdx; i++) {
-						weightMatrix.get(nSteps).addRow(new double[maxBucketIdx + 1]);
+						weightMatrix.get(nSteps).addRow(new double[maxInputIdx + 1]);
 					}
 				}
 				maxBucketIdx = bucketIdx;
@@ -404,7 +405,7 @@ public class SDRClassifier implements Persistable {
 
 		T[] actValues = (T[])new Object[this.actualValues.size()];
 		for(int i = 0; i < actualValues.size(); i++) {
-			actValues[i] = (T)(actValues[i] == null ? defaultValue : actualValues.get(i));
+			actValues[i] = (T)(actualValues.get(i) == null ? defaultValue : actualValues.get(i));
 		}
 
 		retVal.setActualValues(actValues);
@@ -445,7 +446,7 @@ public class SDRClassifier implements Persistable {
 		}
 		double[] predictDist = new double[outputActivation.length];
 		for(int i = 0; i < predictDist.length; i++) {
-			predictDist[i] = outputActivation[i]/ArrayUtils.sum(expOutputActivation);
+			predictDist[i] = expOutputActivation[i]/ArrayUtils.sum(expOutputActivation);
 		}
 
 		return predictDist;
