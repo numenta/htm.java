@@ -850,7 +850,7 @@ public class LayerTest {
         params.put(KEY_MODE, Mode.PURE);
         params.put(KEY_WINDOW_SIZE, 3);
         params.put(KEY_USE_MOVING_AVG, false);
-        Anomaly anomalyComputer = Anomaly.create(params);
+        Anomaly anomalyComputer = Anomaly.create();
 
         seq = 0;
         final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
@@ -863,6 +863,7 @@ public class LayerTest {
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
 
         Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, anomalyComputer);
+        Layer<int[]> l2 = new Layer<>(p, null, null, new TemporalMemory(), null, anomalyComputer);
 
         int timeUntilStable = 600; // 600
         int anomalyRecord = (timeUntilStable + 1) * inputs.length + 2;
@@ -872,7 +873,7 @@ public class LayerTest {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); assertTrue("Observer error", false); }
+            //@Override public void onError(Throwable e) { e.printStackTrace(); assertTrue("Observer error", false); }
             @Override
             public void onNext(Inference output) {
                 if(seq / inputs.length >= timeUntilStable) {
@@ -927,6 +928,7 @@ public class LayerTest {
             for(int i = 0;i < inputs.length;i++) {
                 //System.err.println("Running input "+i+" input= "+inputs[i].toString());
                 l.compute(inputs[i]);
+                l2.compute(inputs[i]);
             }
         }
 
@@ -936,6 +938,21 @@ public class LayerTest {
                     i++;
                 }
                 l.compute(inputs[i]);
+                l2.compute(inputs[i]);
+                int[] oFFActiveColumns = l2.getFeedForwardSparseActives();
+                int[] oPrevPredicted = Cell.asColumnList(l2.getPreviousPredictiveCells());
+                double anomalyRaw = Anomaly.computeRawAnomalyScore(oFFActiveColumns, oPrevPredicted);
+                //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
+                System.err.println("l2.recordNum: " + l2.getRecordNum() + //"  Day: " +
+                        "\nl2.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
+                        "\nl2.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
+                        "\nanomalyScore:\t\t"+anomalyRaw);
+                if(l2.getRecordNum() != anomalyRecord) {
+                    assertEquals(0.0, anomalyRaw,0.000001);
+                } else {
+                    if(timeUntilStable == 400) assertEquals(0.428, anomalyRaw,0.01);
+                    if(timeUntilStable == 600) assertEquals(0.571, anomalyRaw,0.01);
+                }
             }
         }
         ObserverChecker.checkObservable(obs);
