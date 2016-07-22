@@ -86,7 +86,7 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsToColumns(List<Cell> cells, int cellsPerColumn) {
-        return Cell.asColumnList(cells);
+        return SDR.asColumnList(cells);
     }
     
     /**
@@ -99,7 +99,7 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsAsColumnIndices(Set<Cell> cells, int cellsPerColumn) {
-        return Cell.asColumnList(cells);
+        return SDR.asColumnList(cells);
     }
     
     /**
@@ -110,7 +110,7 @@ public class SDR {
      * @return
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return Cell.asCellIndices(cells);
+        return SDR.asCellIndices(cells);
         /*
         try {
             return Cell.asCellIndices(cells);
@@ -119,4 +119,16 @@ public class SDR {
         }
         */
     }
+    /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asColumnList(Collection<Cell> cells) {
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex())
+                .sorted().distinct().toArray();
+    }
+
 }
