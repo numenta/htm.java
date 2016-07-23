@@ -785,7 +785,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         });
         
         Publisher pub = serializedNetwork.getPublisher();
-        
+        network.halt();
         serializedNetwork.start();
         
         int cycleCount = 0;
@@ -809,6 +809,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         }catch(Exception e) {
             e.printStackTrace();
         }
+        System.err.println("testSerializedUnStartedNetworkRuns ends");
     }
     
     /**
@@ -825,6 +826,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         SerialConfig config = new SerialConfig("testSerializedUnStartedNetworkRuns_DateEncoderFST", 
             SerialConfig.SERIAL_TEST_DIR);
         PersistenceAPI api = Persistence.get(config);
+        network.halt();
         api.store(network);
         
         //Serialize above Connections for comparison with same run but unserialized below...
@@ -838,11 +840,12 @@ public class PersistenceAPITest extends ObservableTestBase {
             @Override
             public void onNext(Inference inf) {
                 assertNotNull(inf);
+                int n = inf.getRecordNum();
+                if(n > 1000)  System.err.println("testSerializedUnStartedNetworkRuns_DateEncoder record #"+n);
             }
         });
         
         Publisher pub = serializedNetwork.getPublisher();
-        network.halt();
         serializedNetwork.start();
         
         int cycleCount = 0;
@@ -927,7 +930,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         
         Publisher pub1 = serializedNetwork1.getPublisher();
         Publisher pub2 = serializedNetwork2.getPublisher();
-        
+        network.halt();
         serializedNetwork1.start();
         serializedNetwork2.start();
         
@@ -1037,7 +1040,7 @@ public class PersistenceAPITest extends ObservableTestBase {
                 }
             }
         });
-        
+        network.halt();
         serializedNetwork.start();
         
         try {
@@ -1059,12 +1062,15 @@ public class PersistenceAPITest extends ObservableTestBase {
         PersistenceAPI api = Persistence.get();
         
         TestObserver<Inference> tester;
-        network.observe().subscribe(tester = new TestObserver<Inference>() { 
-            @Override public void onCompleted() {}
+        network.observe().subscribe(tester = new TestObserver<Inference>() {
+            @Override
+            public void onCompleted() {
+            }
+
             @Override
             public void onNext(Inference inf) {
 //                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 500) {
+                if (inf.getRecordNum() == 500) {
                     /////////////////////////////////
                     //      Network Store Here     //
                     /////////////////////////////////
@@ -1098,7 +1104,7 @@ public class PersistenceAPITest extends ObservableTestBase {
                 }
             }
         });
-        
+        network.halt();
         serializedNetwork.restart();
         
         try {
@@ -1151,12 +1157,15 @@ public class PersistenceAPITest extends ObservableTestBase {
         PersistenceAPI api = Persistence.get();
         
         TestObserver<Inference> tester;
-        network.observe().subscribe(tester = new TestObserver<Inference>() { 
-            @Override public void onCompleted() {}
+        network.observe().subscribe(tester = new TestObserver<Inference>() {
+            @Override
+            public void onCompleted() {
+            }
+
             @Override
             public void onNext(Inference inf) {
 //                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore() + (inf.getRecordNum() == 0 ? Arrays.toString((int[])inf.getLayerInput()) : ""));
-                if(inf.getRecordNum() == 499) {
+                if (inf.getRecordNum() == 499) {
                     /////////////////////////////////
                     //      Network Store Here     //
                     /////////////////////////////////
@@ -1195,21 +1204,25 @@ public class PersistenceAPITest extends ObservableTestBase {
         Network serializedNetwork = api.load();
         
         TestObserver<Inference> tester2;
-        serializedNetwork.observe().subscribe(tester2 = new TestObserver<Inference>() { 
-            @Override public void onCompleted() {}
+        serializedNetwork.observe().subscribe(tester2 = new TestObserver<Inference>() {
+            @Override
+            public void onCompleted() {
+            }
+
             @Override
             public void onNext(Inference inf) {
 //                System.out.println("1: " + inf.getRecordNum() + ", " + inf.getAnomalyScore());
-                if(inf.getRecordNum() == 500) {
+                if (inf.getRecordNum() == 500) {
                     assertEquals(500, inf.getRecordNum());
                     serializedNetwork.halt();
-                }else{
+                } else {
                     fail();
                 }
             }
         });
         
         boolean startAtIndex = true;
+        network.halt();
         serializedNetwork.restart(startAtIndex);
         
         // IMPORTANT: Re-acquire the publisher after restart! (Can't use old one)
@@ -1604,21 +1617,34 @@ public class PersistenceAPITest extends ObservableTestBase {
         TestObserver<Inference> tester;
         network.observe().subscribe(tester = new TestObserver<Inference>() {
             int cycles = 0;
-            @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
-            @Override public void onNext(Inference i) {
-                if(cycles++ == 10) {
-                  ////////////////////////
-                  //   CheckPoint Here  //
-                  ////////////////////////
-                    api.checkPointer(network).checkPoint(nestedTester4 = new TestObserver<byte[]>() { 
-                        @Override public void onCompleted() {}
-                        @Override public void onNext(byte[] bytes) {
+
+            @Override
+            public void onCompleted() {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onNext(Inference i) {
+                if (cycles++ == 10) {
+                    ////////////////////////
+                    //   CheckPoint Here  //
+                    ////////////////////////
+                    api.checkPointer(network).checkPoint(nestedTester4 = new TestObserver<byte[]>() {
+                        @Override
+                        public void onCompleted() {
+                        }
+
+                        @Override
+                        public void onNext(byte[] bytes) {
                             assertEquals(10, i.getRecordNum());
                             assertTrue(bytes != null && bytes.length > 10);
                         }
                     });
-                }else if(cycles == 12) {
+                } else if (cycles == 12) {
                     network.halt();
                 }
             }

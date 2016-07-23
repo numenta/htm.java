@@ -110,7 +110,11 @@ public class SDR {
      * @return  sorted array of column indices.
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+        try {
+            return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+        } catch (Exception e) {
+            return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+        }
     }
 
     /**
