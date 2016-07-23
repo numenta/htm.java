@@ -77,7 +77,7 @@ class Observed {
  * @author DavidRay
  *
  */
-public class LayerTest {
+public class LayerTest extends ObservableTestBase {
 
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
@@ -133,9 +133,9 @@ public class LayerTest {
             assertEquals("Predictions not available. Either classifiers unspecified or inferencing has not yet begun.", e.getMessage());
         }
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -152,6 +152,9 @@ public class LayerTest {
         assertNotNull(values);
         assertTrue(values.length == 1);
         assertEquals(0.0D, values[0]);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test
@@ -213,12 +216,12 @@ public class LayerTest {
         final Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor);
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {
                 assertTrue(l.isHalted());
                 isHalted = true;
             }
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {}
         });
         
@@ -232,6 +235,9 @@ public class LayerTest {
             e.printStackTrace();
             fail();
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     int trueCount = 0;
@@ -339,10 +345,10 @@ public class LayerTest {
                 
         final Layer<?> l = n.lookup("r1").lookup("2/3");
         
-        l.observe().subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.observe().subscribe(tester = new TestObserver<Inference>() {
             int idx = 0;
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
                 switch(idx) {
                     case 0: assertEquals("[0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]", Arrays.toString(output.getSDR()));
@@ -384,6 +390,9 @@ public class LayerTest {
             e.printStackTrace();
             fail();
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
     
     public Stream<String> makeStream() {
@@ -455,9 +464,9 @@ public class LayerTest {
                         + "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
                         + "0, 0, 0, 0, 0, 0, 0, 0, 0, 0]";
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
                 assertEquals(input, Arrays.toString((int[])output.getLayerInput()));
             }
@@ -482,6 +491,8 @@ public class LayerTest {
             fail();
         }
         
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test 
@@ -513,11 +524,11 @@ public class LayerTest {
 
         @SuppressWarnings("unchecked")
         Layer<int[]> l = (Layer<int[]>)n.lookup("R1").lookup("L1");
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
                 if(test == 0) {
@@ -536,6 +547,9 @@ public class LayerTest {
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test
@@ -556,10 +570,10 @@ public class LayerTest {
         expected[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         expected[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
                 assertTrue(Arrays.equals(expected[seq++], output.getSDR()));
             }
@@ -570,6 +584,9 @@ public class LayerTest {
             inputs.put("dayOfWeek", i);
             l.compute(inputs);
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test
@@ -591,10 +608,10 @@ public class LayerTest {
         expected[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         Observable<Inference> o = l.observe();
-        o.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        o.subscribe(tester = new TestObserver<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
                 assertTrue(Arrays.equals(expected[seq++], output.getSDR()));
             }
@@ -605,6 +622,9 @@ public class LayerTest {
             inputs.put("dayOfWeek", i);
             l.compute(inputs);
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test
@@ -648,10 +668,10 @@ public class LayerTest {
         ///////////////////////////////////////////////////////
         //              Test with 2 subscribers              //
         ///////////////////////////////////////////////////////
-        l.observe().subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.observe().subscribe(tester = new TestObserver<Inference>() {
             int seq = 0;
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
 //                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq]));
 //                System.out.println("  seq = " + seq + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
@@ -660,10 +680,10 @@ public class LayerTest {
             }
         });
 
-        l.observe().subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester2;
+        l.observe().subscribe(tester2 = new TestObserver<Inference>() {
             int seq2 = 0;
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference output) {
 //                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",  expected = " + Arrays.toString(expected[seq2]));
 //                System.out.println("  seq = " + seq2 + ",    recNum = " + output.getRecordNum() + ",    output = " + Arrays.toString(output.getSDR()));
@@ -679,6 +699,10 @@ public class LayerTest {
         }catch(Exception e) {
             e.printStackTrace();
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
+        checkObserver(tester2);
     }
 
     /**
@@ -703,11 +727,11 @@ public class LayerTest {
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
-        l.subscribe(new TestObserver<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            //@Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference spatialPoolerOutput) {
                 if(test == 0) {
@@ -723,6 +747,9 @@ public class LayerTest {
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     /**
@@ -748,11 +775,11 @@ public class LayerTest {
         
         final int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
         final int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference spatialPoolerOutput) {
                 if(test == 0) {
@@ -772,6 +799,9 @@ public class LayerTest {
         }catch(Exception e) {
             e.printStackTrace();
         }
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
     
     /**
@@ -797,11 +827,10 @@ public class LayerTest {
         
         int timeUntilStable = 600;
 
-        TestObserver obs = new TestObserver<Inference>() {
+        TestObserver<Inference> observer;
+        
+        l.subscribe(observer = new TestObserver<Inference>() {
             int test = 0;
-
-            @Override public void onCompleted() {}
-            //@Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference output) {
                 //assertTrue(false);
@@ -812,15 +841,15 @@ public class LayerTest {
                     // This should fail. Uncomment to test TestObserver
                     // assertEquals(33, output.getSDR().length);
                 }
-
+                
+                ++seq;
+                
                 if(test == 6) test = 0;
                 else test++;
 
                 seq++;
             }
-        };
-
-        l.subscribe(obs);
+        });
 
         // Now push some warm up data through so that "onNext" is called above
         for(int j = 0;j < timeUntilStable;j++) {
@@ -834,7 +863,8 @@ public class LayerTest {
                 l.compute(inputs[i]);
             }
         }
-        ObserverChecker.checkObservable(obs);
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(observer);
 
     }
 
@@ -974,14 +1004,13 @@ public class LayerTest {
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), null, null);
-
-        TestObserver obs = new TestObserver<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) {}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
-                assertEquals(0, i.getSDR().length);
+                assertTrue(i.getSDR().length > 0);
             }
         };
         l.subscribe(obs);
@@ -989,7 +1018,9 @@ public class LayerTest {
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
-        ObserverChecker.checkObservable(obs);
+
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     @Test
@@ -1011,12 +1042,11 @@ public class LayerTest {
 
         // First test without prime directive :-P
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
-
-        TestObserver obs = new TestObserver<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
                 if(test == 0) {
@@ -1028,13 +1058,11 @@ public class LayerTest {
                 ++test; 
             }
         };
-        l.subscribe(obs);
 
         // SHOULD RECEIVE BOTH
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
         l.compute(inputs[1]);
-        ObserverChecker.checkObservable(obs);
 
         // --------------------------------------------------------------------------------------------
 
@@ -1043,24 +1071,24 @@ public class LayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, 1);
 
         Layer<int[]> l2 = new Layer<>(p, null, new SpatialPooler(), null, null, null);
-
-        TestObserver obs2 = new TestObserver<Inference>() {
+        TestObserver<Inference> tester2;
+        l2.subscribe(tester2 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference i) {
                 // should be one and only onNext() called 
                 assertTrue(Arrays.equals(expected1, i.getSDR()));
             }
-        };
-        l2.subscribe(obs2);
+        });
 
         // SHOULD RECEIVE BOTH
         // Now push some fake data through so that "onNext" is called above
         l2.compute(inputs[0]);
         l2.compute(inputs[1]);
 
-        ObserverChecker.checkObservable(obs);
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
+        checkObserver(tester2);
     }
 
     /**
@@ -1075,10 +1103,9 @@ public class LayerTest {
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1090,6 +1117,9 @@ public class LayerTest {
         Map<String, Object> multiInput = new HashMap<>();
         multiInput.put("dayOfWeek", 0.0);
         l.compute(multiInput);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     /**
@@ -1113,10 +1143,9 @@ public class LayerTest {
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1137,6 +1166,9 @@ public class LayerTest {
         // and subtract that from the total input to get the total entries sent through
         // the event chain from bottom to top.
         assertEquals((NUM_CYCLES * INPUT_GROUP_COUNT) - PRIME_COUNT, TOTAL);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     /**
@@ -1168,9 +1200,9 @@ public class LayerTest {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1178,9 +1210,9 @@ public class LayerTest {
             }
         });
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester2;
+        l.subscribe(tester2 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1188,9 +1220,9 @@ public class LayerTest {
             }
         });
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester3;
+        l.subscribe(tester3 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1212,6 +1244,11 @@ public class LayerTest {
         // and subtract that from the total input to get the total entries sent through
         // the event chain from bottom to top.
         assertEquals( ((NUM_CYCLES * INPUT_GROUP_COUNT) - PRIME_COUNT) * NUM_SUBSCRIBERS, TOTAL);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
+        checkObserver(tester2);
+        checkObserver(tester3);
     }
 
     @Test
@@ -1233,9 +1270,9 @@ public class LayerTest {
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
-        l.subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
@@ -1283,6 +1320,9 @@ public class LayerTest {
         assertTrue(Arrays.equals(
             ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1),
                 SDR.cellsAsColumnIndices(l.getPreviousPredictiveCells(), cellsPerColumn)));
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
 
     /**
@@ -1401,6 +1441,8 @@ public class LayerTest {
         }
     }
     
+    boolean flowReceived2 = false;
+    boolean flowReceived3 = false;
     @Test
     public void testMissingEncoderMap() {
         boolean flowReceived = false;
@@ -1409,14 +1451,11 @@ public class LayerTest {
         Object pConsumption = null;
 
         Parameters p = NetworkTestHarness.getParameters().copy();
-        //p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
         p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
         p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
         p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
-
-//        System.out.println(p);
 
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -1443,12 +1482,11 @@ public class LayerTest {
             @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
             @Override
             public void onNext(Inference i) {
-                if(o.flowReceived) return; // No need to set this value multiple times
-                o.nClassifiers = i.getClassifiers().size();
-                o.pTimestamp = i.getClassifiers().get("timestamp");
-                o.pConsumption = i.getClassifiers().get("consumption");
+                if(flowReceived2) return; // No need to set this value multiple times
 
-                o.flowReceived = o.nClassifiers == 4 && o.pTimestamp != null && o.pConsumption != null;
+                flowReceived2 = i.getClassifiers().size() == 4 &&
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
             }
         };
 
@@ -1462,10 +1500,7 @@ public class LayerTest {
         }
 
         try {
-            assertNotEquals(4, o.nClassifiers);
-            assertNull(o.pTimestamp);
-            assertNull(o.pConsumption);
-            assertFalse(o.flowReceived);
+            assertFalse(flowReceived2);
         }catch(Exception e) {
             e.printStackTrace();
         }
@@ -1496,8 +1531,19 @@ public class LayerTest {
         
         l.getConnections().printParameters();
 
-        l.subscribe(obs);
-        
+        l.subscribe(new Observer<Inference>() {
+            @Override public void onCompleted() {}
+            @Override public void onError(Throwable e) { System.out.println("error: " + e.getMessage()); e.printStackTrace();}
+            @Override
+            public void onNext(Inference i) {
+                if(flowReceived3) return; // No need to set this value multiple times
+
+                flowReceived3 = i.getClassifiers().size() == 4 &&
+                    i.getClassifiers().get("timestamp") != null &&
+                        i.getClassifiers().get("consumption") != null;
+            }
+        });
+
         try {
             l.close();
             fail();
@@ -1506,7 +1552,7 @@ public class LayerTest {
         }
 
         try {
-            assertFalse(o.flowReceived);
+            assertFalse(flowReceived3);
         }catch(Exception e) {
             e.printStackTrace();
         }

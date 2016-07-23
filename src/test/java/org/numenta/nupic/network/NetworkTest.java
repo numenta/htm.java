@@ -62,7 +62,7 @@ import rx.Subscriber;
 import rx.observers.TestObserver;
 
 
-public class NetworkTest {
+public class NetworkTest extends ObservableTestBase {
     private int[][] dayMap = new int[][] { 
         new int[] { 1, 1, 0, 0, 0, 0, 0, 1 }, // Sunday
         new int[] { 1, 1, 1, 0, 0, 0, 0, 0 }, // Monday
@@ -732,9 +732,9 @@ public class NetworkTest {
         }
         
         // Test that we get proper output after prediction stabilization
-        r1.observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester;
+        r1.observe().subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 int nextDay = ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue()));
                 assertEquals(6, nextDay);
@@ -743,6 +743,9 @@ public class NetworkTest {
         
         multiInput.put("dayOfWeek", 5.0);
         n.compute(multiInput);
+        
+        // Check for exception during the TestObserver's onNext() execution.
+        checkObserver(tester);
     }
     
     @Test
@@ -963,13 +966,17 @@ public class NetworkTest {
                     .add(new SpatialPooler())
                     .add(htmSensor)));
 
-        network.observe().subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        network.observe().subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {
                 //Should never happen here.
                 assertEquals(0, anomaly, 0);
                 completed = true;
+                
+                super.onCompleted();
             }
             @Override public void onError(Throwable e) { 
+                super.onError(e);
                 errorMessage = e.getMessage();
                 network.halt();
             }
@@ -997,6 +1004,8 @@ public class NetworkTest {
         assertFalse(completed);
         assertEquals("Cannot autoclassify with raw array input or  " +
             "Coordinate based encoders... Remove auto classify setting.", errorMessage);
+        
+        assertTrue(hasErrors(tester));
     }
     
     ///////////////////////////////////////////////////////////////////////////////////
