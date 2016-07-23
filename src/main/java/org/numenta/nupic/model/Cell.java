@@ -23,10 +23,12 @@
 package org.numenta.nupic.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.SDR;
 
 /**
  * Software implementation of a neuron in the neocortical region.
@@ -139,6 +141,28 @@ public class Cell implements Comparable<Cell>, Serializable {
      */
     public String toString() {
         return String.valueOf(index);
+    }
+
+    /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asColumnList(Collection<Cell> cells) {
+        return SDR.asColumnList(cells);
+    }
+
+    /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asCellIndices(Collection<Cell> cells) {
+        return SDR.asCellIndices(cells);
     }
 
     /**

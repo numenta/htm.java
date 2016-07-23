@@ -2281,14 +2281,21 @@ public class Layer<T> implements Persistable {
                 int inputWidth = -1;
 
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    if(t1.getSDR().length > 0 && ArrayUtils.isSparse(t1.getSDR())) {
+                public ManualInput call(ManualInput mi) {
+                    int[] miSDR = mi.getSDR();
+                    // SP needs a dense SDR.
+                    if(miSDR.length > 0 && ArrayUtils.isSparse(miSDR)) {
+                        // Convert to dense SDR, update ManualInput
                         if(inputWidth == -1) {
                             inputWidth = calculateInputWidth();
                         }
-                        t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
+                        miSDR = ArrayUtils.asDense(miSDR, inputWidth);
+                        mi.sdr(miSDR);
                     }
-                    return t1.sdr(spatialInput(t1.getSDR())).feedForwardActiveColumns(t1.getSDR());
+                    int[] spSDR = spatialInput(miSDR);
+                    mi.sdr(spSDR);
+                    mi.feedForwardActiveColumns(spSDR);
+                    return mi;
                 }
             };
         }
@@ -2297,13 +2304,19 @@ public class Layer<T> implements Persistable {
             return new Func1<ManualInput, ManualInput>() {
 
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    if(!ArrayUtils.isSparse(t1.getSDR())) {
-                        // Set on Layer, then set sparse actives as the sdr,
-                        // then set on Manual Input (t1)
-                        t1 = t1.sdr(feedForwardSparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1))).feedForwardSparseActives(t1.getSDR());
+                public ManualInput call(ManualInput mi) {
+                    int[] miSDR = mi.getSDR();
+                    // TM needs a sparse SDR
+                    if(!ArrayUtils.isSparse(miSDR)) {
+                        // Convert to sparse. Update Layer and ManualInput
+                        miSDR = ArrayUtils.where(miSDR, ArrayUtils.WHERE_1);
+                        feedForwardSparseActives(miSDR);
+                        mi.sdr(miSDR);
+                        mi.feedForwardSparseActives(miSDR);
                     }
-                    return t1.sdr(temporalInput(t1.getSDR(), t1));
+                    miSDR = temporalInput(miSDR, mi);
+                    mi.sdr(miSDR);
+                    return mi;
                 }
             };
         }
@@ -2346,15 +2359,14 @@ public class Layer<T> implements Persistable {
         public Func1<ManualInput, ManualInput> createAnomalyFunc(final Anomaly an) {
             return new Func1<ManualInput, ManualInput>() {
 
-                int cellsPerColumn = connections.getCellsPerColumn();
-
                 @Override
-                public ManualInput call(ManualInput t1) {
-                    if(t1.getFeedForwardSparseActives() == null || t1.getPreviousPredictiveCells() == null) {
-                        return t1.anomalyScore(1.0);
+                public ManualInput call(ManualInput mi) {
+                    int[] ffActiveCols = mi.getFeedForwardSparseActives();
+                    if(ffActiveCols == null || mi.getPreviousPredictiveCells() == null) {
+                        return mi.anomalyScore(1.0);
                     }
-                    return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), 
-                        SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));
+                    int[] prevPredictedCols = Cell.asColumnList(mi.getPreviousPredictiveCells());
+                    return mi.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
                 }
             };
         }

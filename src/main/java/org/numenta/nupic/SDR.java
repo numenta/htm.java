@@ -78,6 +78,7 @@ public class SDR {
     
     /**
      * Converts a List of {@link Cell}s to {@link Column} indexes.
+     * NB: Use Cell.asColumnList(cells) instead
      * 
      * @param cells             the list of cells to convert
      * @param cellsPerColumn    the defined number of cells per column  
@@ -85,13 +86,12 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsToColumns(List<Cell> cells, int cellsPerColumn) {
-        IntStream op = cells.stream().mapToInt(c -> c.getIndex());
-            
-        return op.map(cellIdx -> cellIdx / cellsPerColumn).distinct().toArray();
+        return SDR.asColumnList(cells);
     }
     
     /**
      * Converts a Set of {@link Cell}s to {@link Column} indexes.
+     * NB: Use Cell.asColumnList(cells) instead
      * 
      * @param cells             the list of cells to convert
      * @param cellsPerColumn    the defined number of cells per column  
@@ -99,26 +99,34 @@ public class SDR {
      * @return  the column indexes of the specified cells.
      */
     public static int[] cellsAsColumnIndices(Set<Cell> cells, int cellsPerColumn) {
-        return cells.stream().mapToInt(c -> c.getIndex())
-                   .sorted().map(cellIdx -> cellIdx / cellsPerColumn).distinct().toArray();
+        return SDR.asColumnList(cells);
     }
     
     /**
-     * Converts a {@link Collection} of {@link Cell}s to a list
-     * of cell indexes.
-     * 
-     * @param cells
-     * @return
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        try { 
-            // This ugliness is inserted because, while there is no sharing by different threads and
-            // and no reentrant access, JUnit tests involving many tests make this throw a 
-            // ConcurrentModificationException even though this code is isolated???? 
-            // In that case, running it twice corrects the internal modCount. :-(
-            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
-        }catch(Exception e) {
-            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
+        try {
+            return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+        } catch (Exception e) {
+            return cells.stream().mapToInt(c -> c.getIndex()).toArray();
         }
     }
+
+    /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asColumnList(Collection<Cell> cells) {
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex())
+                .sorted().distinct().toArray();
+    }
+
 }

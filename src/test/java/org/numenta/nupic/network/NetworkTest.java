@@ -430,16 +430,15 @@ public class NetworkTest extends ObservableTestBase {
         
         // 1. Re-Attach Observer
         // 2. Restart Network
-        
-        network.observe().subscribe(new Observer<Inference>() { 
+        TestObserver<Inference> obs = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override
             public void onNext(Inference inf) {
                 /** see {@link #createDayOfWeekInferencePrintout()} */
-                
+
                 dayOfWeekPrintout.apply(inf, cellsPerCol);
-               
+
                 ////////////////////////////////////////////////////////////
                 // Ensure the records pick up precisely where we left off //
                 ////////////////////////////////////////////////////////////
@@ -447,8 +446,10 @@ public class NetworkTest extends ObservableTestBase {
                     expectedDataFlag = true;
                 }
             }
-        });
-        
+        };
+
+        network.observe().subscribe(obs);
+        network.halt();
         network.restart();
         
         try { network.lookup("r1").lookup("1").getLayerThread().join(3000); }catch(Exception e) { e.printStackTrace(); }
