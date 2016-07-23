@@ -103,22 +103,16 @@ public class SDR {
     }
     
     /**
-     * Converts a {@link Collection} of {@link Cell}s to a list
-     * of cell indexes.
-     * 
-     * @param cells
-     * @return
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return SDR.asCellIndices(cells);
-        /*
-        try {
-            return Cell.asCellIndices(cells);
-        } catch (Exception e) {
-            return Cell.asCellIndices(cells);
-        }
-        */
+        return cells.stream().mapToInt(c -> c.getIndex()).toArray();
     }
+
     /**
      * Converts a Collection of {@link Cell}s to {@link Column} indexes.
      *

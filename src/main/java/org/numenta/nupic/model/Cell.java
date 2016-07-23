@@ -162,7 +162,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @return  sorted array of column indices.
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        return cells.stream().mapToInt(c -> c.getIndex()).toArray();
+        return SDR.asCellIndices(cells);
     }
 
     /**
