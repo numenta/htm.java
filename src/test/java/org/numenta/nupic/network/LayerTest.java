@@ -1012,8 +1012,7 @@ public class LayerTest extends ObservableTestBase {
                 assertNotNull(i);
                 assertTrue(i.getSDR().length > 0);
             }
-        };
-        l.subscribe(obs);
+        });
 
         // Now push some fake data through so that "onNext" is called above
         l.compute(inputs[0]);
@@ -1057,7 +1056,7 @@ public class LayerTest extends ObservableTestBase {
                 }
                 ++test; 
             }
-        };
+        });
 
         // SHOULD RECEIVE BOTH
         // Now push some fake data through so that "onNext" is called above
