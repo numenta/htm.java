@@ -842,7 +842,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         });
         
         Publisher pub = serializedNetwork.getPublisher();
-        
+        network.halt();
         serializedNetwork.start();
         
         int cycleCount = 0;
