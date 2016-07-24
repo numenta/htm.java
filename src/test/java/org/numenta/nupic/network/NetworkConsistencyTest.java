@@ -26,6 +26,7 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.ScalarEncoder;
+import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -59,8 +60,11 @@ public class NetworkConsistencyTest {
     
     private static boolean doPrintout = false;
     
+    private static final int SAMPLE_WEEK = new FastRandom().nextInt(125);
+    
     @AfterClass
     public static void compare() {
+        System.out.println("USING SAMPLE #: " + SAMPLE_WEEK);
         assertEquals(napiSamples.size(), simpleSamples.size());
         
         if(doPrintout) {
@@ -68,12 +72,14 @@ public class NetworkConsistencyTest {
             for(Iterator<SampleWeek> it = simpleSamples.iterator(), it2 = napiSamples.iterator();it.hasNext() && it2.hasNext();) {
                 SampleWeek sw1 = it.next();
                 SampleWeek sw2 = it2.next();
-                System.out.println("" + sw1.seqNum + " - " + sw2.seqNum);
-                System.out.println("" + Arrays.toString(sw1.encoderOut) + " - " + Arrays.toString(sw2.encoderOut));
-                System.out.println("" + Arrays.toString(sw1.spOut) + " - " + Arrays.toString(sw2.spOut));
-                System.out.println("" + Arrays.toString(sw1.tmIn) + " - " + Arrays.toString(sw2.tmIn));
-                System.out.println("" + Arrays.toString(sw1.tmPred) + " - " + Arrays.toString(sw2.tmPred));
-                System.out.println("" + sw1.score + " - " + sw2.score);
+                System.out.println("Seq#: " + sw1.seqNum + " - " + sw2.seqNum);
+                System.out.println("Encoder: " + Arrays.toString(sw1.encoderOut) + " - " + Arrays.toString(sw2.encoderOut));
+                System.out.println("SP: " + Arrays.toString(sw1.spOut) + " - " + Arrays.toString(sw2.spOut));
+                System.out.println("TM (in): " + Arrays.toString(sw1.tmIn) + " - " + Arrays.toString(sw2.tmIn));
+                System.out.println("TM (pred. cols): " + Arrays.toString(sw1.tmPred) + " - " + Arrays.toString(sw2.tmPred));
+                System.out.println("TM (Active Cells): " + Arrays.toString(sw1.activeCells) + " - " + Arrays.toString(sw2.activeCells));
+                System.out.println("TM (Predictive Cells): " + Arrays.toString(sw1.predictiveCells) + " - " + Arrays.toString(sw2.predictiveCells));
+                System.out.println("Anomaly Score: " + sw1.score + " - " + sw2.score);
                 System.out.println("");
             }
         }
@@ -299,20 +305,20 @@ public class NetworkConsistencyTest {
                 int[] predictedColumns = SDR.cellsAsColumnIndices(inf.getPredictiveCells(), cellsPerColumn); //Get the predicted column indexes
                 if(doPrintout) System.out.println("TemporalMemory Input = " + Arrays.toString(inf.getFeedForwardSparseActives()));
                 if(doPrintout) System.out.println("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
+                Set<Cell> actives = inf.getActiveCells();
+                int[] actCellIndices = SDR.asCellIndices(actives);
+                if(doPrintout) System.out.println("TemporalMemory Active Cells = " + Arrays.toString(actCellIndices));
+                Set<Cell> pred = inf.getPredictiveCells();
+                int[] predCellIndices = SDR.asCellIndices(pred);
+                if(doPrintout) System.out.println("TemporalMemory Predictive Cells = " + Arrays.toString(predCellIndices));
                 
                 //Anomaly 
                 double score = inf.getAnomalyScore();
                 if(doPrintout) System.out.println("Anomaly Score = " + score);
                 
-                if(inf.getRecordNum() / 7 == 123) {
-                    if((inf.getRecordNum() + 1) == 867) {
-                        SampleWeek sw = new SampleWeek(inf.getRecordNum() + 1, inf.getEncoding(), inf.getFeedForwardActiveColumns(), 
-                            inf.getFeedForwardSparseActives(), predictedColumns, score);
-                        napiSamples.add(sw);
-                    }else{
-                        napiSamples.add(new SampleWeek(inf.getRecordNum() + 1, inf.getEncoding(), inf.getFeedForwardActiveColumns(), 
-                            inf.getFeedForwardSparseActives(), predictedColumns, score));
-                    }
+                if(inf.getRecordNum() / 7 == SAMPLE_WEEK) {
+                    napiSamples.add(new SampleWeek(inf.getRecordNum() + 1, inf.getEncoding(), inf.getFeedForwardActiveColumns(), 
+                        inf.getFeedForwardSparseActives(), predictedColumns, actCellIndices, predCellIndices, score));
                 }
             }
         });
@@ -416,28 +422,36 @@ public class NetworkConsistencyTest {
             predictedColumns = SDR.cellsAsColumnIndices(cc.predictiveCells(), cellsPerColumn); //Get the predicted column indexes
             if(doPrintout) System.out.println("TemporalMemory Input = " + Arrays.toString(input));
             if(doPrintout) System.out.println("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
+            Set<Cell> actives = cc.activeCells();
+            int[] actCellIndices = SDR.asCellIndices(actives);
+            if(doPrintout) System.out.println("TemporalMemory Active Cells = " + Arrays.toString(actCellIndices));
+            Set<Cell> pred = cc.predictiveCells();
+            int[] predCellIndices = SDR.asCellIndices(pred);
+            if(doPrintout) System.out.println("TemporalMemory Predictive Cells = " + Arrays.toString(predCellIndices));
             
             //Anomaly 
             double score = anomaly.compute(input, prevPredictedColumns, 0.0, 0);
             if(doPrintout) System.out.println("Anomaly Score = " + score);
             
-            if(recordNum == 123) {
-                simpleSamples.add(new SampleWeek(seqNum, encoding, output, input, predictedColumns, score));
+            if(recordNum == SAMPLE_WEEK) {
+                simpleSamples.add(new SampleWeek(seqNum, encoding, output, input, predictedColumns, actCellIndices, predCellIndices, score));
             }
         }
     }
     
     class SampleWeek {
         int seqNum;
-        int[] encoderOut, spOut, tmIn, tmPred;
+        int[] encoderOut, spOut, tmIn, tmPred, activeCells, predictiveCells;
         double score;
         
-        public SampleWeek(int seq, int[] enc, int[] spo, int[] tmin, int[] tmpred, double sc) {
+        public SampleWeek(int seq, int[] enc, int[] spo, int[] tmin, int[] tmpred, int[] actCells, int[] predCells, double sc) {
             seqNum = seq;
             encoderOut = enc;
             spOut = spo;
             tmIn = tmin;
             tmPred = tmpred;
+            activeCells = actCells;
+            predictiveCells = predCells;
             score = sc;
         }
 
@@ -456,6 +470,8 @@ public class NetworkConsistencyTest {
             result = prime * result + Arrays.hashCode(spOut);
             result = prime * result + Arrays.hashCode(tmIn);
             result = prime * result + Arrays.hashCode(tmPred);
+            result = prime * result + Arrays.hashCode(activeCells);
+            result = prime * result + Arrays.hashCode(predictiveCells);
             return result;
         }
 
@@ -482,6 +498,10 @@ public class NetworkConsistencyTest {
             if(!Arrays.equals(tmIn, other.tmIn))
                 return false;
             if(!Arrays.equals(tmPred, other.tmPred))
+                return false;
+            if(!Arrays.equals(activeCells, other.activeCells))
+                return false;
+            if(!Arrays.equals(predictiveCells, other.predictiveCells))
                 return false;
             return true;
         }
