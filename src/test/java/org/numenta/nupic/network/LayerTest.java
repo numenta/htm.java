@@ -858,6 +858,142 @@ public class LayerTest extends ObservableTestBase {
         // Check for exception during the TestObserver's onNext() execution.
         checkObserver(observer);
     }
+    
+    /**
+     * Temporary test to test basic sequence mechanisms
+     */
+    @Test
+    public void testTMAnomalyInteraction() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+
+        Map<String, Object> params = new HashMap<>();
+        params.put(KEY_MODE, Mode.PURE);
+        params.put(KEY_WINDOW_SIZE, 3);
+        params.put(KEY_USE_MOVING_AVG, false);
+        Anomaly anomalyComputer = Anomaly.create();
+
+        seq = 0;
+        final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
+        final int[] input2 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] input3 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
+        final int[] input4 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
+        final int[] input5 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
+        final int[] input6 = new int[] { 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
+        final int[] input7 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
+        final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
+
+        Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, anomalyComputer);
+        l.name("Layer 1");
+        Layer<int[]> l2 = new Layer<>(p, null, null, new TemporalMemory(), null, anomalyComputer);
+        l2.name("Layer 2");
+        
+        l.close();
+        l2.close();
+        
+        assertTrue(DeepEquals.deepEquals(l.getConnections(), l2.getConnections()));
+
+        int timeUntilStable = 600; // 600
+        int anomalyRecord = (timeUntilStable + 1) * inputs.length + 2;
+        
+        TestObserver<Inference> obs = new TestObserver<Inference>() {
+            int test = 0;
+
+            @Override public void onCompleted() {}
+            //@Override public void onError(Throwable e) { e.printStackTrace(); assertTrue("Observer error", false); }
+            @Override
+            public void onNext(Inference output) {
+                if(seq / inputs.length >= timeUntilStable) {
+
+                    System.err.println("\n\nseq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
+                            ", \n\t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
+                    //assertTrue(output.getSDR().length >= 8);
+                /*
+                                    int[] ffActiveCols = mi.getFeedForwardSparseActives();
+                    if(ffActiveCols == null || mi.getPreviousPredictiveCells() == null) {
+                        return mi.anomalyScore(1.0);
+                    }
+                    int[] prevPredictedCols = Cell.asColumnList(mi.getPreviousPredictiveCells());
+                    return mi.anomalyScore(anomalyComputer.compute(ffActiveCols, prevPredictedCols, 0, 0));
+
+                 */
+
+                    if(l.getPreviousPredictiveCells() != null && output.getPreviousPredictiveCells() != null) {
+                        int[] oFFActiveColumns = output.getFeedForwardSparseActives();
+                        int[] oPrevPredicted = Cell.asColumnList(output.getPreviousPredictiveCells());
+                        int[] oPredicted = Cell.asColumnList(output.getPredictiveCells());
+                        double anomalyRaw = Anomaly.computeRawAnomalyScore(oFFActiveColumns, oPrevPredicted);
+                        //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
+                        System.err.println("recordNum: " + output.getRecordNum() + //"  Day: " +
+                                //((Map<String, Object>)output.getLayerInput()).get("dayOfWeek") + "  -  " +
+                                "\nl.ffActiveColumns:\t" +
+                                Arrays.toString(ArrayUtils.where(l.getFeedForwardActiveColumns(), ArrayUtils.WHERE_1)) +
+                                "\no.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
+                                "\nl.prevPredColumns:\t" + Arrays.toString(Cell.asColumnList(l.getPreviousPredictiveCells())) +
+                                "\no.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
+                                "\nl.predColumns:\t" + Arrays.toString(Cell.asColumnList(l.getPredictiveCells())) +
+                                "\no.predColumns:\t" + Arrays.toString(oPredicted) +
+                                "\nrawAnomalyScore:\t\t"+anomalyRaw +
+                                "\ninferenceAnomalyScore:\t\t"+output.getAnomalyScore());
+                        if(output.getRecordNum() != anomalyRecord) {
+                            //assertEquals(0.0, anomalyRaw,0.000001);
+                        } else {
+                            if(timeUntilStable == 400) assertEquals(0.428, anomalyRaw,0.01);
+                            if(timeUntilStable == 600) assertEquals(0.571, anomalyRaw,0.01);
+                        }
+                    } else {
+                        System.err.println("recordNum: " + output.getRecordNum() + " getPreviousPredictiveCells NULL");
+                    }
+
+                }
+                seq++;
+
+                if(test == 6) test = 0;
+                else test++;
+            }
+        };
+        l.subscribe(obs);
+
+        // Now push some warm up data through so that "onNext" is called above
+        for(int j = 0;j < timeUntilStable;j++) {
+            for(int i = 0;i < inputs.length;i++) {
+                //System.err.println("Running input "+i+" input= "+inputs[i].toString());
+                l.compute(inputs[i]);
+                l2.compute(inputs[i]);
+            }
+        }
+
+        int recordNum = 0;
+        for(int j = 0;j < 2;j++) {
+            for(int i = 0;i < inputs.length;i++) {
+                if(j == 1 && i == 2) {
+                    i++;
+                    System.err.println("\n\nIntroducing Anomalous Record: " + (recordNum + 1));
+                }
+                l.compute(inputs[i]);
+                l2.compute(inputs[i]);
+                int[] oFFActiveColumns = l2.getFeedForwardSparseActives();
+                int[] oPrevPredicted = Cell.asColumnList(l2.getPreviousPredictiveCells());
+                int[] oPredicted = Cell.asColumnList(l2.getPredictiveCells());
+                double anomalyRaw = Anomaly.computeRawAnomalyScore(oFFActiveColumns, oPrevPredicted);
+                //UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
+                recordNum = l2.getRecordNum();
+                System.err.println("l2.recordNum: " + l2.getRecordNum() + //"  Day: " +
+                        "\nl2.ffActiveColumns:\t" + Arrays.toString(oFFActiveColumns) +
+                        "\nl2.prevPredColumns:\t" + Arrays.toString(oPrevPredicted) +
+                        "\nl2.predColumns:\t" + Arrays.toString(oPredicted) +
+                        "\nanomalyScore:\t\t"+anomalyRaw);
+                if(l2.getRecordNum() != anomalyRecord) {
+                    assertEquals(0.0, anomalyRaw,0.000001);
+                } else {
+                    if(timeUntilStable == 400) assertEquals(0.428, anomalyRaw,0.01);
+                    if(timeUntilStable == 600) assertEquals(0.571, anomalyRaw,0.01);
+                }
+            }
+        }
+        
+        checkObserver(obs);
+    }
 
     @Test
     public void testBasicSetup_SPandTM() {

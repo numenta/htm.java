@@ -19,6 +19,6 @@
 	<classpathentry kind="lib" path="libs/trove-3.1a1.jar" sourcepath="/Users/cogmission/Resources/trove/3.1a1/trove-3.1a1-src.jar"/>
 	<classpathentry kind="lib" path="libs/java-util-1.19.3.jar" sourcepath="/Users/cogmission/.m2/repository/com/cedarsoftware/java-util/1.19.3/java-util-1.19.3-sources.jar"/>
 	<classpathentry kind="lib" path="libs/objenesis-2.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/fast-serialization"/>
+	<classpathentry kind="lib" path="libs/fst-2.45.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
