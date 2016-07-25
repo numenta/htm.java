@@ -104,6 +104,17 @@ public class SDR {
     }
     
     /**
+     * Converts a Collection of {@link Cell}s to {@link Column} indexes.
+     *
+     * @param cells             the list of cells to convert
+     *
+     * @return  sorted array of column indices.
+     */
+    public static int[] asColumnList(Collection<Cell> cells) {
+        return cells.stream().mapToInt(c -> c.getColumn().getIndex()).sorted().distinct().toArray();
+    }
+
+    /**
      * Converts a {@link Collection} of {@link Cell}s to a list
      * of cell indexes.
      * 
@@ -111,14 +122,11 @@ public class SDR {
      * @return
      */
     public static int[] asCellIndices(Collection<Cell> cells) {
-        try { 
-            // This ugliness is inserted because, while there is no sharing by different threads and
-            // and no reentrant access, JUnit tests involving many tests make this throw a 
-            // ConcurrentModificationException even though this code is isolated???? 
-            // In that case, running it twice corrects the internal modCount. :-(
-            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
-        }catch(Exception e) {
-            return cells.stream().mapToInt(cell -> cell.getIndex()).sorted().toArray();
+        int[] retVal = new int[cells.size()];
+        int i = 0;
+        for(Cell cell : cells) {
+            retVal[i++] = cell.getIndex();
         }
+        return retVal;
     }
 }
