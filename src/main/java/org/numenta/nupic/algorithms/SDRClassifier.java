@@ -34,8 +34,6 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -382,6 +380,7 @@ public class SDRClassifier implements Persistable {
 	 * bucketIdx starting from bucketIdx 0) for each step in {@code steps}. The
 	 * Classification also contains the average actual value for each bucket.
      */
+     @SuppressWarnings("unchecked")
 	private <T> Classification<T> infer(int[] patternNZ, Map<String, Object> classification) {
 		Classification<T> retVal = new Classification<T>();
 		// Return Classification. For buckets which we don't have an actual
