@@ -858,7 +858,7 @@ public class LayerTest extends ObservableTestBase {
         // Check for exception during the TestObserver's onNext() execution.
         checkObserver(observer);
     }
-
+    
     @Test
     public void testBasicSetup_SPandTM() {
         Parameters p = NetworkTestHarness.getParameters().copy();
