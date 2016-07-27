@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
 #### Added
+* [[PR #439](https://github.com/numenta/htm.java/pull/439)] Added the SDRClassifier!
 * [[PR #435](https://github.com/numenta/htm.java/pull/435)] Added ObservableTestBase class for improved AssertFailure detection in tests using Observables 
 
 #### Changed
