@@ -26,6 +26,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 <br>
 
 ### Recent News Items...
+* [HTM.java Receives New SDRClassifier!](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/algorithms/SDRClassifier.java) (07/26/2016)
 * [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
 * [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
 * [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
