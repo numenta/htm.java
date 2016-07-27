@@ -1,18 +1,24 @@
 package org.numenta.nupic.algorithms;
 
-import com.cedarsoftware.util.DeepEquals;
-import gnu.trove.list.array.TIntArrayList;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
+
 import org.junit.Test;
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.network.Persistence;
 import org.numenta.nupic.network.PersistenceAPI;
 import org.numenta.nupic.serialize.SerialConfig;
-import org.numenta.nupic.serialize.SerializerCore;
 
-import java.lang.reflect.Array;
-import java.util.*;
+import com.cedarsoftware.util.DeepEquals;
 
-import static org.junit.Assert.*;
+import gnu.trove.list.array.TIntArrayList;
 
 public class SDRClassifierTest {
     private SDRClassifier classifier;
