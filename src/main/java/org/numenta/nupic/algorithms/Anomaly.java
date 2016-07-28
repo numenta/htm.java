@@ -220,8 +220,8 @@ public abstract class Anomaly implements Persistable {
             // Get the percent of active columns that were NOT predicted, that is
             // our anomaly score.
             score = (nActiveColumns - score) / (double)nActiveColumns;
-        }else if(prevPredictedColumns.length > 0) {
-            score = 1.0d;
+        } else {
+            score = 0.0d;
         }
         
         return score;

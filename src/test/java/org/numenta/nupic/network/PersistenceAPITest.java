@@ -501,7 +501,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         assertEquals(0.0, score, 0);
 
         score = serializedAnomalyComputer.compute(new int[0], new int[] {3,5}, 0, 0);
-        assertEquals(1.0, score, 0);
+        assertEquals(0.0, score, 0);
 
         score = serializedAnomalyComputer.compute(new int[] { 3, 5, 7 }, new int[] { 3, 5, 7 }, 0, 0);
         assertEquals(0.0, score, 0);
