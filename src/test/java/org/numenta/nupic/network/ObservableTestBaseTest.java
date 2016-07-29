@@ -77,7 +77,7 @@ public class ObservableTestBaseTest extends ObservableTestBase {
             fail();   
             
         }catch(Exception e) {
-            e.printStackTrace();
+            
         }
     }
     
@@ -124,7 +124,7 @@ public class ObservableTestBaseTest extends ObservableTestBase {
         TestObserver<Inference> observer = new TestObserver<Inference>() {
             @Override
             public void onNext(Inference i) {
-                assertTrue(i.getAnomalyScore() == 0.0);
+                assertTrue(i.getAnomalyScore() == 0.0); // Force error: anomalyScore == 1.0
             }
         };
         

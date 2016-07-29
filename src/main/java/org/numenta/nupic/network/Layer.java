@@ -1974,7 +1974,7 @@ public class Layer<T> implements Persistable {
         // Store the Compute Cycle
         mi.computeCycle = cc;
         
-        return SDR.asCellIndices(activeCells);
+        return SDR.asCellIndices(cc.activeCells);
     }
     
     /**
