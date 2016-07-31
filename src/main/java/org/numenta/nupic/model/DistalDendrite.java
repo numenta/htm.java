@@ -48,6 +48,7 @@ public class DistalDendrite extends Segment implements Persistable {
     private static final double EPSILON = 0.0000001;
     
     private Cell cell;
+    private Cell presynapticCell;
     
     /**
      * Constructs a new {@code Segment} object with the specified owner
@@ -71,6 +72,24 @@ public class DistalDendrite extends Segment implements Persistable {
     public Cell getParentCell() {
         return cell;
     }
+    
+    /**
+     * Returns the source {@link Cell} which activates {@link Synapse}s
+     * on this {@code DistalDendrite}
+     * @return  the presynapticCell
+     */
+    public Cell getPresynapticCell() {
+        return presynapticCell;
+    }
+    
+    /**
+     * Returns the index of the column containing this {@link DistalDendrite}'s
+     * presynaptic {@link Cell}
+     * @return      the index of the presynaptic cell's column
+     */
+    public int getPresynapticColumnIndex() {
+        return presynapticCell.getColumn().getIndex();
+    }
 
     /**
      * Creates and returns a newly created {@link Synapse} with the specified
@@ -84,6 +103,7 @@ public class DistalDendrite extends Segment implements Persistable {
      * @return
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
+        this.presynapticCell = sourceCell;
         Pool pool = new Pool(1);
         Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapses(), sourceCell.getIndex());
         pool.setPermanence(c, s, permanence);

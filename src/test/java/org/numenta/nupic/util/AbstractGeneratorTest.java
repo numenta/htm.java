@@ -21,7 +21,10 @@
  */
 package org.numenta.nupic.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -35,7 +38,7 @@ public class AbstractGeneratorTest {
      * 
      * @return  an {@link AbstractGenerator} that runs for 30 iterations
      */
-    private AbstractGenerator<Integer> getTerminableGenerator() {
+    private Generator<Integer> getTerminableGenerator() {
         @SuppressWarnings("serial")
         class TerminableGenerator extends AbstractGenerator<Integer> {
             int i = 0;
@@ -60,7 +63,7 @@ public class AbstractGeneratorTest {
      * @return  an {@link AbstractGenerator} that runs infinitely
      *          until halted.
      */
-    private AbstractGenerator<Integer> getInfiniteGenerator() {
+    private Generator<Integer> getInfiniteGenerator() {
         @SuppressWarnings("serial")
         class InfiniteGenerator extends AbstractGenerator<Integer> {
             int i = 0;
@@ -94,7 +97,7 @@ public class AbstractGeneratorTest {
     public void testTerminableGenerator() {
         int i = 0;
         
-        AbstractGenerator<Integer> generator = getTerminableGenerator();
+        Generator<Integer> generator = getTerminableGenerator();
         
         for(Integer result : generator) {
             assertNotEquals(result, Integer.valueOf(i - 1));
@@ -115,7 +118,7 @@ public class AbstractGeneratorTest {
     public void testInfiniteGenerator() {
         int i = 0;
         
-        AbstractGenerator<Integer> generator = getInfiniteGenerator();
+        Generator<Integer> generator = getInfiniteGenerator();
         
         for(Integer result : generator) {
             if(result == 30) {

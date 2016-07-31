@@ -51,9 +51,17 @@ public class Tuple implements Persistable {
 	 * @param objects
 	 */
 	public Tuple(Object... objects) {
-		container = new Object[objects.length];
-		for(int i = 0;i < objects.length;i++) container[i] = objects[i];
-		this.hashcode = hashCode();
+		remake(objects);
+	}
+	
+	/**
+	 * Remakes the internals for this Tuple.
+	 * @param objects
+	 */
+	protected void remake(Object...objects) {
+	    container = new Object[objects.length];
+        for(int i = 0;i < objects.length;i++) container[i] = objects[i];
+        this.hashcode = hashCode();
 	}
 	
 	/**

@@ -47,6 +47,8 @@ public class NamedTuple extends Tuple {
     
     private static final String[] EMPTY_KEYS = {};
     
+    protected NamedTuple() {}
+    
     /**
      * Constructs and new {@code NamedTuple}
      * 
@@ -55,6 +57,27 @@ public class NamedTuple extends Tuple {
      */
     public NamedTuple(String[] keys, Object... objects) {
         super(interleave(keys, objects));
+        
+        if(keys.length != objects.length) {
+            throw new IllegalArgumentException("Keys and values must be same length.");
+        }
+        
+        this.keys = keys;
+        
+        entries = new Bucket[keys.length * 2];
+        for(int i = 0;i < entries.length;i++) {
+            entries[i] = new Bucket(i);
+        }
+        
+        for(int i = 0;i < keys.length;i++) {
+            addEntry(keys[i], objects[i]);
+        }
+        
+        this.thisHashcode = hashCode();
+    }
+    
+    protected void remake(String[] keys, Object... objects) {
+        super.remake(interleave(keys, objects));
         
         if(keys.length != objects.length) {
             throw new IllegalArgumentException("Keys and values must be same length.");
@@ -90,7 +113,7 @@ public class NamedTuple extends Tuple {
      */
     public Collection<Object> values() {
         List<Object> retVal = new ArrayList<>();
-        for(int i = 1;i < all().size();i+=2) {
+        for(int i = 1;container != null && i < all().size();i+=2) {
             retVal.add(all().get(i));
         }
         return retVal;
@@ -120,6 +143,8 @@ public class NamedTuple extends Tuple {
      * @return
      */
     public boolean hasKey(String key) {
+        if(entries == null) return false;
+        
         int hash = hashIndex(key);
         Entry e = entries[hash].find(key, hash);
         return e != null;
@@ -152,7 +177,7 @@ public class NamedTuple extends Tuple {
      * @param key       the unique String identifier
      * @param value     the Object corresponding to the specified key
      */
-    private void addEntry(String key, Object value) {
+    protected void addEntry(String key, Object value) {
         int hash = hashIndex(key);
         Entry e;
         if((e = entries[hash].find(key, hash)) != null && e.key.equals(key)) {
@@ -171,7 +196,7 @@ public class NamedTuple extends Tuple {
      * @param key   String to be hashed.
      * @return
      */
-    private int hashIndex(String key) {
+    protected int hashIndex(String key) {
         return Math.abs(key.hashCode()) % entries.length;
     }
     
@@ -209,7 +234,7 @@ public class NamedTuple extends Tuple {
     /**
      * Encapsulates the hashed key/value pair in a linked node.
      */
-    private final class Entry implements Persistable {
+    final class Entry implements Persistable {
         private static final long serialVersionUID = 1L;
         
         String key;
@@ -284,7 +309,7 @@ public class NamedTuple extends Tuple {
      * Rudimentary (light-weight) Linked List implementation for storing
      * hash {@link Entry} collisions.
      */
-    private final class Bucket implements Persistable {
+    final class Bucket implements Persistable {
         private static final long serialVersionUID = 1L;
         
         Entry last;
@@ -302,7 +327,7 @@ public class NamedTuple extends Tuple {
          * Adds the specified {@link Entry} to this Bucket.
          * @param e
          */
-        private void add(Entry e) {
+        void add(Entry e) {
             if(last == null) {
                 last = e;
             }else{
@@ -320,7 +345,7 @@ public class NamedTuple extends Tuple {
          * @param hash      the hash code.
          * @return
          */
-        private Entry find(String key, int hash) {
+        Entry find(String key, int hash) {
             if(last == null) return null;
             
             Entry found = last;

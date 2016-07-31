@@ -1,12 +1,19 @@
 package org.numenta.nupic.algorithms;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.monitor.ComputeDecorator;
+import org.numenta.nupic.util.AbstractGenerator;
+import org.numenta.nupic.util.Generator;
+import org.numenta.nupic.util.IntGenerator;
+import org.numenta.nupic.util.NamedTuple;
+import org.numenta.nupic.util.SegmentGenerator;
 import org.numenta.nupic.util.SparseObjectMatrix;
 
 public class TemporalMemory implements ComputeDecorator, Serializable {
@@ -56,6 +63,105 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         }
         //Only the TemporalMemory initializes cells so no need to test for redundancy
         c.setCells(cells);
+    }
+    
+    @SuppressWarnings("serial")
+    private Generator<NamedTuple> excitedColumnsGenerator(
+        List<Column> activeColumns, List<DistalDendrite> activeSegments, List<DistalDendrite> matchingSegments,
+            Connections connections) {
+        
+        return new AbstractGenerator<NamedTuple>() {
+            int activeColumnsProcessed = 0;
+            int activeSegmentsProcessed = 0;
+            int matchingSegmentsProcessed = 0;
+
+            int activeColumnsNum = activeColumns.size();
+            int activeSegmentsNum = activeSegments.size();
+            int matchingSegmentsNum = matchingSegments.size();
+            
+            boolean isActiveColumn;
+            
+            @Override
+            public void exec() {
+                while((activeColumnsProcessed < activeColumnsNum ||
+                      activeSegmentsProcessed < activeSegmentsNum ||
+                      matchingSegmentsProcessed < matchingSegmentsNum) && !haltRequested()) {
+                    
+                    int currentColumn = Integer.MAX_VALUE;
+                    if(activeSegmentsProcessed < activeSegmentsNum) {
+                        currentColumn = Math.min(
+                            currentColumn, 
+                            activeSegments.get(activeSegmentsProcessed).getPresynapticColumnIndex());
+                    }
+                    
+                    if(matchingSegmentsProcessed < matchingSegmentsNum) {
+                        currentColumn = Math.min(
+                            currentColumn,
+                            matchingSegments.get(matchingSegmentsProcessed).getPresynapticColumnIndex());
+                    }
+                    
+                    if(activeColumnsProcessed < activeColumnsNum &&
+                        activeColumns.get(activeColumnsProcessed).getIndex() <= currentColumn) {
+                        
+                        currentColumn = activeColumns.get(activeColumnsProcessed).getIndex();
+                        isActiveColumn = true;
+                        activeColumnsProcessed += 1;
+                    } else {
+                        isActiveColumn = false;
+                    }
+                    
+                    int activeSegmentsBegin = activeSegmentsProcessed;
+                    int activeSegmentsEnd = activeSegmentsProcessed;
+                    for(int i = activeSegmentsProcessed;i < activeSegmentsNum;i++) {
+                        if(activeSegments.get(i).getPresynapticColumnIndex() == currentColumn) {
+                            activeSegmentsProcessed += 1;
+                            activeSegmentsEnd += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    int matchingSegmentsBegin = matchingSegmentsProcessed;
+                    int matchingSegmentsEnd = matchingSegmentsProcessed;
+                    for(int i = matchingSegmentsProcessed;i < matchingSegmentsNum;i++) {
+                        if(matchingSegments.get(i).getPresynapticColumnIndex() == currentColumn) {
+                            matchingSegmentsProcessed += 1;
+                            matchingSegmentsEnd += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    Generator<Integer> asIndexGenerator = IntGenerator.of(activeSegmentsBegin, activeSegmentsEnd);
+                    Generator<Integer> msIndexGenerator = IntGenerator.of(matchingSegmentsBegin, matchingSegmentsEnd);
+                    yield(
+                        new NamedTuple(
+                            new String[] { 
+                                "column", 
+                                "isActiveColumn",
+                                "activeSegments", 
+                                "activeSegmentsCount", 
+                                "matchingSegments", 
+                                "matchingSegmentsCount" 
+                            },
+                            currentColumn, 
+                            isActiveColumn, 
+                            SegmentGenerator.of(activeSegments, asIndexGenerator), 
+                            activeSegmentsEnd - activeSegmentsBegin,
+                            SegmentGenerator.of(matchingSegments, msIndexGenerator),
+                            matchingSegmentsEnd - matchingSegmentsBegin
+                        )
+                    );
+                }
+            }
+
+            @Override
+            public boolean isConsumed() {
+                return activeColumnsProcessed >= activeColumnsNum &&
+                       activeSegmentsProcessed >= activeSegmentsNum &&
+                       matchingSegmentsProcessed >= matchingSegmentsNum;
+            }
+        };
     }
 
 	/////////////////////////// CORE FUNCTIONS /////////////////////////////

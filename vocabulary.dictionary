@@ -223,3 +223,5 @@ popout
 draggable
 exec
 terminable
+foreach
+remakes

@@ -9,39 +9,33 @@ public class MethodSignatureTest {
 
     @Test
     public void testSetParam() {
-        MethodSignature ms = new MethodSignature(2);
+        MethodSignature ms = new MethodSignature();
         
         int param1 = 5;
-        ms.setParam(param1, 0);
-        assertEquals(5, ms.get(0));
+        ms.addParam(param1, "five");
+        assertEquals(5, ms.get("five"));
         
         String test = "test";
-        ms.setParam(test, 1);
-        assertEquals("test", ms.get(1));
-        
-        try {
-            ms.setParam("fail", 2);
-            fail();
-        }catch(Exception e) {
-            assertEquals(e.getClass(), ArrayIndexOutOfBoundsException.class);
-        }
+        ms.addParam(test, "name");
+        assertEquals("test", ms.get("name"));
     }
     
     @Test
     public void testSetParams() {
-        MethodSignature ms = new MethodSignature(2);
+        MethodSignature ms = new MethodSignature();
         
-        int param1 = 5;
         String test = "test";
-        ms.setParams(param1, test);
-        assertEquals(5, ms.get(0));
-        assertEquals("test", ms.get(1));
+        ms.setParams(new String[] { "arg0", "arg1" }, test, "value1");
+        assertEquals(test, ms.values().iterator().next());
+        assertEquals("test", ms.get("arg0"));
+        assertEquals("value1", ms.get("arg1"));
         
         try {
-            ms.setParam("fail", 2);
+            ms.setParams(new String[] { "arg0", "arg1" }, test);
             fail();
         }catch(Exception e) {
-            assertEquals(e.getClass(), ArrayIndexOutOfBoundsException.class);
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertEquals("Keys and values must be same length.", e.getMessage());
         }
     }
 

@@ -21,7 +21,6 @@
  */
 package org.numenta.nupic.util;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -44,6 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  *         int i = 0;
  *         while(i < 50) {
  *             // Do some work then call yield
+ *             
  *             yield(new Integer(i++));  // Execution "pauses" here after yield() is executed...
  *             
  *             // Do some more work...   // Execution continues here after call to next()...
@@ -59,9 +59,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  * while(generator.hasNext()) {
  *     System.out.println(generator.next());
  * }
+ * 
+ * // Using foreach...
+ * MyGenerator generator2 = new MyGenerator();
+ * for(Integer result : generator2) {
+ *     System.out.println(result);
+ * }
  * </pre>
  * 
- * -----------------
+ * <hr><br>
  * 
  * <b>For infinite generator...</b>
  * <pre>
@@ -69,11 +75,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  *     public void exec() {
  *         int i = 0;
  *         while(true) {
- *             if(isHalted()) {
+ *             if(isHalted()) {          // Sane implementation must do this first...
                    break;
                }
                
  *             // Do some work then call yield
+ *             
  *             yield(new Integer(i++));  // Execution "pauses" here after yield() is executed...
  *             
  *             // Do some more work...   // Execution continues here after call to next()...
@@ -89,13 +96,19 @@ import java.util.concurrent.LinkedBlockingQueue;
  * while(generator.hasNext()) {
  *     System.out.println(generator.next());
  * }
+ * 
+ * // Using foreach...
+ * MyGenerator generator2 = new MyGenerator();
+ * for(Integer result : generator2) {
+ *     System.out.println(result);
+ * }
  * </pre>
  * 
  * @author cogmission
  *
  * @param <T> the return type of the generator
  */
-public abstract class AbstractGenerator<T> implements Iterable<T>, Iterator<T>, Serializable  {
+public abstract class AbstractGenerator<T> implements Generator<T>  {
     /** Default serial id*/
     protected static final long serialVersionUID = 1L;
 
@@ -144,23 +157,14 @@ public abstract class AbstractGenerator<T> implements Iterable<T>, Iterator<T>, 
     public abstract void exec();
     
     /**
-     * Overridden to identify when this generator has
-     * concluded its processing. For infinite generators
-     * simply return "false" here.
-     * 
-     * @return  a flag indicating whether the last iteration
-     *          was the last processing cycle.  
-     */
-    public abstract boolean isConsumed();
-    
-    /**
      * Called during the execution of the {@link #exec()}
      * method to signal the availability of the result from
      * one iteration of processing.
      *  
      * @param t     the object of type &lt;T&gt; to return
      */
-    protected void yield(T t) {
+    @Override
+    public void yield(T t) {
         returnVal = t;
         try {
             queue.offer(t);
@@ -171,11 +175,9 @@ public abstract class AbstractGenerator<T> implements Iterable<T>, Iterator<T>, 
     }
     
     /**
-     * Returns a flag indicating whether another iteration
-     * of processing may occur.
-     * 
-     * @return  true if so, false if not
+     * {@inheritDoc}
      */
+    @Override
     public boolean hasNext() {
         return !isConsumed();
     }
@@ -183,7 +185,8 @@ public abstract class AbstractGenerator<T> implements Iterable<T>, Iterator<T>, 
     /**
      * Halts the main thread
      */
-    protected void halt() {
+    @Override
+    public void halt() {
         running = false;
         mainThread.interrupt();
     }
@@ -193,16 +196,15 @@ public abstract class AbstractGenerator<T> implements Iterable<T>, Iterator<T>, 
      * the execution is to be stopped.
      * @return      true if halt requested, false if not
      */
-    protected boolean haltRequested() {
+    @Override
+    public boolean haltRequested() {
         return !running;
     }
     
     /**
-     * Returns the object of type &lt;T&gt; which is the
-     * result of one iteration of processing.
-     * 
-     * @return   the object of type &lt;T&gt; to return
+     * {@inheritDoc}
      */
+    @Override
     public T next() {
         if(!running) {
             running = true;
