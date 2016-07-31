@@ -34,7 +34,7 @@ import java.util.Set;
 
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -50,7 +50,7 @@ import org.numenta.nupic.util.SparseObjectMatrix;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and
- * {@link TemporalMemory} as well as the state of all support structures
+ * {@link OldTemporalMemory} as well as the state of all support structures
  * (i.e. Cells, Columns, Segments, Synapses etc.).
  *
  * In the separation of data from logic, this class represents the data/state.

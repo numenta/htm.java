@@ -33,7 +33,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -52,7 +52,7 @@ import rx.Subscriber;
  * It is comprised of {@link Region}s which are in turn comprised of {@link Layer}s;
  * each Layer directly containing one or more algorithm or computational components
  * such (i.e. {@link Sensor}, {@link MultiEncoder}, {@link SpatialPooler}, 
- * {@link TemporalMemory}, {@link CLAClassifier} etc.)
+ * {@link OldTemporalMemory}, {@link CLAClassifier} etc.)
  * </p>
  * <p>
  * Networks in HTM.java are extremely easy to compose. For instance, here is an example 
@@ -536,7 +536,7 @@ public class Network implements Persistable {
     }
     
     /**
-     * Finds any {@link Region} containing a {@link Layer} which contains a {@link TemporalMemory} 
+     * Finds any {@link Region} containing a {@link Layer} which contains a {@link OldTemporalMemory} 
      * and resets them.
      */
     public void reset() {

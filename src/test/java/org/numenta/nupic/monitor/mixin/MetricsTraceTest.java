@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 
 
@@ -20,7 +20,7 @@ public class MetricsTraceTest {
         Connections connections = new Connections();
         parameters.apply(connections);
         
-        TemporalMemory temporalMemory = new TemporalMemory();
+        OldTemporalMemory temporalMemory = new OldTemporalMemory();
         temporalMemory.init(connections);
         MonitoredTemporalMemory monitoredTM = new MonitoredTemporalMemory(temporalMemory, connections);
         

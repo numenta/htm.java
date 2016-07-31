@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.util.ArrayUtils;
@@ -23,7 +23,7 @@ public class ConnectionsTest {
 
     @Test
     public void testColumnForCell1D() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 2048 });
         cn.setCellsPerColumn(5);
@@ -37,7 +37,7 @@ public class ConnectionsTest {
     
     @Test
     public void testColumnForCell2D() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -51,7 +51,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellIndexes() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -71,7 +71,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsColumnIndexes() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -91,7 +91,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellObjects() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -108,7 +108,7 @@ public class ConnectionsTest {
 
     @Test
     public void testAsColumnObjects() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -137,7 +137,7 @@ public class ConnectionsTest {
         Parameters p = getParameters();
         Connections con = new Connections();
         p.apply(con);
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         tm.init(con);
         
         for(int x = 0;x < 602;x++) {

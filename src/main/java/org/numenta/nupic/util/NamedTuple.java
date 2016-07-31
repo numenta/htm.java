@@ -137,6 +137,15 @@ public class NamedTuple extends Tuple {
     }
     
     /**
+     * Altered from parent behavior to return the number of key/values.
+     * @return
+     */
+    @Override
+    public int size() {
+        return super.size() / 2;
+    }
+    
+    /**
      * Creates an {@link Entry} with the hashed key value, checking 
      * for duplicates (which aren't allowed during construction).
      * 

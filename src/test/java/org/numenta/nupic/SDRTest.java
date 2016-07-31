@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 
 
@@ -18,7 +18,7 @@ public class SDRTest {
 
     @Test
     public void testAsCellIndices() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -84,7 +84,7 @@ public class SDRTest {
     
     @Test
     public void testCellsAsColumnIndicesList() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -101,7 +101,7 @@ public class SDRTest {
     
     @Test
     public void testCellsAsColumnIndicesSet() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);

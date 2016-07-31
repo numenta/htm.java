@@ -221,3 +221,5 @@ savvy
 uninstall
 popout
 draggable
+exec
+terminable

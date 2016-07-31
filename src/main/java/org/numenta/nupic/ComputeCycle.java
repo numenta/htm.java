@@ -26,14 +26,14 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 
 /**
  * Contains a snapshot of the state attained during one computational
- * call to the {@link TemporalMemory}. The {@code TemporalMemory} uses
+ * call to the {@link OldTemporalMemory}. The {@code TemporalMemory} uses
  * data from previous compute cycles to derive new data for the current cycle
  * through a comparison between states of those different cycles, therefore
  * this state container is necessary.
@@ -62,7 +62,7 @@ public class ComputeCycle implements Persistable {
     /**
      * Constructs a new {@code ComputeCycle} initialized with
      * the connections relevant to the current calling {@link Thread} for
-     * the specified {@link TemporalMemory}
+     * the specified {@link OldTemporalMemory}
      * 
      * @param   c       the current connections state of the TemporalMemory
      */
@@ -136,7 +136,7 @@ public class ComputeCycle implements Persistable {
     
     /**
      * Returns the Set of matching {@link DistalDendrite}s from 
-     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
      * @return
      */
     public Set<DistalDendrite> matchingSegments() {
@@ -145,7 +145,7 @@ public class ComputeCycle implements Persistable {
     
     /**
      * Returns the Set of matching {@link Cell}s from
-     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
      * @return
      */
     public Set<Cell> matchingCells() {

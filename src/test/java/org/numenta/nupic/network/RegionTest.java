@@ -39,7 +39,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -106,7 +106,7 @@ public class RegionTest extends ObservableTestBase {
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters();
         Region r1 = Network.createRegion("r1");
-        r1.add(Network.createLayer("l1", p).add(new TemporalMemory()));
+        r1.add(Network.createLayer("l1", p).add(new OldTemporalMemory()));
         try {
             r1.reset();
             assertTrue(r1.lookup("l1").hasTemporalMemory());
@@ -128,7 +128,7 @@ public class RegionTest extends ObservableTestBase {
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters();
         Region r1 = Network.createRegion("r1");
-        r1.add(Network.createLayer("l1", p).add(new TemporalMemory()));
+        r1.add(Network.createLayer("l1", p).add(new OldTemporalMemory()));
         r1.observe().subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -213,7 +213,7 @@ public class RegionTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
@@ -298,7 +298,7 @@ public class RegionTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build())));
@@ -336,7 +336,7 @@ public class RegionTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build()))
@@ -408,7 +408,7 @@ public class RegionTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build()))
@@ -450,7 +450,7 @@ public class RegionTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2/3", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
@@ -531,7 +531,7 @@ public class RegionTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2/3", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
@@ -553,11 +553,11 @@ public class RegionTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2/3", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("days-of-week.csv"))))
-                    .add(new TemporalMemory())
+                    .add(new OldTemporalMemory())
                     .add(new SpatialPooler()))
             .connect("2/3", "4"));
         

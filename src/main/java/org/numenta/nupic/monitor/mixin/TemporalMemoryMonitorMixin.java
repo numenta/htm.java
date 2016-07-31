@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -51,7 +51,7 @@ import com.bethecoder.table.spec.AsciiTable;
  * and create {@link Metric}s from them for analysis and pretty-printing
  * 
  * This interface contains "defender" methods or Traits that are used to collect
- * result data for the {@link TemporalMemory}.
+ * result data for the {@link OldTemporalMemory}.
  * 
  * @author cogmission
  *
@@ -487,7 +487,7 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
     }
 
     /**
-     * Called to delegate a {@link TemporalMemory#reset(Connections)} call and
+     * Called to delegate a {@link OldTemporalMemory#reset(Connections)} call and
      * then set a flag locally which controls remaking of test {@link Trace}s.
      * 
      * @param c
@@ -500,7 +500,7 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
     
     /**
      * Returns a list of {@link Trace} objects containing data sets used
-     * to analyze the behavior and state of the {@link TemporalMemory} This
+     * to analyze the behavior and state of the {@link OldTemporalMemory} This
      * method is called from all of the "mmXXX" methods to make sure that
      * the data represents the most current execution cycle of the TM.
      * 
@@ -535,7 +535,7 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
     
     /**
      * Returns a list of {@link Metric} objects containing statistics used
-     * to analyze the behavior and state of the {@link TemporalMemory} This
+     * to analyze the behavior and state of the {@link OldTemporalMemory} This
      * method is called from all of the "mmXXX" methods to make sure that
      * the data represents the most current execution cycle of the TM.
      * 

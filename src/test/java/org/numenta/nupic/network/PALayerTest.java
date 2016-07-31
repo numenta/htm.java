@@ -45,7 +45,7 @@ import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.PASpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -115,7 +115,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new PALayer<Map<String, Object>>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<Map<String, Object>>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         // Test that we get the expected exception if there hasn't been any processing.
         try {
@@ -195,7 +195,7 @@ public class PALayerTest {
     @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        Layer<?> l = Network.createPALayer("l1", p).add(new TemporalMemory());
+        Layer<?> l = Network.createPALayer("l1", p).add(new OldTemporalMemory());
         try {
             l.reset();
             assertTrue(l.hasTemporalMemory());
@@ -216,7 +216,7 @@ public class PALayerTest {
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         @SuppressWarnings("unchecked")
-        Layer<int[]> l = (PALayer<int[]>)Network.createPALayer("l1", p).add(new TemporalMemory());
+        Layer<int[]> l = (PALayer<int[]>)Network.createPALayer("l1", p).add(new OldTemporalMemory());
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -796,7 +796,7 @@ public class PALayerTest {
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
 
 
-        Layer<int[]> l = new PALayer<>(p, null, null, new TemporalMemory(), null, null);
+        Layer<int[]> l = new PALayer<>(p, null, null, new OldTemporalMemory(), null, null);
 
         int timeUntilStable = 600;
 
@@ -848,7 +848,7 @@ public class PALayerTest {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), new TemporalMemory(), null, null);
+        Layer<int[]> l = new PALayer<>(p, null, new PASpatialPooler(), new OldTemporalMemory(), null, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -942,7 +942,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -980,7 +980,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
@@ -1025,7 +1025,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -1099,7 +1099,7 @@ public class PALayerTest {
         assertTrue(cellsPerColumn > 0);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final PALayer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final PALayer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
         l.setPADepolarize(0.0);
 
         l.subscribe(new Observer<Inference>() {
@@ -1165,7 +1165,7 @@ public class PALayerTest {
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         final List<int[]> emissions = new ArrayList<int[]>();
         Observable<Inference> o = l.observe();
@@ -1228,7 +1228,7 @@ public class PALayerTest {
         Layer<?> l = Network.createPALayer("TestLayer", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(anomalyComputer)
-            .add(new TemporalMemory())
+            .add(new OldTemporalMemory())
             .add(new PASpatialPooler())
             .add(Sensor.create(
                 FileSensor::create,
@@ -1244,7 +1244,7 @@ public class PALayerTest {
             public void onNext(Inference i) {
                 if(flowReceived) return; // No need to set this value multiple times
 
-                flowReceived = i.getClassifiers().size() == 4 &&
+                flowReceived = i.getClassifiers().size() == 2 &&
                     i.getClassifiers().get("timestamp") != null &&
                         i.getClassifiers().get("consumption") != null;
             }
