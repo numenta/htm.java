@@ -16,7 +16,7 @@ public interface IntGenerator {
      * @param upper     the upper bound <b><em>(exclusive)</em></b>
      * @return  an {@link AbstractGenerator} capable of returning a range of integers
      */
-    public static AbstractGenerator<Integer> of(int lower, int upper) {
+    public static Generator<Integer> of(int lower, int upper) {
         /**
          *  Inner implementation of an {@code AbstractGenerator} for {@code Integer}s 
          */
