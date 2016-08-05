@@ -449,9 +449,9 @@ public class NetworkTest extends ObservableTestBase {
             }
         });
         
-        network.restart();
-        
+        network.halt();
         try { network.lookup("r1").lookup("1").getLayerThread().join(3000); }catch(Exception e) { e.printStackTrace(); }
+        network.restart();
         
         Publisher newPub = network.getPublisher();
         
