@@ -225,3 +225,6 @@ exec
 terminable
 foreach
 remakes
+tm
+configs
+accessor

@@ -84,7 +84,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @param s     the Synapse to add
      */
     public void addReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this).add(s);
+        c.getReceptorSynapses(this, true).add(s);
     }
     
     /**
@@ -95,20 +95,35 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @param s     the Synapse to remove
      */
     public void removeReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this).remove(s);
-        c.decrementSynapses();
+        c.getReceptorSynapses(this, false).remove(s);
+        c.decrementDistalSynapses();
+    }
+    
+    /**
+     * Returns the Set of {@link Synapse}s which have this cell
+     * as their source cells.
+     *  
+     * @param   c               the connections state of the temporal memory
+     *                          return an orphaned empty set.
+     * @return  the Set of {@link Synapse}s which have this cell
+     *          as their source cells.
+     */
+    public Set<Synapse> getReceptorSynapses(Connections c) {
+        return getReceptorSynapses(c, false);
     }
 
     /**
      * Returns the Set of {@link Synapse}s which have this cell
      * as their source cells.
      *  
-     * @param   c       the connections state of the temporal memory
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
      * @return  the Set of {@link Synapse}s which have this cell
      *          as their source cells.
      */
-    public Set<Synapse> getReceptorSynapses(Connections c) {
-        return c.getReceptorSynapses(this);
+    public Set<Synapse> getReceptorSynapses(Connections c, boolean doLazyCreate) {
+        return c.getReceptorSynapses(this, doLazyCreate);
     }
 
     /**
@@ -119,19 +134,33 @@ public class Cell implements Comparable<Cell>, Serializable {
      */
     public DistalDendrite createSegment(Connections c) {
         DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
-        c.getSegments(this).add(dd);
+        c.getSegments(this, true).add(dd);
 
         return dd;
+    }
+    
+    /**
+     * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
+     * 
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return  a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
+     */
+    public List<DistalDendrite> getSegments(Connections c) {
+        return getSegments(c, false);
     }
 
     /**
      * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      * 
-     * @param   c   the connections state of the temporal memory
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
      * @return  a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      */
-    public List<DistalDendrite> getSegments(Connections c) {
-        return c.getSegments(this);
+    public List<DistalDendrite> getSegments(Connections c, boolean doLazyCreate) {
+        return c.getSegments(this, doLazyCreate);
     }
 
     /**

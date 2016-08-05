@@ -686,13 +686,15 @@ public class SpatialPooler implements Persistable {
         int[] columnCoords = c.getMemory().computeCoordinates(columnIndex);
         double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
         double[] ratios = ArrayUtils.divide(
-                colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
+            colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
         double[] inputCoords = ArrayUtils.multiply(
-                ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
+            ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
         inputCoords = ArrayUtils.d_add(inputCoords, 
-                ArrayUtils.multiply(ArrayUtils.divide(
-                        ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
-                        0.5));
+            ArrayUtils.multiply(ArrayUtils.divide(
+                ArrayUtils.toDoubleArray(
+                    c.getInputDimensions()), 
+                    ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
+                    0.5));
         int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
         return c.getInputMatrix().computeIndex(inputCoordInts);
     }
@@ -929,7 +931,11 @@ public class SpatialPooler implements Persistable {
      *              	The overlap score for a column is defined as the number
      *              	of synapses in a "connected state" (connected synapses)
      *              	that are connected to input bits which are turned on.
-     * @return
+     * @param density   The fraction of columns to survive inhibition. This
+     *                  value is only an intended target. Since the surviving
+     *                  columns are picked in a local fashion, the exact fraction
+     *                  of surviving columns is likely to vary.
+     * @return  indices of the winning columns
      */
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
         int numCols = c.getNumColumns();

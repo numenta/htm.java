@@ -56,7 +56,7 @@ public class IntGeneratorTest {
     public void testIntegerGenerator_SpecifyNext() {
         int i = 28;
         
-        AbstractGenerator<Integer> generator = IntGenerator.of(i, 31);
+        Generator<Integer> generator = IntGenerator.of(i, 31);
         
         assertFalse(generator.next() == 29);
         

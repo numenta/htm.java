@@ -320,7 +320,7 @@ public class OldTemporalMemoryTest {
         assertEquals(2, dd3.getAllSynapses(cn).size(), 0);// was 0
         
         //Check total synapse count
-        assertEquals(8, cn.getSynapseCount());
+        assertEquals(8, cn.getDistalSynapseCount());
         
     }
     
@@ -528,17 +528,17 @@ public class OldTemporalMemoryTest {
         assertTrue(cn.getSynapses(dd).contains(s0));
         s0.destroy(cn);
         assertFalse(cn.getSynapses(dd).contains(s0));
-        assertEquals(2, cn.getSynapseCount());
+        assertEquals(2, cn.getDistalSynapseCount());
         assertEquals(2, cn.getSynapses(dd).size());
         
         s1.destroy(cn);
         assertFalse(cn.getSynapses(dd).contains(s1));
-        assertEquals(1, cn.getSynapseCount());
+        assertEquals(1, cn.getDistalSynapseCount());
         assertEquals(1, cn.getSynapses(dd).size());
         
         s2.destroy(cn);
         assertFalse(cn.getSynapses(dd).contains(s2));
-        assertEquals(0, cn.getSynapseCount());
+        assertEquals(0, cn.getDistalSynapseCount());
         assertEquals(0, cn.getSynapses(dd).size());
     }
     

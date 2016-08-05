@@ -1507,7 +1507,7 @@ public class SpatialPoolerTest {
         objMatrix.set(2, new double[] { 0.51, 0.081, 0.025, 0.089, 0.31 });
         objMatrix.set(3, new double[] { 0.18, 0.0601, 0.11, 0.011, 0.03 });
         objMatrix.set(4, new double[] { 0.011, 0.011, 0.011, 0.011, 0.011 });
-        mem.setPermanences(objMatrix);
+        mem.setProximalPermanences(objMatrix);
 
         //    	mem.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
         //    	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();

@@ -25,16 +25,20 @@ package org.numenta.nupic;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -44,9 +48,10 @@ import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.FlatMatrix;
-import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.util.UniversalRandom;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and
@@ -197,189 +202,38 @@ public class Connections implements Persistable {
 
     ///////////////////////   Structural Elements /////////////////////////
     /** Reverse mapping from source cell to {@link Synapse} */
-    protected Map<Cell, LinkedHashSet<Synapse>> receptorSynapses;
+    public Map<Cell, LinkedHashSet<Synapse>> receptorSynapses;
 
     protected Map<Cell, List<DistalDendrite>> segments;
-    protected Map<Segment, List<Synapse>> synapses;
+    public Map<Segment, List<Synapse>> distalSynapses;
+    protected Map<Segment, List<Synapse>> proximalSynapses;
 
     /** Helps index each new Segment */
     protected int segmentCounter = -1;
-    /** Helps index each new Synapse */
-    protected int synapseCounter = -1;
+    /** Helps index each new proximal Synapse */
+    protected int proximalSynapseCounter = -1;
+    /** Helps index each new distal Synapse */
+    protected int distalSynapseCounter = -1;
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
-    protected Random random = new MersenneTwister(seed);
+    protected Random random = new UniversalRandom(seed);
 
-    ///////// paCLA extensions
-
-	  protected double[] paOverlaps;
+    
+    ////////////////////////////////////////
+    //       Connections Constructor      //
+    ////////////////////////////////////////
     /**
-     * Sets paOverlaps (predictive assist vector) for {@link PASpatialPooler}
-     *
-     * @param overlaps
-     */
-    public void setPAOverlaps(double[] overlaps) {
-        this.paOverlaps = overlaps;
-    }
-
-    /**
-     * Returns paOverlaps (predictive assist vector) for {@link PASpatialPooler}
-     *
-     * @return
-     */
-    public double[] getPAOverlaps() {
-        return this.paOverlaps;
-    }
-
-    /**
-     * Constructs a new {@code Connections} object. Use
-     *
+     * Constructs a new {@code Connections} object. This object
+     * is usually configured via the {@link Parameters#apply(Object)}
+     * method.
      */
     public Connections() {}
-
-    /**
-     * Returns the configured initial connected percent.
-     * @return
-     */
-    public double getInitConnectedPct() {
-        return this.initConnectedPct;
-    }
-
-    /**
-     * Clears all state.
-     */
-    public void clear() {
-        activeCells.clear();
-        winnerCells.clear();
-        predictiveCells.clear();
-        matchingCells.clear();
-        matchingSegments.clear();
-        successfullyPredictedColumns.clear();
-        activeSegments.clear();
-        learningSegments.clear();
-    }
-
-    /**
-     * Atomically returns the segment counter
-     * @return
-     */
-    public int getSegmentCount() {
-        return segmentCounter + 1;
-    }
-
-    /**
-     * Atomically increments and returns the incremented count.
-     * @return
-     */
-    public int incrementSegments() {
-        return ++segmentCounter;
-    }
-
-    /**
-     * Atomically decrements and returns the decremented count.
-     * @return
-     */
-    public int decrementSegments() {
-        return --segmentCounter;
-    }
-
-    /**
-     * Atomically sets the segment counter
-     * @param counter
-     */
-    public void setSegmentCount(int counter) {
-        segmentCounter = counter;
-    }
-
-    /**
-     * Returns the cycle count.
-     * @return
-     */
-    public int getIterationNum() {
-        return iterationNum;
-    }
-
-    /**
-     * Sets the iteration count.
-     * @param num
-     */
-    public void setIterationNum(int num) {
-        this.iterationNum = num;
-    }
-
-    /**
-     * Returns the period count which is the number of cycles
-     * between meta information updates.
-     * @return
-     */
-    public int getUpdatePeriod() {
-        return updatePeriod;
-    }
-
-    /**
-     * Sets the update period
-     * @param period
-     */
-    public void setUpdatePeriod(int period) {
-        this.updatePeriod = period;
-    }
-
-    /**
-     * Returns the {@link Cell} specified by the index passed in.
-     * @param index		of the specified cell to return.
-     * @return
-     */
-    public Cell getCell(int index) {
-        return cells[index];
-    }
-
-    /**
-     * Returns an array containing all of the {@link Cell}s.
-     * @return
-     */
-    public Cell[] getCells() {
-        return cells;
-    }
-
-    /**
-     * Sets the flat array of cells
-     * @param cells
-     */
-    public void setCells(Cell[] cells) {
-        this.cells = cells;
-    }
-
-    /**
-     * Returns an array containing the {@link Cell}s specified
-     * by the passed in indexes.
-     *
-     * @param cellIndexes	indexes of the Cells to return
-     * @return
-     */
-    public Cell[] getCells(int[] cellIndexes) {
-        Cell[] retVal = new Cell[cellIndexes.length];
-        for(int i = 0;i < cellIndexes.length;i++) {
-            retVal[i] = cells[cellIndexes[i]];
-        }
-        return retVal;
-    }
-
-    /**
-     * Returns a {@link LinkedHashSet} containing the {@link Cell}s specified
-     * by the passed in indexes.
-     *
-     * @param cellIndexes	indexes of the Cells to return
-     * @return
-     */
-    public LinkedHashSet<Cell> getCellSet(int[] cellIndexes) {
-        LinkedHashSet<Cell> retVal = new LinkedHashSet<Cell>(cellIndexes.length);
-        for(int i = 0;i < cellIndexes.length;i++) {
-            retVal.add(cells[cellIndexes[i]]);
-        }
-        return retVal;
-    }
-
+    
+    
+    /////////////////////////////////////////
+    //         General Methods             //
+    /////////////////////////////////////////
     /**
      * Sets the seed used for the internal random number generator.
      * If the generator has been instantiated, this method will initialize
@@ -414,6 +268,61 @@ public class Connections implements Persistable {
     public void setRandom(Random random){
         this.random = random;
     }
+    
+    /**
+     * Returns the {@link Cell} specified by the index passed in.
+     * @param index     of the specified cell to return.
+     * @return
+     */
+    public Cell getCell(int index) {
+        return cells[index];
+    }
+
+    /**
+     * Returns an array containing all of the {@link Cell}s.
+     * @return
+     */
+    public Cell[] getCells() {
+        return cells;
+    }
+
+    /**
+     * Sets the flat array of cells
+     * @param cells
+     */
+    public void setCells(Cell[] cells) {
+        this.cells = cells;
+    }
+
+    /**
+     * Returns an array containing the {@link Cell}s specified
+     * by the passed in indexes.
+     *
+     * @param cellIndexes   indexes of the Cells to return
+     * @return
+     */
+    public Cell[] getCells(int... cellIndexes) {
+        Cell[] retVal = new Cell[cellIndexes.length];
+        for(int i = 0;i < cellIndexes.length;i++) {
+            retVal[i] = cells[cellIndexes[i]];
+        }
+        return retVal;
+    }
+
+    /**
+     * Returns a {@link LinkedHashSet} containing the {@link Cell}s specified
+     * by the passed in indexes.
+     *
+     * @param cellIndexes   indexes of the Cells to return
+     * @return
+     */
+    public LinkedHashSet<Cell> getCellSet(int... cellIndexes) {
+        LinkedHashSet<Cell> retVal = new LinkedHashSet<Cell>(cellIndexes.length);
+        for(int i = 0;i < cellIndexes.length;i++) {
+            retVal.add(cells[cellIndexes[i]]);
+        }
+        return retVal;
+    }
 
     /**
      * Sets the matrix containing the {@link Column}s
@@ -444,6 +353,50 @@ public class Connections implements Persistable {
      */
     public void setInputMatrix(SparseMatrix<?> matrix) {
         this.inputMatrix = matrix;
+    }
+
+    ////////////////////////////////////////
+    //       SpatialPooler Methods        //
+    ////////////////////////////////////////
+    /**
+     * Returns the configured initial connected percent.
+     * @return
+     */
+    public double getInitConnectedPct() {
+        return this.initConnectedPct;
+    }
+
+    /**
+     * Returns the cycle count.
+     * @return
+     */
+    public int getIterationNum() {
+        return iterationNum;
+    }
+
+    /**
+     * Sets the iteration count.
+     * @param num
+     */
+    public void setIterationNum(int num) {
+        this.iterationNum = num;
+    }
+
+    /**
+     * Returns the period count which is the number of cycles
+     * between meta information updates.
+     * @return
+     */
+    public int getUpdatePeriod() {
+        return updatePeriod;
+    }
+
+    /**
+     * Sets the update period
+     * @param period
+     */
+    public void setUpdatePeriod(int period) {
+        this.updatePeriod = period;
     }
 
     /**
@@ -558,47 +511,49 @@ public class Connections implements Persistable {
      *
      * @param s the {@link SparseObjectMatrix}
      */
-    public void setPermanences(SparseObjectMatrix<double[]> s) {
+    public void setProximalPermanences(SparseObjectMatrix<double[]> s) {
         for(int idx : s.getSparseIndices()) {
             memory.getObject(idx).setProximalPermanences(this, s.getObject(idx));
         }
     }
 
     /**
-     * Atomically returns the count of {@link Synapse}s
+     * Returns the count of {@link Synapse}s on
+     * {@link ProximalDendrite}s
      * @return
      */
-    public int getSynapseCount() {
-        return synapseCounter + 1;
+    public int getProximalSynapseCount() {
+        return proximalSynapseCounter + 1;
     }
-
+    
     /**
-     * Atomically sets the count of {@link Synapse}s
+     * Sets the count of {@link Synapse}s on
+     * {@link ProximalDendrite}s
      * @param i
      */
-    public void setSynapseCount(int i) {
-        this.synapseCounter = i;
+    public void setProximalSynapseCount(int i) {
+        this.proximalSynapseCounter = i;
     }
-
+    
     /**
-     * Atomically increments and returns the incremented
-     * {@link Synapse} count.
+     * Increments and returns the incremented
+     * proximal {@link Synapse} count.
      *
      * @return
      */
-    public int incrementSynapses() {
-        return ++synapseCounter;
+    public int incrementProximalSynapses() {
+        return ++proximalSynapseCounter;
     }
 
     /**
-     * Atomically decrements and returns the decremented
-     * {link Synapse} count
+     * Decrements and returns the decremented
+     * proximal {link Synapse} count
      * @return
      */
-    public int decrementSynapses() {
-        return --synapseCounter;
+    public int decrementProximalSynapses() {
+        return --proximalSynapseCounter;
     }
-
+    
     /**
      * Returns the indexed count of connected synapses per column.
      * @return
@@ -1102,44 +1057,175 @@ public class Connections implements Persistable {
         this.boostFactors = boostFactors;
     }
 
+    
+    ////////////////////////////////////////
+    //       TemporalMemory Methods       //
+    ////////////////////////////////////////
+    
     /**
-     * High verbose output useful for debugging
+     * Returns a {@link Tuple} containing the active and matching segments given
+     * a set of active cells.
+     * 
+     * @param activeInput                       currently active cells
+     * @param activePermanenceThreshold         permanence threshold for a synapse 
+     *                                          to be considered active
+     * @param activeSynapseThreshold            number of synapses needed for a
+     *                                          segment to be considered active
+     * @param matchingPermananceThreshold       permanence threshold for a
+     *                                          synapse to be considered matching
+     * @param matchingSynapseThreshold          number of synapses needed for a
+     *                                          segment to be considered matching
+     *                                          
+     * <p>
+     * Notes: activeSegments and matchingSegments are sorted by the cell they are on.
+     * 
+     * @return  Tuple containing: activeSegments, matchingSegments
      */
-    public void printParameters() {
-        System.out.println("------------ SpatialPooler Parameters ------------------");
-        System.out.println("numInputs                  = " + getNumInputs());
-        System.out.println("numColumns                 = " + getNumColumns());
-        System.out.println("cellsPerColumn             = " + getCellsPerColumn());
-        System.out.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
-        System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
-        System.out.println("potentialPct               = " + getPotentialPct());
-        System.out.println("potentialRadius            = " + getPotentialRadius());
-        System.out.println("globalInhibition           = " + getGlobalInhibition());
-        System.out.println("localAreaDensity           = " + getLocalAreaDensity());
-        System.out.println("inhibitionRadius           = " + getInhibitionRadius());
-        System.out.println("stimulusThreshold          = " + getStimulusThreshold());
-        System.out.println("synPermActiveInc           = " + getSynPermActiveInc());
-        System.out.println("synPermInactiveDec         = " + getSynPermInactiveDec());
-        System.out.println("synPermConnected           = " + getSynPermConnected());
-        System.out.println("minPctOverlapDutyCycle     = " + getMinPctOverlapDutyCycles());
-        System.out.println("minPctActiveDutyCycle      = " + getMinPctActiveDutyCycles());
-        System.out.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
-        System.out.println("maxBoost                   = " + getMaxBoost());
-        System.out.println("spVerbosity                = " + getSpVerbosity());
-        System.out.println("version                    = " + getVersion());
-
-        System.out.println("\n------------ TemporalMemory Parameters ------------------");
-        System.out.println("activationThreshold        = " + getActivationThreshold());
-        System.out.println("learningRadius             = " + getLearningRadius());
-        System.out.println("minThreshold               = " + getMinThreshold());
-        System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
-        System.out.println("initialPermanence          = " + getInitialPermanence());
-        System.out.println("connectedPermanence        = " + getConnectedPermanence());
-        System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
-        System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
+    public Tuple computeActivity(Set<Cell> activeInput, double activePermanenceThreshold,
+        int activeSynapseThreshold, double matchingPermananceThreshold, int matchingSynapseThreshold) {
+        
+        int nextSegmentIdx = getSegmentCount();
+        
+        // Object[][] = segments and their counts (i.e. { {segment, count}, {segment, count} } )
+        Object[][] numActiveSynapsesForSegment = new Object[nextSegmentIdx][2];
+        Arrays.stream(numActiveSynapsesForSegment).forEach(arr -> arr[1] = 0);
+        Object[][] numMatchingSynapsesForSegment = new Object[nextSegmentIdx][2];
+        Arrays.stream(numMatchingSynapsesForSegment).forEach(arr -> arr[1] = 0);
+        
+        for(Cell cell : activeInput) {
+            for(Synapse synapse : cell.getReceptorSynapses(this)) {
+                Segment segment = synapse.getSegment();
+                double permanence = synapse.getPermanence();
+                if(permanence >= matchingPermananceThreshold) {
+                    numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
+                    numMatchingSynapsesForSegment[segment.getIndex()][1] = 
+                        ((int)numMatchingSynapsesForSegment[segment.getIndex()][1]) + 1;
+                    
+                    if(permanence >= activePermanenceThreshold) {
+                        numActiveSynapsesForSegment[segment.getIndex()][0] = segment;
+                        numActiveSynapsesForSegment[segment.getIndex()][1] = 
+                            ((int)numActiveSynapsesForSegment[segment.getIndex()][1]) + 1;
+                    }
+                }
+            }
+        }
+        
+        List<DistalDendrite> activeSegments = new ArrayList<>();
+        List<DistalDendrite> matchingSegments = new ArrayList<>();
+        for(int i = 0;i < nextSegmentIdx;i++) {
+            if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
+                activeSegments.add((DistalDendrite)numActiveSynapsesForSegment[i][0]);
+            }
+        }
+        
+        for(int i = 0;i < nextSegmentIdx;i++) {
+            if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
+                matchingSegments.add((DistalDendrite)numMatchingSynapsesForSegment[i][0]);
+            }
+        }
+        
+        return new Tuple(
+            activeSegments.stream()
+                .sorted()
+                .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)),
+            matchingSegments.stream()
+                .sorted()
+                .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)));
+    }
+    
+    /**
+     * Returns the index of the {@link Column} owning the cell which owns 
+     * the specified segment.
+     * @param segment   the {@link DistalDendrite} of the cell whose column index is desired.
+     * @return  the owning column's index
+     */
+    public int columnIndexForSegment(DistalDendrite segment) {
+        return segment.getParentCell().getIndex() / cellsPerColumn;
+    }
+    
+    /**
+     * Returns the count of {@link Synapse}s on
+     * {@link DistalDendrite}s
+     * @return
+     */
+    public int getDistalSynapseCount() {
+        return distalSynapseCounter + 1;
     }
 
-    /////////////////////////////// Temporal Memory //////////////////////////////
+    /**
+     * Sets the count of {@link Synapse}s on
+     * {@link DistalDendrites}
+     * 
+     * @param i
+     */
+    public void setDistalSynapseCount(int i) {
+        this.distalSynapseCounter = i;
+    }
+
+    /**
+     * Increments and returns the incremented
+     * distal {@link Synapse} count.
+     *
+     * @return
+     */
+    public int incrementDistalSynapses() {
+        return ++distalSynapseCounter;
+    }
+
+    /**
+     * Decrements and returns the decremented
+     * distal {link Synapse} count
+     * @return
+     */
+    public int decrementDistalSynapses() {
+        return --distalSynapseCounter;
+    }
+
+    /**
+     * Clears all {@link TemporalMemory} state.
+     */
+    public void clear() {
+        activeCells.clear();
+        winnerCells.clear();
+        predictiveCells.clear();
+        matchingCells.clear();
+        matchingSegments.clear();
+        successfullyPredictedColumns.clear();
+        activeSegments.clear();
+        learningSegments.clear();
+    }
+
+    /**
+     * Atomically returns the segment counter
+     * @return
+     */
+    public int getSegmentCount() {
+        return segmentCounter + 1;
+    }
+
+    /**
+     * Atomically increments and returns the incremented count.
+     * @return
+     */
+    public int incrementSegments() {
+        return ++segmentCounter;
+    }
+
+    /**
+     * Atomically decrements and returns the decremented count.
+     * @return
+     */
+    public int decrementSegments() {
+        return --segmentCounter;
+    }
+
+    /**
+     * Atomically sets the segment counter
+     * @param counter
+     */
+    public void setSegmentCount(int counter) {
+        segmentCounter = counter;
+    }
 
     /**
      * Returns the current {@link Set} of active {@link Cell}s
@@ -1271,7 +1357,7 @@ public class Connections implements Persistable {
     public void setMatchingSegments(Set<DistalDendrite> segments) {
         this.matchingSegments = segments;
     }
-
+    
     /**
      * Returns the mapping of {@link Cell}s to their reverse mapped
      * {@link Synapse}s.
@@ -1281,6 +1367,20 @@ public class Connections implements Persistable {
      *                  {@link Synapse}s.
      */
     public Set<Synapse> getReceptorSynapses(Cell cell) {
+        return getReceptorSynapses(cell, false);
+    }
+
+    /**
+     * Returns the mapping of {@link Cell}s to their reverse mapped
+     * {@link Synapse}s.
+     *
+     * @param cell              the {@link Cell} used as a key.
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return          the mapping of {@link Cell}s to their reverse mapped
+     *                  {@link Synapse}s.
+     */
+    public Set<Synapse> getReceptorSynapses(Cell cell, boolean doLazyCreate) {
         if(cell == null) {
             throw new IllegalArgumentException("Cell was null");
         }
@@ -1291,12 +1391,21 @@ public class Connections implements Persistable {
 
         LinkedHashSet<Synapse> retVal = null;
         if((retVal = receptorSynapses.get(cell)) == null) {
+            if(!doLazyCreate) return Collections.emptySet();
             receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
         }
 
         return retVal;
     }
-
+    
+    /**
+     * <b>FOR TEST USE ONLY<b>
+     * @return
+     */
+    public Map<Cell, HashSet<Synapse>> getReceptorSynapseMapping() {
+        return new LinkedHashMap<>(receptorSynapses);
+    }
+    
     /**
      * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
      *
@@ -1304,6 +1413,18 @@ public class Connections implements Persistable {
      * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
      */
     public List<DistalDendrite> getSegments(Cell cell) {
+        return getSegments(cell, false);
+    }
+
+    /**
+     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     *
+     * @param cell              the {@link Cell} used as a key.
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     */
+    public List<DistalDendrite> getSegments(Cell cell, boolean doLazyCreate) {
         if(cell == null) {
             throw new IllegalArgumentException("Cell was null");
         }
@@ -1314,10 +1435,19 @@ public class Connections implements Persistable {
 
         List<DistalDendrite> retVal = null;
         if((retVal = segments.get(cell)) == null) {
+            if(!doLazyCreate) return Collections.emptyList();
             segments.put(cell, retVal = new ArrayList<DistalDendrite>());
         }
 
         return retVal;
+    }
+    
+    /**
+     * <b>FOR TEST USE ONLY</b>
+     * @return
+     */
+    public Map<Cell, List<DistalDendrite>> getSegmentMapping() {
+        return new LinkedHashMap<>(segments);
     }
 
     /**
@@ -1331,13 +1461,13 @@ public class Connections implements Persistable {
             throw new IllegalArgumentException("Segment was null");
         }
 
-        if(synapses == null) {
-            synapses = new LinkedHashMap<Segment, List<Synapse>>();
+        if(distalSynapses == null) {
+            distalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
         }
 
         List<Synapse> retVal = null;
-        if((retVal = synapses.get(segment)) == null) {
-            synapses.put(segment, retVal = new ArrayList<Synapse>());
+        if((retVal = distalSynapses.get(segment)) == null) {
+            distalSynapses.put(segment, retVal = new ArrayList<Synapse>());
         }
 
         return retVal;
@@ -1354,13 +1484,13 @@ public class Connections implements Persistable {
             throw new IllegalArgumentException("Segment was null");
         }
 
-        if(synapses == null) {
-            synapses = new LinkedHashMap<Segment, List<Synapse>>();
+        if(proximalSynapses == null) {
+            proximalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
         }
 
         List<Synapse> retVal = null;
-        if((retVal = synapses.get(segment)) == null) {
-            synapses.put(segment, retVal = new ArrayList<Synapse>());
+        if((retVal = proximalSynapses.get(segment)) == null) {
+            proximalSynapses.put(segment, retVal = new ArrayList<Synapse>());
         }
 
         return retVal;
@@ -1687,9 +1817,69 @@ public class Connections implements Persistable {
         }
         return retVal;
     }
+    
+    
+    ///////////////////////////////////////////////////
+    //    Experimental Prediction Assisted Configs   //
+    ///////////////////////////////////////////////////
+    protected double[] paOverlaps;
+    /**
+     * Sets paOverlaps (predictive assist vector) for {@link PASpatialPooler}
+     *
+     * @param overlaps
+     */
+    public void setPAOverlaps(double[] overlaps) {
+        this.paOverlaps = overlaps;
+    }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
+    /**
+     * Returns paOverlaps (predictive assist vector) for {@link PASpatialPooler}
+     *
+     * @return
+     */
+    public double[] getPAOverlaps() {
+        return this.paOverlaps;
+    }
+
+    /**
+     * High verbose output useful for debugging
+     */
+    public void printParameters() {
+        System.out.println("------------ SpatialPooler Parameters ------------------");
+        System.out.println("numInputs                  = " + getNumInputs());
+        System.out.println("numColumns                 = " + getNumColumns());
+        System.out.println("cellsPerColumn             = " + getCellsPerColumn());
+        System.out.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
+        System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
+        System.out.println("potentialPct               = " + getPotentialPct());
+        System.out.println("potentialRadius            = " + getPotentialRadius());
+        System.out.println("globalInhibition           = " + getGlobalInhibition());
+        System.out.println("localAreaDensity           = " + getLocalAreaDensity());
+        System.out.println("inhibitionRadius           = " + getInhibitionRadius());
+        System.out.println("stimulusThreshold          = " + getStimulusThreshold());
+        System.out.println("synPermActiveInc           = " + getSynPermActiveInc());
+        System.out.println("synPermInactiveDec         = " + getSynPermInactiveDec());
+        System.out.println("synPermConnected           = " + getSynPermConnected());
+        System.out.println("minPctOverlapDutyCycle     = " + getMinPctOverlapDutyCycles());
+        System.out.println("minPctActiveDutyCycle      = " + getMinPctActiveDutyCycles());
+        System.out.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
+        System.out.println("maxBoost                   = " + getMaxBoost());
+        System.out.println("spVerbosity                = " + getSpVerbosity());
+        System.out.println("version                    = " + getVersion());
+
+        System.out.println("\n------------ TemporalMemory Parameters ------------------");
+        System.out.println("activationThreshold        = " + getActivationThreshold());
+        System.out.println("learningRadius             = " + getLearningRadius());
+        System.out.println("minThreshold               = " + getMinThreshold());
+        System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        System.out.println("initialPermanence          = " + getInitialPermanence());
+        System.out.println("connectedPermanence        = " + getConnectedPermanence());
+        System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
+        System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -1775,8 +1965,10 @@ public class Connections implements Persistable {
         result = prime * result + (int)(temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(synPermTrimThreshold);
         result = prime * result + (int)(temp ^ (temp >>> 32));
-        result = prime * result + synapseCounter;
-        result = prime * result + ((synapses == null) ? 0 : synapses.hashCode());
+        result = prime * result + proximalSynapseCounter;
+        result = prime * result + distalSynapseCounter;
+        result = prime * result + ((proximalSynapses == null) ? 0 : proximalSynapses.hashCode());
+        result = prime * result + ((distalSynapses == null) ? 0 : distalSynapses.hashCode());
         result = prime * result + Arrays.hashCode(tieBreaker);
         result = prime * result + updatePeriod;
         temp = Double.doubleToLongBits(version);
@@ -1785,8 +1977,8 @@ public class Connections implements Persistable {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(Object obj) {
@@ -1952,12 +2144,19 @@ public class Connections implements Persistable {
             return false;
         if(Double.doubleToLongBits(synPermTrimThreshold) != Double.doubleToLongBits(other.synPermTrimThreshold))
             return false;
-        if(synapseCounter != other.synapseCounter)
+        if(proximalSynapseCounter != other.proximalSynapseCounter)
             return false;
-        if(synapses == null) {
-            if(other.synapses != null)
+        if(distalSynapseCounter != other.distalSynapseCounter)
+            return false;
+        if(proximalSynapses == null) {
+            if(other.proximalSynapses != null)
                 return false;
-        } else if(!synapses.equals(other.synapses))
+        } else if(!proximalSynapses.equals(other.proximalSynapses))
+            return false;
+        if(distalSynapses == null) {
+            if(other.distalSynapses != null)
+                return false;
+        } else if(!distalSynapses.equals(other.distalSynapses))
             return false;
         if(!Arrays.equals(tieBreaker, other.tieBreaker))
             return false;

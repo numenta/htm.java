@@ -481,6 +481,9 @@ public class Parameters implements Persistable {
         Set<KEY> presentKeys = paramMap.keySet();
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
+                if(key == KEY.RANDOM) {
+                    ((Random)getParameterByKey(key)).setSeed(Long.valueOf(((int)getParameterByKey(KEY.SEED))));
+                }
                 beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
             }
         }

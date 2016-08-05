@@ -45,7 +45,7 @@ import org.numenta.nupic.Persistable;
  * @see DistalDendrite
  * @see Connections
  */
-public class Synapse implements Persistable {
+public class Synapse implements Persistable, Comparable<Synapse> {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -53,6 +53,7 @@ public class Synapse implements Persistable {
     private Segment segment;
     private Pool pool;
     private int synapseIndex;
+    private Integer boxedIndex;
     private int inputIndex;
     private double permanence;
 
@@ -78,6 +79,7 @@ public class Synapse implements Persistable {
         this.segment = segment;
         this.pool = pool;
         this.synapseIndex = index;
+        this.boxedIndex = new Integer(index);
         this.inputIndex = inputIndex;
         
         // If this isn't a synapse on a proximal dendrite
@@ -165,6 +167,16 @@ public class Synapse implements Persistable {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * 
+     * <em> Note: All comparisons use the segment's index only </em>
+     */
+    @Override
+    public int compareTo(Synapse arg0) {
+        return boxedIndex.compareTo(arg0.boxedIndex);
     }
 
     /* (non-Javadoc)

@@ -48,7 +48,6 @@ public class DistalDendrite extends Segment implements Persistable {
     private static final double EPSILON = 0.0000001;
     
     private Cell cell;
-    private Cell presynapticCell;
     
     /**
      * Constructs a new {@code Segment} object with the specified owner
@@ -74,24 +73,6 @@ public class DistalDendrite extends Segment implements Persistable {
     }
     
     /**
-     * Returns the source {@link Cell} which activates {@link Synapse}s
-     * on this {@code DistalDendrite}
-     * @return  the presynapticCell
-     */
-    public Cell getPresynapticCell() {
-        return presynapticCell;
-    }
-    
-    /**
-     * Returns the index of the column containing this {@link DistalDendrite}'s
-     * presynaptic {@link Cell}
-     * @return      the index of the presynaptic cell's column
-     */
-    public int getPresynapticColumnIndex() {
-        return presynapticCell.getColumn().getIndex();
-    }
-
-    /**
      * Creates and returns a newly created {@link Synapse} with the specified
      * source cell, permanence, and index.
      * 
@@ -103,9 +84,8 @@ public class DistalDendrite extends Segment implements Persistable {
      * @return
      */
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
-        this.presynapticCell = sourceCell;
         Pool pool = new Pool(1);
-        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementSynapses(), sourceCell.getIndex());
+        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementDistalSynapses(), sourceCell.getIndex());
         pool.setPermanence(c, s, permanence);
         return s;
     }
@@ -151,6 +131,7 @@ public class DistalDendrite extends Segment implements Persistable {
      * @param permanenceIncrement       the increment by which permanences are increased.
      * @param permanenceDecrement       the increment by which permanences are decreased.
      */
+    @Deprecated
     public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
         List<Synapse> synapsesToDestroy = null;
         
@@ -164,6 +145,46 @@ public class DistalDendrite extends Segment implements Persistable {
 
             permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
 
+            if(Math.abs(permanence) < EPSILON) {
+                if(synapsesToDestroy == null) {
+                    synapsesToDestroy = new ArrayList<>();
+                }
+                synapsesToDestroy.add(synapse);
+            }else{
+                synapse.setPermanence(c, permanence);
+            }
+        }
+        
+        if(synapsesToDestroy != null) {
+            for(Synapse s : synapsesToDestroy) {
+                s.destroy(c);
+            }
+        }
+    }
+    
+    /**
+     * Updates synapses on segment.
+     * Strengthens active synapses; weakens inactive synapses.
+     * 
+     * @param c                         Connections instance for the tm
+     * @param prevActiveCells           Active cells in `t-1`
+     * @param permanenceIncrement       Amount to increment active synapses
+     * @param permanenceDecrement       Amount to decrement inactive synapses
+     */
+    public void adaptSegment(Set<Cell> prevActiveCells, Connections c, double permanenceIncrement, double permanenceDecrement) {
+        List<Synapse> synapsesToDestroy = null;
+        
+        for(Synapse synapse : c.getSynapses(this)) {
+            double permanence = synapse.getPermanence();
+            if(prevActiveCells.contains(synapse.getPresynapticCell())) {
+                permanence += permanenceIncrement;
+            } else {
+                permanence -= permanenceDecrement;
+            }
+            
+            // Keep permanence within min/max bounds
+            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
+            
             if(Math.abs(permanence) < EPSILON) {
                 if(synapsesToDestroy == null) {
                     synapsesToDestroy = new ArrayList<>();

@@ -475,7 +475,7 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
         ((IndicesTrace)getTraceMap().get("activeColumns")).items.add(
             Arrays.stream(activeColumns).boxed().collect(Collectors.toCollection(LinkedHashSet::new)));
         ((CountsTrace)getTraceMap().get("numSegments")).items.add(cnx.getSegmentCount());
-        ((CountsTrace)getTraceMap().get("numSynapses")).items.add(cnx.getSynapseCount());
+        ((CountsTrace)getTraceMap().get("numSynapses")).items.add(cnx.getDistalSynapseCount());
         ((StringsTrace)getTraceMap().get("sequenceLabels")).items.add(sequenceLabel);
         ((BoolsTrace)getTraceMap().get("resets")).items.add(resetActive());
         

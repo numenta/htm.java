@@ -40,13 +40,15 @@ import org.numenta.nupic.model.DistalDendrite;
  * 
  * @author David Ray
  */
-public class ComputeCycle implements Persistable {
+public class ComputeCycle2 implements Persistable {
     private static final long serialVersionUID = 1L;
     
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
     
-    public Set<Cell> predictiveCells = new LinkedHashSet<>();
+    /** Force access through accessor because this list is created lazily */
+    private Set<Cell> predictiveCells = new LinkedHashSet<>();
+    
     public Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
     public Set<Cell> matchingCells = new LinkedHashSet<>();
     public Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
@@ -58,7 +60,7 @@ public class ComputeCycle implements Persistable {
     /**
      * Constructs a new {@code ComputeCycle}
      */
-    public ComputeCycle() {}
+    public ComputeCycle2() {}
     
     /**
      * Constructs a new {@code ComputeCycle} initialized with
@@ -67,7 +69,7 @@ public class ComputeCycle implements Persistable {
      * 
      * @param   c       the current connections state of the TemporalMemory
      */
-    public ComputeCycle(Connections c) {
+    public ComputeCycle2(Connections c) {
         this.activeCells = new LinkedHashSet<>(c.getActiveCells());
         this.winnerCells = new LinkedHashSet<>(c.getWinnerCells());
         this.predictiveCells = new LinkedHashSet<>(c.getPredictiveCells());
@@ -99,6 +101,11 @@ public class ComputeCycle implements Persistable {
      * @return
      */
     public Set<Cell> predictiveCells() {
+        if(predictiveCells.isEmpty()) {
+            for(DistalDendrite activeSegment : activeSegments) {
+                predictiveCells.add(activeSegment.getParentCell());
+            }
+        }
         return predictiveCells;
     }
     
@@ -137,7 +144,7 @@ public class ComputeCycle implements Persistable {
     
     /**
      * Returns the Set of matching {@link DistalDendrite}s from 
-     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle2, Map)}
      * @return
      */
     public Set<DistalDendrite> matchingSegments() {
@@ -146,7 +153,7 @@ public class ComputeCycle implements Persistable {
     
     /**
      * Returns the Set of matching {@link Cell}s from
-     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
+     * {@link OldTemporalMemory#computePredictiveCells(Connections, ComputeCycle2, Map)}
      * @return
      */
     public Set<Cell> matchingCells() {
@@ -183,7 +190,7 @@ public class ComputeCycle implements Persistable {
             return false;
         if(getClass() != obj.getClass())
             return false;
-        ComputeCycle other = (ComputeCycle)obj;
+        ComputeCycle2 other = (ComputeCycle2)obj;
         if(activeCells == null) {
             if(other.activeCells != null)
                 return false;
