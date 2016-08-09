@@ -313,8 +313,6 @@ public class SpatialPooler implements Persistable {
         for (int i=0;i<overlapArray.length;i++) {
             if (overlaps[i] > 0)
                 overlapArray[i] = 1;
-            else
-                overlapArray[i] = 0;
         }
         
         if(activeColumns.length > 0) {
