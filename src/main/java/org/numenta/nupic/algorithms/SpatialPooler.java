@@ -309,7 +309,14 @@ public class SpatialPooler implements Persistable {
     public void updateDutyCycles(Connections c, int[] overlaps, int[] activeColumns) {
         double[] overlapArray = new double[c.getNumColumns()];
         double[] activeArray = new double[c.getNumColumns()];
-        ArrayUtils.greaterThanXThanSetToY(overlaps, 0, 1);
+        
+        for (int i=0;i<overlapArray.length;i++) {
+            if (overlaps[i] > 0)
+                overlapArray[i] = 1;
+            else
+                overlapArray[i] = 0;
+        }
+        
         if(activeColumns.length > 0) {
             ArrayUtils.setIndexesTo(activeArray, activeColumns, 1);
         }
