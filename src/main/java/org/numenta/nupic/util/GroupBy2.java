@@ -23,6 +23,7 @@ package org.numenta.nupic.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -155,6 +156,11 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         nextList = new Optional[numEntries];
         Arrays.fill(nextList, NONE);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator<Tuple> iterator() { return this; }
     
     /**
      * Returns a flag indicating that at least one {@link Generator} has

@@ -83,20 +83,21 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         Set<Cell> prevActiveCells = conn.getActiveCells();
         Set<Cell> prevWinnerCells = conn.getWinnerCells();
         
-        Arrays.sort(activeColumnIndices);
         List<Column> activeColumns = Arrays.stream(activeColumnIndices)
+            .sorted()
             .mapToObj(i -> conn.getColumn(i))
             .collect(Collectors.toList());
         
         Function<Column, Column> identity = Function.identity();
         Function<DistalDendrite, Column> segToCol = segment -> segment.getParentCell().getColumn(); 
         
-        for(Object o : GroupBy2.of(
+        GroupBy2<Column> grouper = GroupBy2.<Column>of(
             new Pair(activeColumns, identity),
             new Pair(new ArrayList(conn.getActiveSegments()), segToCol),
-            new Pair(new ArrayList(conn.getMatchingSegments()), segToCol))) {
-            
-            ColumnData columnData = new ColumnData((Tuple)o);
+            new Pair(new ArrayList(conn.getMatchingSegments()), segToCol));
+        
+        for(Tuple t : grouper) {
+            ColumnData columnData = new ColumnData(t);
             System.out.println("Column: " + columnData.column());
             System.out.println("activeColumns: " + columnData.activeColumns());
             System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
