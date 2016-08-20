@@ -1179,7 +1179,7 @@ public class Layer<T> implements Persistable {
      * @return the binary vector representing the current prediction.
      */
     public Set<Cell> getPreviousPredictiveCells() {
-        return previousPredictiveCells;
+        return currentInference.getPreviousPredictiveCells();//previousPredictiveCells;
     }
 
     /**
@@ -1190,7 +1190,7 @@ public class Layer<T> implements Persistable {
      * @return the array of active column indexes
      */
     public int[] getFeedForwardActiveColumns() {
-        return feedForwardActiveColumns;
+        return currentInference.getFeedForwardActiveColumns();//feedForwardActiveColumns;
     }
 
     /**
@@ -1200,7 +1200,7 @@ public class Layer<T> implements Persistable {
      * @return
      */
     public Set<Cell> getActiveCells() {
-        return activeCells;
+        return currentInference.getActiveCells();
     }
 
     /**
@@ -1968,7 +1968,7 @@ public class Layer<T> implements Persistable {
         previousPredictiveCells = predictiveCells;
         
         // Store the predictive columns
-        mi.predictiveCells(predictiveCells = cc.predictiveCells);
+        mi.predictiveCells(predictiveCells = cc.predictiveCells());
         // Store activeCells
         mi.activeCells(activeCells = cc.activeCells());
         // Store the Compute Cycle

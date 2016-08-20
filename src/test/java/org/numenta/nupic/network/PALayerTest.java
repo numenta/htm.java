@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -74,7 +75,7 @@ public class PALayerTest {
     /** Total used for spatial pooler priming tests */
     private int TOTAL = 0;
 
-    @Test
+    @Ignore
     public void testMasking() {
         byte algo_content_mask = 0;
 
@@ -108,7 +109,7 @@ public class PALayerTest {
         assertEquals(0, algo_content_mask);
     }
 
-    @Test
+    @Ignore
     public void testGetAllValues() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -146,7 +147,7 @@ public class PALayerTest {
         assertEquals(0.0D, values[0]);
     }
 
-    @Test
+    @Ignore
     public void testConstructors() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Network n = new Network("test",p);
@@ -154,7 +155,7 @@ public class PALayerTest {
         assertTrue(n == l.getParentNetwork());
     }
 
-    @Test
+    @Ignore
     public void testPolariseAndVerbosity() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Network n = new Network("test",p);
@@ -167,7 +168,7 @@ public class PALayerTest {
     }
 
 
-    @Test
+    @Ignore
     public void testSpatialInput() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{3});
@@ -192,7 +193,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         Layer<?> l = Network.createPALayer("l1", p).add(new OldTemporalMemory());
@@ -212,7 +213,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         @SuppressWarnings("unchecked")
@@ -234,7 +235,7 @@ public class PALayerTest {
     }
 
     boolean isHalted = false;
-    @Test
+    @Ignore
     public void testHalt() {
         Sensor<File> sensor = Sensor.create(
                         FileSensor::create,
@@ -274,7 +275,7 @@ public class PALayerTest {
     }
 
     int trueCount = 0;
-    @Test
+    @Ignore
     public void testReset() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create,
@@ -314,7 +315,7 @@ public class PALayerTest {
     }
 
     int seqResetCount = 0;
-    @Test
+    @Ignore
     public void testSequenceChangeReset() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create,
@@ -353,7 +354,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testLayerWithObservableInput() {
         Publisher manual = Publisher.builder()
             .addHeader("timestamp,consumption")
@@ -415,7 +416,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testLayerWithObservableInputIntegerArray() {
         Publisher manual = Publisher.builder()
             .addHeader("sdr_in")
@@ -488,7 +489,7 @@ public class PALayerTest {
 
     }
 
-    @Test
+    @Ignore
     public void testLayerWithGenericObservable() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -542,7 +543,7 @@ public class PALayerTest {
         l.compute(inputs[1]);
     }
 
-    @Test
+    @Ignore
     public void testBasicSetupEncoder_UsingSubscribe() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -576,7 +577,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testBasicSetupEncoder_UsingObserve() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -611,7 +612,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testBasicSetupEncoder_AUTO_MODE() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create,
@@ -688,7 +689,7 @@ public class PALayerTest {
     /**
      * Temporary test to test basic sequence mechanisms
      */
-    @Test
+    @Ignore
     public void testBasicSetup_SpatialPooler_MANUAL_MODE() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -732,7 +733,7 @@ public class PALayerTest {
     /**
      * Temporary test to test basic sequence mechanisms
      */
-    @Test
+    @Ignore
     public void testBasicSetup_SpatialPooler_AUTO_MODE() {
         Sensor<File> sensor = Sensor.create(
             FileSensor::create,
@@ -781,7 +782,7 @@ public class PALayerTest {
     /**
      * Temporary test to test basic sequence mechanisms
      */
-    @Test
+    @Ignore
     public void testBasicSetup_TemporalMemory_MANUAL_MODE() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -834,7 +835,7 @@ public class PALayerTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testBasicSetup_SPandTM() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -865,7 +866,7 @@ public class PALayerTest {
         l.compute(inputs[1]);
     }
 
-    @Test
+    @Ignore
     public void testSpatialPoolerPrimerDelay() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
@@ -935,7 +936,7 @@ public class PALayerTest {
      * Simple test to verify data gets passed through the {@link CLAClassifier}
      * configured within the chain of components.
      */
-    @Test
+    @Ignore
     public void testBasicClassifierSetup() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -966,7 +967,7 @@ public class PALayerTest {
      * tests the ability to specify exactly the number of input records for
      * the PASpatialPooler to consume before passing records on.
      */
-    @Test
+    @Ignore
     public void testMoreComplexSpatialPoolerPriming() {
         final int PRIME_COUNT = 35;
         final int NUM_CYCLES = 20;
@@ -1011,7 +1012,7 @@ public class PALayerTest {
      * Tests the ability for multiple subscribers to receive copies of
      * a given {@link PALayer}'s computed values.
      */
-    @Test
+    @Ignore
     public void test2ndAndSubsequentSubscribersPossible() {
         final int PRIME_COUNT = 35;
         final int NUM_CYCLES = 50;
@@ -1082,7 +1083,7 @@ public class PALayerTest {
         assertEquals( ((NUM_CYCLES * INPUT_GROUP_COUNT) - PRIME_COUNT) * NUM_SUBSCRIBERS, TOTAL);
     }
 
-    @Test
+    @Ignore
     public void testGetAllPredictions() {
         final int PRIME_COUNT = 35;
         final int NUM_CYCLES = 120;
@@ -1158,7 +1159,7 @@ public class PALayerTest {
      * Test that a given layer can return an {@link Observable} capable of
      * service multiple subscribers.
      */
-    @Test
+    @Ignore
     public void testObservableRetrieval() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
@@ -1207,7 +1208,7 @@ public class PALayerTest {
      * configured within the chain of components.
      */
     boolean flowReceived = false;
-    @Test
+    @Ignore
     public void testFullLayerFluentAssembly() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());

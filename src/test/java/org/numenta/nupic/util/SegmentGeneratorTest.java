@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.DistalDendrite;
 
@@ -47,7 +47,7 @@ public class SegmentGeneratorTest {
     
     @Test
     public void testGenerateSegments() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);

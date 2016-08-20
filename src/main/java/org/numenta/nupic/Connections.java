@@ -35,10 +35,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -63,6 +62,8 @@ import org.numenta.nupic.util.UniversalRandom;
 public class Connections implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
+    
+    private static final double EPSILON = 0.00001;
     
     /////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
     private int potentialRadius = 16;
@@ -94,8 +95,9 @@ public class Connections implements Persistable {
 
     //Internal state
     private double version = 1.0;
-    public int iterationNum = 0;
-    public int iterationLearnNum = 0;
+    public int spIterationNum = 0;
+    public int spIterationLearnNum = 0;
+    public int tmIteration = 0;
 
     /** A matrix representing the shape of the input. */
     protected SparseMatrix<?> inputMatrix;
@@ -371,7 +373,7 @@ public class Connections implements Persistable {
      * @return
      */
     public int getIterationNum() {
-        return iterationNum;
+        return spIterationNum;
     }
 
     /**
@@ -379,7 +381,7 @@ public class Connections implements Persistable {
      * @param num
      */
     public void setIterationNum(int num) {
-        this.iterationNum = num;
+        this.spIterationNum = num;
     }
 
     /**
@@ -1096,12 +1098,12 @@ public class Connections implements Persistable {
             for(Synapse synapse : cell.getReceptorSynapses(this)) {
                 Segment segment = synapse.getSegment();
                 double permanence = synapse.getPermanence();
-                if(permanence >= matchingPermananceThreshold) {
+                if(permanence - matchingPermananceThreshold > -EPSILON) {
                     numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
                     numMatchingSynapsesForSegment[segment.getIndex()][1] = 
                         ((int)numMatchingSynapsesForSegment[segment.getIndex()][1]) + 1;
                     
-                    if(permanence >= activePermanenceThreshold) {
+                    if(permanence - activePermanenceThreshold > -EPSILON) {
                         numActiveSynapsesForSegment[segment.getIndex()][0] = segment;
                         numActiveSynapsesForSegment[segment.getIndex()][1] = 
                             ((int)numActiveSynapsesForSegment[segment.getIndex()][1]) + 1;
@@ -1125,10 +1127,10 @@ public class Connections implements Persistable {
         }
         
         return new Tuple(
-            activeSegments.stream()
+            (Object)activeSegments.stream()
                 .sorted()
                 .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)),
-            matchingSegments.stream()
+            (Object)matchingSegments.stream()
                 .sorted()
                 .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)));
     }
@@ -1182,7 +1184,7 @@ public class Connections implements Persistable {
     }
 
     /**
-     * Clears all {@link TemporalMemory} state.
+     * Clears all {@link OldTemporalMemory} state.
      */
     public void clear() {
         activeCells.clear();
@@ -1906,8 +1908,9 @@ public class Connections implements Persistable {
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + Arrays.hashCode(inputDimensions);
         result = prime * result + ((inputMatrix == null) ? 0 : inputMatrix.hashCode());
-        result = prime * result + iterationLearnNum;
-        result = prime * result + iterationNum;
+        result = prime * result + spIterationLearnNum;
+        result = prime * result + spIterationNum;
+        result = prime * result + tmIteration;
         result = prime * result + learningRadius;
         result = prime * result + ((learningSegments == null) ? 0 : learningSegments.hashCode());
         temp = Double.doubleToLongBits(localAreaDensity);
@@ -2035,9 +2038,11 @@ public class Connections implements Persistable {
                 return false;
         } else if(!inputMatrix.equals(other.inputMatrix))
             return false;
-        if(iterationLearnNum != other.iterationLearnNum)
+        if(spIterationLearnNum != other.spIterationLearnNum)
             return false;
-        if(iterationNum != other.iterationNum)
+        if(spIterationNum != other.spIterationNum)
+            return false;
+        if(tmIteration != other.tmIteration)
             return false;
         if(learningRadius != other.learningRadius)
             return false;

@@ -114,7 +114,7 @@ public class SpatialPooler implements Persistable {
             tieBreaker[i] = 0.01 * c.getRandom().nextDouble();
         }
         c.setTieBreaker(tieBreaker);
-
+        
         //Initialize state meta-management statistics
         c.setOverlapDutyCycles(new double[numColumns]);
         c.setActiveDutyCycles(new double[numColumns]);
@@ -734,7 +734,9 @@ public class SpatialPooler implements Persistable {
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
 
-        return ArrayUtils.sample((int)Math.round(indices.size() * c.getPotentialPct()), indices, c.getRandom());
+        
+        int[] retVal = new int[(int)Math.round(indices.size() * c.getPotentialPct())];
+        return ArrayUtils.sample(indices, retVal, c.getRandom());
     }
 
     /**
@@ -823,8 +825,8 @@ public class SpatialPooler implements Persistable {
      *                  for indicating separate training vs. testing sets.
      */
     public void updateBookeepingVars(Connections c, boolean learn) {
-        c.iterationNum += 1;
-        if(learn) c.iterationLearnNum += 1;
+        c.spIterationNum += 1;
+        if(learn) c.spIterationLearnNum += 1;
     }
 
     /**
@@ -881,7 +883,7 @@ public class SpatialPooler implements Persistable {
         }
 
         //Add our fixed little bit of random noise to the scores to help break ties.
-        ArrayUtils.d_add(overlaps, c.getTieBreaker());
+        //ArrayUtils.d_add(overlaps, c.getTieBreaker());
 
         if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
             return inhibitColumnsGlobal(c, overlaps, density);

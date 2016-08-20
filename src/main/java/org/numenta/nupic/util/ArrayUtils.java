@@ -1336,19 +1336,16 @@ public class ArrayUtils {
      * @param random     a random number generator
      * @return a sample of numbers of the specified size
      */
-    public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
-        TIntHashSet temp = new TIntHashSet();
+    public static int[] sample(TIntArrayList choices, int[] selectedIndices, Random random) {
+        TIntArrayList choiceSupply = new TIntArrayList(choices);
         int upperBound = choices.size();
-        for (int i = 0; i < sampleSize; i++) {
+        for (int i = 0; i < selectedIndices.length; i++) {
             int randomIdx = random.nextInt(upperBound);
-            while (temp.contains(choices.get(randomIdx))) {
-                randomIdx = random.nextInt(upperBound);
-            }
-            temp.add(choices.get(randomIdx));
+            selectedIndices[i] = (choiceSupply.removeAt(randomIdx));
+            upperBound--;
         }
-        TIntArrayList al = new TIntArrayList(temp);
-        al.sort();
-        return al.toArray();
+        Arrays.sort(selectedIndices);
+        return selectedIndices;
     }
 
     /**

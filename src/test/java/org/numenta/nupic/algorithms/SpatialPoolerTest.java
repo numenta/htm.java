@@ -32,13 +32,14 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.model.Pool;
+import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.UniversalRandom;
 
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
@@ -68,6 +69,7 @@ public class SpatialPoolerTest {
         parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
         parameters.setParameterByKey(KEY.SEED, 42);
         parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
+        parameters.setRandom(new UniversalRandom(42));
     }
 
     private void initSP() {
@@ -206,6 +208,32 @@ public class SpatialPoolerTest {
             assertTrue(Arrays.equals(permanences, potential));
         }
     }
+    
+    @Test
+    public void testOverlapsOutput() {
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.setColumnDimensions(new int[] {3});
+        parameters.setInputDimensions(new int[] { 5 });
+        parameters.setPotentialRadius(5);
+        parameters.setNumActiveColumnsPerInhArea(5);
+        parameters.setGlobalInhibition(true);
+        parameters.setSynPermActiveInc(0.1);
+        parameters.setSynPermInactiveDec(0.1);
+        parameters.setSeed(42);
+        parameters.setRandom(new UniversalRandom(42));
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        cn.setBoostFactors(new double[] { 2.0, 2.0, 2.0 });
+        int[] inputVector = { 1, 1, 1, 1, 1 };
+        int[] activeArray = { 0, 0, 0 };
+        int[] expOutput = { 2, 0, 0 };
+        sp.compute(cn, inputVector, activeArray, true, true);
+        System.out.println("out = " + Arrays.toString(activeArray));
+    }
 
     /**
      * Given a specific input and initialization params the SP should return this
@@ -232,7 +260,6 @@ public class SpatialPoolerTest {
         parameters.setMaxBoost(10);
         parameters.setSynPermConnected(0.1);
         parameters.setSynPermTrimThreshold(0);
-        parameters.setRandom(new MersenneTwister(42));
         initSP();
 
         int[] inputVector = {
@@ -266,10 +293,9 @@ public class SpatialPoolerTest {
         });
 
         int[] expected = new int[] {
-                46, 61, 86, 216, 314, 543, 554, 587, 630, 675, 736, 
-                745, 834, 931, 990, 1131, 1285, 1305, 1307, 1326, 1411, 1414, 
-                1431, 1471, 1547, 1579, 1603, 1687, 1698, 1730, 1847, 
-                1859, 1885, 1893, 1895, 1907, 1934, 1978, 1984, 1990 };
+            84, 107, 212, 222, 241, 248, 249, 351, 409, 418, 438, 551, 609, 629, 
+            637, 638, 648, 662, 697, 719, 757, 835, 848, 936, 991, 1005, 1022, 1065, 
+            1092, 1247, 1264, 1347, 1511, 1540, 1745, 1769, 1786, 1838, 1844, 2023 };
 
         assertTrue(Arrays.equals(expected, real));
     }
@@ -646,6 +672,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(new int[] { 6/*Don't care*/ });
         parameters.setColumnDimensions(new int[] { 6 });
         parameters.setMaxBoost(10.0);
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         double[] minActiveDutyCycles = new double[6];
@@ -829,6 +856,7 @@ public class SpatialPoolerTest {
         setupParameters();
         parameters.setInputDimensions(new int[] { 5 });
         parameters.setColumnDimensions(new int[] { 5 });
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         SpatialPooler mockSP = new SpatialPooler() {
@@ -871,6 +899,7 @@ public class SpatialPoolerTest {
         setupParameters();
         parameters.setInputDimensions(new int[] { 8 });
         parameters.setColumnDimensions(new int[] { 8 });
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         mockSP = new SpatialPooler() {

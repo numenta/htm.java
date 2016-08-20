@@ -23,6 +23,7 @@
 package org.numenta.nupic;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,8 +46,6 @@ public class ComputeCycle implements Persistable {
     
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
-    
-    public Set<Cell> predictiveCells = new LinkedHashSet<>();
     public Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
     public Set<Cell> matchingCells = new LinkedHashSet<>();
     public Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
@@ -54,6 +53,10 @@ public class ComputeCycle implements Persistable {
     public Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
     public Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
     
+    /** Force access through accessor because this list is created lazily */
+    private Set<Cell> predictiveCells = new LinkedHashSet<>();
+    
+        
     
     /**
      * Constructs a new {@code ComputeCycle}
@@ -95,10 +98,16 @@ public class ComputeCycle implements Persistable {
     }
     
     /**
-     * Returns the {@link Set} of predictive cells.
+     * Returns the {@link List} of sorted predictive cells.
      * @return
      */
     public Set<Cell> predictiveCells() {
+        if(predictiveCells.isEmpty()) {
+            for(DistalDendrite activeSegment : activeSegments) {
+                predictiveCells.add(activeSegment.getParentCell());
+            }
+        }
+        
         return predictiveCells;
     }
     

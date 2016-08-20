@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * Copyright (C) 2014-2016, Numenta, Inc.  Unless you have an agreement
  * with Numenta, Inc., for a separate license for this software code, the
  * following terms and conditions apply:
  *
@@ -19,32 +19,25 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic.monitor;
+package org.numenta.nupic.util;
 
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.ComputeCycle2;
-import org.numenta.nupic.Connections;
+import java.util.Iterator;
 
 /**
- * Decorator interface for main algorithms 
+ * Implementors add the ability to return the "next" item which 
+ * would be returned by a call to {@link Iterator#next()} - without
+ * altering the iterator's pointer to the indexed item.
  * 
  * @author cogmission
+ *
+ * @param <T>   the type of the return value.
  */
-public interface ComputeDecorator2 {
+public interface PeekableIterator<T> extends Iterator<T> {
     /**
-     * Feeds input record through TM, performing inferencing and learning
+     * Returns the item that would be returned by {@link #next()},
+     * without forwarding the iterator index.
      * 
-     * @param connections       the connection memory
-     * @param activeColumns     direct activated column input
-     * @param learn             learning mode flag
-     * @return                  {@link ComputeCycle} container for one cycle of inference values.
+     * @return  the "next" item to be returned by a call to {@link Iterator#next()}
      */
-    public ComputeCycle2 compute(Connections connections, int[] activeColumns, boolean learn);
-    /**
-     * Called to start the input of a new sequence, and
-     * reset the sequence state of the TM.
-     * 
-     * @param   connections   the Connections state of the temporal memory
-     */
-    public void reset(Connections connections);
+    public T peek();
 }

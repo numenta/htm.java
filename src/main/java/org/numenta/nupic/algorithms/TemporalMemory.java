@@ -4,35 +4,30 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.numenta.nupic.ComputeCycle2;
+import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.algorithms.OldTemporalMemory.ExcitedColumn;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.Synapse;
-import org.numenta.nupic.monitor.ComputeDecorator2;
-import org.numenta.nupic.util.AbstractGenerator;
-import org.numenta.nupic.util.Generator;
-import org.numenta.nupic.util.IntGenerator;
-import org.numenta.nupic.util.NamedTuple;
-import org.numenta.nupic.util.SegmentGenerator;
+import org.numenta.nupic.monitor.ComputeDecorator;
+import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
-public class TemporalMemory implements ComputeDecorator2, Serializable {
-	private static final long serialVersionUID = 1L;
+import javafx.util.Pair;
 
+public class TemporalMemory implements ComputeDecorator, Serializable {
+    private static final long serialVersionUID = 1L;
+    
     /**
-     * Constructs a new {@code TemporalMemory}
-     */
-	public TemporalMemory() {}
-	
-	/**
      * Uses the specified {@link Connections} object to Build the structural 
      * anatomy needed by this {@code TemporalMemory} to implement its algorithms.
      * 
@@ -72,192 +67,50 @@ public class TemporalMemory implements ComputeDecorator2, Serializable {
         //Only the TemporalMemory initializes cells so no need to test for redundancy
         c.setCells(cells);
     }
-    
-    @SuppressWarnings("serial")
-    private Generator<ExcitedColumn> excitedColumnsGenerator(
-        int[] activeColumns, List<DistalDendrite> activeSegments, List<DistalDendrite> matchingSegments,
-            Connections connections) {
-        
-        return new AbstractGenerator<ExcitedColumn>() {
-            int activeColumnsProcessed = 0;
-            int activeSegmentsProcessed = 0;
-            int matchingSegmentsProcessed = 0;
 
-            int activeColumnsNum = activeColumns.length;
-            int activeSegmentsNum = activeSegments.size();
-            int matchingSegmentsNum = matchingSegments.size();
-            
-            boolean isActiveColumn;
-            
-            @Override
-            public void exec() {
-                while((activeColumnsProcessed < activeColumnsNum ||
-                      activeSegmentsProcessed < activeSegmentsNum ||
-                      matchingSegmentsProcessed < matchingSegmentsNum) && !haltRequested()) {
-                    
-                    int currentColumn = Integer.MAX_VALUE;
-                    if(activeSegmentsProcessed < activeSegmentsNum) {
-                        currentColumn = Math.min(
-                            currentColumn, 
-                            connections.columnIndexForSegment(activeSegments.get(activeSegmentsProcessed)));
-                    }
-                    
-                    if(matchingSegmentsProcessed < matchingSegmentsNum) {
-                        currentColumn = Math.min(
-                            currentColumn,
-                            connections.columnIndexForSegment(matchingSegments.get(matchingSegmentsProcessed)));
-                    }
-                    
-                    if(activeColumnsProcessed < activeColumnsNum &&
-                        activeColumns[activeColumnsProcessed] <= currentColumn) {
-                        
-                        currentColumn = activeColumns[activeColumnsProcessed];
-                        isActiveColumn = true;
-                        activeColumnsProcessed += 1;
-                    } else {
-                        isActiveColumn = false;
-                    }
-                    
-                    int activeSegmentsBegin = activeSegmentsProcessed;
-                    int activeSegmentsEnd = activeSegmentsProcessed;
-                    for(int i = activeSegmentsProcessed;i < activeSegmentsNum;i++) {
-                        if(connections.columnIndexForSegment(activeSegments.get(i)) == currentColumn) {
-                            activeSegmentsProcessed += 1;
-                            activeSegmentsEnd += 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    int matchingSegmentsBegin = matchingSegmentsProcessed;
-                    int matchingSegmentsEnd = matchingSegmentsProcessed;
-                    for(int i = matchingSegmentsProcessed;i < matchingSegmentsNum;i++) {
-                        if(connections.columnIndexForSegment(matchingSegments.get(i)) == currentColumn) {
-                            matchingSegmentsProcessed += 1;
-                            matchingSegmentsEnd += 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    Generator<Integer> asIndexGenerator = IntGenerator.of(activeSegmentsBegin, activeSegmentsEnd);
-                    Generator<Integer> msIndexGenerator = IntGenerator.of(matchingSegmentsBegin, matchingSegmentsEnd);
-                    yield(
-                        new ExcitedColumn(
-                            currentColumn, 
-                            isActiveColumn, 
-                            SegmentGenerator.of(activeSegments, asIndexGenerator), 
-                            activeSegmentsEnd - activeSegmentsBegin,
-                            SegmentGenerator.of(matchingSegments, msIndexGenerator),
-                            matchingSegmentsEnd - matchingSegmentsBegin
-                        )
-                    );
-                }
-            }
-
-            @Override
-            public boolean isConsumed() {
-                return activeColumnsProcessed >= activeColumnsNum &&
-                       activeSegmentsProcessed >= activeSegmentsNum &&
-                       matchingSegmentsProcessed >= matchingSegmentsNum;
-            }
-        };
-    }
-
-	/////////////////////////// CORE FUNCTIONS /////////////////////////////
-    
     /**
      * Feeds input record through TM, performing inference and learning.
-     * <p>
-     * <b>Pseudocode:</b>
-     * </p><p>
-     * <pre>
-     *  for each column
-     *      if column is active and has active distal dendrite segments
-     *          call activatePredictedColumn
-     *      if column is active and doesn't have active distal dendrite segments
-     *          call burstColumn
-     *      if column is inactive and has matching distal dendrite segments
-     *          call punishPredictedColumn
-     *  for each distal dendrite segment with activity >= activationThreshold
-     *      mark the segment as active
-     *  for each distal dendrite segment with unconnected activity >= minThreshold
-     *      mark the segment as matching
-     *
-     *  Updates {@link Connections} member variables:
-     *    - `activeCells`     (set)
-     *    - `winnerCells`     (set)
-     *    - `activeSegments`  (set)
-     *    - `matchingSegments`(set)
-     * </pre>
-     * </p>
      * 
-     * @param activeColumns (set)  Indices of active columns
-     * @param learn         (boolean) Whether or not learning is enabled
+     * @param   conn                    The column/cell structure and connectivity
+     * @param   activeColumnIndices     Indexes of Columns active during the current cycle
+     * @param   learn                   Whether or not learning is enabled
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public ComputeCycle2 compute(Connections conn, int[] activeColumns, boolean learn) {
-        ComputeCycle2 cycle = new ComputeCycle2();
+    public ComputeCycle compute(Connections conn, int[] activeColumnIndices, boolean learn) {
+        ComputeCycle cycle = new ComputeCycle();
         
         Set<Cell> prevActiveCells = conn.getActiveCells();
         Set<Cell> prevWinnerCells = conn.getWinnerCells();
         
-        Arrays.sort(activeColumns);
+        Arrays.sort(activeColumnIndices);
+        List<Column> activeColumns = Arrays.stream(activeColumnIndices)
+            .mapToObj(i -> conn.getColumn(i))
+            .collect(Collectors.toList());
         
-        for(ExcitedColumn excitedColumn : excitedColumnsGenerator(
-            activeColumns, new ArrayList<>(conn.getActiveSegments()), 
-                new ArrayList<>(conn.getMatchingSegments()), conn)) {
+        Function<Column, Column> identity = Function.identity();
+        Function<DistalDendrite, Column> segToCol = segment -> segment.getParentCell().getColumn(); 
+        
+        for(Object o : GroupBy2.of(
+            new Pair(activeColumns, identity),
+            new Pair(new ArrayList(conn.getActiveSegments()), segToCol),
+            new Pair(new ArrayList(conn.getMatchingSegments()), segToCol))) {
             
-            if(excitedColumn.isActiveColumn) {
-                if(excitedColumn.activeSegmentsCount != 0) {
-                    List<Cell> cellsToAdd = activatePredictedColumn(
-                        conn, excitedColumn, prevActiveCells, conn.getPermanenceIncrement(), 
-                            conn.getPermanenceDecrement(), learn);
+            ColumnData columnData = new ColumnData((Tuple)o);
+            System.out.println("Column: " + columnData.column());
+            System.out.println("activeColumns: " + columnData.activeColumns());
+            System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
+            System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
+            
+            if(!columnData.activeColumns().isEmpty()) {
+                if(!columnData.activeSegments().isEmpty()) {
                     
-                    cycle.activeCells.addAll(cellsToAdd);
-                    cycle.winnerCells.addAll(cellsToAdd);
-                } else {
-                    Tuple bestCellxWinnerCell = burstColumn(
-                        conn, excitedColumn, prevActiveCells, prevWinnerCells, conn.getMaxNewSynapseCount(),
-                            conn.getInitialPermanence(), conn.getPermanenceIncrement(), 
-                                conn.getPermanenceDecrement(), conn.getRandom(), learn);
-                    
-                    cycle.activeCells.addAll((List<Cell>)bestCellxWinnerCell.get(0));
-                    cycle.winnerCells.add((Cell)bestCellxWinnerCell.get(1));
                 }
-            } else if(learn) {
-                punishPredictedColumn(conn, excitedColumn, prevActiveCells, conn.getPredictedSegmentDecrement());
             }
         }
+            
         
-        // Tuple = [activeSegments, matchingSegments]
-        Tuple activeMatchingSegments = conn.computeActivity(cycle.activeCells, conn.getConnectedPermanence(), 
-            conn.getActivationThreshold(), 0.0, conn.getMinThreshold());
-        
-        cycle.activeSegments = (Set<DistalDendrite>)activeMatchingSegments.get(0);
-        cycle.matchingSegments = (Set<DistalDendrite>)activeMatchingSegments.get(1);
-        
-        conn.setActiveCells(new LinkedHashSet<>(cycle.activeCells));
-        conn.setWinnerCells(new LinkedHashSet<>(cycle.winnerCells));
-        conn.setActiveSegments(new LinkedHashSet<>(cycle.activeSegments));
-        conn.setMatchingSegments(new LinkedHashSet<>(cycle.matchingSegments));
-        
-        return cycle;
-    }
-    
-    /**
-     * Signals the start of a new sequence and resets the sequence
-     * state of the TM.
-     * 
-     * @param   connections     {@link Connections} instance for the tm
-     */
-    @Override
-    public void reset(Connections connections) {
-        connections.getActiveCells().clear();
-        connections.getWinnerCells().clear();
-        connections.getActiveSegments().clear();
-        connections.getMatchingSegments().clear();
+        return null;
     }
     
     /**
@@ -278,25 +131,23 @@ public class TemporalMemory implements ComputeDecorator2, Serializable {
      * </pre>
      * </p>
      * 
-     * @param conn                      {@link Connections} instance for the tm
-     * @param excitedColumn             {@link NamedTuple} generated by 
-     *                                  {@link #excitedColumnsGenerator(int[], List, List, Connections)}
+     * @param conn                      {@link Connections} instance for the tm 
+     * @param activeSegments            A iterable of Segment objects for the
+     *                                  column compute is operating on that are active
      * @param prevActiveCells           Active cells in `t-1`
      * @param permanenceIncrement       Amount by which permanences of synapses are
-     *                                  decremented during learning.
-     * @param permanenceDecrement       Amount by which permanences of synapses are
      *                                  incremented during learning.
-     * @param learn                     Determines if permanences are adjusted
-     * 
-     * @return cellsToAdd               A list of predicted cells that will be added to active cells 
-     *                                  and winner cells.
+     * @param permanenceDecrement       Amount by which permanences of synapses are
+     *                                  decremented during learning.
+     * @param learn
+     * @return      A list of predicted cells that will be added to active cells and winner cells.
      */
-    public List<Cell> activatePredictedColumn(Connections conn, ExcitedColumn excitedColumn, 
+    public List<Cell> activatePredictedColumn(Connections conn, List<DistalDendrite> activeSegments,
         Set<Cell> prevActiveCells, double permanenceIncrement, double permanenceDecrement, boolean learn) {
         
         List<Cell> cellsToAdd = new ArrayList<>();
         Cell cell = null;
-        for(DistalDendrite active : excitedColumn.activeSegments) {
+        for(DistalDendrite active : activeSegments) {
             boolean newCell = cell != active.getParentCell();
             if(newCell) {
                 cell = active.getParentCell();
@@ -335,8 +186,9 @@ public class TemporalMemory implements ComputeDecorator2, Serializable {
      * </p>
      * 
      * @param conn                      Connections instance for the tm
-     * @param excitedColumn             Excited Column instance from 
-     *                                  {@link #excitedColumnsGenerator(int[], List, List, Connections)}
+     * @param column                    The {@link Column} which is bursting 
+     * @param matchingSegments          A list of {@link DistalDendrites} for the column compute
+     *                                  is operating on that are matching                       
      * @param prevActiveCells           Active cells in `t-1`
      * @param prevWinnerCells           Winner cells in `t-1`
      * @param initialPermanence         Initial permanence of a new synapse.
@@ -352,212 +204,66 @@ public class TemporalMemory implements ComputeDecorator2, Serializable {
      *                  cells       list of the processed column's cells
      *                  bestCell    the best cell
      */
-    public Tuple burstColumn(Connections conn, ExcitedColumn excitedColumn, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells,
-        int maxNewSynapseCount, double initialPermanence, double permanenceIncrement, double permanenceDecrement, Random random, boolean learn) {
-        
-        List<Cell> cells = conn.getColumn(excitedColumn.column).getCells();
-        Cell bestCell = null;
-        
-        if(excitedColumn.matchingSegmentsCount != 0) {
-            // Tuple = [bestSegment, bestNumActiveSynapses]
-            Tuple bestMatch = bestMatchingSegment(conn, excitedColumn, prevActiveCells);
-            
-            DistalDendrite bestSegment = (DistalDendrite)bestMatch.get(0);
-            bestCell = bestSegment.getParentCell();
-            
-            if(learn) {
-                bestSegment.adaptSegment(prevActiveCells, conn, permanenceIncrement, permanenceDecrement);
-                
-                int nGrowDesired = maxNewSynapseCount - (int)bestMatch.get(1);
-                if(nGrowDesired > 0) {
-                    growSynapses(conn, prevWinnerCells, bestSegment, initialPermanence, nGrowDesired, random);
-                }
-            }
-        } else {
-            bestCell = leastUsedCell(conn, cells, random, learn);
-            if(learn) {
-                int nGrowExact = Integer.min(maxNewSynapseCount, prevWinnerCells.size());
-                if(nGrowExact > 0) {
-                    DistalDendrite bestSegment = bestCell.createSegment(conn);
-                    growSynapses(conn, prevWinnerCells, bestSegment, initialPermanence, nGrowExact, random);
-                }
-            }
-        }
-        
-        return new Tuple(cells, bestCell);
-    }
-    
-    /**
-     * Punishes the Segments that incorrectly predicted a column to be active.
-     * 
-     * <p>
-     * <pre>
-     * Pseudocode:
-     *  for each matching segment in the column
-     *    weaken active synapses
-     * </pre>
-     * </p>
-     *   
-     * @param conn                              Connections instance for the tm
-     * @param excitedColumn                     Excited Column instance from excitedColumnsGenerator
-     * @param prevActiveCells                   Active cells in `t-1`
-     * @param predictedSegmentDecrement         Amount by which permanences of synapses
-     *                                          are decremented during learning.
-     */
-    public void punishPredictedColumn(Connections conn, ExcitedColumn excitedColumn, 
-        Set<Cell> prevActiveCells, double predictedSegmentDecrement) {
-        
-        if(predictedSegmentDecrement > 0) {
-            for(DistalDendrite segment : excitedColumn.matchingSegments) {
-                segment.adaptSegment(prevActiveCells, conn, -conn.getPredictedSegmentDecrement(), 0);
-            }
-        }
-    }
-    
-    //////////////////////////////////
-    //       Helper Functions       //
-    //////////////////////////////////    
-    /**
-     * Gets the segment on a cell with the largest number of active synapses.
-     * Returns an int representing the segment and the number of synapses
-     * corresponding to it.
-     * 
-     * @param conn                  Connections instance for the tm
-     * @param excitedColumn         Excited Column instance from
-                                    excitedColumnsGenerator
-     * @param prevActiveCells       Active cells in `t-1`
-     * 
-     * @return  Tuple containing:
-     *              bestSegment             (DistalDendrite)
-     *              bestNumActiveSynapses   (int)
-     */
-    public Tuple bestMatchingSegment(Connections conn, ExcitedColumn excitedColumn, Set<Cell> prevActiveCells) {
-        int maxSynapses = 0;
-        DistalDendrite bestSegment = null;
-        int bestNumActiveSynapses = 0;
-        
-        for(DistalDendrite segment : excitedColumn.matchingSegments) {
-            int numActiveSynapses = 0;
-            
-            for(Synapse syn : conn.getSynapses(segment)) {
-                if(prevActiveCells.contains(syn.getPresynapticCell())) {
-                    numActiveSynapses += 1;
-                }
-            }
-            
-            if(numActiveSynapses >= maxSynapses) {
-                maxSynapses = numActiveSynapses;
-                bestSegment = segment;
-                bestNumActiveSynapses = numActiveSynapses;
-            }
-        }
-        
-        return new Tuple(bestSegment, bestNumActiveSynapses);
-    }
-    
-    /**
-     * Gets the cell with the smallest number of segments.
-     * Break ties randomly.
-     * 
-     * @param conn      Connections instance for the tm
-     * @param cells     List of {@link Cell}s
-     * @param random    Random Number Generator
-     * @param learn     Added learn to keep from creating data structures
-     *                  for holding segments when learning is off.
-     * 
-     * @return  the least used {@code Cell}
-     */
-    public Cell leastUsedCell(Connections conn, List<Cell> cells, Random random, boolean learn) {
-        List<Cell> leastUsedCells = new ArrayList<>();
-        int minNumSegments = Integer.MAX_VALUE;
-        for(Cell cell : cells) {
-            int numSegments = cell.getSegments(conn, learn).size();
-            
-            if(numSegments < minNumSegments) {
-                minNumSegments = numSegments;
-                leastUsedCells.clear();
-            }
-            
-            if(numSegments == minNumSegments) {
-                leastUsedCells.add(cell);
-            }
-        }
-        
-        int i = random.nextInt(leastUsedCells.size());
-        return leastUsedCells.get(i);
-    }
-    
-    /**
-     * Creates nDesiredNewSynapes synapses on the segment passed in if
-     * possible, choosing random cells from the previous winner cells that are
-     * not already on the segment.
-     * <p>
-     * <b>Notes:</b> The process of writing the last value into the index in the array
-     * that was most recently changed is to ensure the same results that we get
-     * in the c++ implementation using iter_swap with vectors.
-     * </p>
-     * 
-     * @param conn                      Connections instance for the tm
-     * @param prevWinnerCells           Winner cells in `t-1`
-     * @param segment                   Segment to grow synapses on.     
-     * @param initialPermanence         Initial permanence of a new synapse.
-     * @param nDesiredNewSynapses       Desired number of synapses to grow
-     * @param random                    Tm object used to generate random
-     *                                  numbers
-     */
-    public void growSynapses(Connections conn, Set<Cell> prevWinnerCells, DistalDendrite segment, 
-        double initialPermanence, int nDesiredNewSynapses, Random random) {
-        
-        List<Cell> candidates = new ArrayList<>(prevWinnerCells);
-        Collections.sort(candidates);
-        int eligibleEnd = candidates.size() - 1;
-        
-        for(Synapse synapse : conn.getSynapses(segment)) {
-            Cell presynapticCell = synapse.getPresynapticCell();
-            int index = Collections.binarySearch(candidates, presynapticCell);
-            if(index > -1) {
-                candidates.set(index, candidates.get(eligibleEnd));
-                eligibleEnd -= 1;
-            }
-        }
-        
-        int candidatesLength = eligibleEnd + 1;
-        int nActual = nDesiredNewSynapses < candidatesLength ? nDesiredNewSynapses : candidatesLength;
-        
-        for(int i = 0;i < nActual;i++) {
-            int rand = random.nextInt(candidatesLength);
-            segment.createSynapse(conn, candidates.get(rand), initialPermanence);
-            candidates.set(rand, candidates.get(candidatesLength - 1));
-            candidatesLength -= 1;
-        }
-    }
-    
-    /**
-     * Container for {@link TemporalMemory#excitedColumnsGenerator(int[], List, List, Connections)} cycle
-     */
-    public static class ExcitedColumn implements Serializable {
-        /** serial version */
-        private static final long serialVersionUID = 1L;
-        
-        int column;
-        int activeSegmentsCount;
-        int matchingSegmentsCount;
-        
-        boolean isActiveColumn;
-        
-        Generator<DistalDendrite> activeSegments;
-        Generator<DistalDendrite> matchingSegments;
-        
+    int count = 0;
+//    public Tuple burstColumn(Connections conn, Column column, List<DistalDendrite> matchingSegments, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells,
+//        int maxNewSynapseCount, double initialPermanence, double permanenceIncrement, double permanenceDecrement, Random random, boolean learn) {
+//        
+//        List<Cell> cells = column.getCells();
+//        Cell bestCell = null;
+//        
+//        if(!matchingSegments.isEmpty()) {
+//            DistalDendrite bestSegment = matchingSegments.stream().max(s -> s.getOverlap());
+//            
+//            DistalDendrite bestSegment = (DistalDendrite)bestMatch.get(0);
+//            bestCell = bestSegment.getParentCell();
+//            
+//            if(learn) {
+//                bestSegment.adaptSegment(prevActiveCells, conn, permanenceIncrement, permanenceDecrement);
+//                
+//                int nGrowDesired = maxNewSynapseCount - (int)bestMatch.get(1);
+//                if(nGrowDesired > 0) {
+//                    growSynapses(conn, prevWinnerCells, bestSegment, initialPermanence, nGrowDesired, random);
+//                }
+//            }
+//        } else {
+//            bestCell = leastUsedCell(conn, cells, random, learn);
+//            if(learn) {
+//                int nGrowExact = Integer.min(maxNewSynapseCount, prevWinnerCells.size());
+//                if(nGrowExact > 0) {
+//                    DistalDendrite bestSegment = bestCell.createSegment(conn);
+//                    growSynapses(conn, prevWinnerCells, bestSegment, initialPermanence, nGrowExact, random);
+//                }
+//            }
+//        }
+//        
+//        return new Tuple(cells, bestCell);
+//    }
 
-        public ExcitedColumn(int column, boolean isActiveColumn, Generator<DistalDendrite> activeSegments,
-            int activeSegmentsCount, Generator<DistalDendrite> matchingSegments, int matchingSegmentsCount) {
-            
-            this.column = column;
-            this.isActiveColumn = isActiveColumn;
-            this.activeSegments = activeSegments;
-            this.activeSegmentsCount = activeSegmentsCount;
-            this.matchingSegments = matchingSegments;
-            this.matchingSegmentsCount = matchingSegmentsCount;
+    @Override
+    public void reset(Connections connections) {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    @SuppressWarnings("unchecked")
+    class ColumnData {
+        Tuple t;
+        public ColumnData(Tuple t) {
+            this.t = t;
+        }
+        
+        public Column column() { return (Column)t.get(0); }
+        public List<Column> activeColumns() { return (List<Column>)t.get(1); }
+        public List<DistalDendrite> activeSegments() { 
+            return t.get(2).equals(Optional.empty()) ? 
+                Collections.emptyList() :
+                    (List<DistalDendrite>)t.get(2); 
+        }
+        public List<DistalDendrite> matchingSegments() {
+            return t.get(3).equals(Optional.empty()) ? 
+                Collections.emptyList() :
+                    (List<DistalDendrite>)t.get(3); 
         }
     }
+
 }

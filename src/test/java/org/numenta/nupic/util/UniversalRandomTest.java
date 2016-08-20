@@ -1,0 +1,119 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
+package org.numenta.nupic.util;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+
+/**
+ * Tests the {@code UniversalRandom} class designed to implement
+ * the same algorithm and produce the same output as the UniversalRandom
+ * of the Python universal_random.py file.
+ * @author cogmission
+ */
+public class UniversalRandomTest {
+    
+    @Test
+    public void testRandom() {
+        UniversalRandom random = new UniversalRandom(42);
+        
+        long s = 2858730232218250L;
+        long e = (s >>> 35);
+        assertEquals(83200, e);
+        
+        int x = random.nextInt(50);
+        //System.out.println("x = " + x);
+        assertEquals(0, x);
+        
+        x = random.nextInt(50);
+        //System.out.println("x = " + x);
+        assertEquals(26, x);
+        
+        x = random.nextInt(50);
+        //System.out.println("x = " + x);
+        assertEquals(14, x);
+        
+        x = random.nextInt(50);
+        //System.out.println("x = " + x);
+        assertEquals(15, x);
+        
+        x = random.nextInt(50);
+        //System.out.println("x = " + x);
+        assertEquals(38, x);
+        
+        int[] expecteds = { 47, 13, 9, 15, 31, 6, 3, 0, 21, 45 };
+        for(int i = 0;i < 10;i++) {
+            int o = random.nextInt(50);
+            assertEquals(expecteds[i], o);
+        }
+        
+        double[] exp = { 
+            0.945,
+            0.2426,
+            0.5214,
+            0.0815,
+            0.0988,
+            0.5497,
+            0.4013,
+            0.4559,
+            0.5415,
+            0.2381
+        };
+        random = new UniversalRandom(42);
+        for(int i = 0;i < 10;i++) {
+            double o = random.nextDouble();
+            assertEquals(exp[i], o, 0.0001);
+        }
+        
+        /*
+        e = 83200
+        x = 0
+        x = 26
+        x = 14
+        x = 15
+        x = 38
+        x = 47
+        x = 13
+        x = 9
+        x = 15
+        x = 31
+        x = 6
+        x = 3
+        x = 0
+        x = 21
+        x = 45
+        d = 0.945
+        d = 0.2426
+        d = 0.5214
+        d = 0.0815
+        d = 0.0988
+        d = 0.5497
+        d = 0.4013
+        d = 0.4559
+        d = 0.5415
+        d = 0.2381
+
+         */
+    }
+}

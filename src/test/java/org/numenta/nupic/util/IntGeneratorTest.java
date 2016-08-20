@@ -21,14 +21,17 @@
  */
 package org.numenta.nupic.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class IntGeneratorTest {
 
     /**
-     * Test that iteration control is managed by the {@link AbstractGenerator#exec()}
+     * Test that iteration control is managed by the {@link AbstractStuff#exec()}
      * method, and that the execution can be precisely terminated.
      */
     @Test
@@ -49,7 +52,7 @@ public class IntGeneratorTest {
     }
     
     /**
-     * Test that iteration control is managed by the {@link AbstractGenerator#exec()}
+     * Test that iteration control is managed by the {@link AbstractStuff#exec()}
      * method, and that the execution can be precisely terminated.
      */
     @Test

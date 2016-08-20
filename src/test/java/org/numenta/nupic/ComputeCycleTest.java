@@ -47,8 +47,8 @@ public class ComputeCycleTest {
         assertEquals(4, cc.activeCells.size());
         assertNotNull(cc.winnerCells);
         assertEquals(2, cc.winnerCells.size());
-        assertNotNull(cc.predictiveCells);
-        assertEquals(4, cc.predictiveCells.size());
+        assertNotNull(cc.predictiveCells());
+        assertEquals(4, cc.predictiveCells().size());
         assertNotNull(cc.successfullyPredictedColumns);
         assertEquals(1, cc.successfullyPredictedColumns.size());
         

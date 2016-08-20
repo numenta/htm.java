@@ -184,7 +184,7 @@ public class PALayer<T> extends Layer<T> {
         if(spatialPooler != null && spatialPooler instanceof PASpatialPooler) {
             int boosted = 0;
             double[] polarization = new double[connections.getNumColumns()];
-            for(Cell cell : cc.predictiveCells) {
+            for(Cell cell : cc.predictiveCells()) {
                 Column column = cell.getColumn();
                 if(polarization[column.getIndex()] == 0.0) {
                     boosted++;

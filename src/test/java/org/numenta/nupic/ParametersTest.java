@@ -221,13 +221,13 @@ public class ParametersTest {
     @Test
     public void testSize() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(47, params.size());
+        assertEquals(48, params.size());
     }
 
     @Test
     public void testKeys() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertTrue(params.keys() != null && params.keys().size() == 47); 
+        assertTrue(params.keys() != null && params.keys().size() == 48); 
     }
 
     @Test
@@ -273,7 +273,7 @@ public class ParametersTest {
         params.setMinThreshold(42);
         assertEquals(42, params.getParameterByKey(KEY.MIN_THRESHOLD));
 
-        params.setMaxNewSynapseCount(42);
+        params.setMaxSynapsesPerSegment(42);
         assertEquals(42, params.getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT));
 
         params.setSeed(42);

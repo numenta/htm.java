@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
 #### Added
+* Parameters key ```Parameters.KEY.MAX_SEGMENTS_PER_CELL```
 * Added new ```AbstractGenerator``` class which adds Python like generators (w/yield method)
 * Added new ```UniversalRandom``` RNG which has an [allegory in python](https://gist.github.com/cogmission/c4cb8feaba19595dae8ff964e18b05d0#file-universal_random-py) which can be used to compare versions 
 * Added new methods on the MTJ matrices to add and remove rows and columns
@@ -24,7 +25,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * [[PR #435](https://github.com/numenta/htm.java/pull/435)] Added ObservableTestBase class for improved AssertFailure detection in tests using Observables 
 
 #### Changed
-* ```Connections.apply()``` now sets the seed value from the ```Parameters``` object. 
+* ```Connections.apply()``` now sets the seed value from the ```Parameters``` object.
+* ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT``` to ```Parameters.KEY.MAX_SYNAPSES_PER_SEGMENT```
 
 #### Fixed
 * Fixed documentaton of SpatialPooler.inhibitColumnsLocal - added parameter documentation

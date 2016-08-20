@@ -83,6 +83,13 @@ public class Column implements Comparable<Column>, Serializable {
 
     /**
      * Returns the {@link Cell} residing at the specified index.
+     * <p>
+     * <b>IMPORTANT NOTE:</b> the index provided is the index of the Cell within this
+     * column and is <b>not</b> the actual index of the Cell within the total
+     * list of Cells of all columns. Each Cell maintains it's own <i><b>GLOBAL</i></b>
+     * index which is the index describing the occurrence of a cell within the
+     * total list of all cells. Thus, {@link Cell#getIndex()} returns the <i><b>GLOBAL</i></b>
+     * index and <b>not</b> the index within this column.
      * 
      * @param index     the index of the {@link Cell} to return.
      * @return          the {@link Cell} residing at the specified index.
