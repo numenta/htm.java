@@ -36,7 +36,7 @@ public class ConnectionsTest {
         Connections connections = new Connections();
         
         retVal.apply(connections);
-        new TemporalMemory().init(connections);
+        TemporalMemory.init(connections);
         
         Cell cell10 = connections.getCell(10);
         List<DistalDendrite> segments = connections.getSegments(cell10);
@@ -66,7 +66,7 @@ public class ConnectionsTest {
         Connections connections = new Connections();
         
         p.apply(connections);
-        new TemporalMemory().init(connections);
+        TemporalMemory.init(connections);
         
         Cell cell42 = connections.getCell(42);
         
@@ -98,7 +98,7 @@ public class ConnectionsTest {
         Connections connections = new Connections();
         
         p.apply(connections);
-        new TemporalMemory().init(connections);
+        TemporalMemory.init(connections);
         
         connections.createSegment(connections.getCell(10));
         DistalDendrite segment2 = connections.createSegment(connections.getCell(20));
@@ -138,9 +138,8 @@ public class ConnectionsTest {
         p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
         
         Connections connections = new Connections();
-        
         p.apply(connections);
-        new TemporalMemory().init(connections);
+        TemporalMemory.init(connections);
         
         DistalDendrite segment = connections.createSegment(connections.getCell(20));
         Synapse synapse1 = connections.createSynapse(segment, connections.getCell(80), 0.85);
@@ -165,18 +164,54 @@ public class ConnectionsTest {
         assertEquals(2, act.matchingSegments.get(0).getOverlap());
     }
     
+    /**
+     * Creates segments and synapses, then destroys segments and synapses on
+     * either side of them and verifies that existing Segment and Synapse
+     * instances still point to the same segment / synapse as before.
+     */
     @Test
     public void testPathsNotInvalidatedByOtherDestroys() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
         
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment1 = connections.createSegment(connections.getCell(11));
+        connections.createSegment(connections.getCell(12));
+        DistalDendrite segment3 = connections.createSegment(connections.getCell(13));
+        connections.createSegment(connections.getCell(14));
+        DistalDendrite segment5 = connections.createSegment(connections.getCell(15));
+        
+        Cell cell203 = connections.getCell(203);
+        Synapse synapse1 = connections.createSynapse(segment3, connections.getCell(201), .85);
+        Synapse synapse2 = connections.createSynapse(segment3, connections.getCell(202), .85);
+        Synapse synapse3 = connections.createSynapse(segment3, cell203, .85);
+        Synapse synapse4 = connections.createSynapse(segment3, connections.getCell(204), .85);
+        Synapse synapse5 = connections.createSynapse(segment3, connections.getCell(205), .85);
+        
+        assertEquals(cell203, synapse3.getPresynapticCell());
+        connections.destroySynapse(synapse1);
+        assertEquals(cell203, synapse3.getPresynapticCell());
+        connections.destroySynapse(synapse5);
+        assertEquals(cell203, synapse3.getPresynapticCell());
+        
+        connections.destroySegment(segment1);
+        List<Synapse> l234 = Arrays.stream(new Synapse[] { synapse2, synapse3, synapse4 }).collect(Collectors.toList());
+        assertEquals(connections.unDestroyedSynapsesForSegment(segment3), l234);
+        connections.destroySegment(segment5);
+        assertEquals(connections.unDestroyedSynapsesForSegment(segment3), l234);
+        assertEquals(cell203, synapse3.getPresynapticCell());
     }
 
     @Test
     public void testColumnForCell1D() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 2048 });
         cn.setCellsPerColumn(5);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         assertEquals(0, cn.getCell(0).getColumn().getIndex());
         assertEquals(0, cn.getCell(4).getColumn().getIndex());
@@ -186,11 +221,10 @@ public class ConnectionsTest {
     
     @Test
     public void testColumnForCell2D() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         assertEquals(0, cn.getCell(0).getColumn().getIndex());
         assertEquals(0, cn.getCell(3).getColumn().getIndex());
@@ -200,11 +234,10 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellIndexes() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 16383 };
         Set<Cell> cells = cn.getCellSet(expectedIndexes);
@@ -220,11 +253,10 @@ public class ConnectionsTest {
     
     @Test
     public void testAsColumnIndexes() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 4095 };
         Set<Column> columns = cn.getColumnSet(expectedIndexes);
@@ -240,11 +272,10 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellObjects() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] indexes = { 0, 3, 4, 16383 };
         Set<Integer> idxSet = new HashSet<Integer>(
@@ -257,11 +288,10 @@ public class ConnectionsTest {
 
     @Test
     public void testAsColumnObjects() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] indexes = { 0, 3, 4, 4095 };
         Set<Integer> idxSet = new HashSet<Integer>(
@@ -287,7 +317,7 @@ public class ConnectionsTest {
         Connections con = new Connections();
         p.apply(con);
         TemporalMemory tm = new TemporalMemory();
-        tm.init(con);
+        TemporalMemory.init(con);
         
         for(int x = 0;x < 602;x++) {
             for(int[] i : inputs) {
