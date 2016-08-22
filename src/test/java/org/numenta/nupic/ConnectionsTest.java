@@ -205,6 +205,40 @@ public class ConnectionsTest {
         assertEquals(connections.unDestroyedSynapsesForSegment(segment3), l234);
         assertEquals(cell203, synapse3.getPresynapticCell());
     }
+    
+    /**
+     * Destroy a segment that has a destroyed synapse and a non-destroyed
+     * synapse. Make sure nothing gets double-destroyed.
+     */
+    @Test
+    public void testDestroySegmentWithDestroyedSynapses() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment1 = connections.createSegment(connections.getCell(11));
+        DistalDendrite segment2 = connections.createSegment(connections.getCell(12));
+        
+        connections.createSynapse(segment1, connections.getCell(101), .85);
+        Synapse synapse2a = connections.createSynapse(segment2, connections.getCell(201), .85);
+        connections.createSynapse(segment2, connections.getCell(202), .85);
+        
+        assertEquals(3, connections.numSynapses());
+        
+        connections.destroySynapse(synapse2a);
+        
+        assertEquals(2, connections.numSegments());
+        assertEquals(2, connections.numSynapses());
+        
+        connections.destroySegment(segment2);
+        
+        assertEquals(1, connections.numSegments());
+        assertEquals(1, connections.numSynapses());
+    }
 
     @Test
     public void testColumnForCell1D() {
