@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 import org.numenta.nupic.Connections.Activity;
+import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -79,7 +80,7 @@ public class ConnectionsTest {
         
         Activity retVal = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
         assertEquals(1, retVal.activeSegments.size());
-        assertEquals(segment1, retVal.activeSegments.get(0));
+        assertEquals(segment1, retVal.activeSegments.get(0).segment);
         
         DistalDendrite segment3 = connections.createSegment(cell42);
         assertTrue(segment2 == segment3);
@@ -161,7 +162,7 @@ public class ConnectionsTest {
         Activity act = connections.newComputeActivity(actives, 0.5, 2, 0.0, 1, true);
         assertEquals(0, act.activeSegments.size());
         assertEquals(1, act.matchingSegments.size());
-        assertEquals(2, act.matchingSegments.get(0).getOverlap());
+        assertEquals(2, act.matchingSegments.get(0).overlap);
     }
     
     /**
@@ -283,7 +284,160 @@ public class ConnectionsTest {
         p.set(KEY.CELLS_PER_COLUMN, 32);
         p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
         p.set(KEY.MAX_SYNAPSES_PER_SEGMENT, 2);
-        p.get(KEY.ACTIVATION_THRESHOLD);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment1 = connections.createSegment(connections.getCell(11));
+        DistalDendrite segment2 = connections.createSegment(connections.getCell(11));
+        
+        assertEquals(2, connections.numSegments());
+        connections.destroySegment(segment1);
+        connections.destroySegment(segment2);
+        assertEquals(0, connections.numSegments());
+        
+        connections.createSegment(connections.getCell(11));
+        assertEquals(1, connections.numSegments());
+        connections.createSegment(connections.getCell(11));
+        assertEquals(2, connections.numSegments());
+        DistalDendrite segment3 = connections.createSegment(connections.getCell(11));
+        assertTrue(segment3.getIndex() < 2);
+        assertEquals(2, connections.numSegments());
+    }
+    
+    /**
+     * Destroy some synapses then verify that the maxSynapsesPerSegment is
+     * still correctly applied.
+     */
+    @Test
+    public void testDestroySynapsesThenReachLimit() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
+        p.set(KEY.MAX_SYNAPSES_PER_SEGMENT, 2);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment = connections.createSegment(connections.getCell(10));
+        
+        Synapse synapse1 = connections.createSynapse(segment, connections.getCell(201), .85);
+        Synapse synapse2 = connections.createSynapse(segment, connections.getCell(202), .85);
+        
+        assertEquals(2, connections.numSynapses());
+        connections.destroySynapse(synapse1);
+        connections.destroySynapse(synapse2);
+        assertEquals(0, connections.numSynapses());
+        
+        connections.createSynapse(segment, connections.getCell(201), .85);
+        assertEquals(1, connections.numSynapses());
+        connections.createSynapse(segment, connections.getCell(202), .90);
+        assertEquals(2, connections.numSynapses());
+        Synapse synapse3 = connections.createSynapse(segment, connections.getCell(203), .8);
+        assertTrue(synapse3.getIndex() < 2);
+        assertEquals(2, connections.numSynapses());
+    }
+    
+    /**
+     * Hit the maxSynapsesPerSegment threshold multiple times. Make sure it
+     * works more than once.
+     */
+    @Test
+    public void testReachSegmentLimitMultipleTimes() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
+        p.set(KEY.MAX_SYNAPSES_PER_SEGMENT, 2);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment = connections.createSegment(connections.getCell(10));
+        connections.createSynapse(segment, connections.getCell(201), .85);
+        assertEquals(1, connections.numSynapses());
+        connections.createSynapse(segment, connections.getCell(202), .9);
+        assertEquals(2, connections.numSynapses());
+        connections.createSynapse(segment, connections.getCell(203), .8);
+        assertEquals(2, connections.numSynapses());
+        Synapse synapse = connections.createSynapse(segment, connections.getCell(204), .8);
+        assertTrue(synapse.getIndex() < 2);
+        assertEquals(2, connections.numSynapses());
+    }
+    
+    /**
+     * Creates a sample set of connections, and makes sure that computing the
+     * activity for a collection of cells with no activity returns the right
+     * activity data.
+     */
+    @Test
+    public void testComputeActivity() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        // Cell with 1 segment.
+        // Segment with:
+        // - 1 connected synapse: active
+        // - 2 matching synapses
+        DistalDendrite segment1a = connections.createSegment(connections.getCell(10));
+        connections.createSynapse(segment1a, connections.getCell(150), .85);
+        connections.createSynapse(segment1a, connections.getCell(151), .15);
+        
+        // Cell with 2 segments.
+        // Segment with:
+        // - 1 connected synapse: active
+        // - 2 matching synapses
+        DistalDendrite segment2a = connections.createSegment(connections.getCell(20));
+        connections.createSynapse(segment2a, connections.getCell(80), .85);
+        connections.createSynapse(segment2a, connections.getCell(81), .85);
+        Synapse synapse = connections.createSynapse(segment2a, connections.getCell(82), .85);
+        synapse.setPermanence(null, 0.15);
+        
+        // Segment with:
+        // - 2 connected synapses: 1 active, 1 inactive
+        // - 3 matching synapses: 2 active, 1 inactive
+        // - 1 non-matching synapse: 1 active
+        DistalDendrite segment2b = connections.createSegment(connections.getCell(20));
+        connections.createSynapse(segment2b, connections.getCell(50), .85);
+        connections.createSynapse(segment2b, connections.getCell(51), .85);
+        connections.createSynapse(segment2b, connections.getCell(52), .15);
+        connections.createSynapse(segment2b, connections.getCell(53), .05);
+        
+        // Cell with 1 segment.
+        // Segment with:
+        // - 1 non-matching synapse: 1 active
+        DistalDendrite segment3a = connections.createSegment(connections.getCell(30));
+        connections.createSynapse(segment3a, connections.getCell(53), .05);
+        
+        Connections c = connections;
+        List<Cell> inputVec = IntStream.of(50, 52, 53, 80, 81, 82, 150, 151)
+            .mapToObj(i -> c.getCell(i))
+            .collect(Collectors.toList());
+        
+        Activity activity = c.newComputeActivity(inputVec, .5, 2, .1, 1, true);
+        List<SegmentOverlap> active = activity.activeSegments;
+        List<SegmentOverlap> matching = activity.matchingSegments;
+        
+        assertEquals(1, active.size());
+        assertEquals(segment2a, active.get(0).segment);
+        assertEquals(2, active.get(0).overlap);
+        
+        assertEquals(3, matching.size());
+        assertEquals(segment1a, matching.get(0).segment);
+        assertEquals(2, matching.get(0).overlap);
+        assertEquals(segment2a, matching.get(1).segment);
+        assertEquals(3, matching.get(1).overlap);
+        assertEquals(segment2b, matching.get(2).segment);
+        assertEquals(2, matching.get(2).overlap);
     }
 
     @Test

@@ -27,6 +27,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 #### Changed
 * ```Connections.apply()``` now sets the seed value from the ```Parameters``` object.
 * ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT``` to ```Parameters.KEY.MAX_SYNAPSES_PER_SEGMENT```
+* Parameters.(g|s)etParameterByKey to simplified get() / set()
 
 #### Fixed
 * Fixed documentaton of SpatialPooler.inhibitColumnsLocal - added parameter documentation

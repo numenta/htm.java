@@ -1072,15 +1072,27 @@ public class Connections implements Persistable {
      * Return type from {@link Connections#newComputeActivity(Set, double, int, double, int, boolean)}
      */
     public static class Activity {
-        public List<DistalDendrite> activeSegments;
-        public List<DistalDendrite> matchingSegments;
-        public Activity(List<DistalDendrite> actives, List<DistalDendrite> matching) {
+        public List<SegmentOverlap> activeSegments;
+        public List<SegmentOverlap> matchingSegments;
+        public Activity(List<SegmentOverlap> actives, List<SegmentOverlap> matching) {
             this.activeSegments = actives;
             this.matchingSegments = matching;
         }
         
         public String toString() {
             return "\nactives = " + activeSegments + "\nmatching = " + matchingSegments;
+        }
+    }
+    
+    /**
+     * Accounting class used during {@link Connections#newComputeActivity(Collection, double, int, double, int, boolean)}
+     */
+    public static class SegmentOverlap {
+        public DistalDendrite segment;
+        public int overlap;
+        public SegmentOverlap(DistalDendrite dd, int overlap) {
+            this.segment = dd;
+            this.overlap = overlap;
         }
     }
     
@@ -1141,12 +1153,12 @@ public class Connections implements Persistable {
             tmIteration++;
         }
         
-        List<DistalDendrite> activeSegments = new ArrayList<>();
-        List<DistalDendrite> matchingSegments = new ArrayList<>();
+        List<SegmentOverlap> activeSegments = new ArrayList<>();
+        List<SegmentOverlap> matchingSegments = new ArrayList<>();
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0])
-                    .overlap((int)numActiveSynapsesForSegment[i][1]));
+                activeSegments.add(new SegmentOverlap(((DistalDendrite)numActiveSynapsesForSegment[i][0]),
+                    (int)numActiveSynapsesForSegment[i][1]));
                 
                 if(recordIteration) {
                     ((DistalDendrite)numActiveSynapsesForSegment[i][0]).setLastUsedIteration(tmIteration);
@@ -1156,13 +1168,13 @@ public class Connections implements Persistable {
         
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0])
-                    .overlap((int)numMatchingSynapsesForSegment[i][1]));
+                matchingSegments.add(new SegmentOverlap(((DistalDendrite)numMatchingSynapsesForSegment[i][0]),
+                    (int)numMatchingSynapsesForSegment[i][1]));
             }
         }
         
-        Collections.sort(activeSegments);
-        Collections.sort(matchingSegments);
+        Collections.sort(activeSegments, (as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
+        Collections.sort(matchingSegments, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
         return new Activity(activeSegments, matchingSegments);
     }
     
@@ -1219,15 +1231,13 @@ public class Connections implements Persistable {
         List<DistalDendrite> matchingSegments = new ArrayList<>();
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0])
-                    .overlap((int)numActiveSynapsesForSegment[i][1]));
+                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0]));
             }
         }
         
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0])
-                    .overlap((int)numMatchingSynapsesForSegment[i][1]));
+                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0]));
             }
         }
         
@@ -1274,6 +1284,7 @@ public class Connections implements Persistable {
             
             segment.setDestroyed(false);
             cell.decDestroyedSegments();
+            incrementSegments();
         }else{
             segment = new DistalDendrite(cell, incrementSegments());
             getSegments(cell, true).add(segment);
@@ -1489,6 +1500,7 @@ public class Connections implements Persistable {
             
             synapse.setDestroyed(false);
             segment.decDestroyedSynapses();
+            incrementDistalSynapses();
         }else{
             getSynapses(segment).add(
                 synapse = new Synapse(
