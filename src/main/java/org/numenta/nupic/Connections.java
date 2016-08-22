@@ -1105,9 +1105,9 @@ public class Connections implements Persistable {
      * <p>
      * Notes: activeSegments and matchingSegments are sorted by the cell they are on.
      * 
-     * @return  Tuple containing: activeSegments, matchingSegments
+     * @return  an {@link Activity} containing: activeSegments, matchingSegments
      */
-    public Activity newComputeActivity(Set<Cell> activeInput, double activePermanenceThreshold,
+    public Activity newComputeActivity(Collection<Cell> activeInput, double activePermanenceThreshold,
         int activeSynapseThreshold, double matchingPermananceThreshold, int matchingSynapseThreshold,
             boolean recordIteration) {
         
@@ -1145,7 +1145,8 @@ public class Connections implements Persistable {
         List<DistalDendrite> matchingSegments = new ArrayList<>();
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add((DistalDendrite)numActiveSynapsesForSegment[i][0]);
+                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0])
+                    .overlap((int)numActiveSynapsesForSegment[i][1]));
                 
                 if(recordIteration) {
                     ((DistalDendrite)numActiveSynapsesForSegment[i][0]).setLastUsedIteration(tmIteration);
@@ -1155,7 +1156,8 @@ public class Connections implements Persistable {
         
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add((DistalDendrite)numMatchingSynapsesForSegment[i][0]);
+                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0])
+                    .overlap((int)numMatchingSynapsesForSegment[i][1]));
             }
         }
         
@@ -1217,13 +1219,15 @@ public class Connections implements Persistable {
         List<DistalDendrite> matchingSegments = new ArrayList<>();
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add((DistalDendrite)numActiveSynapsesForSegment[i][0]);
+                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0])
+                    .overlap((int)numActiveSynapsesForSegment[i][1]));
             }
         }
         
         for(int i = 0;i < nextSegmentIdx;i++) {
             if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add((DistalDendrite)numMatchingSynapsesForSegment[i][0]);
+                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0])
+                    .overlap((int)numMatchingSynapsesForSegment[i][1]));
             }
         }
         
@@ -1236,50 +1240,9 @@ public class Connections implements Persistable {
                 .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)));
     }
     
-    /**
-     * Used internally to return the least recently activated segment on 
-     * the specified cell
-     * 
-     * @param cell  cell to search for segments on
-     * @return  the least recently activated segment on 
-     *          the specified cell
-     */
-    private DistalDendrite leastRecentlyUsedSegment(Cell cell) {
-        List<DistalDendrite> segments = getSegments(cell, false);
-        DistalDendrite min = null;
-        int minIteration = Integer.MAX_VALUE;
-        
-        for(DistalDendrite dd : segments) {
-            if(!dd.destroyed() && dd.lastUsedIteration() < minIteration) {
-                min = dd;
-                minIteration = dd.lastUsedIteration();
-            }
-        }
-        
-        return min;
-    }
-    
-    /**
-     * Used internally to find the synapse with the smallest permanence
-     * on the given segment.
-     * 
-     * @param dd    Segment object to search for synapses on
-     * @return  Synapse object on the segment with the minimal permanence
-     */
-    private Synapse minPermanenceSynapse(DistalDendrite dd) {
-        List<Synapse> synapses = getSynapses(dd);
-        Synapse min = null;
-        double minPermanence = Double.MAX_VALUE;
-        
-        for(Synapse synapse : synapses) {
-            if(!synapse.destroyed() && synapse.getPermanence() < minPermanence - EPSILON) {
-                min = synapse;
-                minPermanence = synapse.getPermanence();
-            }
-        }
-        
-        return min;
-    }
+    /////////////////////////////////////////////////////////////////
+    //     Segment (Specifically, Distal Dendrite) Operations      //
+    /////////////////////////////////////////////////////////////////
     
     /**
      * Adds a new {@link DistalDendrite} segment on the specified {@link Cell},
@@ -1350,6 +1313,152 @@ public class Connections implements Persistable {
     }
     
     /**
+     * Used internally to return the least recently activated segment on 
+     * the specified cell
+     * 
+     * @param cell  cell to search for segments on
+     * @return  the least recently activated segment on 
+     *          the specified cell
+     */
+    private DistalDendrite leastRecentlyUsedSegment(Cell cell) {
+        List<DistalDendrite> segments = getSegments(cell, false);
+        DistalDendrite min = null;
+        int minIteration = Integer.MAX_VALUE;
+        
+        for(DistalDendrite dd : segments) {
+            if(!dd.destroyed() && dd.lastUsedIteration() < minIteration) {
+                min = dd;
+                minIteration = dd.lastUsedIteration();
+            }
+        }
+        
+        return min;
+    }
+    
+    /**
+     * Returns the total number of {@link DistalDendrite}s
+     * 
+     * @return  the total number of segments
+     */
+    public int numSegments() {
+        return numSegments(null);
+    }
+    
+    /**
+     * Returns the number of {@link DistalDendrite}s on a given {@link Cell}
+     * if specified, or the total number if the "optionalCellArg" is null.
+     * 
+     * @param optionalCellArg   an optional Cell to specify the context of the segment count.
+     * @return  either the total number of segments or the number on a specified cell.
+     */
+    public int numSegments(Cell optionalCellArg) {
+        if(optionalCellArg != null) {
+            return getSegments(optionalCellArg).size() - optionalCellArg.getNumDestroyedSegments();
+        }
+        
+        return segmentCounter + 1;
+    }
+    
+    /**
+     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     *
+     * @param cell      the {@link Cell} used as a key.
+     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     */
+    public List<DistalDendrite> getSegments(Cell cell) {
+        return getSegments(cell, false);
+    }
+
+    /**
+     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     *
+     * @param cell              the {@link Cell} used as a key.
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
+     */
+    public List<DistalDendrite> getSegments(Cell cell, boolean doLazyCreate) {
+        if(cell == null) {
+            throw new IllegalArgumentException("Cell was null");
+        }
+
+        if(segments == null) {
+            segments = new LinkedHashMap<Cell, List<DistalDendrite>>();
+        }
+
+        List<DistalDendrite> retVal = null;
+        if((retVal = segments.get(cell)) == null) {
+            if(!doLazyCreate) return Collections.emptyList();
+            segments.put(cell, retVal = new ArrayList<DistalDendrite>());
+        }
+
+        return retVal;
+    }
+    
+    /**
+     * Returns the filtered list of {@link DistalDendrites} that are not marked 
+     * as destroyed, for the specified {@link Cell}
+     *  
+     * @param cell      the Cell for which non-destroyed segments are returned
+     * @return
+     */
+    public List<DistalDendrite> unDestroyedSegmentsForCell(Cell cell) {
+        return segments == null || segments.get(cell) == null ?
+            Collections.emptyList() :
+                segments.get(cell)
+                    .stream()
+                    .filter(v -> !v.destroyed())
+                    .collect(Collectors.toList());
+    }
+    
+    /**
+     * Returns the segment counter
+     * @return
+     */
+    public int getSegmentCount() {
+        return segmentCounter + 1;
+    }
+
+    /**
+     * Increments and returns the incremented count.
+     * @return
+     */
+    public int incrementSegments() {
+        return ++segmentCounter;
+    }
+
+    /**
+     * Decrements and returns the decremented count.
+     * @return
+     */
+    public int decrementSegments() {
+        return --segmentCounter;
+    }
+
+    /**
+     * Returns the index of the {@link Column} owning the cell which owns 
+     * the specified segment.
+     * @param segment   the {@link DistalDendrite} of the cell whose column index is desired.
+     * @return  the owning column's index
+     */
+    public int columnIndexForSegment(DistalDendrite segment) {
+        return segment.getParentCell().getIndex() / cellsPerColumn;
+    }
+    
+    /**
+     * <b>FOR TEST USE ONLY</b>
+     * @return
+     */
+    public Map<Cell, List<DistalDendrite>> getSegmentMapping() {
+        return new LinkedHashMap<>(segments);
+    }
+    
+    
+    /////////////////////////////////////////////////////////////////
+    //                    Synapse Operations                       //
+    /////////////////////////////////////////////////////////////////
+    
+    /**
      * Creates a new synapse on a segment.
      * 
      * @param segment               the {@link DistalDendrite} segment to which a {@link Synapse} is 
@@ -1413,13 +1522,25 @@ public class Connections implements Persistable {
     }
     
     /**
-     * Returns the index of the {@link Column} owning the cell which owns 
-     * the specified segment.
-     * @param segment   the {@link DistalDendrite} of the cell whose column index is desired.
-     * @return  the owning column's index
+     * Used internally to find the synapse with the smallest permanence
+     * on the given segment.
+     * 
+     * @param dd    Segment object to search for synapses on
+     * @return  Synapse object on the segment with the minimal permanence
      */
-    public int columnIndexForSegment(DistalDendrite segment) {
-        return segment.getParentCell().getIndex() / cellsPerColumn;
+    private Synapse minPermanenceSynapse(DistalDendrite dd) {
+        List<Synapse> synapses = getSynapses(dd);
+        Synapse min = null;
+        double minPermanence = Double.MAX_VALUE;
+        
+        for(Synapse synapse : synapses) {
+            if(!synapse.destroyed() && synapse.getPermanence() < minPermanence - EPSILON) {
+                min = synapse;
+                minPermanence = synapse.getPermanence();
+            }
+        }
+        
+        return min;
     }
     
     /**
@@ -1444,6 +1565,108 @@ public class Connections implements Persistable {
         }
         
         return distalSynapseCounter + 1;
+    }
+    
+    /**
+     * Returns the mapping of {@link Cell}s to their reverse mapped
+     * {@link Synapse}s.
+     *
+     * @param cell      the {@link Cell} used as a key.
+     * @return          the mapping of {@link Cell}s to their reverse mapped
+     *                  {@link Synapse}s.
+     */
+    public Set<Synapse> getReceptorSynapses(Cell cell) {
+        return getReceptorSynapses(cell, false);
+    }
+
+    /**
+     * Returns the mapping of {@link Cell}s to their reverse mapped
+     * {@link Synapse}s.
+     *
+     * @param cell              the {@link Cell} used as a key.
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return          the mapping of {@link Cell}s to their reverse mapped
+     *                  {@link Synapse}s.
+     */
+    public Set<Synapse> getReceptorSynapses(Cell cell, boolean doLazyCreate) {
+        if(cell == null) {
+            throw new IllegalArgumentException("Cell was null");
+        }
+
+        if(receptorSynapses == null) {
+            receptorSynapses = new LinkedHashMap<>();
+        }
+
+        LinkedHashSet<Synapse> retVal = null;
+        if((retVal = receptorSynapses.get(cell)) == null) {
+            if(!doLazyCreate) return Collections.emptySet();
+            receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
+        }
+
+        return retVal;
+    }
+    
+    /**
+     * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
+     *
+     * @param segment   the {@link DistalDendrite} used as a key.
+     * @return          the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
+     */
+    public List<Synapse> getSynapses(DistalDendrite segment) {
+        if(segment == null) {
+            throw new IllegalArgumentException("Segment was null");
+        }
+
+        if(distalSynapses == null) {
+            distalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
+        }
+
+        List<Synapse> retVal = null;
+        if((retVal = distalSynapses.get(segment)) == null) {
+            distalSynapses.put(segment, retVal = new ArrayList<Synapse>());
+        }
+
+        return retVal;
+    }
+
+    /**
+     * Returns the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     *
+     * @param segment   the {@link ProximalDendrite} used as a key.
+     * @return          the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
+     */
+    public List<Synapse> getSynapses(ProximalDendrite segment) {
+        if(segment == null) {
+            throw new IllegalArgumentException("Segment was null");
+        }
+
+        if(proximalSynapses == null) {
+            proximalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
+        }
+
+        List<Synapse> retVal = null;
+        if((retVal = proximalSynapses.get(segment)) == null) {
+            proximalSynapses.put(segment, retVal = new ArrayList<Synapse>());
+        }
+
+        return retVal;
+    }
+    
+    /**
+     * Returns the filtered list of {@link Synapses} that are not marked 
+     * as destroyed, for the specified {@link DistalDendrite} segment.
+     *  
+     * @param cell      the Cell for which non-destroyed segments are returned
+     * @return  the filtered list of {@link Synapses}
+     */
+    public List<Synapse> unDestroyedSynapsesForSegment(DistalDendrite dd) {
+        return distalSynapses == null || distalSynapses.get(dd) == null ?
+            Collections.emptyList() :
+                distalSynapses.get(dd)
+                    .stream()
+                    .filter(v -> !v.destroyed())
+                    .collect(Collectors.toList());
     }
     
     /**
@@ -1483,6 +1706,14 @@ public class Connections implements Persistable {
     public int decrementDistalSynapses() {
         return --distalSynapseCounter;
     }
+    
+    /**
+     * <b>FOR TEST USE ONLY<b>
+     * @return
+     */
+    public Map<Cell, HashSet<Synapse>> getReceptorSynapseMapping() {
+        return new LinkedHashMap<>(receptorSynapses);
+    }
 
     /**
      * Clears all {@link OldTemporalMemory} state.
@@ -1496,38 +1727,6 @@ public class Connections implements Persistable {
         successfullyPredictedColumns.clear();
         activeSegments.clear();
         learningSegments.clear();
-    }
-
-    /**
-     * Atomically returns the segment counter
-     * @return
-     */
-    public int getSegmentCount() {
-        return segmentCounter + 1;
-    }
-
-    /**
-     * Atomically increments and returns the incremented count.
-     * @return
-     */
-    public int incrementSegments() {
-        return ++segmentCounter;
-    }
-
-    /**
-     * Atomically decrements and returns the decremented count.
-     * @return
-     */
-    public int decrementSegments() {
-        return --segmentCounter;
-    }
-
-    /**
-     * Atomically sets the segment counter
-     * @param counter
-     */
-    public void setSegmentCount(int counter) {
-        segmentCounter = counter;
     }
 
     /**
@@ -1661,168 +1860,6 @@ public class Connections implements Persistable {
         this.matchingSegments = segments;
     }
     
-    /**
-     * Returns the mapping of {@link Cell}s to their reverse mapped
-     * {@link Synapse}s.
-     *
-     * @param cell      the {@link Cell} used as a key.
-     * @return          the mapping of {@link Cell}s to their reverse mapped
-     *                  {@link Synapse}s.
-     */
-    public Set<Synapse> getReceptorSynapses(Cell cell) {
-        return getReceptorSynapses(cell, false);
-    }
-
-    /**
-     * Returns the mapping of {@link Cell}s to their reverse mapped
-     * {@link Synapse}s.
-     *
-     * @param cell              the {@link Cell} used as a key.
-     * @param doLazyCreate      create a container for future use if true, if false
-     *                          return an orphaned empty set.
-     * @return          the mapping of {@link Cell}s to their reverse mapped
-     *                  {@link Synapse}s.
-     */
-    public Set<Synapse> getReceptorSynapses(Cell cell, boolean doLazyCreate) {
-        if(cell == null) {
-            throw new IllegalArgumentException("Cell was null");
-        }
-
-        if(receptorSynapses == null) {
-            receptorSynapses = new LinkedHashMap<>();
-        }
-
-        LinkedHashSet<Synapse> retVal = null;
-        if((retVal = receptorSynapses.get(cell)) == null) {
-            if(!doLazyCreate) return Collections.emptySet();
-            receptorSynapses.put(cell, retVal = new LinkedHashSet<>());
-        }
-
-        return retVal;
-    }
-    
-    /**
-     * <b>FOR TEST USE ONLY<b>
-     * @return
-     */
-    public Map<Cell, HashSet<Synapse>> getReceptorSynapseMapping() {
-        return new LinkedHashMap<>(receptorSynapses);
-    }
-    
-    /**
-     * Returns the total number of {@link DistalDendrite}s
-     * 
-     * @return  the total number of segments
-     */
-    public int numSegments() {
-        return numSegments(null);
-    }
-    
-    /**
-     * Returns the number of {@link DistalDendrite}s on a given {@link Cell}
-     * if specified, or the total number if the "optionalCellArg" is null.
-     * 
-     * @param optionalCellArg   an optional Cell to specify the context of the segment count.
-     * @return  either the total number of segments or the number on a specified cell.
-     */
-    public int numSegments(Cell optionalCellArg) {
-        if(optionalCellArg != null) {
-            return getSegments(optionalCellArg).size() - optionalCellArg.getNumDestroyedSegments();
-        }
-        
-        return segmentCounter + 1;
-    }
-    
-    /**
-     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-     *
-     * @param cell      the {@link Cell} used as a key.
-     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-     */
-    public List<DistalDendrite> getSegments(Cell cell) {
-        return getSegments(cell, false);
-    }
-
-    /**
-     * Returns the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-     *
-     * @param cell              the {@link Cell} used as a key.
-     * @param doLazyCreate      create a container for future use if true, if false
-     *                          return an orphaned empty set.
-     * @return          the mapping of {@link Cell}s to their {@link DistalDendrite}s.
-     */
-    public List<DistalDendrite> getSegments(Cell cell, boolean doLazyCreate) {
-        if(cell == null) {
-            throw new IllegalArgumentException("Cell was null");
-        }
-
-        if(segments == null) {
-            segments = new LinkedHashMap<Cell, List<DistalDendrite>>();
-        }
-
-        List<DistalDendrite> retVal = null;
-        if((retVal = segments.get(cell)) == null) {
-            if(!doLazyCreate) return Collections.emptyList();
-            segments.put(cell, retVal = new ArrayList<DistalDendrite>());
-        }
-
-        return retVal;
-    }
-    
-    /**
-     * <b>FOR TEST USE ONLY</b>
-     * @return
-     */
-    public Map<Cell, List<DistalDendrite>> getSegmentMapping() {
-        return new LinkedHashMap<>(segments);
-    }
-
-    /**
-     * Returns the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
-     *
-     * @param segment   the {@link DistalDendrite} used as a key.
-     * @return          the mapping of {@link DistalDendrite}s to their {@link Synapse}s.
-     */
-    public List<Synapse> getSynapses(DistalDendrite segment) {
-        if(segment == null) {
-            throw new IllegalArgumentException("Segment was null");
-        }
-
-        if(distalSynapses == null) {
-            distalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
-        }
-
-        List<Synapse> retVal = null;
-        if((retVal = distalSynapses.get(segment)) == null) {
-            distalSynapses.put(segment, retVal = new ArrayList<Synapse>());
-        }
-
-        return retVal;
-    }
-
-    /**
-     * Returns the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
-     *
-     * @param segment   the {@link ProximalDendrite} used as a key.
-     * @return          the mapping of {@link ProximalDendrite}s to their {@link Synapse}s.
-     */
-    public List<Synapse> getSynapses(ProximalDendrite segment) {
-        if(segment == null) {
-            throw new IllegalArgumentException("Segment was null");
-        }
-
-        if(proximalSynapses == null) {
-            proximalSynapses = new LinkedHashMap<Segment, List<Synapse>>();
-        }
-
-        List<Synapse> retVal = null;
-        if((retVal = proximalSynapses.get(segment)) == null) {
-            proximalSynapses.put(segment, retVal = new ArrayList<Synapse>());
-        }
-
-        return retVal;
-    }
-
     /**
      * Returns the column at the specified index.
      * @param index

@@ -53,6 +53,8 @@ public class DistalDendrite extends Segment implements Persistable {
     
     private int numDestroyedSynapses;
     
+    private int overlap;
+    
     private boolean destroyed;
     
     /**
@@ -263,6 +265,28 @@ public class DistalDendrite extends Segment implements Persistable {
      */
     public void setNumDestroyedSynapses(int num) {
         this.numDestroyedSynapses = num;
+    }
+    
+    /**
+     * Sets the overlap or number of active {@link Synapse}s on 
+     * this segment.
+     * 
+     * @param overlap       the number of active synapses during
+     *                      the last processing cycle.
+     * @return
+     */
+    public DistalDendrite overlap(int overlap) {
+        this.overlap = overlap;
+        return this;
+    }
+    
+    /**
+     * Returns the overlap (number of active {@link Synapse}s),
+     * for this {@code DistalDendrite}
+     * @return the overlap for this {@code DistalDendrite}
+     */
+    public int getOverlap() {
+        return overlap;
     }
 
     /**

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -19,6 +20,7 @@ import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
@@ -123,6 +125,49 @@ public class ConnectionsTest {
         Activity activity = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
         assertEquals(0, activity.activeSegments.size());
         assertEquals(0, activity.matchingSegments.size());
+    }
+    
+    /**
+     * Creates a segment, creates a number of synapses on it, destroys a
+     * synapse, and makes sure it got destroyed.
+     */
+    @Test
+    public void testDestroySynapse() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        
+        Connections connections = new Connections();
+        
+        p.apply(connections);
+        new TemporalMemory().init(connections);
+        
+        DistalDendrite segment = connections.createSegment(connections.getCell(20));
+        Synapse synapse1 = connections.createSynapse(segment, connections.getCell(80), 0.85);
+        Synapse synapse2 = connections.createSynapse(segment, connections.getCell(81), 0.85);
+        Synapse synapse3 = connections.createSynapse(segment, connections.getCell(82), 0.15);
+        
+        assertEquals(3, connections.numSynapses());
+        
+        connections.destroySynapse(synapse2);
+        
+        assertEquals(2, connections.numSynapses());
+        List<Synapse> expected = new ArrayList<>();
+        expected.add(synapse1);expected.add(synapse3);
+        assertEquals(expected, connections.unDestroyedSynapsesForSegment(segment));
+        
+        List<Cell> actives = IntStream.of(80, 81, 82)
+            .mapToObj(i -> connections.getCell(i))
+            .collect(Collectors.toList());
+        Activity act = connections.newComputeActivity(actives, 0.5, 2, 0.0, 1, true);
+        assertEquals(0, act.activeSegments.size());
+        assertEquals(1, act.matchingSegments.size());
+        assertEquals(2, act.matchingSegments.get(0).getOverlap());
+    }
+    
+    @Test
+    public void testPathsNotInvalidatedByOtherDestroys() {
+        
     }
 
     @Test

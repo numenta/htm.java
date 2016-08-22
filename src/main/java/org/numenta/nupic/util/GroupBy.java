@@ -71,11 +71,9 @@ public class GroupBy<T, R> implements Generator<Pair<T, R>>, PeekableIterator<Pa
     private static final long serialVersionUID = 1L;
     
     private List<T> iter;
-    private int[] array;
     private Function<T, R> fn;
     private Generator<Integer> range;
     private Pair<T, R> next;
-    private boolean isArray;
     
     
     /**

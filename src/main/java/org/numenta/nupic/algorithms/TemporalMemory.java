@@ -40,7 +40,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * 
      * @param   c       {@link Connections} object
      */
-    public void init(Connections c) {
+    public static void init(Connections c) {
         SparseObjectMatrix<Column> matrix = c.getMemory() == null ?
             new SparseObjectMatrix<Column>(c.getColumnDimensions()) :
                 c.getMemory();
