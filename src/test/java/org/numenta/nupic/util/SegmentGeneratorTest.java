@@ -39,8 +39,8 @@ public class SegmentGeneratorTest {
 
     private Parameters getDefaultParameters() {
         Parameters retVal = Parameters.getTemporalDefaultParameters();
-        retVal.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        retVal.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
         
         return retVal;
     }

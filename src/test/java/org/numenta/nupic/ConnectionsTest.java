@@ -30,8 +30,8 @@ public class ConnectionsTest {
     @Test
     public void testCreateSegment() {
         Parameters retVal = Parameters.getTemporalDefaultParameters();
-        retVal.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        retVal.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
         
         Connections connections = new Connections();
         
@@ -59,9 +59,9 @@ public class ConnectionsTest {
     @Test
     public void testCreateSegmentReuse() {
         Parameters p = Parameters.getTemporalDefaultParameters();
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
-        p.setParameterByKey(KEY.MAX_SEGMENTS_PER_CELL, 2);
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
         
         Connections connections = new Connections();
         
@@ -92,8 +92,8 @@ public class ConnectionsTest {
     @Test
     public void testDestroySegment() {
         Parameters p = Parameters.getTemporalDefaultParameters();
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
         
         Connections connections = new Connections();
         
@@ -134,8 +134,8 @@ public class ConnectionsTest {
     @Test
     public void testDestroySynapse() {
         Parameters p = Parameters.getTemporalDefaultParameters();
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
         
         Connections connections = new Connections();
         p.apply(connections);
@@ -172,8 +172,8 @@ public class ConnectionsTest {
     @Test
     public void testPathsNotInvalidatedByOtherDestroys() {
         Parameters p = Parameters.getTemporalDefaultParameters();
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
         
         Connections connections = new Connections();
         p.apply(connections);
@@ -213,8 +213,8 @@ public class ConnectionsTest {
     @Test
     public void testDestroySegmentWithDestroyedSynapses() {
         Parameters p = Parameters.getTemporalDefaultParameters();
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
         
         Connections connections = new Connections();
         p.apply(connections);
@@ -238,6 +238,52 @@ public class ConnectionsTest {
         
         assertEquals(1, connections.numSegments());
         assertEquals(1, connections.numSynapses());
+    }
+    
+    /**
+     * Destroy a segment that has a destroyed synapse and a non-destroyed
+     * synapse. Create a new segment in the same place. Make sure its synapse
+     * count is correct.
+     */
+    @Test
+    public void testReuseSegmentWithDestroyedSynapses() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        
+        Connections connections = new Connections();
+        p.apply(connections);
+        TemporalMemory.init(connections);
+        
+        DistalDendrite segment = connections.createSegment(connections.getCell(11));
+        
+        Synapse synapse1 = connections.createSynapse(segment, connections.getCell(201), .85);
+        connections.createSynapse(segment, connections.getCell(202), .85);
+        
+        connections.destroySynapse(synapse1);
+        
+        assertEquals(1, connections.numSynapses(segment));
+        
+        connections.destroySegment(segment);
+        
+        DistalDendrite reincarnated = connections.createSegment(connections.getCell(11));
+        
+        assertEquals(0, connections.numSynapses(reincarnated));
+        assertEquals(0, connections.unDestroyedSynapsesForSegment(reincarnated).size());
+    }
+    
+    /**
+     * Destroy some segments then verify that the maxSegmentsPerCell is still
+     * correctly applied.
+     */
+    @Test
+    public void testDestroySegmentsThenReachLimit() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
+        p.set(KEY.MAX_SYNAPSES_PER_SEGMENT, 2);
+        p.get(KEY.ACTIVATION_THRESHOLD);
     }
 
     @Test
@@ -366,37 +412,37 @@ public class ConnectionsTest {
     
     public static Parameters getParameters() {
         Parameters parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 8 });
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
-        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 8 });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
+        parameters.set(KEY.CELLS_PER_COLUMN, 6);
         
         //SpatialPooler specific
-        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
-        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
-        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
-        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
-        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        parameters.setParameterByKey(KEY.SEED, 42);
-        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
+        parameters.set(KEY.POTENTIAL_RADIUS, 12);//3
+        parameters.set(KEY.POTENTIAL_PCT, 0.5);//0.5
+        parameters.set(KEY.GLOBAL_INHIBITION, false);
+        parameters.set(KEY.LOCAL_AREA_DENSITY, -1.0);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
+        parameters.set(KEY.MAX_BOOST, 10.0);
+        parameters.set(KEY.SEED, 42);
+        parameters.set(KEY.SP_VERBOSITY, 0);
         
         //Temporal Memory specific
-        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.8);
-        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 5);
-        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
-        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.05);
-        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
-        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 4);
-        parameters.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        parameters.set(KEY.INITIAL_PERMANENCE, 0.2);
+        parameters.set(KEY.CONNECTED_PERMANENCE, 0.8);
+        parameters.set(KEY.MIN_THRESHOLD, 5);
+        parameters.set(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
+        parameters.set(KEY.PERMANENCE_INCREMENT, 0.05);
+        parameters.set(KEY.PERMANENCE_DECREMENT, 0.05);
+        parameters.set(KEY.ACTIVATION_THRESHOLD, 4);
+        parameters.set(KEY.RANDOM, new MersenneTwister(42));
         
         return parameters;
     }

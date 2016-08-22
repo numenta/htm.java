@@ -113,7 +113,7 @@ public class PALayerTest {
     public void testGetAllValues() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<Map<String, Object>>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
@@ -171,7 +171,7 @@ public class PALayerTest {
     @Ignore
     public void testSpatialInput() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[]{3});
+        p.set(KEY.INPUT_DIMENSIONS, new int[]{3});
         Network n = new Network("test",p);
         PALayer<?> l = new PALayer<>(n, p);
 
@@ -244,8 +244,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -284,8 +284,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -324,8 +324,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -369,8 +369,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
@@ -431,7 +431,7 @@ public class PALayerTest {
 
         Parameters p = Parameters.getAllDefaultParameters();
         p = p.union(getArrayTestParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
@@ -492,7 +492,7 @@ public class PALayerTest {
     @Ignore
     public void testLayerWithGenericObservable() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -547,7 +547,7 @@ public class PALayerTest {
     public void testBasicSetupEncoder_UsingSubscribe() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<>(p, me, null, null, null, null);
@@ -581,7 +581,7 @@ public class PALayerTest {
     public void testBasicSetupEncoder_UsingObserve() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<>(p, me, null, null, null, null);
@@ -621,8 +621,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -692,7 +692,7 @@ public class PALayerTest {
     @Ignore
     public void testBasicSetup_SpatialPooler_MANUAL_MODE() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -742,8 +742,8 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -785,7 +785,7 @@ public class PALayerTest {
     @Ignore
     public void testBasicSetup_TemporalMemory_MANUAL_MODE() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         final int[] input1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
         final int[] input2 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
@@ -838,7 +838,7 @@ public class PALayerTest {
     @Ignore
     public void testBasicSetup_SPandTM() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -869,7 +869,7 @@ public class PALayerTest {
     @Ignore
     public void testSpatialPoolerPrimerDelay() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -911,8 +911,8 @@ public class PALayerTest {
         // --------------------------------------------------------------------------------------------
 
         // NOW TEST WITH prime directive
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42)); // due to static RNG we have to reset the sequence
-        p.setParameterByKey(KEY.SP_PRIMER_DELAY, 1);
+        p.set(KEY.RANDOM, new MersenneTwister(42)); // due to static RNG we have to reset the sequence
+        p.set(KEY.SP_PRIMER_DELAY, 1);
 
         Layer<int[]> l2 = new PALayer<>(p, null, new PASpatialPooler(), null, null, null);
 
@@ -940,7 +940,7 @@ public class PALayerTest {
     public void testBasicClassifierSetup() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
@@ -976,9 +976,9 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
-        p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
+        p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
@@ -1021,9 +1021,9 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
-        p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
+        p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
@@ -1092,11 +1092,11 @@ public class PALayerTest {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
-        p.setParameterByKey(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
+        p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
-        final int cellsPerColumn = (int)p.getParameterByKey(KEY.CELLS_PER_COLUMN);
+        final int cellsPerColumn = (int)p.get(KEY.CELLS_PER_COLUMN);
         assertTrue(cellsPerColumn > 0);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -1163,7 +1163,7 @@ public class PALayerTest {
     public void testObservableRetrieval() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new PALayer<>(p, me, new PASpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
@@ -1212,11 +1212,11 @@ public class PALayerTest {
     public void testFullLayerFluentAssembly() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
-        p.setParameterByKey(KEY.POTENTIAL_RADIUS, 200);
-        p.setParameterByKey(KEY.INHIBITION_RADIUS, 50);
-        p.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p.set(KEY.POTENTIAL_RADIUS, 200);
+        p.set(KEY.INHIBITION_RADIUS, 50);
+        p.set(KEY.GLOBAL_INHIBITION, true);
 
 //        System.out.println(p);
 
@@ -1269,7 +1269,7 @@ public class PALayerTest {
             0, 0, 0, 0, null, null, null,
             "sdr_in", "darr", "SDRPassThroughEncoder");
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        p.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         return p;
     }
 

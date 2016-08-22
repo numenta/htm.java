@@ -323,7 +323,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB5() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getCellsPerColumn() == 4);
@@ -355,7 +355,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB6() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getCellsPerColumn() == 4);
@@ -408,9 +408,9 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB7() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        p.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.7);
-        p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.2);
+        p.set(KEY.INITIAL_PERMANENCE, 0.2);
+        p.set(KEY.CONNECTED_PERMANENCE, 0.7);
+        p.set(KEY.PERMANENCE_INCREMENT, 0.2);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getInitialPermanence() == 0.2);
@@ -446,10 +446,10 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB8() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        p.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.7);
-        p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.2);
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.INITIAL_PERMANENCE, 0.2);
+        p.set(KEY.CONNECTED_PERMANENCE, 0.7);
+        p.set(KEY.PERMANENCE_INCREMENT, 0.2);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getInitialPermanence() == 0.2);
@@ -486,9 +486,9 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB9() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        p.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.7);
-        p.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.2);
+        p.set(KEY.INITIAL_PERMANENCE, 0.2);
+        p.set(KEY.CONNECTED_PERMANENCE, 0.7);
+        p.set(KEY.PERMANENCE_INCREMENT, 0.2);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getInitialPermanence() == 0.2);
@@ -538,8 +538,8 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testB11() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
-        p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.ACTIVATION_THRESHOLD, 8);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getCellsPerColumn() == 4);
@@ -708,7 +708,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testH2() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
@@ -749,7 +749,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testH3() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
@@ -791,7 +791,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testH4() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
@@ -822,7 +822,7 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testH5() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
         init(p, PATTERN_MACHINE);
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
@@ -853,8 +853,8 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     @Test
     public void testH9() {
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
-        p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.ACTIVATION_THRESHOLD, 8);
         init(p, PATTERN_MACHINE);
         
         // Instead of implementing the Python "shuffle" method, just use the exact output
@@ -931,8 +931,8 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     public void testH10() {
         // train TM on noisy sequences with orphan decay turned off
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
-        p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.ACTIVATION_THRESHOLD, 8);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getPredictedSegmentDecrement() == 0);
@@ -959,9 +959,9 @@ public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
         double predictedInactiveColumnsMean1 = predictedInactiveColumnsMetric.mean;
         
         p = Parameters.empty();
-        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
-        p.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 8);
-        p.setParameterByKey(KEY.PREDICTED_SEGMENT_DECREMENT, 0.04);
+        p.set(KEY.CELLS_PER_COLUMN, 4);
+        p.set(KEY.ACTIVATION_THRESHOLD, 8);
+        p.set(KEY.PREDICTED_SEGMENT_DECREMENT, 0.04);
         init(p, PATTERN_MACHINE);
         
         assertTrue(tm.getConnections().getPredictedSegmentDecrement() == 0.04);

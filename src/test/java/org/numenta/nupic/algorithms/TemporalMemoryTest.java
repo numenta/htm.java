@@ -19,25 +19,25 @@ public class TemporalMemoryTest {
     
     private Parameters getDefaultParameters() {
         Parameters retVal = Parameters.getTemporalDefaultParameters();
-        retVal.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
-        retVal.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
-        retVal.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 3);
-        retVal.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.21);
-        retVal.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.5);
-        retVal.setParameterByKey(KEY.MIN_THRESHOLD, 2);
-        retVal.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 3);
-        retVal.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.10);
-        retVal.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.10);
-        retVal.setParameterByKey(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
-        retVal.setParameterByKey(KEY.RANDOM, new UniversalRandom(42));
-        retVal.setParameterByKey(KEY.SEED, 42);
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
+        retVal.set(KEY.ACTIVATION_THRESHOLD, 3);
+        retVal.set(KEY.INITIAL_PERMANENCE, 0.21);
+        retVal.set(KEY.CONNECTED_PERMANENCE, 0.5);
+        retVal.set(KEY.MIN_THRESHOLD, 2);
+        retVal.set(KEY.MAX_NEW_SYNAPSE_COUNT, 3);
+        retVal.set(KEY.PERMANENCE_INCREMENT, 0.10);
+        retVal.set(KEY.PERMANENCE_DECREMENT, 0.10);
+        retVal.set(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
+        retVal.set(KEY.RANDOM, new UniversalRandom(42));
+        retVal.set(KEY.SEED, 42);
         
         return retVal;
     }
     
     private Parameters getDefaultParameters(Parameters p, KEY key, Object value) {
         Parameters retVal = p == null ? getDefaultParameters() : p;
-        retVal.setParameterByKey(key, value);
+        retVal.set(key, value);
         
         return retVal;
     }

@@ -465,7 +465,7 @@ public class Parameters implements Persistable {
     private static Parameters getParameters(Map<KEY, Object> map) {
         Parameters result = new Parameters();
         for (KEY key : map.keySet()) {
-            result.setParameterByKey(key, map.get(key));
+            result.set(key, map.get(key));
         }
         return result;
     }
@@ -491,9 +491,9 @@ public class Parameters implements Persistable {
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
                 if(key == KEY.RANDOM) {
-                    ((Random)getParameterByKey(key)).setSeed(Long.valueOf(((int)getParameterByKey(KEY.SEED))));
+                    ((Random)get(key)).setSeed(Long.valueOf(((int)get(KEY.SEED))));
                 }
-                beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
+                beanUtil.setSimpleProperty(cn, key.fieldName, get(key));
             }
         }
     }
@@ -507,7 +507,7 @@ public class Parameters implements Persistable {
      */
     public Parameters union(Parameters p) {
         for(KEY k : p.paramMap.keySet()) {
-            setParameterByKey(k, p.getParameterByKey(k));
+            set(k, p.get(k));
         }
         return this;
     }
@@ -544,7 +544,7 @@ public class Parameters implements Persistable {
      * @param key
      * @param value
      */
-    public void setParameterByKey(KEY key, Object value) {
+    public void set(KEY key, Object value) {
         paramMap.put(key, value);
     }
 
@@ -554,7 +554,7 @@ public class Parameters implements Persistable {
      * @param key
      * @return
      */
-    public Object getParameterByKey(KEY key) {
+    public Object get(KEY key) {
         return paramMap.get(key);
     }
 
@@ -585,7 +585,7 @@ public class Parameters implements Persistable {
             String fieldName = property.getName();
             KEY propKey = KEY.getKeyByFieldName(property.getName());
             if (propKey != null) {
-                Object paramValue = this.getParameterByKey(propKey);
+                Object paramValue = this.get(propKey);
                 Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
                 
                 // KEY.POTENTIAL_RADIUS is defined as Math.min(cn.numInputs, potentialRadius) so just log...
@@ -1021,7 +1021,7 @@ public class Parameters implements Persistable {
     }
 
     private void buildParamStr(StringBuilder spatialInfo, KEY key) {
-        Object value = getParameterByKey(key);
+        Object value = get(key);
         if (value instanceof int[]) {
             value = ArrayUtils.intArrayToString(value);
         }

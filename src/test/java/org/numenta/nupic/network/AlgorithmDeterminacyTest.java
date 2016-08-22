@@ -79,37 +79,37 @@ public class AlgorithmDeterminacyTest {
     
     public static Parameters getParameters() {
         Parameters parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 8 });
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
-        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 6);
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 8 });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 20 });
+        parameters.set(KEY.CELLS_PER_COLUMN, 6);
         
         //SpatialPooler specific
-        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 12);//3
-        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
-        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
-        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
-        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        parameters.setParameterByKey(KEY.SEED, 42);
-        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
+        parameters.set(KEY.POTENTIAL_RADIUS, 12);//3
+        parameters.set(KEY.POTENTIAL_PCT, 0.5);//0.5
+        parameters.set(KEY.GLOBAL_INHIBITION, false);
+        parameters.set(KEY.LOCAL_AREA_DENSITY, -1.0);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 5.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
+        parameters.set(KEY.MAX_BOOST, 10.0);
+        parameters.set(KEY.SEED, 42);
+        parameters.set(KEY.SP_VERBOSITY, 0);
         
         //Temporal Memory specific
-        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.2);
-        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.8);
-        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 5);
-        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
-        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.05);
-        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.05);
-        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 4);
-        parameters.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        parameters.set(KEY.INITIAL_PERMANENCE, 0.2);
+        parameters.set(KEY.CONNECTED_PERMANENCE, 0.8);
+        parameters.set(KEY.MIN_THRESHOLD, 5);
+        parameters.set(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
+        parameters.set(KEY.PERMANENCE_INCREMENT, 0.05);
+        parameters.set(KEY.PERMANENCE_DECREMENT, 0.05);
+        parameters.set(KEY.ACTIVATION_THRESHOLD, 4);
+        parameters.set(KEY.RANDOM, new MersenneTwister(42));
         
         return parameters;
     }
@@ -220,7 +220,7 @@ public class AlgorithmDeterminacyTest {
                         "darr",               // fieldType (dense array as opposed to sparse array or "sarr")
                         "SDRPassThroughEncoder"); // encoderType
         
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, settings);
+        p.set(KEY.FIELD_ENCODING_MAP, settings);
         
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
