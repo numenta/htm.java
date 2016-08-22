@@ -56,7 +56,7 @@ public class Synapse implements Persistable, Comparable<Synapse> {
     private Integer boxedIndex;
     private int inputIndex;
     private double permanence;
-
+    private boolean destroyed;
     
     /**
      * Constructor used when setting parameters later.
@@ -81,11 +81,6 @@ public class Synapse implements Persistable, Comparable<Synapse> {
         this.synapseIndex = index;
         this.boxedIndex = new Integer(index);
         this.inputIndex = inputIndex;
-        
-        // If this isn't a synapse on a proximal dendrite
-        if(sourceCell != null) {
-            sourceCell.addReceptorSynapse(c, this);
-        }
     }
 
     /**
@@ -146,7 +141,9 @@ public class Synapse implements Persistable, Comparable<Synapse> {
      * 
      * @param c
      */
+    @Deprecated
     public void destroy(Connections c) {
+        this.destroyed = true;
         this.pool.destroySynapse(this);
         if(sourceCell != null) {
             c.getSynapses((DistalDendrite)segment).remove(this);
@@ -154,6 +151,22 @@ public class Synapse implements Persistable, Comparable<Synapse> {
         }else{
             c.getSynapses((ProximalDendrite)segment).remove(this);
         }
+    }
+    
+    /**
+     * Returns the flag indicating whether this segment has been destroyed.
+     * @return  the flag indicating whether this segment has been destroyed.
+     */
+    public boolean destroyed() {
+        return destroyed;
+    }
+    
+    /**
+     * Sets the flag indicating whether this segment has been destroyed.
+     * @param b the flag indicating whether this segment has been destroyed.
+     */
+    public void setDestroyed(boolean b) {
+        this.destroyed = b;
     }
 
     /**

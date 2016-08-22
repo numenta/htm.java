@@ -46,6 +46,8 @@ public class Cell implements Comparable<Cell>, Serializable {
     private final Column column;
     /** Cash this because Cells are immutable */
     private final int hashcode;
+    /** tracks number of destroyed segments */
+    private int numDestroyedSegments;
 
 
     /**
@@ -83,6 +85,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @param c     the connections state of the temporal memory
      * @param s     the Synapse to add
      */
+    @Deprecated
     public void addReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this, true).add(s);
     }
@@ -94,6 +97,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @param c     the connections state of the temporal memory
      * @param s     the Synapse to remove
      */
+    @Deprecated
     public void removeReceptorSynapse(Connections c, Synapse s) {
         c.getReceptorSynapses(this, false).remove(s);
         c.decrementDistalSynapses();
@@ -132,6 +136,7 @@ public class Cell implements Comparable<Cell>, Serializable {
      * @param   c       the connections state of the temporal memory
      * @return          a newly created {@link DistalDendrite}
      */
+    @Deprecated
     public DistalDendrite createSegment(Connections c) {
         DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
         c.getSegments(this, true).add(dd);
@@ -161,6 +166,28 @@ public class Cell implements Comparable<Cell>, Serializable {
      */
     public List<DistalDendrite> getSegments(Connections c, boolean doLazyCreate) {
         return c.getSegments(this, doLazyCreate);
+    }
+    
+    /**
+     * Increments the number of destroyed segments for this {@code Cell}
+     */
+    public void incDestroyedSegments() {
+        numDestroyedSegments++;
+    }
+    
+    /**
+     * Decrements the number of destroyed segments for this {@code Cell}
+     */
+    public void decDestroyedSegments() {
+        numDestroyedSegments--;
+    }
+    
+    /**
+     * Returns the number of destroyed segments for this {@code Cell}
+     * @return
+     */
+    public int getNumDestroyedSegments() {
+        return numDestroyedSegments;
     }
 
     /**

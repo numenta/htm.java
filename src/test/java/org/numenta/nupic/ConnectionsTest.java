@@ -4,26 +4,130 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
+import org.numenta.nupic.Connections.Activity;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
 
 public class ConnectionsTest {
+    
+    @Test
+    public void testCreateSegment() {
+        Parameters retVal = Parameters.getTemporalDefaultParameters();
+        retVal.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.setParameterByKey(KEY.CELLS_PER_COLUMN, 4);
+        
+        Connections connections = new Connections();
+        
+        retVal.apply(connections);
+        new TemporalMemory().init(connections);
+        
+        Cell cell10 = connections.getCell(10);
+        List<DistalDendrite> segments = connections.getSegments(cell10);
+        // Establish list is empty == no current segments
+        assertEquals(0, segments.size());
+        
+        DistalDendrite segment1 = connections.createSegment(cell10);
+        assertEquals(0, segment1.getIndex());
+        assertEquals(10, segment1.getParentCell().getIndex());
+        
+        DistalDendrite segment2 = connections.createSegment(cell10);
+        assertEquals(1, segment2.getIndex());
+        assertEquals(10, segment2.getParentCell().getIndex());
+        
+        List<DistalDendrite> expected = Arrays.asList(new DistalDendrite[] { segment1, segment2 });
+        assertEquals(expected, connections.getSegments(cell10));
+        assertEquals(2, connections.getSegmentCount());
+    }
+
+    @Test
+    public void testCreateSegmentReuse() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        p.setParameterByKey(KEY.MAX_SEGMENTS_PER_CELL, 2);
+        
+        Connections connections = new Connections();
+        
+        p.apply(connections);
+        new TemporalMemory().init(connections);
+        
+        Cell cell42 = connections.getCell(42);
+        
+        DistalDendrite segment1 = connections.createSegment(cell42);
+        connections.createSynapse(segment1, connections.getCell(1), 0.5);
+        connections.createSynapse(segment1, connections.getCell(2), 0.5);
+        
+        DistalDendrite segment2 = connections.createSegment(cell42);
+        Set<Cell> activeInput = Arrays.stream(new Cell[] { connections.getCell(1), connections.getCell(2) }).collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        Activity retVal = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
+        assertEquals(1, retVal.activeSegments.size());
+        assertEquals(segment1, retVal.activeSegments.get(0));
+        
+        DistalDendrite segment3 = connections.createSegment(cell42);
+        assertTrue(segment2 == segment3);
+    }
+    
+    /**
+     * Creates a segment, destroys it, and makes sure it got destroyed along
+     * with all of its synapses.
+     */
+    @Test
+    public void testDestroySegment() {
+        Parameters p = Parameters.getTemporalDefaultParameters();
+        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        p.setParameterByKey(KEY.CELLS_PER_COLUMN, 32);
+        
+        Connections connections = new Connections();
+        
+        p.apply(connections);
+        new TemporalMemory().init(connections);
+        
+        connections.createSegment(connections.getCell(10));
+        DistalDendrite segment2 = connections.createSegment(connections.getCell(20));
+        connections.createSegment(connections.getCell(30));
+        connections.createSegment(connections.getCell(40));
+        
+        connections.createSynapse(segment2, connections.getCell(80), 0.85);
+        connections.createSynapse(segment2, connections.getCell(81), 0.85);
+        connections.createSynapse(segment2, connections.getCell(82), 0.15);
+        
+        assertEquals(4, connections.numSegments());
+        assertEquals(3, connections.numSynapses());
+        
+        connections.destroySegment(segment2);
+        
+        assertEquals(3, connections.numSegments());
+        assertEquals(0, connections.numSynapses());
+        
+        Connections c = connections;
+        Set<Cell> activeInput = Arrays.stream(
+            new Cell[] { c.getCell(80), c.getCell(81), c.getCell(82) })
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        Activity activity = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
+        assertEquals(0, activity.activeSegments.size());
+        assertEquals(0, activity.matchingSegments.size());
+    }
 
     @Test
     public void testColumnForCell1D() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 2048 });
         cn.setCellsPerColumn(5);
@@ -37,7 +141,7 @@ public class ConnectionsTest {
     
     @Test
     public void testColumnForCell2D() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -51,7 +155,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellIndexes() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -71,7 +175,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsColumnIndexes() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -91,7 +195,7 @@ public class ConnectionsTest {
     
     @Test
     public void testAsCellObjects() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -108,7 +212,7 @@ public class ConnectionsTest {
 
     @Test
     public void testAsColumnObjects() {
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
@@ -137,7 +241,7 @@ public class ConnectionsTest {
         Parameters p = getParameters();
         Connections con = new Connections();
         p.apply(con);
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         tm.init(con);
         
         for(int x = 0;x < 602;x++) {

@@ -49,6 +49,12 @@ public class DistalDendrite extends Segment implements Persistable {
     
     private Cell cell;
     
+    private int lastUsedIteration;
+    
+    private int numDestroyedSynapses;
+    
+    private boolean destroyed;
+    
     /**
      * Constructs a new {@code Segment} object with the specified owner
      * {@link Cell} and the specified index.
@@ -83,6 +89,7 @@ public class DistalDendrite extends Segment implements Persistable {
      * 
      * @return
      */
+    @Deprecated
     public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
         Pool pool = new Pool(1);
         Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementDistalSynapses(), sourceCell.getIndex());
@@ -121,48 +128,6 @@ public class DistalDendrite extends Segment implements Persistable {
     }
 
     /**
-     * Called for learning {@code Segment}s so that they may adjust the
-     * permanences of their synapses.
-     * 
-     * @param c                         the connections state of the temporal memory
-     * @param activeSynapses            a set of active synapses owned by this {@code Segment} which
-     *                                  will have their permanences increased. All others will have
-     *                                  their permanences decreased.
-     * @param permanenceIncrement       the increment by which permanences are increased.
-     * @param permanenceDecrement       the increment by which permanences are decreased.
-     */
-    @Deprecated
-    public void adaptSegment(Connections c, Set<Synapse> activeSynapses, double permanenceIncrement, double permanenceDecrement) {
-        List<Synapse> synapsesToDestroy = null;
-        
-        for(Synapse synapse : c.getSynapses(this)) {
-            double permanence = synapse.getPermanence();
-            if(activeSynapses.contains(synapse)) {
-                permanence += permanenceIncrement;
-            } else {
-                permanence -= permanenceDecrement;
-            }
-
-            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
-
-            if(Math.abs(permanence) < EPSILON) {
-                if(synapsesToDestroy == null) {
-                    synapsesToDestroy = new ArrayList<>();
-                }
-                synapsesToDestroy.add(synapse);
-            }else{
-                synapse.setPermanence(c, permanence);
-            }
-        }
-        
-        if(synapsesToDestroy != null) {
-            for(Synapse s : synapsesToDestroy) {
-                s.destroy(c);
-            }
-        }
-    }
-    
-    /**
      * Updates synapses on segment.
      * Strengthens active synapses; weakens inactive synapses.
      * 
@@ -171,6 +136,7 @@ public class DistalDendrite extends Segment implements Persistable {
      * @param permanenceIncrement       Amount to increment active synapses
      * @param permanenceDecrement       Amount to decrement inactive synapses
      */
+    @Deprecated  // Marked for change, not really deprecated
     public void adaptSegment(Set<Cell> prevActiveCells, Connections c, double permanenceIncrement, double permanenceDecrement) {
         List<Synapse> synapsesToDestroy = null;
         
@@ -235,6 +201,68 @@ public class DistalDendrite extends Segment implements Persistable {
         }
 
         return cells;
+    }
+    
+    /**
+     * Sets the last iteration in which this segment was active.
+     * @param iteration
+     */
+    public void setLastUsedIteration(int iteration) {
+        this.lastUsedIteration = iteration;
+    }
+    
+    /**
+     * Returns the iteration in which this segment was last active.
+     * @return  the iteration in which this segment was last active.
+     */
+    public int lastUsedIteration() {
+        return lastUsedIteration;
+    }
+    
+    /**
+     * Returns the flag indicating whether this {@code DistalDendrite} has been destroyed.
+     * @return  the flag indicating whether this segment has been destroyed.
+     */
+    public boolean destroyed() {
+        return destroyed;
+    }
+    
+    /**
+     * Sets the flag indicating whether this {@code DistalDendrite} has been destroyed.
+     * @param b the flag indicating whether this segment has been destroyed.
+     */
+    public void setDestroyed(boolean b) {
+        this.destroyed = b;
+    }
+    
+    /**
+     * Increments the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
+     */
+    public void incDestroyedSynapses() {
+        numDestroyedSynapses++;
+    }
+    
+    /**
+     * Decrements the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
+     */
+    public void decDestroyedSynapses() {
+        numDestroyedSynapses--;
+    }
+    
+    /**
+     * Returns the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
+     * @return
+     */
+    public int getNumDestroyedSynapses() {
+        return numDestroyedSynapses;
+    }
+    
+    /**
+     * Sets the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
+     * @param num   the current number of destroyed synapses
+     */
+    public void setNumDestroyedSynapses(int num) {
+        this.numDestroyedSynapses = num;
     }
 
     /**

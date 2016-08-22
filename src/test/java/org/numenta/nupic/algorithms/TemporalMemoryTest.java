@@ -55,11 +55,11 @@ public class TemporalMemoryTest {
         Cell cell4 = cn.getCell(4);
         Set<Cell> expectedActiveCells = Stream.of(cell4).collect(Collectors.toSet());
         
-        DistalDendrite activeSegment = cell4.createSegment(cn);
-        activeSegment.createSynapse(cn, cn.getCell(0), 0.5);
-        activeSegment.createSynapse(cn, cn.getCell(1), 0.5);
-        activeSegment.createSynapse(cn, cn.getCell(2), 0.5);
-        activeSegment.createSynapse(cn, cn.getCell(3), 0.5);
+        DistalDendrite activeSegment = cn.createSegment(cell4);
+        cn.createSynapse(activeSegment, cn.getCell(0), 0.5);
+        cn.createSynapse(activeSegment, cn.getCell(1), 0.5);
+        cn.createSynapse(activeSegment, cn.getCell(2), 0.5);
+        cn.createSynapse(activeSegment, cn.getCell(3), 0.5);
         
         ComputeCycle cc = tm.compute(cn, previousActiveColumns, true);
         assertTrue(cc.predictiveCells().equals(expectedActiveCells));

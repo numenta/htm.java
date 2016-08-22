@@ -6,14 +6,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.Connections;
-import org.numenta.nupic.algorithms.OldTemporalMemory.ExcitedColumn;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
