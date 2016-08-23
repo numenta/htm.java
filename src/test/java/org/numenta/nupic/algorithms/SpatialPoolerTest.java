@@ -44,6 +44,8 @@ import org.numenta.nupic.util.UniversalRandom;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
+import static org.junit.Assert.*;
+
 public class SpatialPoolerTest {
     private Parameters parameters;
     private SpatialPooler sp;
@@ -1014,6 +1016,41 @@ public class SpatialPoolerTest {
         trueNewDc = new double[] { 500, 400, 300, 200, 1000 };
         assertTrue(Arrays.equals(trueNewDc, newDc));
     }
+
+    /**
+     * Tests that duty cycles arrays are updated properly,
+     * and overlaps does not get changed in between calls.
+     */
+    @Test
+    public void testUpdateDutyCycle() {
+        setupParameters();
+        parameters.setInputDimensions(new int[] { 5 });
+        parameters.setColumnDimensions(new int[] { 5 });
+        initSP();
+
+        int[] overlaps = new int[] { 1, 0, 5, 2, 0 };
+        int[] overlapsClone = overlaps.clone();
+        int[] active = new int[] { 1, 2};
+
+        mem.setIterationNum(0);
+        sp.updateDutyCycles(mem, overlaps, active);
+
+        assertArrayEquals(overlaps, overlapsClone);
+        assertArrayEquals(mem.getOverlapDutyCycles(),new double[] { 1, 0, 1, 1, 0 }, 0.0001);
+        assertArrayEquals(mem.getActiveDutyCycles(),new double[] { 0, 1, 1, 0, 0 }, 0.0001);
+
+        overlaps = new int[] { 0, 1, 2, 0, 3 };
+        overlapsClone = overlaps.clone();
+        active = new int[] { 0, 2, 3};
+
+        mem.setIterationNum(1);
+        sp.updateDutyCycles(mem, overlaps, active);
+
+        assertArrayEquals(overlaps, overlapsClone);
+        assertArrayEquals(mem.getOverlapDutyCycles(),new double[] { 0, 1, 1, 0, 1 }, 0.0001);
+        assertArrayEquals(mem.getActiveDutyCycles(),new double[] { 1, 0, 1, 1, 0 }, 0.0001);
+    }
+
 
     @Test
     public void testIsUpdateRound() {

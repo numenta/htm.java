@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -530,4 +531,32 @@ public class ArrayUtilsTest {
 	    double[] overlaps = new double[] { 1, 2, 1, 4, 8, 3, 12, 5, 4, 1 };
 	    assertTrue(Arrays.equals(new int[] { 6, 4, 7 }, ArrayUtils.nGreatest(overlaps, 3)));
 	}
+
+    @Test
+    public void testGreaterThanXFunctions() {
+        int[] overlaps = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        double[] overlapArray = new double[overlaps.length];
+        ArrayUtils.greaterThanXThanSetToYInB(overlaps, overlapArray, 0, 1);
+        assertArrayEquals(new double[] {  0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0 }, overlapArray, 0.0001);
+
+        int[] arrayInt = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        ArrayUtils.greaterThanXThanSetToY(arrayInt, 0, 1);
+        assertArrayEquals(new int[] { 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0}, arrayInt);
+
+        double[] arrayDouble = new double[] { 0, 5, 3, 0, 2, 0, 0, 7, 1, 2, 0};
+        ArrayUtils.greaterThanXThanSetToY(arrayDouble, 0, 2);
+        assertArrayEquals(new double[] { 0, 2, 2, 0, 2, 0, 0, 2, 2, 2, 0}, arrayDouble, 0.0001);
+    }
+
+
+    @Test
+    public void testArgmax()
+    {
+        int[] iarray = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        double[] darray = new double[] { 0, 1, 10, 0, 3, 0, 6, 7, 1, 2, 0};
+        assertEquals(ArrayUtils.argmax(iarray), 7 );
+        assertEquals(ArrayUtils.argmax(darray), 2 );
+    }
+
+
 }

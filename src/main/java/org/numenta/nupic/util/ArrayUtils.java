@@ -1714,6 +1714,21 @@ public class ArrayUtils {
     }
 
     /**
+     * Sets value to "y" in "targetB" if the value in the same index in "sourceA" is bigger than "x".
+     * @param sourceA array to compare elements with X
+     * @param targetB array to set elements to Y
+     * @param x     the comparison
+     * @param y     the value to set if the comparison fails
+     */
+    public static void greaterThanXThanSetToYInB(int[] sourceA, double[] targetB, int x, double y) {
+        for (int i=0;i<sourceA.length;i++) {
+            if (sourceA[i] > x)
+                targetB[i] = y;
+        }
+    }
+
+
+    /**
      * Returns the index of the max value in the specified array
      * @param array the array to find the max value index in
      * @return the index of the max value
