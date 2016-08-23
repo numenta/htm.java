@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -110,7 +111,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
             System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
             System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
             
-            if(!columnData.activeColumns().isEmpty()) {
+            if(!((List<?>)t.get(1)).get(0).equals(Optional.empty())) {
                 if(!columnData.activeSegments().isEmpty()) {
                     List<Cell> cellsToAdd = activatePredictedColumn(conn, columnData.activeSegments(), 
                         prevActiveCells, conn.getPermanenceIncrement(), conn.getPermanenceDecrement(), learn);
