@@ -48,7 +48,7 @@ public class TemporalMemoryTest {
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -65,6 +65,22 @@ public class TemporalMemoryTest {
         assertTrue(cc.predictiveCells().equals(expectedActiveCells));
         ComputeCycle cc2 = tm.compute(cn, activeColumns, true);
         assertTrue(cc2.activeCells().equals(expectedActiveCells));
+    }
+    
+    @Test
+    public void testBurstUnpredictedColumns() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = getDefaultParameters();
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        int[] activeColumns = { 0 };
+        Set<Cell> burstingCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
+        
+        ComputeCycle cc = tm.compute(cn, activeColumns, true);
+        
+        assertTrue(cc.activeCells().equals(burstingCells));
     }
 
 }

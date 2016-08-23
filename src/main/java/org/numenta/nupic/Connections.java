@@ -153,6 +153,9 @@ public class Connections implements Persistable {
     protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
     protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
+    
+    protected List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
+    protected List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
 
     /** Total number of columns */
     protected int[] columnDimensions = new int[] { 2048 };
@@ -1828,6 +1831,7 @@ public class Connections implements Persistable {
      * Returns the Set of learning {@link DistalDendrite}s
      * @return
      */
+    @Deprecated
     public Set<DistalDendrite> getLearningSegments() {
         return learningSegments;
     }
@@ -1836,6 +1840,7 @@ public class Connections implements Persistable {
      * Sets the {@link Set} of learning segments
      * @param segments
      */
+    @Deprecated
     public void setLearningSegments(Set<DistalDendrite> segments) {
         this.learningSegments = segments;
     }
@@ -1844,6 +1849,7 @@ public class Connections implements Persistable {
      * Returns the Set of active {@link DistalDendrite}s
      * @return
      */
+    @Deprecated
     public Set<DistalDendrite> getActiveSegments() {
         return activeSegments;
     }
@@ -1852,6 +1858,7 @@ public class Connections implements Persistable {
      * Sets the {@link Set} of active {@link Segment}s
      * @param segments
      */
+    @Deprecated
     public void setActiveSegments(Set<DistalDendrite> segments) {
         this.activeSegments = segments;
     }
@@ -1860,6 +1867,7 @@ public class Connections implements Persistable {
      * Returns the Set of matching {@link DistalDendrite}s
      * @return
      */
+    @Deprecated
     public Set<DistalDendrite> getMatchingSegments() {
         return matchingSegments;
     }
@@ -1868,8 +1876,41 @@ public class Connections implements Persistable {
      * Sets the Set of matching {@link DistalDendrite}s
      * @param segments
      */
+    @Deprecated
     public void setMatchingSegments(Set<DistalDendrite> segments) {
         this.matchingSegments = segments;
+    }
+    
+    /**
+     * Returns the Set of active {@link SegmentOverlap}s
+     * @return
+     */
+    public List<SegmentOverlap> getActiveSegmentOverlaps() {
+        return activeSegOverlaps;
+    }
+
+    /**
+     * Sets the {@link Set} of active {@link SegmentOverlap}s
+     * @param segments
+     */
+    public void setActiveSegmentOverlaps(List<SegmentOverlap> segments) {
+        this.activeSegOverlaps = segments;
+    }
+
+    /**
+     * Returns the Set of matching {@link SegmentOverlap}s
+     * @return
+     */
+    public List<SegmentOverlap> getMatchingSegmentOverlaps() {
+        return matchingSegOverlaps;
+    }
+
+    /**
+     * Sets the Set of matching {@link SegmentOverlap}s
+     * @param segments
+     */
+    public void setMatchingSegmentOverlaps(List<SegmentOverlap> segments) {
+        this.matchingSegOverlaps = segments;
     }
     
     /**

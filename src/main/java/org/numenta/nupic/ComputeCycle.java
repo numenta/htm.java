@@ -22,15 +22,20 @@
 
 package org.numenta.nupic;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.util.Tuple;
 
 /**
  * Contains a snapshot of the state attained during one computational
@@ -53,9 +58,14 @@ public class ComputeCycle implements Persistable {
     public Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
     public Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
     
+    public List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
+    public List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
+    
+    
     /** Force access through accessor because this list is created lazily */
     private Set<Cell> predictiveCells = new LinkedHashSet<>();
-    
+    /** Used for one cycle's typed output translation from the tuple created */
+    public ColumnData columnData = new ColumnData();
         
     
     /**
@@ -103,8 +113,8 @@ public class ComputeCycle implements Persistable {
      */
     public Set<Cell> predictiveCells() {
         if(predictiveCells.isEmpty()) {
-            for(DistalDendrite activeSegment : activeSegments) {
-                predictiveCells.add(activeSegment.getParentCell());
+            for(SegmentOverlap activeSegment : activeSegOverlaps) {
+                predictiveCells.add(activeSegment.segment.getParentCell());
             }
         }
         
@@ -160,6 +170,32 @@ public class ComputeCycle implements Persistable {
      */
     public Set<Cell> matchingCells() {
         return matchingCells;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static class ColumnData {
+        Tuple t;
+        
+        public ColumnData() {}
+        
+        public ColumnData(Tuple t) {
+            this.t = t;
+        }
+        
+        public Column column() { return (Column)t.get(0); }
+        public List<Column> activeColumns() { return (List<Column>)t.get(1); }
+        public List<SegmentOverlap> activeSegments() { 
+            return ((List<?>)t.get(2)).get(0).equals(Optional.empty()) ? 
+                Collections.emptyList() :
+                    (List<SegmentOverlap>)t.get(2); 
+        }
+        public List<SegmentOverlap> matchingSegments() {
+            return ((List<?>)t.get(3)).get(0).equals(Optional.empty()) ? 
+                Collections.emptyList() :
+                    (List<SegmentOverlap>)t.get(3); 
+        }
+        
+        public ColumnData set(Tuple t) { this.t = t; return this; }
     }
 
     /* (non-Javadoc)
