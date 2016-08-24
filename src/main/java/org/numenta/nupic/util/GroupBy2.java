@@ -52,6 +52,10 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     /** stores the {@link GroupBy} {@link Generator}s created from the supplied lists */
     private List<GroupBy<Object, R>> generatorList;
     
+    /** the current interation's minimum key value */
+    private R minKeyVal;
+    
+    
     ///////////////////////
     //    Control Lists  //
     ///////////////////////
@@ -140,7 +144,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         
         for(int i = 0;i < numEntries;i++) {
             for(Pair<Object, R> p : generatorList.get(i)) {
-                System.out.println("generator " + i + ": " + p.getValue() + ",  " + p.getKey());
+                System.out.println("generator " + i + ": " + p.getKey() + ",  " + p.getValue());
             }
             System.out.println("");
         }
@@ -175,10 +179,9 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
             reset();
         }
         
-        return IntStream.range(0,  numEntries)
-                .filter(i -> advanceList[i] && generatorList.get(i).hasNext())
-                .mapToObj(i -> Optional.of(generatorList.get(i).peek()))
-                .anyMatch(i -> i.isPresent());
+        advanceSequences();
+        
+        return nextMinKey();
     }
     
     /**
@@ -191,9 +194,6 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     @SuppressWarnings("unchecked")
     @Override
     public Tuple next() {
-        advanceSequences();
-        
-        R minKeyVal = nextMinKey();
         
         Object[] objs = IntStream
             .range(0, numEntries + 1)
@@ -234,12 +234,13 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
      * 
      * @return  the next smallest generated key.
      */
-    private R nextMinKey() {
+    private boolean nextMinKey() {
         return Arrays.stream(nextList)
             .filter(opt -> opt.isPresent())
             .map(opt -> opt.get().getValue())
             .min((k, k2) -> k.compareTo(k2))
-            .get();
+            .map(k -> { minKeyVal = k; return k; } )
+            .isPresent();
     }
     
     /**

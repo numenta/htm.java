@@ -1504,6 +1504,7 @@ public class Connections implements Persistable {
             synapse.setDestroyed(false);
             segment.decDestroyedSynapses();
             incrementDistalSynapses();
+            synapse.setPresynapticCell(presynapticCell);
         }else{
             getSynapses(segment).add(
                 synapse = new Synapse(
@@ -1544,7 +1545,7 @@ public class Connections implements Persistable {
      * @return  Synapse object on the segment with the minimal permanence
      */
     private Synapse minPermanenceSynapse(DistalDendrite dd) {
-        List<Synapse> synapses = getSynapses(dd);
+        List<Synapse> synapses = unDestroyedSynapsesForSegment(dd);
         Synapse min = null;
         double minPermanence = Double.MAX_VALUE;
         

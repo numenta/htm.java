@@ -62,7 +62,6 @@ public class GroupBy2Test {
         
         int i = 0;
         for(Tuple t : m) {
-            System.out.println(t);
             int j = 0;
             for(Object o : t.all()) {
                 assertEquals(o, expectedValues.get(i).get(j));
@@ -95,7 +94,6 @@ public class GroupBy2Test {
         
         int i = 0;
         for(Tuple t : m) {
-            System.out.println(t);
             int j = 0;
             for(Object o : t.all()) {
                 assertEquals(o, expectedValues.get(i).get(j));
@@ -111,7 +109,7 @@ public class GroupBy2Test {
         List<Integer> sequence1 = Arrays.asList(new Integer[] { 3, 4, 5 });
         List<Integer> sequence2 = Arrays.asList(new Integer[] { 3, 3, 4, 5 });
         
-        Function<Integer, Integer> identity = Function.identity();
+        Function<Integer, Integer> identity = x -> x;//Function.identity();
         Function<Integer, Integer> times3 = x -> x * 3;
         Function<Integer, Integer> times4 = x -> x * 4;
         
@@ -132,7 +130,6 @@ public class GroupBy2Test {
         
         int i = 0;
         for(Tuple t : m) {
-            System.out.println(t);
             int j = 0;
             for(Object o : t.all()) {
                 assertEquals(o, expectedValues.get(i).get(j));
@@ -173,7 +170,6 @@ public class GroupBy2Test {
         
         int i = 0;
         for(Tuple t : m) {
-            System.out.println(t);
             int j = 0;
             for(Object o : t.all()) {
                 assertEquals(o, expectedValues.get(i).get(j));
@@ -218,7 +214,6 @@ public class GroupBy2Test {
         
         int i = 0;
         for(Tuple t : m) {
-            System.out.println(t);
             int j = 0;
             for(Object o : t.all()) {
                 assertEquals(o, expectedValues.get(i).get(j));

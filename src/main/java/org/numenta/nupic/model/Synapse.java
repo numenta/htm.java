@@ -126,6 +126,15 @@ public class Synapse implements Persistable, Comparable<Synapse> {
     public Segment getSegment() {
         return segment;
     }
+    
+    /**
+     * Called by {@link Connections#destroySynapse(Synapse)} to assign
+     * a reused Synapse to another presynaptic Cell
+     * @param cell  the new presynaptic cell
+     */
+    public void setPresynapticCell(Cell cell) {
+        this.sourceCell = cell;
+    }
 
     /**
      * Returns the containing {@link Cell} 

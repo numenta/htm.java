@@ -357,24 +357,25 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         
         List<Cell> candidates = new ArrayList<>(prevWinnerCells);
         Collections.sort(candidates);
-        int eligibleEnd = candidates.size();
+        int eligibleEnd = candidates.size() - 1;
         
         for(Synapse synapse : conn.unDestroyedSynapsesForSegment(segment)) {
             Cell presynapticCell = synapse.getPresynapticCell();
-            int ineligible = candidates.subList(0, eligibleEnd).indexOf(presynapticCell);
-            if(ineligible != -1) {
+            int index = candidates.subList(0, eligibleEnd + 1).indexOf(presynapticCell);
+            if(index != -1) {
+                candidates.set(index, candidates.get(eligibleEnd));
                 eligibleEnd--;
-                candidates.set(ineligible, candidates.get(eligibleEnd));
             }
         }
         
-        int nActual = nDesiredNewSynapses < eligibleEnd ? nDesiredNewSynapses : eligibleEnd;
+        int candidatesLength = eligibleEnd + 1;
+        int nActual = nDesiredNewSynapses < candidatesLength ? nDesiredNewSynapses : candidatesLength;
         
         for(int i = 0;i < nActual;i++) {
-            int rand = random.nextInt(eligibleEnd);
+            int rand = random.nextInt(candidatesLength);
             conn.createSynapse(segment, candidates.get(rand), initialPermanence);
-            candidates.set(rand, candidates.get(eligibleEnd));
-            eligibleEnd--;
+            candidates.set(rand, candidates.get(candidatesLength - 1));
+            candidatesLength--;
         }
     }
     
