@@ -35,7 +35,7 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.SDR;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -55,7 +55,7 @@ import rx.Subscriber;
 /**
  * <p>
  * Tests which makes sure that indeterminacy never creeps in to the codebase.
- * This is verified by running the {@link OldTemporalMemory} using the same 
+ * This is verified by running the {@link TemporalMemory} using the same 
  * configuration parameters, inputs and random number generator in the following 
  * 3 modes:</p><p>
  * <ol>
@@ -137,8 +137,8 @@ public class AlgorithmDeterminacyTest {
         Parameters p = getParameters();
         Connections con = new Connections();
         p.apply(con);
-        OldTemporalMemory tm = new OldTemporalMemory();
-        tm.init(con);
+        TemporalMemory tm = new TemporalMemory();
+        TemporalMemory.init(con);
         
         ComputeCycle cc = null;
         for(int x = 0;x < 602;x++) {
@@ -166,7 +166,7 @@ public class AlgorithmDeterminacyTest {
         final int[] input7 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
 
-        Layer<int[]> l = new Layer<>(p, null, null, new OldTemporalMemory(), null, null);
+        Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, null);
         
         int timeUntilStable = 600;
 
@@ -225,7 +225,7 @@ public class AlgorithmDeterminacyTest {
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("1", p)
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(sensor)));
                     
         network.start();

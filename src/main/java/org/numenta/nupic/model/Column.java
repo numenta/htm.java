@@ -31,7 +31,7 @@ import java.util.Random;
 
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 
 /**
  * Abstraction of both an input bit and a columnal collection of
@@ -116,7 +116,7 @@ public class Column implements Comparable<Column>, Serializable {
 
     /**
      * Returns the configured number of cells per column for
-     * all {@code Column} objects within the current {@link OldTemporalMemory}
+     * all {@code Column} objects within the current {@link TemporalMemory}
      * @return
      */
     public int getNumCellsPerColumn() {

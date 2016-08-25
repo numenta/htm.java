@@ -24,7 +24,7 @@ import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -280,7 +280,7 @@ public class NetworkConsistencyTest {
             .add(Network.createRegion("NAB Region")
                 .add(Network.createLayer("NAB Layer", parameters)
                     .add(Anomaly.create(params))
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(ObservableSensor::create,
                             SensorParams.create(SensorParams.Keys::obs, "Manual Input", supplier)))));
@@ -340,7 +340,7 @@ public class NetworkConsistencyTest {
 
         private ScalarEncoder encoder;
         private SpatialPooler spatialPooler;
-        private OldTemporalMemory temporalMemory;
+        private TemporalMemory temporalMemory;
         private Anomaly anomaly;
         
         private int columnCount;
@@ -367,7 +367,7 @@ public class NetworkConsistencyTest {
             
             spatialPooler = new SpatialPooler();
             
-            temporalMemory = new OldTemporalMemory();
+            temporalMemory = new TemporalMemory();
             
             Map<String, Object> anomalyParams = new HashMap<>();
             anomalyParams.put(KEY_MODE, Mode.PURE);
@@ -376,7 +376,7 @@ public class NetworkConsistencyTest {
             configure();
         }
         
-        public SimpleLayer(Parameters p, ScalarEncoder e, SpatialPooler s, OldTemporalMemory t, Anomaly a) {
+        public SimpleLayer(Parameters p, ScalarEncoder e, SpatialPooler s, TemporalMemory t, Anomaly a) {
             this.params = p;
             this.encoder = e;
             this.spatialPooler = s;
@@ -390,7 +390,7 @@ public class NetworkConsistencyTest {
             columnCount = ((int[])params.get(KEY.COLUMN_DIMENSIONS))[0];
             params.apply(memory);
             spatialPooler.init(memory);
-            temporalMemory.init(memory);
+            TemporalMemory.init(memory);
 
             columnCount = memory.getPotentialPools().getMaxIndex() + 1; //If necessary, flatten multi-dimensional index
             cellsPerColumn = memory.getCellsPerColumn();

@@ -4,8 +4,10 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,9 +18,11 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.UniversalRandom;
+import org.nustaq.serialization.FSTConfiguration;
 
 public class TemporalMemoryTest { 
     
@@ -45,6 +49,13 @@ public class TemporalMemoryTest {
         retVal.set(key, value);
         
         return retVal;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T> T deepCopyPlain(T t) {
+        FSTConfiguration fastSerialConfig = FSTConfiguration.createDefaultConfiguration();
+        byte[] bytes = fastSerialConfig.asByteArray(t);
+        return (T)fastSerialConfig.asObject(bytes);
     }
 
     @Test
@@ -648,5 +659,206 @@ public class TemporalMemoryTest {
         assertEquals(0.48, as5.getPermanence(), 0.01);
         assertEquals(0.50, is1.getPermanence(), 0.01);
         assertEquals(0.50, is2.getPermanence(), 0.01);
+    }
+    
+    @Test
+    public void testAddSegmentToCellWithFewestSegments() {
+        boolean grewOnCell1 = false;
+        boolean grewOnCell2 = false;
+        
+        for(int seed = 0;seed < 100;seed++) {
+            TemporalMemory tm = new TemporalMemory();
+            Connections cn = new Connections();
+            Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
+            p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
+            p = getDefaultParameters(p, KEY.SEED, seed);
+            p.apply(cn);
+            TemporalMemory.init(cn);
+            
+            int[] prevActiveColumns = { 1, 2, 3, 4 };
+            Cell[] prevActiveCells = { cn.getCell(4), cn.getCell(5), cn.getCell(6), cn.getCell(7) };
+            int[] activeColumns = { 0 };
+            Cell[] nonMatchingCells = { cn.getCell(0), cn.getCell(3) };
+            Set<Cell> activeCells = cn.getCellSet(new int[] { 0, 1, 2, 3});
+            
+            DistalDendrite segment1 = cn.createSegment(nonMatchingCells[0]);
+            cn.createSynapse(segment1, prevActiveCells[0], 0.5);
+            DistalDendrite segment2 = cn.createSegment(nonMatchingCells[1]);
+            cn.createSynapse(segment2, prevActiveCells[1], 0.5);
+            
+            tm.compute(cn, prevActiveColumns, true);
+            ComputeCycle cc = tm.compute(cn, activeColumns, true);
+            
+            assertTrue(cc.activeCells().equals(activeCells));
+            
+            assertEquals(3, cn.getSegmentCount());
+            assertEquals(1, cn.getCell(0).getSegments(cn).size());
+            assertEquals(1, cn.getCell(3).getSegments(cn).size());
+            assertEquals(1, segment1.getAllSynapses(cn).size());
+            assertEquals(1, segment2.getAllSynapses(cn).size());
+            
+            List<DistalDendrite> segments = cn.getCell(1).getSegments(cn, true);
+            if(segments.size() == 0) {
+                List<DistalDendrite> segments2 = cn.getCell(2).getSegments(cn);
+                assertFalse(segments2.size() == 0);
+                grewOnCell2 = true;
+                segments.addAll(segments2);
+            } else {
+                grewOnCell1 = true;
+            }
+            
+            assertEquals(1, segments.size());
+            List<Synapse> synapses = segments.get(0).getAllSynapses(cn);
+            assertEquals(4, synapses.size());
+            
+            Set<Column> columnCheckList = cn.getColumnSet(prevActiveColumns);
+            
+            for(Synapse synapse : synapses) {
+                assertEquals(0.2, synapse.getPermanence(), 0.01);
+                
+                Column column = synapse.getPresynapticCell().getColumn();
+                assertTrue(columnCheckList.contains(column));
+                columnCheckList.remove(column);
+            }
+            
+            assertEquals(0, columnCheckList.size());
+        }
+        
+        assertTrue(grewOnCell1);
+        assertTrue(grewOnCell2);
+    }
+    
+    @Test
+    public void testConnectionsNeverChangeWhenLearningDisabled() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
+        p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
+        p = getDefaultParameters(p, KEY.INITIAL_PERMANENCE, 0.2);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        int[] prevActiveColumns = { 0 };
+        Cell[] prevActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
+        int[] activeColumns = { 1, 2 };
+        Cell prevInactiveCell = cn.getCell(81);
+        Cell expectedActiveCell = cn.getCell(4);
+        
+        DistalDendrite correctActiveSegment = cn.createSegment(expectedActiveCell);
+        cn.createSynapse(correctActiveSegment, prevActiveCells[0], 0.5);
+        cn.createSynapse(correctActiveSegment, prevActiveCells[1], 0.5);
+        cn.createSynapse(correctActiveSegment, prevActiveCells[2], 0.5);
+        
+        DistalDendrite wrongMatchingSegment = cn.createSegment(cn.getCell(43));
+        cn.createSynapse(wrongMatchingSegment, prevActiveCells[0], 0.5);
+        cn.createSynapse(wrongMatchingSegment, prevActiveCells[1], 0.5);
+        cn.createSynapse(wrongMatchingSegment, prevInactiveCell, 0.5);
+        
+        Map<Cell, HashSet<Synapse>> synMapBefore = deepCopyPlain(cn.getReceptorSynapseMapping());
+        Map<Cell, List<DistalDendrite>> segMapBefore = deepCopyPlain(cn.getSegmentMapping());
+        
+        tm.compute(cn, prevActiveColumns, false);
+        tm.compute(cn, activeColumns, false);
+        
+        assertTrue(synMapBefore != cn.getReceptorSynapseMapping());
+        assertEquals(synMapBefore, cn.getReceptorSynapseMapping());
+        assertTrue(segMapBefore != cn.getSegmentMapping());
+        assertEquals(segMapBefore, cn.getSegmentMapping());
+    }
+    
+    @Test
+    public void testLeastUsedCell() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = getDefaultParameters(null, KEY.COLUMN_DIMENSIONS, new int[] { 2 });
+        p = getDefaultParameters(p, KEY.CELLS_PER_COLUMN, 2);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        DistalDendrite dd = cn.createSegment(cn.getCell(0));
+        cn.createSynapse(dd, cn.getCell(3), 0.3);
+        
+        for(int i = 0;i < 100;i++) {
+            assertEquals(1, tm.leastUsedCell(cn, cn.getColumn(0).getCells(), cn.getRandom()).getIndex());
+        }
+    }
+    
+    @Test
+    public void testAdaptSegment() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = Parameters.getAllDefaultParameters();
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        DistalDendrite dd = cn.createSegment(cn.getCell(0));
+        Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.6);
+        Synapse s2 = cn.createSynapse(dd, cn.getCell(37), 0.4);
+        Synapse s3 = cn.createSynapse(dd, cn.getCell(477), 0.9);
+        
+        tm.adaptSegment(cn, dd, cn.getCellSet(23, 37), cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        
+        assertEquals(0.7, s1.getPermanence(), 0.01);
+        assertEquals(0.5, s2.getPermanence(), 0.01);
+        assertEquals(0.8, s3.getPermanence(), 0.01);
+    }
+    
+    @Test
+    public void testAdaptSegmentToMax() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = Parameters.getAllDefaultParameters();
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        DistalDendrite dd = cn.createSegment(cn.getCell(0));
+        Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.9);
+        
+        tm.adaptSegment(cn, dd, cn.getCellSet(23), cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertEquals(1.0, s1.getPermanence(), 0.1);
+        
+        // Now permanence should be at max
+        tm.adaptSegment(cn, dd, cn.getCellSet(23), cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertEquals(1.0, s1.getPermanence(), 0.1);
+    }
+    
+    @Test
+    public void testAdaptSegmentToMin() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = Parameters.getAllDefaultParameters();
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        DistalDendrite dd = cn.createSegment(cn.getCell(0));
+        Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.1);
+        cn.createSynapse(dd, cn.getCell(1), 0.3);
+        
+        tm.adaptSegment(cn, dd, cn.getCellSet(), cn.getPermanenceIncrement(), cn.getPermanenceDecrement());
+        assertFalse(cn.unDestroyedSynapsesForSegment(dd).contains(s1));
+    }
+    
+    @Test
+    public void testNumberOfColumns() {
+        Connections cn = new Connections();
+        Parameters p = Parameters.getAllDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 64, 64 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        assertEquals(64 * 64, cn.getNumColumns());
+    }
+    
+    @Test
+    public void testNumberOfCells() {
+        Connections cn = new Connections();
+        Parameters p = Parameters.getAllDefaultParameters();
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 64, 64 });
+        p.set(KEY.CELLS_PER_COLUMN, 32);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        assertEquals(64 * 64 * 32, cn.getCells().length);
     }
 }

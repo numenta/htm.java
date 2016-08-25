@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.algorithms;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -35,7 +36,6 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
@@ -43,8 +43,6 @@ import org.numenta.nupic.util.UniversalRandom;
 
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
-
-import static org.junit.Assert.*;
 
 public class SpatialPoolerTest {
     private Parameters parameters;
@@ -232,7 +230,7 @@ public class SpatialPoolerTest {
         cn.setBoostFactors(new double[] { 2.0, 2.0, 2.0 });
         int[] inputVector = { 1, 1, 1, 1, 1 };
         int[] activeArray = { 0, 0, 0 };
-        int[] expOutput = { 2, 0, 0 };
+        int[] expOutput = { 1, 0, 0 };
         sp.compute(cn, inputVector, activeArray, true, true);
         System.out.println("out = " + Arrays.toString(activeArray));
     }

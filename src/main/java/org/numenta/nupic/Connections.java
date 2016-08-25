@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -54,7 +54,7 @@ import org.numenta.nupic.util.UniversalRandom;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and
- * {@link OldTemporalMemory} as well as the state of all support structures
+ * {@link TemporalMemory} as well as the state of all support structures
  * (i.e. Cells, Columns, Segments, Synapses etc.).
  *
  * In the separation of data from logic, this class represents the data/state.
@@ -1732,7 +1732,7 @@ public class Connections implements Persistable {
     }
 
     /**
-     * Clears all {@link OldTemporalMemory} state.
+     * Clears all {@link TemporalMemory} state.
      */
     public void clear() {
         activeCells.clear();

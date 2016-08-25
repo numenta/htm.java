@@ -73,7 +73,7 @@ public class MonitoredTemporalMemory implements ComputeDecorator, TemporalMemory
     
     /**
      * Returns the original class which is being tested. In this 
-     * case it is the {@link OldTemporalMemory}
+     * case it is the {@link TemporalMemory}
      */
     @SuppressWarnings("unchecked")
     @Override

@@ -26,7 +26,7 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -94,11 +94,11 @@ public class PALayer<T> extends Layer<T> {
      * @param params                    the parameters object from which to obtain settings
      * @param e                         an (optional) encoder providing input
      * @param sp                        an (optional) SpatialPooler
-     * @param tm                        an (optional) {@link OldTemporalMemory}
+     * @param tm                        an (optional) {@link TemporalMemory}
      * @param autoCreateClassifiers     flag indicating whether to create {@link CLAClassifier}s
      * @param a                         an (optional) {@link Anomaly} computer.
      */
-    public PALayer(Parameters params, MultiEncoder e, SpatialPooler sp, OldTemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
+    public PALayer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
         super(params, e, sp, tm, autoCreateClassifiers, a);
     }
 
@@ -170,7 +170,7 @@ public class PALayer<T> extends Layer<T> {
     }
 
     /**
-     * Called internally to invoke the {@link OldTemporalMemory}
+     * Called internally to invoke the {@link TemporalMemory}
      *
      * @param input
      *            the current input vector

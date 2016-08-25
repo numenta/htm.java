@@ -24,7 +24,7 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
@@ -41,7 +41,7 @@ public class QuickTest {
         private Connections connections;
         private MultiEncoder encoder;
         private SpatialPooler sp;
-        private OldTemporalMemory tm;
+        private TemporalMemory tm;
         private CLAClassifier classifier;
         @SuppressWarnings("unused")
         private Anomaly anomaly;
@@ -158,11 +158,11 @@ public class QuickTest {
          * @param c         the {@link Connections} object.
          * @param encoder   the {@link MultiEncoder}
          * @param sp        the {@link SpatialPooler}
-         * @param tm        the {@link OldTemporalMemory}
+         * @param tm        the {@link TemporalMemory}
          * @param cl        the {@link CLAClassifier}
          */
         public Layer(Connections c, MultiEncoder encoder, SpatialPooler sp, 
-            OldTemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
+            TemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
             
             this.connections = c;
             this.encoder = encoder;
@@ -389,8 +389,8 @@ public class QuickTest {
 //        int[] sparseSdr = testSpatialPooler(sp, conn, encoding);
         //////////////////////////////////////////////////////////
         
-        OldTemporalMemory tm = new OldTemporalMemory();
-        tm.init(conn);
+        TemporalMemory tm = new TemporalMemory();
+        TemporalMemory.init(conn);
         
         //////////////////////////////////////////////////////////
         // Tuple = (activeCells, predictiveCells)
@@ -463,7 +463,7 @@ public class QuickTest {
         return sparse;
     }
     
-    public static Tuple testTemporalMemory(OldTemporalMemory tm, Connections conn, int[] sparseSPOutput) {
+    public static Tuple testTemporalMemory(TemporalMemory tm, Connections conn, int[] sparseSPOutput) {
         int[] expected = { 
                 0, 87, 96, 128, 145, 151, 163, 180, 183, 218, 233, 242, 250, 260, 
                 264, 289, 290, 303, 312, 313, 334, 335, 337, 342, 346, 347, 353, 355, 356, 357, 

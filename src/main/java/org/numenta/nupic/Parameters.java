@@ -33,7 +33,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
@@ -47,13 +47,13 @@ import org.nustaq.serialization.FSTObjectOutput;
 import com.cedarsoftware.util.DeepEquals;
 
 /**
- * Specifies parameters to be used as a configuration for a given {@link OldTemporalMemory}
+ * Specifies parameters to be used as a configuration for a given {@link TemporalMemory}
  * or {@link SpatialPooler}
  *
  * @author David Ray
  * @author Kirill Solovyev
  * @see SpatialPooler
- * @see OldTemporalMemory
+ * @see TemporalMemory
  * @see Connections
  * @see ComputeCycle
  */
@@ -141,7 +141,7 @@ public class Parameters implements Persistable {
     }
 
     /**
-     * Constant values representing configuration parameters for the {@link OldTemporalMemory}
+     * Constant values representing configuration parameters for the {@link TemporalMemory}
      */
     public static enum KEY {
         /////////// Universal Parameters ///////////

@@ -31,7 +31,7 @@ import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.util.ArrayUtils;
@@ -78,11 +78,11 @@ public class ManualInput implements Inference {
     private int[] feedForwardActiveColumns;
     /** Active column indexes from the {@link SpatialPooler} at time "t" */
     private int[] feedForwardSparseActives;
-    /** Predictive {@link Cell}s in the {@link OldTemporalMemory} at time "t - 1" */
+    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t - 1" */
     private Set<Cell> previousPredictiveCells;
-    /** Predictive {@link Cell}s in the {@link OldTemporalMemory} at time "t" */
+    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t" */
     private Set<Cell> predictiveCells;
-    /** Active {@link Cell}s in the {@link OldTemporalMemory} at time "t" */
+    /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
     private Set<Cell> activeCells;
     
     private Map<String, Classification<Object>> classification;
@@ -405,7 +405,7 @@ public class ManualInput implements Inference {
     }
     
     /**
-     * Returns the column activation from a {@link OldTemporalMemory}
+     * Returns the column activation from a {@link TemporalMemory}
      * @return
      */
     @Override
@@ -414,7 +414,7 @@ public class ManualInput implements Inference {
     }
     
     /**
-     * Sets the column activation from a {@link OldTemporalMemory}
+     * Sets the column activation from a {@link TemporalMemory}
      * @param cells
      * @return
      */

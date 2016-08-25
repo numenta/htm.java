@@ -36,7 +36,7 @@ import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -127,7 +127,7 @@ public class PlaygroundTest {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new OldTemporalMemory())
+                .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
         

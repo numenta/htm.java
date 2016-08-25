@@ -12,7 +12,7 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.network.Network;
 import org.numenta.nupic.network.NetworkTestHarness;
 import org.numenta.nupic.network.Persistence;
@@ -70,7 +70,7 @@ public class HTMObjectInputOutputTest {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new OldTemporalMemory())
+                .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
 
