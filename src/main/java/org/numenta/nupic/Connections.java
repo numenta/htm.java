@@ -22,6 +22,7 @@
 
 package org.numenta.nupic;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1072,9 +1073,11 @@ public class Connections implements Persistable {
     ////////////////////////////////////////
     
     /**
-     * Return type from {@link Connections#newComputeActivity(Set, double, int, double, int, boolean)}
+     * Return type from {@link Connections#computeActivity(Set, double, int, double, int, boolean)}
      */
-    public static class Activity {
+    public static class Activity implements Serializable {
+        /** default serial */
+        private static final long serialVersionUID = 1L;
         public List<SegmentOverlap> activeSegments;
         public List<SegmentOverlap> matchingSegments;
         public Activity(List<SegmentOverlap> actives, List<SegmentOverlap> matching) {
@@ -1088,14 +1091,23 @@ public class Connections implements Persistable {
     }
     
     /**
-     * Accounting class used during {@link Connections#newComputeActivity(Collection, double, int, double, int, boolean)}
+     * Accounting class used during {@link Connections#computeActivity(Collection, double, int, double, int, boolean)}
      */
-    public static class SegmentOverlap {
+    public static class SegmentOverlap implements Serializable, Comparable<SegmentOverlap> {
+        /** default serial */
+        private static final long serialVersionUID = 1L;
         public DistalDendrite segment;
         public int overlap;
         public SegmentOverlap(DistalDendrite dd, int overlap) {
             this.segment = dd;
             this.overlap = overlap;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compareTo(SegmentOverlap other) {
+            return segment.compareTo(other.segment);
         }
     }
     
@@ -1122,7 +1134,7 @@ public class Connections implements Persistable {
      * 
      * @return  an {@link Activity} containing: activeSegments, matchingSegments
      */
-    public Activity newComputeActivity(Collection<Cell> activeInput, double activePermanenceThreshold,
+    public Activity computeActivity(Collection<Cell> activeInput, double activePermanenceThreshold,
         int activeSynapseThreshold, double matchingPermananceThreshold, int matchingSynapseThreshold,
             boolean recordIteration) {
         
@@ -1179,78 +1191,6 @@ public class Connections implements Persistable {
         Collections.sort(activeSegments, (as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
         Collections.sort(matchingSegments, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
         return new Activity(activeSegments, matchingSegments);
-    }
-    
-    /**
-     * Returns a {@link Tuple} containing the active and matching segments given
-     * a set of active cells.
-     * 
-     * @param activeInput                       currently active cells
-     * @param activePermanenceThreshold         permanence threshold for a synapse 
-     *                                          to be considered active
-     * @param activeSynapseThreshold            number of synapses needed for a
-     *                                          segment to be considered active
-     * @param matchingPermananceThreshold       permanence threshold for a
-     *                                          synapse to be considered matching
-     * @param matchingSynapseThreshold          number of synapses needed for a
-     *                                          segment to be considered matching
-     *                                          
-     * <p>
-     * Notes: activeSegments and matchingSegments are sorted by the cell they are on.
-     * 
-     * @return  Tuple containing: activeSegments, matchingSegments
-     */
-    @Deprecated
-    public Tuple computeActivity(Set<Cell> activeInput, double activePermanenceThreshold,
-        int activeSynapseThreshold, double matchingPermananceThreshold, int matchingSynapseThreshold) {
-        
-        int nextSegmentIdx = getSegmentCount();
-        
-        // Object[][] = segments and their counts (i.e. { {segment, count}, {segment, count} } )
-        Object[][] numActiveSynapsesForSegment = new Object[nextSegmentIdx][2];
-        Arrays.stream(numActiveSynapsesForSegment).forEach(arr -> arr[1] = 0);
-        Object[][] numMatchingSynapsesForSegment = new Object[nextSegmentIdx][2];
-        Arrays.stream(numMatchingSynapsesForSegment).forEach(arr -> arr[1] = 0);
-        
-        for(Cell cell : activeInput) {
-            for(Synapse synapse : cell.getReceptorSynapses(this)) {
-                Segment segment = synapse.getSegment();
-                double permanence = synapse.getPermanence();
-                if(permanence - matchingPermananceThreshold > -EPSILON) {
-                    numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
-                    numMatchingSynapsesForSegment[segment.getIndex()][1] = 
-                        ((int)numMatchingSynapsesForSegment[segment.getIndex()][1]) + 1;
-                    
-                    if(permanence - activePermanenceThreshold > -EPSILON) {
-                        numActiveSynapsesForSegment[segment.getIndex()][0] = segment;
-                        numActiveSynapsesForSegment[segment.getIndex()][1] = 
-                            ((int)numActiveSynapsesForSegment[segment.getIndex()][1]) + 1;
-                    }
-                }
-            }
-        }
-        
-        List<DistalDendrite> activeSegments = new ArrayList<>();
-        List<DistalDendrite> matchingSegments = new ArrayList<>();
-        for(int i = 0;i < nextSegmentIdx;i++) {
-            if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add(((DistalDendrite)numActiveSynapsesForSegment[i][0]));
-            }
-        }
-        
-        for(int i = 0;i < nextSegmentIdx;i++) {
-            if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add(((DistalDendrite)numMatchingSynapsesForSegment[i][0]));
-            }
-        }
-        
-        return new Tuple(
-            (Object)activeSegments.stream()
-                .sorted()
-                .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)),
-            (Object)matchingSegments.stream()
-                .sorted()
-                .collect(Collectors.toCollection(LinkedHashSet<DistalDendrite>::new)));
     }
     
     /////////////////////////////////////////////////////////////////
@@ -1784,6 +1724,12 @@ public class Connections implements Persistable {
      * @return
      */
     public Set<Cell> getPredictiveCells() {
+        if(predictiveCells.isEmpty()) {
+            Collections.sort(activeSegOverlaps);
+            for(SegmentOverlap activeSegment : activeSegOverlaps) {
+                predictiveCells.add(activeSegment.segment.getParentCell());
+            }
+        }
         return predictiveCells;
     }
 

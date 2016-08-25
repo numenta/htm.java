@@ -1,12 +1,13 @@
 package org.numenta.nupic.algorithms;
 
+import static org.numenta.nupic.util.GroupBy2.Slot.NONE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -106,12 +107,12 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         double permanenceDecrement = conn.getPermanenceDecrement();
         for(Tuple t : grouper) {
             ColumnData columnData = cycle.columnData.set(t);
-            System.out.println("Column: " + columnData.column());
-            System.out.println("activeColumns: " + columnData.activeColumns());
-            System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
-            System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
+//            System.out.println("Column: " + columnData.column());
+//            System.out.println("activeColumns: " + columnData.activeColumns());
+//            System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
+//            System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
             
-            if(!((List<?>)t.get(1)).get(0).equals(Optional.empty())) {
+            if(!((List<?>)t.get(1)).get(0).equals(NONE)) {
                 if(!columnData.activeSegments().isEmpty()) {
                     List<Cell> cellsToAdd = activatePredictedColumn(conn, columnData.activeSegments(), 
                         prevActiveCells, conn.getPermanenceIncrement(), conn.getPermanenceDecrement(), learn);
@@ -132,7 +133,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
             }
         }
             
-        Activity activity = conn.newComputeActivity(cycle.activeCells, conn.getConnectedPermanence(), conn.getActivationThreshold(), 
+        Activity activity = conn.computeActivity(cycle.activeCells, conn.getConnectedPermanence(), conn.getActivationThreshold(), 
             0.0, conn.getMinThreshold(), learn);
         
         cycle.activeSegOverlaps = activity.activeSegments;
@@ -142,6 +143,9 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         conn.setWinnerCells(new LinkedHashSet<>(cycle.winnerCells));
         conn.setActiveSegmentOverlaps(activity.activeSegments);
         conn.setMatchingSegmentOverlaps(activity.matchingSegments);
+        // Forces generation of the predictive cells from the above active segments
+        conn.getPredictiveCells().clear();
+        conn.getPredictiveCells();
         
         return cycle;
     }

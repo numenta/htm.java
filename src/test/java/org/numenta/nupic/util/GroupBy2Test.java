@@ -25,16 +25,16 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import org.junit.Test;
+import org.numenta.nupic.util.GroupBy2.Slot;
 
 import javafx.util.Pair;
 
 public class GroupBy2Test {
     
-    private List<Optional<?>> none = Arrays.asList(Optional.empty());
+    private List<Slot<?>> none = Arrays.asList(Slot.empty());
     
     public List<Integer> list(int i) {
         return Arrays.asList(new Integer[] { i });

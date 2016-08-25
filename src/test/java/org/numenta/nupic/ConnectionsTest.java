@@ -78,7 +78,7 @@ public class ConnectionsTest {
         DistalDendrite segment2 = connections.createSegment(cell42);
         Set<Cell> activeInput = Arrays.stream(new Cell[] { connections.getCell(1), connections.getCell(2) }).collect(Collectors.toCollection(LinkedHashSet::new));
         
-        Activity retVal = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
+        Activity retVal = connections.computeActivity(activeInput, 0.5, 2, 0.1, 1, true);
         assertEquals(1, retVal.activeSegments.size());
         assertEquals(segment1, retVal.activeSegments.get(0).segment);
         
@@ -123,7 +123,7 @@ public class ConnectionsTest {
             new Cell[] { c.getCell(80), c.getCell(81), c.getCell(82) })
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         
-        Activity activity = connections.newComputeActivity(activeInput, 0.5, 2, 0.1, 1, true);
+        Activity activity = connections.computeActivity(activeInput, 0.5, 2, 0.1, 1, true);
         assertEquals(0, activity.activeSegments.size());
         assertEquals(0, activity.matchingSegments.size());
     }
@@ -159,7 +159,7 @@ public class ConnectionsTest {
         List<Cell> actives = IntStream.of(80, 81, 82)
             .mapToObj(i -> connections.getCell(i))
             .collect(Collectors.toList());
-        Activity act = connections.newComputeActivity(actives, 0.5, 2, 0.0, 1, true);
+        Activity act = connections.computeActivity(actives, 0.5, 2, 0.0, 1, true);
         assertEquals(0, act.activeSegments.size());
         assertEquals(1, act.matchingSegments.size());
         assertEquals(2, act.matchingSegments.get(0).overlap);
@@ -423,7 +423,7 @@ public class ConnectionsTest {
             .mapToObj(i -> c.getCell(i))
             .collect(Collectors.toList());
         
-        Activity activity = c.newComputeActivity(inputVec, .5, 2, .1, 1, true);
+        Activity activity = c.computeActivity(inputVec, .5, 2, .1, 1, true);
         List<SegmentOverlap> active = activity.activeSegments;
         List<SegmentOverlap> matching = activity.matchingSegments;
         

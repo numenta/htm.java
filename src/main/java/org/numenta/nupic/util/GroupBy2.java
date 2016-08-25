@@ -21,11 +21,13 @@
  */
 package org.numenta.nupic.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -43,9 +45,6 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     /** serial version */
     private static final long serialVersionUID = 1L;
     
-    /** Used internally to represent an empty value */
-    public final Optional<Pair<Object, R>> NONE = Optional.empty();
-    
     /** stores the user inputted pairs */
     private Pair<List<Object>, Function<Object, R>>[] entries;
     
@@ -60,7 +59,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     //    Control Lists  //
     ///////////////////////
     private boolean[] advanceList;
-    private Optional<Pair<Object, R>>[] nextList;
+    private Slot<Pair<Object, R>>[] nextList;
     
     private int numEntries;
     
@@ -100,14 +99,14 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
      * <br>
      * <b>Will output the following {@link Tuple}s:</b>
      * <pre>
-     *  '7':'[7]':'[Optional.empty]'
-     *  '9':'[Optional.empty]':'[3]'
+     *  '7':'[7]':'[NONE]'
+     *  '9':'[NONE]':'[3]'
      *  '12':'[12]':'[4]'
-     *  '15':'[Optional.empty]':'[5]'
-     *  '16':'[16]':'[Optional.empty]'
+     *  '15':'[NONE]':'[5]'
+     *  '16':'[16]':'[NONE]'
      *  
      *  From row 1 of the output:
-     *  Where '7' == Tuple.get(0), 'List[7]' == Tuple.get(1), 'List[Optional.empty]' == Tuple.get(2) == empty list with no members
+     *  Where '7' == Tuple.get(0), 'List[7]' == Tuple.get(1), 'List[NONE]' == Tuple.get(2) == empty list with no members
      * </pre>
      * 
      * <b>Note: Read up on groupby here:</b><br>
@@ -120,7 +119,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
      *          iterated over in the nth list passed in. Note that this
      *          is a generator and a n+1 dimensional tuple is yielded for
      *          every group. If a list has no members in the current
-     *          group, {@link Optional#empty()} is returned in place of a generator.
+     *          group, {@link Slot#NONE} is returned in place of a generator.
      */
     @SuppressWarnings("unchecked")
     public static <R extends Comparable<R>> GroupBy2<R> of(Pair<List<Object>, Function<Object, R>>... entries) {
@@ -144,8 +143,8 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         
         advanceList = new boolean[numEntries];
         Arrays.fill(advanceList, true);
-        nextList = new Optional[numEntries];
-        Arrays.fill(nextList, NONE);
+        nextList = new Slot[numEntries];
+        Arrays.fill(nextList, Slot.NONE);
     }
     
     /**
@@ -196,7 +195,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
                 advanceList[i] = true;
             }else{
                 advanceList[i] = false;
-                ((List<Object>)retVal.get(i + 1)).add(NONE);
+                ((List<Object>)retVal.get(i + 1)).add(Slot.empty());
             }
         }
         
@@ -211,7 +210,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         for(int i = 0;i < numEntries;i++) {
             if(advanceList[i]) {
                 nextList[i] = generatorList.get(i).hasNext() ?
-                    Optional.of(generatorList.get(i).next()) : NONE;
+                    Slot.of(generatorList.get(i).next()) : Slot.empty();
             }
         }
     }
@@ -258,12 +257,161 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     private void drainKey(Tuple retVal, int listIdx, R targetVal) {
         while(generatorList.get(listIdx).hasNext()) {
             if(generatorList.get(listIdx).peek().getValue().equals(targetVal)) {
-                nextList[listIdx] = Optional.of(generatorList.get(listIdx).next());
+                nextList[listIdx] = Slot.of(generatorList.get(listIdx).next());
                 ((List<Object>)retVal.get(listIdx + 1)).add(nextList[listIdx].get().getKey());
             }else{
-                nextList[listIdx] = NONE;
+                nextList[listIdx] = Slot.empty();
                 break;
             }
+        }
+    }
+    
+    /**
+     * A minimal {@link Serializable} version of an {@link Slot}
+     * @param <T>   the value held within this {@code Slot}
+     */
+    public static final class Slot<T> implements Serializable {
+        /** Default Serial */
+        private static final long serialVersionUID = 1L;
+        
+        /**
+         * Common instance for {@code empty()}.
+         */
+        public static final Slot<?> NONE = new Slot<>();
+
+        /**
+         * If non-null, the value; if null, indicates no value is present
+         */
+        private final T value;
+        
+        private Slot() { this.value = null; }
+        
+        /**
+         * Constructs an instance with the value present.
+         *
+         * @param value the non-null value to be present
+         * @throws NullPointerException if value is null
+         */
+        private Slot(T value) {
+            this.value = Objects.requireNonNull(value);
+        }
+
+        /**
+         * Returns an {@code Slot} with the specified present non-null value.
+         *
+         * @param <T> the class of the value
+         * @param value the value to be present, which must be non-null
+         * @return an {@code Slot} with the value present
+         * @throws NullPointerException if value is null
+         */
+        public static <T> Slot<T> of(T value) {
+            return new Slot<>(value);
+        }
+
+        /**
+         * Returns an {@code Slot} describing the specified value, if non-null,
+         * otherwise returns an empty {@code Slot}.
+         *
+         * @param <T> the class of the value
+         * @param value the possibly-null value to describe
+         * @return an {@code Slot} with a present value if the specified value
+         * is non-null, otherwise an empty {@code Slot}
+         */
+        @SuppressWarnings("unchecked")
+        public static <T> Slot<T> ofNullable(T value) {
+            return value == null ? (Slot<T>)NONE : of(value);
+        }
+
+        /**
+         * If a value is present in this {@code Slot}, returns the value,
+         * otherwise throws {@code NoSuchElementException}.
+         *
+         * @return the non-null value held by this {@code Slot}
+         * @throws NoSuchElementException if there is no value present
+         *
+         * @see Slot#isPresent()
+         */
+        public T get() {
+            if (value == null) {
+                throw new NoSuchElementException("No value present");
+            }
+            return value;
+        }
+        
+        /**
+         * Returns an empty {@code Slot} instance.  No value is present for this
+         * Slot.
+         *
+         * @param <T> Type of the non-existent value
+         * @return an empty {@code Slot}
+         */
+        public static<T> Slot<T> empty() {
+            @SuppressWarnings("unchecked")
+            Slot<T> t = (Slot<T>) NONE;
+            return t;
+        }
+
+        /**
+         * Return {@code true} if there is a value present, otherwise {@code false}.
+         *
+         * @return {@code true} if there is a value present, otherwise {@code false}
+         */
+        public boolean isPresent() {
+            return value != null;
+        }
+        
+        /**
+         * Indicates whether some other object is "equal to" this Slot. The
+         * other object is considered equal if:
+         * <ul>
+         * <li>it is also an {@code Slot} and;
+         * <li>both instances have no value present or;
+         * <li>the present values are "equal to" each other via {@code equals()}.
+         * </ul>
+         *
+         * @param obj an object to be tested for equality
+         * @return {code true} if the other object is "equal to" this object
+         * otherwise {@code false}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (!(obj instanceof Slot)) {
+                return false;
+            }
+
+            Slot<?> other = (Slot<?>) obj;
+            return Objects.equals(value, other.value);
+        }
+
+        /**
+         * Returns the hash code value of the present value, if any, or 0 (zero) if
+         * no value is present.
+         *
+         * @return hash code value of the present value or 0 if no value is present
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(value);
+        }
+
+        /**
+         * Returns a non-empty string representation of this Slot suitable for
+         * debugging. The exact presentation format is unspecified and may vary
+         * between implementations and versions.
+         *
+         * @implSpec If a value is present the result must include its string
+         * representation in the result. Empty and present Slots must be
+         * unambiguously differentiable.
+         *
+         * @return the string representation of this instance
+         */
+        @Override
+        public String toString() {
+            return value != null ? String.format("Slot[%s]", value) : "NONE";
         }
     }
 }

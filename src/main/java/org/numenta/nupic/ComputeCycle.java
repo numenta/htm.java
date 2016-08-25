@@ -22,12 +22,12 @@
 
 package org.numenta.nupic;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.numenta.nupic.Connections.SegmentOverlap;
@@ -35,6 +35,8 @@ import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.util.GroupBy2;
+import org.numenta.nupic.util.GroupBy2.Slot;
 import org.numenta.nupic.util.Tuple;
 
 /**
@@ -172,8 +174,14 @@ public class ComputeCycle implements Persistable {
         return matchingCells;
     }
     
+    /**
+     * Used in the {@link TemporalMemory#compute(Connections, int[], boolean)} method
+     * to make pulling values out of the {@link GroupBy2} more readable and named.
+     */
     @SuppressWarnings("unchecked")
-    public static class ColumnData {
+    public static class ColumnData implements Serializable {
+        /** Default Serial */
+        private static final long serialVersionUID = 1L;
         Tuple t;
         
         public ColumnData() {}
@@ -185,12 +193,12 @@ public class ComputeCycle implements Persistable {
         public Column column() { return (Column)t.get(0); }
         public List<Column> activeColumns() { return (List<Column>)t.get(1); }
         public List<SegmentOverlap> activeSegments() { 
-            return ((List<?>)t.get(2)).get(0).equals(Optional.empty()) ? 
+            return ((List<?>)t.get(2)).get(0).equals(Slot.empty()) ? 
                 Collections.emptyList() :
                     (List<SegmentOverlap>)t.get(2); 
         }
         public List<SegmentOverlap> matchingSegments() {
-            return ((List<?>)t.get(3)).get(0).equals(Optional.empty()) ? 
+            return ((List<?>)t.get(3)).get(0).equals(Slot.empty()) ? 
                 Collections.emptyList() :
                     (List<SegmentOverlap>)t.get(3); 
         }
