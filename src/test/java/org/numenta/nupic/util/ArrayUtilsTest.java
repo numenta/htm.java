@@ -22,19 +22,21 @@
 
 package org.numenta.nupic.util;
 
-import org.junit.Test;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
 
 public class ArrayUtilsTest {
     
@@ -386,6 +388,35 @@ public class ArrayUtilsTest {
         assertTrue(Arrays.equals(expected, ArrayUtils.in1d(ar1, expected)));
         // Test none in both
         assertTrue(Arrays.equals(expected, ArrayUtils.in1d(expected, expected)));
+    }
+    
+    @Test
+    public void testTo1d() {
+        double[][] da = new double[][] { { 1., 1.}, {2., 2.}};
+        double[] expected = new double[] { 1., 1., 2., 2. };
+        assertTrue(Arrays.equals(expected, ArrayUtils.to1D(da)));
+        
+        int[][] ia = new int[][] { { 1, 1 }, { 2, 2 } };
+        int[] expectedia = new int[] { 1, 1, 2, 2 };
+        assertTrue(Arrays.equals(expectedia, ArrayUtils.to1D(ia)));
+    }
+    
+    @Test
+    public void testZip() {
+        Cell cell0 = new Cell(new Column(1, 0), 0);
+        Cell cell1 = new Cell(new Column(1, 1), 1);
+        Object[] o1 = new Object[] { cell0, cell1 };
+        Object[] o2 = new Object[] { new Integer(1), new Integer(2) };
+        
+        List<Tuple> zipped = ArrayUtils.zip(o1, o2);
+        assertEquals(2, zipped.size());
+        assertTrue(zipped.get(0).get(0) instanceof Cell && zipped.get(0).get(1) instanceof Integer);
+        assertTrue(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(1)));
+        assertTrue(zipped.get(1).get(0).equals(cell1) && zipped.get(1).get(1).equals(new Integer(2)));
+        
+        // Negative tests
+        assertFalse(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(2))); // Bad Integer
+        assertFalse(zipped.get(1).get(0).equals(cell0) && zipped.get(1).get(1).equals(new Integer(2))); // Bad Cell
     }
 
     @Test

@@ -517,9 +517,21 @@ public class ArrayUtils {
      */
     public static List<Tuple> zip(Object[]... args) {
         List<Tuple> tuples = new ArrayList<Tuple>();
+        
+        int min = Integer.MAX_VALUE;
+        for(Object[] oa : args) {
+            if(oa.length < min) {
+                min = oa.length;
+            }
+        }
+        
         int len = args.length;
-        for (int i = 0; i < len; i++) {
-            tuples.add(new Tuple(args[i]));
+        for(int j = 0;j < min;j++) {
+            MutableTuple mt = new MutableTuple(2);
+            for (int i = 0; i < len; i++) {
+                mt.set(i, args[i][j]);
+            }
+            tuples.add(mt);
         }
 
         return tuples;

@@ -11,6 +11,10 @@ package org.numenta.nupic.util;
 public class MutableTuple extends Tuple {
     
     private static final long serialVersionUID = 1L;
+    
+    public MutableTuple(int size) {
+        container = new Object[size];
+    }
 
     /**
      * Constructs a new {@code MutableTuple} with the contents
