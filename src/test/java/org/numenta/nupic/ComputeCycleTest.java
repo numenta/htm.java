@@ -90,7 +90,7 @@ public class ComputeCycleTest {
         
         ComputeCycle cc = tm.compute(cn, previousActiveColumns, true);
         assertTrue(cc.winnerCells().equals(prevWinnerCells));
-        cc = tm.compute(cn, activeColumnsIndices, true);
+        //cc = tm.compute(cn, activeColumnsIndices, true);
         
         Function<Column, Column> identity = Function.identity();
         Function<SegmentOverlap, Column> segToCol = segment -> segment.segment.getParentCell().getColumn(); 
@@ -109,6 +109,15 @@ public class ComputeCycleTest {
         for(Tuple t : grouper) { // Executes only once
             ColumnData columnData = cycle.columnData.set(t);
             assertTrue(columnData.activeColumns().equals(activeColumns));
+            assertTrue(columnData.activeSegments().isEmpty());
+            
+            List<SegmentOverlap> sos = columnData.matchingSegments();
+            assertEquals(1, sos.size());
+            assertEquals(1, sos.get(0).overlap);
+            assertEquals(0, sos.get(0).segment.getIndex());
+            assertEquals(4, sos.get(0).segment.getParentCell().getIndex());
+            
+            assertTrue(columnData.column().equals(cn.getColumn(4)));
         }
     }
     
