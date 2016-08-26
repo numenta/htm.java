@@ -36,7 +36,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.numenta.nupic.algorithms.PASpatialPooler;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -1753,12 +1752,20 @@ public class Connections implements Persistable {
      */
     public Set<Cell> getPredictiveCells() {
         if(predictiveCells.isEmpty()) {
-            Collections.sort(activeSegOverlaps);
-            for(SegmentOverlap activeSegment : activeSegOverlaps) {
+            List<SegmentOverlap> temp = new ArrayList<>(activeSegOverlaps);
+            Collections.sort(temp);
+            for(SegmentOverlap activeSegment : temp) {
                 predictiveCells.add(activeSegment.segment.getParentCell());
             }
         }
         return predictiveCells;
+    }
+    
+    /**
+     * Clears the previous predictive cells from the list.
+     */
+    public void clearPredictiveCells() {
+        this.predictiveCells.clear();
     }
 
     /**

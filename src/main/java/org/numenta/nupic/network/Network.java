@@ -250,20 +250,6 @@ public class Network implements Persistable {
     }
     
     /**
-     * Creates a {@link PALayer} to hold algorithmic components and returns
-     * it.
-     * 
-     * @param name  the String identifier for the specified {@link PALayer}
-     * @param p     the {@link Parameters} to use for the specified {@link PALayer}
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-    public static PALayer<?> createPALayer(String name, Parameters p) {
-        Network.checkName(name);
-        return new PALayer(name, null, p);
-    }
-    
-    /**
      * DO NOT CALL THIS METHOD! FOR INTERNAL USE ONLY!
      * {@inheritDoc}
      */

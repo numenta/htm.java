@@ -144,7 +144,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         conn.setActiveSegmentOverlaps(activity.activeSegments);
         conn.setMatchingSegmentOverlaps(activity.matchingSegments);
         // Forces generation of the predictive cells from the above active segments
-        conn.getPredictiveCells().clear();
+        conn.clearPredictiveCells();
         conn.getPredictiveCells();
         
         return cycle;
