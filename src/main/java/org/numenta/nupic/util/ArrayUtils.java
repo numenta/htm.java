@@ -908,9 +908,10 @@ public class ArrayUtils {
      * @return
      */
     public static List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
-        ArrayList<Integer> sList = new ArrayList<Integer>(minuend);
-        sList.removeAll(subtrahend);
-        return new ArrayList<Integer>(sList);
+        return IntStream.range(0, minuend.size())
+           .boxed()
+           .map(i -> minuend.get(i) - subtrahend.get(i))
+           .collect(Collectors.toList());
     }
 
     /**

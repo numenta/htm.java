@@ -418,6 +418,46 @@ public class ArrayUtilsTest {
         assertFalse(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(2))); // Bad Integer
         assertFalse(zipped.get(1).get(0).equals(cell0) && zipped.get(1).get(1).equals(new Integer(2))); // Bad Cell
     }
+    
+    @Test
+    public void testMaximum() {
+        double value = 6.7;
+        double[] input = new double[] { 3.2, 6.8 };
+        double[] expected = new double[] { 6.7, 6.8 };
+        
+        double[] result = ArrayUtils.maximum(input, value);
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    @Test
+    public void testRoundDivide() {
+        assertEquals(2.35, 4.7 / 2, 0.01);
+        assertEquals(2.45, 4.9 / 2, 0.01);
+        assertEquals(2.70, 5.4 / 2, 0.01);
+        
+        double[] inputDividend = new double[] { 4.7, 4.9, 5.4 };
+        double[] inputDivisor = new double[] { 2., 2., 2. };
+        
+        double[] expected0 = new double[] { 2.4, 2.5, 2.7 };
+        double[] expected1 = new double[] { 2.0, 2.0, 3.0 };
+        
+        double[] result = ArrayUtils.roundDivide(inputDividend, inputDivisor, 2);
+        assertTrue(Arrays.equals(expected0, result));
+        
+        double[] result2 = ArrayUtils.roundDivide(inputDividend, inputDivisor, 1);
+        assertTrue(Arrays.equals(expected1, result2));
+    }
+    
+    @Test
+    public void testSubtract() {
+        // minuend - subtrahend = difference
+        List<Integer> minuend = Arrays.asList(new Integer[] { 2, 2, 2 });
+        List<Integer> subtrahend = Arrays.asList(new Integer[] { 0, 1, 2 });
+        List<Integer> difference = Arrays.asList(new Integer[] { 2, 1, 0 });
+        
+        List<Integer> result = ArrayUtils.subtract(subtrahend, minuend);
+        assertEquals(difference, result);
+    }
 
     @Test
     public void testRecursiveCoordinatesAssemble() throws InterruptedException {
