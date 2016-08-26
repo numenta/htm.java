@@ -230,9 +230,9 @@ public class SpatialPoolerTest {
         cn.setBoostFactors(new double[] { 2.0, 2.0, 2.0 });
         int[] inputVector = { 1, 1, 1, 1, 1 };
         int[] activeArray = { 0, 0, 0 };
-        int[] expOutput = { 1, 0, 0 };
+//        int[] expOutput = { 1, 0, 0 };
         sp.compute(cn, inputVector, activeArray, true, true);
-        System.out.println("out = " + Arrays.toString(activeArray));
+//        System.out.println("out = " + Arrays.toString(activeArray));
     }
 
     /**

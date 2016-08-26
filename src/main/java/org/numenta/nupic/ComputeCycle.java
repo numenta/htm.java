@@ -27,14 +27,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.DistalDendrite;
 import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.GroupBy2.Slot;
 import org.numenta.nupic.util.Tuple;
@@ -53,13 +51,6 @@ public class ComputeCycle implements Persistable {
     
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
-    public Set<Cell> predictedInactiveCells = new LinkedHashSet<>();
-    public Set<Cell> matchingCells = new LinkedHashSet<>();
-    public Set<Column> successfullyPredictedColumns = new LinkedHashSet<>();
-    public Set<DistalDendrite> activeSegments = new LinkedHashSet<>();
-    public Set<DistalDendrite> learningSegments = new LinkedHashSet<>();
-    public Set<DistalDendrite> matchingSegments = new LinkedHashSet<>();
-    
     public List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
     public List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
     
@@ -83,12 +74,11 @@ public class ComputeCycle implements Persistable {
      * @param   c       the current connections state of the TemporalMemory
      */
     public ComputeCycle(Connections c) {
-        this.activeCells = new LinkedHashSet<>(c.getActiveCells());
-        this.winnerCells = new LinkedHashSet<>(c.getWinnerCells());
-        this.predictiveCells = new LinkedHashSet<>(c.getPredictiveCells());
-        this.successfullyPredictedColumns = new LinkedHashSet<>(c.getSuccessfullyPredictedColumns());
-        this.activeSegments = new LinkedHashSet<>(c.getActiveSegments());
-        this.learningSegments = new LinkedHashSet<>(c.getLearningSegments());
+        this.activeCells = new LinkedHashSet<>(c.activeCells);
+        this.winnerCells = new LinkedHashSet<>(c.winnerCells);
+        this.predictiveCells = new LinkedHashSet<>(c.predictiveCells);
+        this.activeSegOverlaps = new ArrayList<>(c.activeSegOverlaps);
+        this.matchingSegOverlaps = new ArrayList<>(c.matchingSegOverlaps);
     }
     
     /**
@@ -121,57 +111,6 @@ public class ComputeCycle implements Persistable {
         }
         
         return predictiveCells;
-    }
-    
-    /**
-     * Returns the {@link Set} of columns successfully predicted from t - 1.
-     * 
-     * @return  the current {@link Set} of predicted columns
-     */
-    public Set<Column> successfullyPredictedColumns() {
-        return successfullyPredictedColumns;
-    }
-    
-    /**
-     * Returns the Set of learning {@link DistalDendrite}s
-     * @return
-     */
-    public Set<DistalDendrite> learningSegments() {
-        return learningSegments;
-    }
-    
-    /**
-     * Returns the Set of active {@link DistalDendrite}s
-     * @return
-     */
-    public Set<DistalDendrite> activeSegments() {
-        return activeSegments;
-    }
-    
-    /**
-     * Returns a Set of predicted inactive cells.
-     * @return
-     */
-    public Set<Cell> predictedInactiveCells() {
-        return predictedInactiveCells;
-    }
-    
-    /**
-     * Returns the Set of matching {@link DistalDendrite}s from 
-     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
-     * @return
-     */
-    public Set<DistalDendrite> matchingSegments() {
-        return matchingSegments;
-    }
-    
-    /**
-     * Returns the Set of matching {@link Cell}s from
-     * {@link TemporalMemory#computePredictiveCells(Connections, ComputeCycle, Map)}
-     * @return
-     */
-    public Set<Cell> matchingCells() {
-        return matchingCells;
     }
     
     /**
@@ -214,14 +153,10 @@ public class ComputeCycle implements Persistable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
-        result = prime * result + ((activeSegments == null) ? 0 : activeSegments.hashCode());
-        result = prime * result + ((learningSegments == null) ? 0 : learningSegments.hashCode());
-        result = prime * result + ((matchingCells == null) ? 0 : matchingCells.hashCode());
-        result = prime * result + ((matchingSegments == null) ? 0 : matchingSegments.hashCode());
-        result = prime * result + ((predictedInactiveCells == null) ? 0 : predictedInactiveCells.hashCode());
         result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
-        result = prime * result + ((successfullyPredictedColumns == null) ? 0 : successfullyPredictedColumns.hashCode());
         result = prime * result + ((winnerCells == null) ? 0 : winnerCells.hashCode());
+        result = prime * result + ((activeSegOverlaps == null) ? 0 : activeSegOverlaps.hashCode());
+        result = prime * result + ((matchingSegOverlaps == null) ? 0 : matchingSegOverlaps.hashCode());
         return result;
     }
 
@@ -242,45 +177,25 @@ public class ComputeCycle implements Persistable {
                 return false;
         } else if(!activeCells.equals(other.activeCells))
             return false;
-        if(activeSegments == null) {
-            if(other.activeSegments != null)
-                return false;
-        } else if(!activeSegments.equals(other.activeSegments))
-            return false;
-        if(learningSegments == null) {
-            if(other.learningSegments != null)
-                return false;
-        } else if(!learningSegments.equals(other.learningSegments))
-            return false;
-        if(matchingCells == null) {
-            if(other.matchingCells != null)
-                return false;
-        } else if(!matchingCells.equals(other.matchingCells))
-            return false;
-        if(matchingSegments == null) {
-            if(other.matchingSegments != null)
-                return false;
-        } else if(!matchingSegments.equals(other.matchingSegments))
-            return false;
-        if(predictedInactiveCells == null) {
-            if(other.predictedInactiveCells != null)
-                return false;
-        } else if(!predictedInactiveCells.equals(other.predictedInactiveCells))
-            return false;
         if(predictiveCells == null) {
             if(other.predictiveCells != null)
                 return false;
         } else if(!predictiveCells.equals(other.predictiveCells))
             return false;
-        if(successfullyPredictedColumns == null) {
-            if(other.successfullyPredictedColumns != null)
-                return false;
-        } else if(!successfullyPredictedColumns.equals(other.successfullyPredictedColumns))
-            return false;
         if(winnerCells == null) {
             if(other.winnerCells != null)
                 return false;
         } else if(!winnerCells.equals(other.winnerCells))
+            return false;
+        if(activeSegOverlaps == null) {
+            if(other.activeSegOverlaps != null)
+                return false;
+        } else if(!activeSegOverlaps.equals(other.activeSegOverlaps))
+            return false;
+        if(matchingSegOverlaps == null) {
+            if(other.matchingSegOverlaps != null)
+                return false;
+        } else if(!matchingSegOverlaps.equals(other.matchingSegOverlaps))
             return false;
         return true;
     }

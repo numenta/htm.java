@@ -51,6 +51,8 @@ public class PALayer<T> extends Layer<T> {
 
     /** Set to 0.0 to default to parent behavior */
     double paDepolarize = 1.0;
+    
+    int[] feedForwardActiveColumns;
 
     int verbosity = 0;
 

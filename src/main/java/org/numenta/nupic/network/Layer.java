@@ -176,6 +176,8 @@ public class Layer<T> implements Persistable {
     private static final long serialVersionUID = 1L;
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
+    
+    protected int numColumns;
 
     protected Network parentNetwork;
     protected Region parentRegion;
@@ -198,17 +200,6 @@ public class Layer<T> implements Persistable {
     private volatile Inference currentInference;
 
     FunctionFactory factory;
-
-    /** Active columns in the {@link SpatialPooler} at time "t" */
-    protected int[] feedForwardActiveColumns;
-    /** Active column indexes from the {@link SpatialPooler} at time "t" */
-    private int[] feedForwardSparseActives;
-    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t - 1" */
-    private Set<Cell> previousPredictiveCells;
-    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t" */
-    private Set<Cell> predictiveCells;
-    /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
-    private Set<Cell> activeCells;
 
     /** Used to track and document the # of records processed */
     private int recordNum = -1;
@@ -537,8 +528,8 @@ public class Layer<T> implements Persistable {
         if(temporalMemory != null) {
             TemporalMemory.init(connections);
         }
-
-        this.feedForwardActiveColumns = new int[connections.getNumColumns()];
+        
+        this.numColumns = connections.getNumColumns();
 
         this.isClosed = true;
 
@@ -1170,7 +1161,7 @@ public class Layer<T> implements Persistable {
      * @return the binary vector representing the current prediction.
      */
     public Set<Cell> getPredictiveCells() {
-        return predictiveCells;
+        return currentInference.getPredictiveCells();
     }
 
     /**
@@ -1179,7 +1170,7 @@ public class Layer<T> implements Persistable {
      * @return the binary vector representing the current prediction.
      */
     public Set<Cell> getPreviousPredictiveCells() {
-        return currentInference.getPreviousPredictiveCells();//previousPredictiveCells;
+        return currentInference.getPreviousPredictiveCells();
     }
 
     /**
@@ -1190,7 +1181,7 @@ public class Layer<T> implements Persistable {
      * @return the array of active column indexes
      */
     public int[] getFeedForwardActiveColumns() {
-        return currentInference.getFeedForwardActiveColumns();//feedForwardActiveColumns;
+        return currentInference.getFeedForwardActiveColumns();
     }
 
     /**
@@ -1204,25 +1195,13 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Sets the sparse form of the {@link SpatialPooler} column activations and
-     * returns the specified array.
-     * 
-     * @param activesInSparseForm       the sparse column activations
-     * @return
-     */
-    int[] feedForwardSparseActives(int[] activesInSparseForm) {
-        this.feedForwardSparseActives = activesInSparseForm;
-        return this.feedForwardSparseActives;
-    }
-
-    /**
      * Returns the SpatialPooler column activations in sparse form (indexes of
      * the on bits).
      * 
      * @return
      */
     public int[] getFeedForwardSparseActives() {
-        return feedForwardSparseActives;
+        return currentInference.getFeedForwardSparseActives();
     }
 
     /**
@@ -1940,10 +1919,10 @@ public class Layer<T> implements Persistable {
             return input;
         }
         
-        int[] activeColumns = new int[feedForwardActiveColumns.length];
+        int[] activeColumns = new int[numColumns];
         spatialPooler.compute(connections, input, activeColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
       
-        return feedForwardActiveColumns = activeColumns;
+        return activeColumns;
     }
 
     /**
@@ -1965,12 +1944,12 @@ public class Layer<T> implements Persistable {
             cc = temporalMemory.compute(connections, input, isLearn);
         }
         
-        previousPredictiveCells = predictiveCells;
+        mi.previousPredictiveCells(mi.getPredictiveCells());
         
         // Store the predictive columns
-        mi.predictiveCells(predictiveCells = cc.predictiveCells());
+        mi.predictiveCells(cc.predictiveCells());
         // Store activeCells
-        mi.activeCells(activeCells = cc.activeCells());
+        mi.activeCells(cc.activeCells);
         // Store the Compute Cycle
         mi.computeCycle = cc;
         
@@ -2282,13 +2261,15 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(t1.getSDR().length > 0 && ArrayUtils.isSparse(t1.getSDR())) {
+                    int[] sdr = t1.getSDR();
+                    if(sdr.length > 0 && ArrayUtils.isSparse(sdr)) {
                         if(inputWidth == -1) {
                             inputWidth = calculateInputWidth();
                         }
-                        t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
+                        sdr = ArrayUtils.asDense(sdr, inputWidth);
                     }
-                    return t1.sdr(spatialInput(t1.getSDR())).feedForwardActiveColumns(t1.getSDR());
+                    sdr = spatialInput(sdr);
+                    return t1.sdr(sdr).feedForwardActiveColumns(sdr);
                 }
             };
         }
@@ -2298,12 +2279,14 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(!ArrayUtils.isSparse(t1.getSDR())) {
+                    int[] sdr = t1.getSDR();
+                    if(!ArrayUtils.isSparse(sdr)) {
                         // Set on Layer, then set sparse actives as the sdr,
                         // then set on Manual Input (t1)
-                        t1 = t1.sdr(feedForwardSparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1))).feedForwardSparseActives(t1.getSDR());
+                        sdr = ArrayUtils.where(sdr, ArrayUtils.WHERE_1);
+                        t1.sdr(sdr).feedForwardSparseActives(sdr);
                     }
-                    return t1.sdr(temporalInput(t1.getSDR(), t1));
+                    return t1.sdr(temporalInput(sdr, t1));
                 }
             };
         }
