@@ -23,16 +23,6 @@ public class MutableTuple extends Tuple {
     }
     
     /**
-     * Convenience constructor to initialize the size of this {@code MutableTuple}
-     * given that it cannot be resized.
-     * 
-     * @param maxFields
-     */
-    public MutableTuple(int maxFields) {
-        this(new Object[maxFields]);
-    }
-    
-    /**
      * Sets the value at the specified index to be the
      * indicated object.
      * 
@@ -48,5 +38,6 @@ public class MutableTuple extends Tuple {
      */
     public void clear() {
         for(int i = 0;i < container.length;i++) container[i] = null;
+        container = new Object[0];
     }
 }
