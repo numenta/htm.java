@@ -145,24 +145,6 @@ public class Synapse implements Persistable, Comparable<Synapse> {
     }
     
     /**
-     * Removes the references to this Synapse in its associated
-     * {@link Pool} and its upstream presynapticCell's reference.
-     * 
-     * @param c
-     */
-    @Deprecated
-    public void destroy(Connections c) {
-        this.destroyed = true;
-        this.pool.destroySynapse(this);
-        if(sourceCell != null) {
-            c.getSynapses((DistalDendrite)segment).remove(this);
-            sourceCell.removeReceptorSynapse(c, this);
-        }else{
-            c.getSynapses((ProximalDendrite)segment).remove(this);
-        }
-    }
-    
-    /**
      * Returns the flag indicating whether this segment has been destroyed.
      * @return  the flag indicating whether this segment has been destroyed.
      */

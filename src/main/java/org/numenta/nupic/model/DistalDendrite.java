@@ -22,11 +22,8 @@
 
 package org.numenta.nupic.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import org.numenta.nupic.Connections;
@@ -44,8 +41,6 @@ import org.numenta.nupic.Persistable;
 public class DistalDendrite extends Segment implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
-    
-    private static final double EPSILON = 0.0000001;
     
     private Cell cell;
     
@@ -79,25 +74,6 @@ public class DistalDendrite extends Segment implements Persistable {
     }
     
     /**
-     * Creates and returns a newly created {@link Synapse} with the specified
-     * source cell, permanence, and index.
-     * 
-     * @param c             the connections state of the temporal memory
-     * @param sourceCell    the source cell which will activate the new {@code Synapse}
-     * @param permanence    the new {@link Synapse}'s initial permanence.
-     * @param index         the new {@link Synapse}'s index.
-     * 
-     * @return
-     */
-    @Deprecated
-    public Synapse createSynapse(Connections c, Cell sourceCell, double permanence) {
-        Pool pool = new Pool(1);
-        Synapse s = super.createSynapse(c, c.getSynapses(this), sourceCell, pool, c.incrementDistalSynapses(), sourceCell.getIndex());
-        pool.setPermanence(c, s, permanence);
-        return s;
-    }
-
-    /**
      * Returns all {@link Synapse}s
      * 
      * @param c     the connections state of the temporal memory
@@ -127,83 +103,6 @@ public class DistalDendrite extends Segment implements Persistable {
         return synapses;
     }
 
-    /**
-     * Updates synapses on segment.
-     * Strengthens active synapses; weakens inactive synapses.
-     * 
-     * @param c                         Connections instance for the tm
-     * @param prevActiveCells           Active cells in `t-1`
-     * @param permanenceIncrement       Amount to increment active synapses
-     * @param permanenceDecrement       Amount to decrement inactive synapses
-     */
-    @Deprecated  // Marked for change, not really deprecated
-    public void adaptSegment(Set<Cell> prevActiveCells, Connections c, double permanenceIncrement, double permanenceDecrement) {
-        List<Synapse> synapsesToDestroy = null;
-        
-        for(Synapse synapse : c.getSynapses(this)) {
-            double permanence = synapse.getPermanence();
-            if(prevActiveCells.contains(synapse.getPresynapticCell())) {
-                permanence += permanenceIncrement;
-            } else {
-                permanence -= permanenceDecrement;
-            }
-            
-            // Keep permanence within min/max bounds
-            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
-            
-            if(Math.abs(permanence) < EPSILON) {
-                if(synapsesToDestroy == null) {
-                    synapsesToDestroy = new ArrayList<>();
-                }
-                synapsesToDestroy.add(synapse);
-            }else{
-                synapse.setPermanence(c, permanence);
-            }
-        }
-        
-        if(synapsesToDestroy != null) {
-            for(Synapse s : synapsesToDestroy) {
-                s.destroy(c);
-            }
-        }
-    }
-
-    /**
-     * Returns a {@link Set} of previous winner {@link Cell}s which aren't
-     * already attached to any {@link Synapse}s owned by this {@code Segment}
-     * 
-     * @param c                 the connections state of the temporal memory
-     * @param numPickCells      the number of possible cells this segment may designate
-     * @param prevWinners       the set of previous winner cells
-     * @param random            the random number generator
-     * @return a {@link Set} of previous winner {@link Cell}s which aren't
-     *         already attached to any {@link Synapse}s owned by this
-     *         {@code Segment}
-     */
-    @Deprecated
-    public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
-        // Remove cells that are already synapsed on by this segment
-        Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
-        for(Synapse synapse : c.getSynapses(this)) {
-            Cell sourceCell = synapse.getPresynapticCell();
-            if(candidates.contains(sourceCell)) {
-                candidates.remove(sourceCell);
-            }
-        }
-
-        numPickCells = Math.min(numPickCells, candidates.size());
-        List<Cell> cands = new ArrayList<Cell>(candidates);
-        Collections.sort(cands);
-
-        Set<Cell> cells = new LinkedHashSet<Cell>();
-        for(int x = 0;x < numPickCells;x++) {
-            int i = random.nextInt(cands.size());
-            cells.add(cands.remove(i));
-        }
-
-        return cells;
-    }
-    
     /**
      * Sets the last iteration in which this segment was active.
      * @param iteration

@@ -79,31 +79,6 @@ public class Cell implements Comparable<Cell>, Serializable {
     }
 
     /**
-     * Adds a {@link Synapse} which is the receiver of signals
-     * from this {@code Cell}
-     * 
-     * @param c     the connections state of the temporal memory
-     * @param s     the Synapse to add
-     */
-    @Deprecated
-    public void addReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this, true).add(s);
-    }
-    
-    /**
-     * Removes a {@link Synapse} which is no longer a receiver of
-     * signals from this {@code Cell}
-     * 
-     * @param c     the connections state of the temporal memory
-     * @param s     the Synapse to remove
-     */
-    @Deprecated
-    public void removeReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this, false).remove(s);
-        c.decrementDistalSynapses();
-    }
-    
-    /**
      * Returns the Set of {@link Synapse}s which have this cell
      * as their source cells.
      *  
@@ -130,20 +105,6 @@ public class Cell implements Comparable<Cell>, Serializable {
         return c.getReceptorSynapses(this, doLazyCreate);
     }
 
-    /**
-     * Returns a newly created {@link DistalDendrite}
-     * 
-     * @param   c       the connections state of the temporal memory
-     * @return          a newly created {@link DistalDendrite}
-     */
-    @Deprecated
-    public DistalDendrite createSegment(Connections c) {
-        DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
-        c.getSegments(this, true).add(dd);
-
-        return dd;
-    }
-    
     /**
      * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      * 
