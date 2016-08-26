@@ -97,7 +97,7 @@ public class NetworkConsistencyTest {
     public void testSimpleLayer() {
         SimpleLayer layer = new SimpleLayer();
         
-        for(int i = 0;i < 1000;i++) {
+        for(int i = 0;i < 200;i++) {
             for(int j = 1;j < UPPER_BOUNDARY;j++) {
                 layer.input(j, i, RECORDS_PER_CYCLE * i + j);
             }
@@ -116,7 +116,7 @@ public class NetworkConsistencyTest {
         
         Publisher publisher = network.getPublisher();
         
-        for(int i = 0;i < 1000;i++) {
+        for(int i = 0;i < 200;i++) {
             for(int j = 1;j < UPPER_BOUNDARY;j++) {
                 publisher.onNext(String.valueOf(j));
             }
