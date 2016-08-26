@@ -4,16 +4,30 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
+import org.numenta.nupic.ComputeCycle.ColumnData;
+import org.numenta.nupic.Connections.SegmentOverlap;
+import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.util.GroupBy2;
+import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.util.UniversalRandom;
+
+import javafx.util.Pair;
 
 
 public class ComputeCycleTest {
@@ -55,6 +69,72 @@ public class ComputeCycleTest {
         assertFalse(cc1.hashCode() == cc2.hashCode());
         
       
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testActiveColumnsRetrievable() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
+        p = getDefaultParameters(p, KEY.MIN_THRESHOLD, 1);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        int[] previousActiveColumns = { 0, 1, 2, 3 };
+        Set<Cell> prevWinnerCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
+        int[] activeColumnsIndices = { 4 };
+        
+        DistalDendrite matchingSegment = cn.createSegment(cn.getCell(4));
+        cn.createSynapse(matchingSegment, cn.getCell(0), 0.5);
+        
+        ComputeCycle cc = tm.compute(cn, previousActiveColumns, true);
+        assertTrue(cc.winnerCells().equals(prevWinnerCells));
+        cc = tm.compute(cn, activeColumnsIndices, true);
+        
+        Function<Column, Column> identity = Function.identity();
+        Function<SegmentOverlap, Column> segToCol = segment -> segment.segment.getParentCell().getColumn(); 
+        
+        List<Column> activeColumns = Arrays.stream(activeColumnsIndices)
+                .sorted()
+                .mapToObj(i -> cn.getColumn(i))
+                .collect(Collectors.toList());
+        
+        GroupBy2<Column> grouper = GroupBy2.<Column>of(
+            new Pair(activeColumns, identity),
+            new Pair(new ArrayList(cn.getActiveSegmentOverlaps()), segToCol),
+            new Pair(new ArrayList(cn.getMatchingSegmentOverlaps()), segToCol));
+        
+        ComputeCycle cycle = new ComputeCycle();
+        for(Tuple t : grouper) { // Executes only once
+            ColumnData columnData = cycle.columnData.set(t);
+            assertTrue(columnData.activeColumns().equals(activeColumns));
+        }
+    }
+    
+    private Parameters getDefaultParameters(Parameters p, KEY key, Object value) {
+        Parameters retVal = p == null ? getDefaultParameters() : p;
+        retVal.set(key, value);
+        
+        return retVal;
+    }
+    
+    private Parameters getDefaultParameters() {
+        Parameters retVal = Parameters.getTemporalDefaultParameters();
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
+        retVal.set(KEY.ACTIVATION_THRESHOLD, 3);
+        retVal.set(KEY.INITIAL_PERMANENCE, 0.21);
+        retVal.set(KEY.CONNECTED_PERMANENCE, 0.5);
+        retVal.set(KEY.MIN_THRESHOLD, 2);
+        retVal.set(KEY.MAX_NEW_SYNAPSE_COUNT, 3);
+        retVal.set(KEY.PERMANENCE_INCREMENT, 0.10);
+        retVal.set(KEY.PERMANENCE_DECREMENT, 0.10);
+        retVal.set(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
+        retVal.set(KEY.RANDOM, new UniversalRandom(42));
+        retVal.set(KEY.SEED, 42);
+        
+        return retVal;
     }
 
 }
