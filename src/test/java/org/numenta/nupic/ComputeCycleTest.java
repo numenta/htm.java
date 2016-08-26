@@ -34,23 +34,13 @@ public class ComputeCycleTest {
             Arrays.asList(
                 new Cell[] { cells.get(1), cells.get(3), })));
         
-        cnx.setPredictiveCells(new LinkedHashSet<Cell>(
-            Arrays.asList(
-                new Cell[] { cells.get(2), cells.get(3), cells.get(4), cells.get(5) })));
-        
-        cnx.setSuccessfullyPredictedColumns(new LinkedHashSet<Column>(
-            Arrays.asList(new Column[] { column })));
-        
         ComputeCycle cc = new ComputeCycle(cnx);
         assertNotNull(cc.activeCells);
         assertEquals(4, cc.activeCells.size());
         assertNotNull(cc.winnerCells);
         assertEquals(2, cc.winnerCells.size());
         assertNotNull(cc.predictiveCells());
-        assertEquals(4, cc.predictiveCells().size());
-        
-        System.out.println("acSegO = " + cc.activeSegOverlaps.size());
-        System.out.println("maSegO = " + cc.matchingSegOverlaps.size());
+        assertEquals(0, cc.predictiveCells().size());
         
         ComputeCycle cc1 = new ComputeCycle(cnx);
         assertEquals(cc, cc1);

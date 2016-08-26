@@ -1858,22 +1858,26 @@ public class PersistenceAPITest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        int[] expected0 = new int[] { 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0 };
-        int[] expected1 = new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
-        int[] expected2 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-        int[] expected3 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
-        int[] expected4 = new int[] { 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0 };
-        int[] expected5 = new int[] { 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
-        int[] expected6 = new int[] { 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 };
+        int[] expected0 = new int[] { 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0 };
+        int[] expected1 = new int[] { 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0 };
+        int[] expected2 = new int[] { 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
+        int[] expected3 = new int[] { 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0 };
+        int[] expected4 = new int[] { 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0 };
+        int[] expected5 = new int[] { 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0 };
+        int[] expected6 = new int[] { 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1 };
         int[][] expecteds = new int[][] { expected0, expected1, expected2, expected3, expected4, expected5, expected6 };
 
         network.observe().subscribe(new Observer<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
+            @Override public void onError(Throwable e) { 
+                e.printStackTrace(); 
+            }
             @Override
             public void onNext(Inference spatialPoolerOutput) {
+//                System.out.println("expected: " + Arrays.toString(expecteds[test]) + "  --  " +
+//                    "actual: " + Arrays.toString(spatialPoolerOutput.getSDR()));
                 assertTrue(Arrays.equals(expecteds[test++], spatialPoolerOutput.getSDR()));
             }
         });

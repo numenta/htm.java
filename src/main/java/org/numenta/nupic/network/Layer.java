@@ -1944,9 +1944,7 @@ public class Layer<T> implements Persistable {
             cc = temporalMemory.compute(connections, input, isLearn);
         }
         
-        mi.previousPredictiveCells(mi.getPredictiveCells());
-        
-        // Store the predictive columns
+        // Store the predictive columns / simultaneously storing previous predictive in this method
         mi.predictiveCells(cc.predictiveCells());
         // Store activeCells
         mi.activeCells(cc.activeCells);

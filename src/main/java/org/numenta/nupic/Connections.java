@@ -149,11 +149,11 @@ public class Connections implements Persistable {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
-    protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
-    protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
-    protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
-    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
+//    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
+//    protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
+//    protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
+//    protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
+//    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
     
     protected List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
     protected List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
@@ -1109,6 +1109,32 @@ public class Connections implements Persistable {
         public int compareTo(SegmentOverlap other) {
             return segment.compareTo(other.segment);
         }
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + overlap;
+            result = prime * result + ((segment == null) ? 0 : segment.hashCode());
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            SegmentOverlap other = (SegmentOverlap) obj;
+            if (overlap != other.overlap)
+                return false;
+            if (segment == null) {
+                if (other.segment != null)
+                    return false;
+            } else if (!segment.equals(other.segment))
+                return false;
+            return true;
+        }
     }
     
     /**
@@ -1678,11 +1704,13 @@ public class Connections implements Persistable {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
-        matchingCells.clear();
-        matchingSegments.clear();
-        successfullyPredictedColumns.clear();
-        activeSegments.clear();
-        learningSegments.clear();
+        activeSegOverlaps.clear();
+        matchingSegOverlaps.clear();
+//        matchingCells.clear();
+//        matchingSegments.clear();
+//        successfullyPredictedColumns.clear();
+//        activeSegments.clear();
+//        learningSegments.clear();
     }
 
     /**
@@ -1733,101 +1761,6 @@ public class Connections implements Persistable {
         return predictiveCells;
     }
 
-    /**
-     * Sets the current {@link Set} of predictive {@link Cell}s
-     * @param cells
-     */
-    public void setPredictiveCells(Set<Cell> cells) {
-        this.predictiveCells = cells;
-    }
-
-    /**
-     * Returns the Set of matching {@link Cell}s
-     * @return
-     */
-    public Set<Cell> getMatchingCells() {
-        return matchingCells;
-    }
-
-    /**
-     * Sets the Set of matching {@link Cell}s
-     * @param cells
-     */
-    public void setMatchingCells(Set<Cell> cells) {
-        this.matchingCells = cells;
-    }
-
-    /**
-     * Returns the {@link Set} of columns successfully predicted from t - 1.
-     *
-     * @return  the current {@link Set} of predicted columns
-     */
-    public Set<Column> getSuccessfullyPredictedColumns() {
-        return successfullyPredictedColumns;
-    }
-
-    /**
-     * Sets the {@link Set} of columns successfully predicted from t - 1.
-     * @param columns
-     */
-    public void setSuccessfullyPredictedColumns(Set<Column> columns) {
-        this.successfullyPredictedColumns = columns;
-    }
-
-    /**
-     * Returns the Set of learning {@link DistalDendrite}s
-     * @return
-     */
-    @Deprecated
-    public Set<DistalDendrite> getLearningSegments() {
-        return learningSegments;
-    }
-
-    /**
-     * Sets the {@link Set} of learning segments
-     * @param segments
-     */
-    @Deprecated
-    public void setLearningSegments(Set<DistalDendrite> segments) {
-        this.learningSegments = segments;
-    }
-
-    /**
-     * Returns the Set of active {@link DistalDendrite}s
-     * @return
-     */
-    @Deprecated
-    public Set<DistalDendrite> getActiveSegments() {
-        return activeSegments;
-    }
-
-    /**
-     * Sets the {@link Set} of active {@link Segment}s
-     * @param segments
-     */
-    @Deprecated
-    public void setActiveSegments(Set<DistalDendrite> segments) {
-        this.activeSegments = segments;
-    }
-
-    /**
-     * Returns the Set of matching {@link DistalDendrite}s
-     * @return
-     */
-    @Deprecated
-    public Set<DistalDendrite> getMatchingSegments() {
-        return matchingSegments;
-    }
-
-    /**
-     * Sets the Set of matching {@link DistalDendrite}s
-     * @param segments
-     */
-    @Deprecated
-    public void setMatchingSegments(Set<DistalDendrite> segments) {
-        this.matchingSegments = segments;
-    }
-    
     /**
      * Returns the Set of active {@link SegmentOverlap}s
      * @return
@@ -2284,7 +2217,6 @@ public class Connections implements Persistable {
         result = prime * result + activationThreshold;
         result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
         result = prime * result + Arrays.hashCode(activeDutyCycles);
-        result = prime * result + ((activeSegments == null) ? 0 : activeSegments.hashCode());
         result = prime * result + Arrays.hashCode(boostFactors);
         result = prime * result + Arrays.hashCode(cells);
         result = prime * result + cellsPerColumn;
@@ -2306,11 +2238,10 @@ public class Connections implements Persistable {
         result = prime * result + spIterationNum;
         result = prime * result + tmIteration;
         result = prime * result + learningRadius;
-        result = prime * result + ((learningSegments == null) ? 0 : learningSegments.hashCode());
         temp = Double.doubleToLongBits(localAreaDensity);
         result = prime * result + (int)(temp ^ (temp >>> 32));
-        result = prime * result + ((matchingCells == null) ? 0 : matchingCells.hashCode());
-        result = prime * result + ((matchingSegments == null) ? 0 : matchingSegments.hashCode());
+        result = prime * result + ((activeSegOverlaps == null) ? 0 : activeSegOverlaps.hashCode());
+        result = prime * result + ((matchingSegOverlaps == null) ? 0 : matchingSegOverlaps.hashCode());
         temp = Double.doubleToLongBits(maxBoost);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + maxNewSynapseCount;
@@ -2347,7 +2278,6 @@ public class Connections implements Persistable {
         result = prime * result + spVerbosity;
         temp = Double.doubleToLongBits(stimulusThreshold);
         result = prime * result + (int)(temp ^ (temp >>> 32));
-        result = prime * result + ((successfullyPredictedColumns == null) ? 0 : successfullyPredictedColumns.hashCode());
         temp = Double.doubleToLongBits(synPermActiveInc);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(synPermBelowStimulusInc);
@@ -2395,10 +2325,15 @@ public class Connections implements Persistable {
             return false;
         if(!Arrays.equals(activeDutyCycles, other.activeDutyCycles))
             return false;
-        if(activeSegments == null) {
-            if(other.activeSegments != null)
+        if(activeSegOverlaps == null) {
+            if(other.activeSegOverlaps != null)
                 return false;
-        } else if(!activeSegments.equals(other.activeSegments))
+        } else if(!activeSegOverlaps.equals(other.activeSegOverlaps))
+            return false;
+        if(matchingSegOverlaps == null) {
+            if(other.matchingSegOverlaps != null)
+                return false;
+        } else if(!matchingSegOverlaps.equals(other.matchingSegOverlaps))
             return false;
         if(!Arrays.equals(boostFactors, other.boostFactors))
             return false;
@@ -2440,22 +2375,7 @@ public class Connections implements Persistable {
             return false;
         if(learningRadius != other.learningRadius)
             return false;
-        if(learningSegments == null) {
-            if(other.learningSegments != null)
-                return false;
-        } else if(!learningSegments.equals(other.learningSegments))
-            return false;
         if(Double.doubleToLongBits(localAreaDensity) != Double.doubleToLongBits(other.localAreaDensity))
-            return false;
-        if(matchingCells == null) {
-            if(other.matchingCells != null)
-                return false;
-        } else if(!matchingCells.equals(other.matchingCells))
-            return false;
-        if(matchingSegments == null) {
-            if(other.matchingSegments != null)
-                return false;
-        } else if(!matchingSegments.equals(other.matchingSegments))
             return false;
         if(Double.doubleToLongBits(maxBoost) != Double.doubleToLongBits(other.maxBoost))
             return false;
@@ -2504,7 +2424,7 @@ public class Connections implements Persistable {
         if(predictiveCells == null) {
             if(other.predictiveCells != null)
                 return false;
-        } else if(!predictiveCells.equals(other.predictiveCells))
+        } else if(!getPredictiveCells().equals(other.getPredictiveCells()))
             return false;
         if(receptorSynapses == null) {
             if(other.receptorSynapses != null)
@@ -2523,11 +2443,6 @@ public class Connections implements Persistable {
         if(spVerbosity != other.spVerbosity)
             return false;
         if(Double.doubleToLongBits(stimulusThreshold) != Double.doubleToLongBits(other.stimulusThreshold))
-            return false;
-        if(successfullyPredictedColumns == null) {
-            if(other.successfullyPredictedColumns != null)
-                return false;
-        } else if(!successfullyPredictedColumns.equals(other.successfullyPredictedColumns))
             return false;
         if(Double.doubleToLongBits(synPermActiveInc) != Double.doubleToLongBits(other.synPermActiveInc))
             return false;

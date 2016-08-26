@@ -180,6 +180,7 @@ public class DistalDendrite extends Segment implements Persistable {
      *         already attached to any {@link Synapse}s owned by this
      *         {@code Segment}
      */
+    @Deprecated
     public Set<Cell> pickCellsToLearnOn(Connections c, int numPickCells, Set<Cell> prevWinners, Random random) {
         // Remove cells that are already synapsed on by this segment
         Set<Cell> candidates = new LinkedHashSet<Cell>(prevWinners);
