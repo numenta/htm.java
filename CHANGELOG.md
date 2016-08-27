@@ -17,7 +17,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 #### Removed
 #### Added
 * Parameters key ```Parameters.KEY.MAX_SEGMENTS_PER_CELL```
-* Added new ```AbstractGenerator``` class which adds Python like generators (w/yield method)
 * Added new ```UniversalRandom``` RNG which has an [allegory in python](https://gist.github.com/cogmission/c4cb8feaba19595dae8ff964e18b05d0#file-universal_random-py) which can be used to compare versions 
 * Added new methods on the MTJ matrices to add and remove rows and columns
 * Added new Algorithm Foundry culled jar containing Sandia wrapper for the MTJ linear algebra lib
