@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
+ * Copyright (C) 2014-2016, Numenta, Inc.  Unless you have an agreement
  * with Numenta, Inc., for a separate license for this software code, the
  * following terms and conditions apply:
  *
@@ -24,6 +24,7 @@ package org.numenta.nupic.util;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.numenta.nupic.Persistable;
@@ -35,7 +36,7 @@ import org.numenta.nupic.Persistable;
  * 
  * @author David Ray
  */
-public class Tuple implements Persistable {
+public class Tuple implements Persistable, Comparable<Tuple> {
     
     private static final long serialVersionUID = 1L;
 
@@ -44,6 +45,8 @@ public class Tuple implements Persistable {
 	
 	private int hashcode;
 	
+	private Comparator<Tuple> comparator;
+	
 	public Tuple() {}
 	
 	/**
@@ -51,9 +54,30 @@ public class Tuple implements Persistable {
 	 * @param objects
 	 */
 	public Tuple(Object... objects) {
-		container = new Object[objects.length];
-		for(int i = 0;i < objects.length;i++) container[i] = objects[i];
-		this.hashcode = hashCode();
+		remake(objects);
+	}
+	
+	/**
+	 * Constructs a {@code Tuple} that will use the supplied
+	 * {@link Comparator} to implement the {@link Comparable}
+	 * interface.
+	 * @param c            the Comparator function to use to compare the
+	 *                     contents of the is {@code Tuple}
+	 * @param objects      the objects contained within
+	 */
+	public Tuple(Comparator<Tuple> c, Object...objects) {
+	    this.comparator = c;
+	    remake(objects);
+	}
+	
+	/**
+	 * Remakes the internals for this Tuple.
+	 * @param objects
+	 */
+	protected void remake(Object...objects) {
+	    container = new Object[objects.length];
+        for(int i = 0;i < objects.length;i++) container[i] = objects[i];
+        this.hashcode = hashCode();
 	}
 	
 	/**
@@ -129,4 +153,18 @@ public class Tuple implements Persistable {
 			return false;
 		return true;
 	}
+
+	/**
+	 * Uses the supplied {@link Comparator} to compare this {@code Tuple}
+	 * with the specified {@link Tuple}
+	 */
+    @Override
+    public int compareTo(Tuple t) {
+        if(comparator == null) {
+            throw new IllegalStateException("Tuples used for comparison should be " +
+                "instantiated using the constructor taking a Comparator");
+        }
+        
+        return comparator.compare(this, t);
+    }
 }

@@ -97,7 +97,7 @@ public class HTMSensorTest {
                         0, 0, 0, 0, null, null, null,
                         "sdr_in", "darr", "SDRPassThroughEncoder");
         Parameters p = Parameters.empty();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        p.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         return p;
     }
     
@@ -123,7 +123,7 @@ public class HTMSensorTest {
         //fieldEncodings.get("timestamp").put(KEY.DATEFIELD_FORMATTER.getFieldName(), DateEncoder.FULL_DATE);
                 
         Parameters p = Parameters.getEncoderDefaultParameters();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        p.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         
         return p;
     }
@@ -159,7 +159,7 @@ public class HTMSensorTest {
         //fieldEncodings.get("timestamp").put(KEY.DATEFIELD_FORMATTER.getFieldName(), DateEncoder.FULL_DATE);
                 
         Parameters p = Parameters.getEncoderDefaultParameters();
-        p.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        p.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         
         return p;
     }
@@ -311,7 +311,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -334,7 +334,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -357,7 +357,7 @@ public class HTMSensorTest {
             0, 0, 0, 0.1, null, null, null, 
             "consumption", "float", "RandomDistributedScalarEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -380,7 +380,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -403,7 +403,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -426,7 +426,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -449,7 +449,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -472,7 +472,7 @@ public class HTMSensorTest {
             0, 0, 0, 0, null, null, null,
             "timestamp", "datetime", "DateEncoder");
         Parameters params = Parameters.getEncoderDefaultParameters();
-        params.setParameterByKey(KEY.FIELD_ENCODING_MAP, fieldEncodings);
+        params.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
         HTMSensor<File> htmSensor = (HTMSensor<File>) sensor;
         htmSensor.initEncoder(params);
     }
@@ -633,8 +633,8 @@ public class HTMSensorTest {
         
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getGeospatialTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
-        p.setParameterByKey(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
         
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
         

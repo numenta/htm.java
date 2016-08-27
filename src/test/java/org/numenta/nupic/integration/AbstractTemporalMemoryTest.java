@@ -51,7 +51,7 @@ public class AbstractTemporalMemoryTest {
         parameters.apply(connections);
         
         temporalMemory = new TemporalMemory();
-        temporalMemory.init(connections);
+        TemporalMemory.init(connections);
         tm = new MonitoredTemporalMemory(temporalMemory, connections);
         
         this.patternMachine = pm;
@@ -63,15 +63,15 @@ public class AbstractTemporalMemoryTest {
      */
     protected Parameters createTMParams(Parameters overrides) {
         parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
-        parameters.setParameterByKey(KEY.CELLS_PER_COLUMN, 1);
-        parameters.setParameterByKey(KEY.INITIAL_PERMANENCE, 0.8);
-        parameters.setParameterByKey(KEY.CONNECTED_PERMANENCE, 0.7);
-        parameters.setParameterByKey(KEY.MIN_THRESHOLD, 11);
-        parameters.setParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT, 11);
-        parameters.setParameterByKey(KEY.PERMANENCE_INCREMENT, 0.4);
-        parameters.setParameterByKey(KEY.PERMANENCE_DECREMENT, 0.0);
-        parameters.setParameterByKey(KEY.ACTIVATION_THRESHOLD, 11);
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
+        parameters.set(KEY.CELLS_PER_COLUMN, 1);
+        parameters.set(KEY.INITIAL_PERMANENCE, 0.8);
+        parameters.set(KEY.CONNECTED_PERMANENCE, 0.7);
+        parameters.set(KEY.MIN_THRESHOLD, 11);
+        parameters.set(KEY.MAX_NEW_SYNAPSE_COUNT, 11);
+        parameters.set(KEY.PERMANENCE_INCREMENT, 0.4);
+        parameters.set(KEY.PERMANENCE_DECREMENT, 0.0);
+        parameters.set(KEY.ACTIVATION_THRESHOLD, 11);
         
         if(overrides != null) {
             parameters.union(overrides);

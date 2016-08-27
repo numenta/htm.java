@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -506,12 +505,6 @@ public class RandomDistributedScalarEncoderTest {
 		r2 = new int[] { 1, 2, 3, 4, 5, 6 };
 		assertEquals("countOverlap result is incorrect", 0,
 				rdse.countOverlap(r1, r2));
-	}
-
-	@Ignore
-	@Test
-	public void testEncodeInvalidInputType() {
-		// not valid for java as it does not follow duck typing
 	}
 
 	private List<Integer> getRangeAsList(int lowerBound, int upperBound) {

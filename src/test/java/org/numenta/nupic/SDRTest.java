@@ -18,11 +18,10 @@ public class SDRTest {
 
     @Test
     public void testAsCellIndices() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 16383 };
         Set<Cell> cells = cn.getCellSet(expectedIndexes);
@@ -84,11 +83,10 @@ public class SDRTest {
     
     @Test
     public void testCellsAsColumnIndicesList() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 4095 };
         int[] inputIndices = Arrays.stream(expectedIndexes).map(i -> i * cn.getCellsPerColumn()).toArray();
@@ -101,11 +99,10 @@ public class SDRTest {
     
     @Test
     public void testCellsAsColumnIndicesSet() {
-        TemporalMemory tm = new TemporalMemory();
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        tm.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 4095 };
         int[] inputIndices = Arrays.stream(expectedIndexes).map(i -> i * cn.getCellsPerColumn()).toArray();

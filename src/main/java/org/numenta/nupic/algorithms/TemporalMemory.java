@@ -1,39 +1,38 @@
 package org.numenta.nupic.algorithms;
 
+import static org.numenta.nupic.util.GroupBy2.Slot.NONE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.ComputeCycle.ColumnData;
 import org.numenta.nupic.Connections;
+import org.numenta.nupic.Connections.Activity;
+import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.monitor.ComputeDecorator;
+import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Tuple;
 
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import javafx.util.Pair;
 
-/**
- * Temporal Memory implementation in Java
- * 
- * @author Chetan Surpur
- * @author David Ray
- */
 public class TemporalMemory implements ComputeDecorator, Serializable {
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Constructs a new {@code TemporalMemory}
-     */
-    public TemporalMemory() {}
+    
+    private static final double EPSILON = 0.00001;
     
     /**
      * Uses the specified {@link Connections} object to Build the structural 
@@ -50,7 +49,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * 
      * @param   c       {@link Connections} object
      */
-    public void init(Connections c) {
+    public static void init(Connections c) {
         SparseObjectMatrix<Column> matrix = c.getMemory() == null ?
             new SparseObjectMatrix<Column>(c.getColumnDimensions()) :
                 c.getMemory();
@@ -75,371 +74,255 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         //Only the TemporalMemory initializes cells so no need to test for redundancy
         c.setCells(cells);
     }
-    
-    /////////////////////////// CORE FUNCTIONS /////////////////////////////
-    /**
-     * Feeds input record through TM, performing inferencing and learning
-     * 
-     * @param connections       the connection memory
-     * @param activeColumns     direct proximal dendrite input
-     * @param learn             learning mode flag
-     * @return                  {@link ComputeCycle} container for one cycle of inference values.
-     */
-    public ComputeCycle compute(Connections connections, int[] activeColumns, boolean learn) {
-        ComputeCycle result = computeFn(connections, connections.getColumnSet(activeColumns), connections.getPredictiveCells(), 
-            connections.getActiveSegments(), connections.getActiveCells(), connections.getWinnerCells(), connections.getMatchingSegments(), 
-                connections.getMatchingCells(), learn);
-        
-        connections.setActiveCells(result.activeCells);
-        connections.setWinnerCells(result.winnerCells);
-        connections.setPredictiveCells(result.predictiveCells);
-        connections.setSuccessfullyPredictedColumns(result.successfullyPredictedColumns);
-        connections.setActiveSegments(result.activeSegments);
-        connections.setLearningSegments(result.learningSegments);
-        connections.setMatchingSegments(result.matchingSegments);
-        connections.setMatchingCells(result.matchingCells);
-        
-        return result; 
-    }
-    
-    /**
-     * Functional version of {@link #compute(int[], boolean)}. 
-     * This method is stateless and concurrency safe.
-     * 
-     * @param c                             {@link Connections} object containing state of memory members
-     * @param activeColumns                 active {@link Column}s in t
-     * @param prevPredictiveCells           cells predicting in t-1
-     * @param prevActiveSegments            active {@link Segment}s in t-1
-     * @param prevActiveCells               active {@link Cell}s in t-1
-     * @param prevWinnerCells               winner {@link Cell}s in t-1
-     * @param prevMatchingSegments          matching {@link Segment}s in t-1
-     * @param prevMatchingCells             matching cells in t-1 
-     * @param learn                         whether mode is "learning" mode
-     * @return
-     */
-    public ComputeCycle computeFn(Connections c, Set<Column> activeColumns, Set<Cell> prevPredictiveCells, Set<DistalDendrite> prevActiveSegments,
-        Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells, Set<DistalDendrite> prevMatchingSegments, Set<Cell> prevMatchingCells, boolean learn) {
 
+    /**
+     * Feeds input record through TM, performing inference and learning.
+     * 
+     * @param   conn                    The column/cell structure and connectivity
+     * @param   activeColumnIndices     Indexes of Columns active during the current cycle
+     * @param   learn                   Whether or not learning is enabled
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public ComputeCycle compute(Connections conn, int[] activeColumnIndices, boolean learn) {
         ComputeCycle cycle = new ComputeCycle();
         
-        activateCorrectlyPredictiveCells(c, cycle, prevPredictiveCells, prevMatchingCells, activeColumns);
+        Set<Cell> prevActiveCells = conn.getActiveCells();
+        Set<Cell> prevWinnerCells = conn.getWinnerCells();
         
-        burstColumns(c, cycle, activeColumns, cycle.successfullyPredictedColumns, prevActiveCells, prevWinnerCells);
+        List<Column> activeColumns = Arrays.stream(activeColumnIndices)
+            .sorted()
+            .mapToObj(i -> conn.getColumn(i))
+            .collect(Collectors.toList());
         
-        if(learn) {
-            learnOnSegments(c, prevActiveSegments, cycle.learningSegments, prevActiveCells, 
-                cycle.winnerCells, prevWinnerCells, cycle.predictedInactiveCells, prevMatchingSegments);
+        Function<Column, Column> identity = Function.identity();
+        Function<SegmentOverlap, Column> segToCol = segment -> segment.segment.getParentCell().getColumn(); 
+        
+        GroupBy2<Column> grouper = GroupBy2.<Column>of(
+            new Pair(activeColumns, identity),
+            new Pair(new ArrayList(conn.getActiveSegmentOverlaps()), segToCol),
+            new Pair(new ArrayList(conn.getMatchingSegmentOverlaps()), segToCol));
+        
+        double permanenceIncrement = conn.getPermanenceIncrement();
+        double permanenceDecrement = conn.getPermanenceDecrement();
+        for(Tuple t : grouper) {
+            ColumnData columnData = cycle.columnData.set(t);
+//            System.out.println("Column: " + columnData.column());
+//            System.out.println("activeColumns: " + columnData.activeColumns());
+//            System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
+//            System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
+            
+            if(!((List<?>)t.get(1)).get(0).equals(NONE)) {
+                if(!columnData.activeSegments().isEmpty()) {
+                    List<Cell> cellsToAdd = activatePredictedColumn(conn, columnData.activeSegments(), 
+                        prevActiveCells, conn.getPermanenceIncrement(), conn.getPermanenceDecrement(), learn);
+                    
+                    cycle.activeCells.addAll(cellsToAdd);
+                    cycle.winnerCells.addAll(cellsToAdd);
+                }else{
+                    Tuple cellsXwinnerCell = burstColumn(conn, columnData.column(), columnData.matchingSegments(), prevActiveCells, prevWinnerCells,
+                        permanenceIncrement, permanenceDecrement, conn.getRandom(), learn);
+                    
+                    cycle.activeCells.addAll((List<Cell>)cellsXwinnerCell.get(0));
+                    cycle.winnerCells.add((Cell)cellsXwinnerCell.get(1));
+                }
+            }else{
+                if(learn) {
+                    punishPredictedColumn(conn, columnData.matchingSegments(), prevActiveCells, conn.getPredictedSegmentDecrement());
+                }
+            }
         }
+            
+        Activity activity = conn.computeActivity(cycle.activeCells, conn.getConnectedPermanence(), conn.getActivationThreshold(), 
+            0.0, conn.getMinThreshold(), learn);
         
-        computePredictiveCells(c, cycle, cycle.activeCells);
+        cycle.activeSegOverlaps = activity.activeSegments;
+        cycle.matchingSegOverlaps = activity.matchingSegments;
+        
+        conn.setActiveCells(new LinkedHashSet<>(cycle.activeCells));
+        conn.setWinnerCells(new LinkedHashSet<>(cycle.winnerCells));
+        conn.setActiveSegmentOverlaps(activity.activeSegments);
+        conn.setMatchingSegmentOverlaps(activity.matchingSegments);
+        // Forces generation of the predictive cells from the above active segments
+        conn.clearPredictiveCells();
+        conn.getPredictiveCells();
         
         return cycle;
     }
     
     /**
-     * Phase 1: Activate the correctly predictive cells
+     * <p>
+     * Determines which cells in a predicted column should be added to
+     * winner cells list and calls adaptSegment on the segments that correctly
+     * predicted this column.
+     * </p><p>
+     * <b>Pseudocode:</b>
+     * </p><p>
+     * <pre>
+     * for each cell in the column that has an active distal dendrite segment
+     *     mark the cell as active
+     *     mark the cell as a winner cell
+     *     (learning) for each active distal dendrite segment
+     *         strengthen active synapses
+     *         weaken inactive synapses
+     * </pre>
+     * </p>
      * 
-     * Pseudocode:
-     *
-     * - for each previous predictive cell
-     *   - if in active column
-     *     - mark it as active
-     *     - mark it as winner cell
-     *     - mark column as predicted
-     *   - if not in active column
-     *     - mark it as a predicted but inactive cell
-     *     
-     * @param cnx                   Connectivity of layer
-     * @param c                     ComputeCycle interim values container
-     * @param prevPredictiveCells   predictive {@link Cell}s predictive cells in t-1
-     * @param activeColumns         active columns in t
+     * @param conn                      {@link Connections} instance for the tm 
+     * @param activeSegments            A iterable of SegmentOverlap objects for the
+     *                                  column compute is operating on that are active
+     * @param prevActiveCells           Active cells in `t-1`
+     * @param permanenceIncrement       Amount by which permanences of synapses are
+     *                                  incremented during learning.
+     * @param permanenceDecrement       Amount by which permanences of synapses are
+     *                                  decremented during learning.
+     * @param learn
+     * @return      A list of predicted cells that will be added to active cells and winner cells.
      */
-    public void activateCorrectlyPredictiveCells(Connections cnx, ComputeCycle c, 
-        Set<Cell> prevPredictiveCells, Set<Cell> prevMatchingCells, Set<Column> activeColumns) {
+    public List<Cell> activatePredictedColumn(Connections conn, List<SegmentOverlap> activeSegments,
+        Set<Cell> prevActiveCells, double permanenceIncrement, double permanenceDecrement, boolean learn) {
         
-        for(Cell cell : prevPredictiveCells) {
-            Column column = cell.getColumn();
-            if(activeColumns.contains(column)) {
-                c.activeCells.add(cell);
-                c.winnerCells.add(cell);
-                c.successfullyPredictedColumns.add(column);
+        List<Cell> cellsToAdd = new ArrayList<>();
+        Cell cell = null;
+        for(SegmentOverlap active : activeSegments) {
+            boolean newCell = cell != active.segment.getParentCell();
+            if(newCell) {
+                cell = active.segment.getParentCell();
+                cellsToAdd.add(cell);
+            }
+            
+            if(learn) {
+                adaptSegment(conn, active.segment, prevActiveCells, permanenceIncrement, permanenceDecrement);
             }
         }
         
-        if(cnx.getPredictedSegmentDecrement() > 0) {
-            for(Cell cell : prevMatchingCells) {
-                Column column = cell.getColumn();
+        return cellsToAdd;
+    }
+    
+    /**
+     * Activates all of the cells in an unpredicted active column,
+     * chooses a winner cell, and, if learning is turned on, either adapts or
+     * creates a segment. growSynapses is invoked on this segment.
+     * </p><p>
+     * <b>Pseudocode:</b>
+     * </p><p>
+     * <pre>
+     *  mark all cells as active
+     *  if there are any matching distal dendrite segments
+     *      find the most active matching segment
+     *      mark its cell as a winner cell
+     *      (learning)
+     *      grow and reinforce synapses to previous winner cells
+     *  else
+     *      find the cell with the least segments, mark it as a winner cell
+     *      (learning)
+     *      (optimization) if there are previous winner cells
+     *          add a segment to this winner cell
+     *          grow synapses to previous winner cells
+     * </pre>
+     * </p>
+     * 
+     * @param conn                      Connections instance for the tm
+     * @param excitedColumn             Excited Column instance from 
+     *                                  {@link #excitedColumnsGenerator(int[], List, List, Connections)}
+     * @param prevActiveCells           Active cells in `t-1`
+     * @param prevWinnerCells           Winner cells in `t-1`
+     * @param initialPermanence         Initial permanence of a new synapse.
+     * @param maxNewSynapseCount        The maximum number of synapses added to
+                                        a segment during learning     
+     * @param permanenceIncrement       Amount by which permanences of synapses
+                                        are decremented during learning
+     * @param permanenceDecrement       Amount by which permanences of synapses
+                                        are incremented during learning
+     * @param random                    Random number generator
+     * 
+     * @return  Tuple containing:
+     *                  cells       list of the processed column's cells
+     *                  bestCell    the best cell
+     */
+    public Tuple burstColumn(Connections conn, Column column, List<SegmentOverlap> matchingSegments, 
+        Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells, double permanenceIncrement, double permanenceDecrement, 
+            Random random, boolean learn) {
+        
+        List<Cell> cells = column.getCells();
+        Cell bestCell = null;
+        
+        if(!matchingSegments.isEmpty()) {
+            SegmentOverlap bestSegment = matchingSegments.stream().max((so1, so2) -> so1.overlap - so2.overlap).get();
+            bestCell = bestSegment.segment.getParentCell();
+            if(learn) {
+                adaptSegment(conn, bestSegment.segment, prevActiveCells, permanenceIncrement, permanenceDecrement);
                 
-                if(!activeColumns.contains(column)) {
-                    c.predictedInactiveCells.add(cell);
+                int nGrowDesired = conn.getMaxNewSynapseCount() - bestSegment.overlap;
+                
+                if(nGrowDesired > 0) {
+                    growSynapses(conn, prevWinnerCells, bestSegment.segment, conn.getInitialPermanence(), 
+                        nGrowDesired, random); 
+                }
+            }
+        }else{
+            bestCell = leastUsedCell(conn, cells, random);
+            if(learn) {
+                int nGrowExact = Math.min(conn.getMaxNewSynapseCount(), prevWinnerCells.size());
+                if(nGrowExact > 0) {
+                    DistalDendrite bestSegment = conn.createSegment(bestCell);
+                    growSynapses(conn, prevWinnerCells, bestSegment, conn.getInitialPermanence(), 
+                        nGrowExact, random);
                 }
             }
         }
+        
+        return new Tuple(cells, bestCell);
     }
     
     /**
-     * Phase 2: Burst unpredicted columns.
+     * Punishes the Segments that incorrectly predicted a column to be active.
      * 
-     * Pseudocode:
-     *
-     * - for each unpredicted active column
-     *   - mark all cells as active
-     *   - mark the best matching cell as winner cell
-     *     - (learning)
-     *       - if it has no matching segment
-     *         - (optimization) if there are previous winner cells
-     *           - add a segment to it
-     *       - mark the segment as learning
-     * @param c                             Connections temporal memory state
-     * @param cycle                         ComputeCycle interim values container
-     * @param activeColumns                 active columns in t
-     * @param predictedColumns              predicted columns in t
-     * @param prevActiveCells               active {@link Cell}s in t-1
-     * @param prevWinnerCells               winner {@link Cell}s in t-1
-     */
-    public void burstColumns(Connections c, ComputeCycle cycle, 
-        Set<Column> activeColumns, Set<Column> predictedColumns, Set<Cell> prevActiveCells, Set<Cell> prevWinnerCells) {
-        
-        // Now contains only unpredicted columns
-        activeColumns.removeAll(predictedColumns);
-        
-        for(Column column : activeColumns) {
-            List<Cell> cells = column.getCells();
-            cycle.activeCells.addAll(cells);
-            
-            CellSearch cellSearch = getBestMatchingCell(c, cells, prevActiveCells);
-            
-            cycle.winnerCells.add(cellSearch.bestCell);
-            
-            DistalDendrite bestSegment = cellSearch.bestSegment;
-            if(bestSegment == null && prevWinnerCells.size() > 0) {
-                bestSegment = cellSearch.bestCell.createSegment(c);
-            }
-            
-            if(bestSegment != null) {
-                cycle.learningSegments.add(bestSegment);
-            }
-        }
-    }
-    
-    /**
-     * Phase 3: Perform learning by adapting segments.
+     * <p>
      * <pre>
      * Pseudocode:
-     *
-     * - (learning) for each previously active or learning segment
-     *   - if learning segment or from winner cell
-     *     - strengthen active synapses
-     *     - weaken inactive synapses
-     *   - if learning segment
-     *     - add some synapses to the segment
-     *       - sub sample from previous winner cells
+     *  for each matching segment in the column
+     *    weaken active synapses
+     * </pre>
+     * </p>
      *   
-     *   - if predictedSegmentDecrement > 0
-     *     - for each previously matching segment
-     *       - weaken active synapses but don't touch inactive synapses
-     * </pre>    
-     *     
-     * @param c                             the Connections state of the temporal memory
-     * @param prevActiveSegments            the Set of segments active in the previous cycle. "t-1"
-     * @param learningSegments              the Set of segments marked as learning segments in "t"
-     * @param prevActiveCells               the Set of active cells in "t-1"
-     * @param winnerCells                   the Set of winner cells in "t"
-     * @param prevWinnerCells               the Set of winner cells in "t-1"
-     * @param predictedInactiveCells        the Set of predicted inactive cells
-     * @param prevMatchingSegments          the Set of segments with
-     * 
+     * @param conn                              Connections instance for the tm
+     * @param excitedColumn                     Excited Column instance from excitedColumnsGenerator
+     * @param prevActiveCells                   Active cells in `t-1`
+     * @param predictedSegmentDecrement         Amount by which permanences of synapses
+     *                                          are decremented during learning.
      */
-    public void learnOnSegments(Connections c, Set<DistalDendrite> prevActiveSegments, 
-        Set<DistalDendrite> learningSegments, Set<Cell> prevActiveCells, Set<Cell> winnerCells, Set<Cell> prevWinnerCells, 
-            Set<Cell> predictedInactiveCells, Set<DistalDendrite> prevMatchingSegments) {
+    public void punishPredictedColumn(Connections conn, List<SegmentOverlap> matchingSegments, 
+        Set<Cell> prevActiveCells, double predictedSegmentDecrement) {
         
-        double permanenceIncrement = c.getPermanenceIncrement();
-        double permanenceDecrement = c.getPermanenceDecrement();
-            
-        Set<DistalDendrite> prevAndLearning = new HashSet<DistalDendrite>(prevActiveSegments);
-        prevAndLearning.addAll(learningSegments);
-        
-        for(DistalDendrite dd : prevAndLearning) {
-                
-            boolean isLearningSegment = learningSegments.contains(dd);
-            boolean isFromWinnerCell = winnerCells.contains(dd.getParentCell());
-            
-            Set<Synapse> activeSynapses = dd.getActiveSynapses(c, prevActiveCells);
-            
-            if(isLearningSegment || isFromWinnerCell) {
-                dd.adaptSegment(c, activeSynapses, permanenceIncrement, permanenceDecrement);
-            }
-            
-            int n = c.getMaxNewSynapseCount() - activeSynapses.size();
-            if(isLearningSegment && n > 0) {
-                Set<Cell> learnCells = dd.pickCellsToLearnOn(c, n, prevWinnerCells, c.getRandom());
-                for(Cell sourceCell : learnCells) {
-                    dd.createSynapse(c, sourceCell, c.getInitialPermanence());
-                }
-            }
-        }
-        
-        if(c.getPredictedSegmentDecrement() > 0) {
-            for(DistalDendrite segment : prevMatchingSegments) {
-                boolean isPredictedInactiveCell = predictedInactiveCells.contains(segment.getParentCell());
-                
-                if(isPredictedInactiveCell) {
-                    Set<Synapse> activeSynapses = segment.getActiveSynapses(c, prevActiveCells);
-                    segment.adaptSegment(c, activeSynapses, -c.getPredictedSegmentDecrement(), 0.0);
-                }
+        if(predictedSegmentDecrement > 0) {
+            for(SegmentOverlap segment : matchingSegments) {
+                adaptSegment(conn, segment.segment, prevActiveCells, -conn.getPredictedSegmentDecrement(), 0);
             }
         }
     }
     
-    /**
-     * Phase 4: Compute predictive cells due to lateral input on distal dendrites.
-     *
-     * Pseudocode:
-     *
-     * - for each distal dendrite segment with activity >= activationThreshold
-     *   - mark the segment as active
-     *   - mark the cell as predictive
-     *   
-     * - if predictedSegmentDecrement > 0
-     *   - for each distal dendrite segment with unconnected activity > = minThreshold
-     *     - mark the segment as matching
-     *     - mark the cell as matching
-     * 
-     * @param c                 the Connections state of the temporal memory
-     * @param cycle             the state during the current compute cycle
-     * @param activeCells       the active {@link Cell}s in t
-     */
-    public void computePredictiveCells(Connections c, ComputeCycle cycle, Set<Cell> activeCells) {
-        TObjectIntMap<DistalDendrite> numActiveConnectedSynapsesForSegment = new TObjectIntHashMap<>();
-        TObjectIntMap<DistalDendrite> numActiveSynapsesForSegment = new TObjectIntHashMap<>();
-        double connectedPermanence = c.getConnectedPermanence();
-        
-        for(Cell cell : activeCells) {
-            for(Synapse syn : c.getReceptorSynapses(cell)) {
-                DistalDendrite segment = (DistalDendrite)syn.getSegment();
-                double permanence = syn.getPermanence();
-                
-                if(permanence >= connectedPermanence) {
-                    numActiveConnectedSynapsesForSegment.adjustOrPutValue(segment, 1, 1);    
-                    
-                    if(numActiveConnectedSynapsesForSegment.get(segment) >= c.getActivationThreshold()) {
-                        cycle.activeSegments.add(segment);
-                        cycle.predictiveCells.add(segment.getParentCell());
-                    }
-                }
-                
-                if(permanence > 0 && c.getPredictedSegmentDecrement() > 0) {
-                    numActiveSynapsesForSegment.adjustOrPutValue(segment, 1, 1);    
-                    
-                    if(numActiveSynapsesForSegment.get(segment) >= c.getMinThreshold()) {
-                        cycle.matchingSegments.add(segment);
-                        cycle.matchingCells.add(segment.getParentCell());
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Called to start the input of a new sequence, and
-     * reset the sequence state of the TM.
-     * 
-     * @param   connections   the Connections state of the temporal memory
-     */
-    public void reset(Connections connections) {
-        connections.getActiveCells().clear();
-        connections.getPredictiveCells().clear();
-        connections.getActiveSegments().clear();
-        connections.getWinnerCells().clear();
-        connections.getMatchingCells().clear();
-        connections.getMatchingSegments().clear();
-    }
-    
-    /////////////////////////////////////////////////////////////
-    //                    Helper functions                     //
-    /////////////////////////////////////////////////////////////
-    /**
-     * Gets the cell with the best matching segment
-     * (see `TM.bestMatchingSegment`) that has the largest number of active
-     * synapses of all best matching segments.
-     *
-     * If none were found, pick the least used cell (see `TM.leastUsedCell`).
-     *  
-     * @param c                 Connections temporal memory state
-     * @param columnCells             
-     * @param activeCells
-     * @return a CellSearch (bestCell, BestSegment)
-     */
-    public CellSearch getBestMatchingCell(Connections c, List<Cell> columnCells, Set<Cell> activeCells) {
-        int maxSynapses = 0;
-        Cell bestCell = null;
-        DistalDendrite bestSegment = null;
-        
-        for(Cell cell : columnCells) {
-            SegmentSearch bestMatchResult = getBestMatchingSegment(c, cell, activeCells);
-            
-            if(bestMatchResult.bestSegment != null &&  bestMatchResult.numActiveSynapses > maxSynapses) {
-                maxSynapses = bestMatchResult.numActiveSynapses;
-                bestCell = cell;
-                bestSegment = bestMatchResult.bestSegment;
-            }
-        }
-        
-        if(bestCell == null) {
-            bestCell = getLeastUsedCell(c, columnCells);
-        }
-        
-        return new CellSearch(bestCell, bestSegment);
-    }
-    
-    /**
-     * Gets the segment on a cell with the largest number of activate synapses,
-     * including all synapses with non-zero permanences.
-     * 
-     * @param c
-     * @param columnCell
-     * @param activeCells
-     * @return
-     */
-    public SegmentSearch getBestMatchingSegment(Connections c, Cell columnCell, Set<Cell> activeCells) {
-        int maxSynapses = c.getMinThreshold();
-        DistalDendrite bestSegment = null;
-        int bestNumActiveSynapses = 0;
-        int numActiveSynapses = 0;
-        
-        for(DistalDendrite segment : c.getSegments(columnCell)) {
-            numActiveSynapses = 0;
-            for(Synapse synapse : c.getSynapses(segment)) {
-                if(activeCells.contains(synapse.getPresynapticCell()) && synapse.getPermanence() > 0) {
-                    ++numActiveSynapses;
-                }
-            }
-            
-            if(numActiveSynapses >= maxSynapses) {
-                maxSynapses = numActiveSynapses;
-                bestSegment = segment;
-                bestNumActiveSynapses = numActiveSynapses;
-            }
-        }
-        
-        return new SegmentSearch(bestSegment, bestNumActiveSynapses);
-    }
+    ////////////////////////////////
+    //       Helper Functions     //
+    ////////////////////////////////
     
     /**
      * Gets the cell with the smallest number of segments.
      * Break ties randomly.
      * 
-     * @param c
-     * @param columnCells
-     * @return
+     * @param conn      Connections instance for the tm
+     * @param cells     List of {@link Cell}s
+     * @param random    Random Number Generator
+     * @param learn     Added learn to keep from creating data structures
+     *                  for holding segments when learning is off.
+     * 
+     * @return  the least used {@code Cell}
      */
-    public Cell getLeastUsedCell(Connections c, List<Cell> columnCells) {
-        Set<Cell> leastUsedCells = new LinkedHashSet<>();
+    public Cell leastUsedCell(Connections conn, List<Cell> cells, Random random) {
+        List<Cell> leastUsedCells = new ArrayList<>();
         int minNumSegments = Integer.MAX_VALUE;
-        
-        for(Cell cell : columnCells) {
-            int numSegments = c.getSegments(cell).size();
+        for(Cell cell : cells) {
+            int numSegments = conn.unDestroyedSegmentsForCell(cell).size();
             
             if(numSegments < minNumSegments) {
                 minNumSegments = numSegments;
@@ -451,37 +334,104 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
             }
         }
         
-        int randomIdx = c.getRandom().nextInt(leastUsedCells.size());
-        List<Cell> l = new ArrayList<>(leastUsedCells);
-        Collections.sort(l);
-         
-        return l.get(randomIdx);
+        int i = random.nextInt(leastUsedCells.size());
+        return leastUsedCells.get(i);
     }
     
     /**
-     * Used locally to return best cell/segment pair
+     * Creates nDesiredNewSynapes synapses on the segment passed in if
+     * possible, choosing random cells from the previous winner cells that are
+     * not already on the segment.
+     * <p>
+     * <b>Notes:</b> The process of writing the last value into the index in the array
+     * that was most recently changed is to ensure the same results that we get
+     * in the c++ implementation using iter_swap with vectors.
+     * </p>
+     * 
+     * @param conn                      Connections instance for the tm
+     * @param prevWinnerCells           Winner cells in `t-1`
+     * @param segment                   Segment to grow synapses on.     
+     * @param initialPermanence         Initial permanence of a new synapse.
+     * @param nDesiredNewSynapses       Desired number of synapses to grow
+     * @param random                    Tm object used to generate random
+     *                                  numbers
      */
-    public class CellSearch {
-        public Cell bestCell;
-        public DistalDendrite bestSegment;
+    public void growSynapses(Connections conn, Set<Cell> prevWinnerCells, DistalDendrite segment, 
+        double initialPermanence, int nDesiredNewSynapses, Random random) {
         
-        public CellSearch() {}
-        public CellSearch(Cell bestCell, DistalDendrite bestSegment) {
-            this.bestCell = bestCell;
-            this.bestSegment = bestSegment;
+        List<Cell> candidates = new ArrayList<>(prevWinnerCells);
+        Collections.sort(candidates);
+        int eligibleEnd = candidates.size() - 1;
+        
+        for(Synapse synapse : conn.unDestroyedSynapsesForSegment(segment)) {
+            Cell presynapticCell = synapse.getPresynapticCell();
+            int index = candidates.subList(0, eligibleEnd + 1).indexOf(presynapticCell);
+            if(index != -1) {
+                candidates.set(index, candidates.get(eligibleEnd));
+                eligibleEnd--;
+            }
+        }
+        
+        int candidatesLength = eligibleEnd + 1;
+        int nActual = nDesiredNewSynapses < candidatesLength ? nDesiredNewSynapses : candidatesLength;
+        
+        for(int i = 0;i < nActual;i++) {
+            int rand = random.nextInt(candidatesLength);
+            conn.createSynapse(segment, candidates.get(rand), initialPermanence);
+            candidates.set(rand, candidates.get(candidatesLength - 1));
+            candidatesLength--;
         }
     }
     
     /**
-     * Used locally to return best segment matching results
+     * Updates synapses on segment.
+     * Strengthens active synapses; weakens inactive synapses.
+     *  
+     * @param conn                      {@link Connections} instance for the tm
+     * @param segment                   {@link DistalDendrite} to adapt
+     * @param prevActiveCells           Active {@link Cell}s in `t-1`
+     * @param permanenceIncrement       Amount to increment active synapses    
+     * @param permanenceDecrement       Amount to decrement inactive synapses
      */
-    public class SegmentSearch {
-        public DistalDendrite bestSegment;
-        public int numActiveSynapses;
+    public void adaptSegment(Connections conn, DistalDendrite segment, Set<Cell> prevActiveCells, 
+        double permanenceIncrement, double permanenceDecrement) {
         
-        public SegmentSearch(DistalDendrite bestSegment, int numActiveSynapses) {
-            this.bestSegment = bestSegment;
-            this.numActiveSynapses = numActiveSynapses;
+        for(Synapse synapse : conn.unDestroyedSynapsesForSegment(segment)) {
+            double permanence = synapse.getPermanence();
+            
+            if(prevActiveCells.contains(synapse.getPresynapticCell())) {
+                permanence += permanenceIncrement;
+            }else{
+                permanence -= permanenceDecrement;
+            }
+            
+            // Keep permanence within min/max bounds
+            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence; 
+            
+            if(permanence < EPSILON) {
+                conn.destroySynapse(synapse);
+            }else{
+                synapse.setPermanence(conn, permanence);
+            }
+        }
+        
+        if(conn.numSynapses(segment) == 0) {
+            conn.destroySegment(segment);
         }
     }
+    
+    /**
+     * Indicates the start of a new sequence and resets the sequence
+     * state of the TM.
+     * 
+     * @param connections   The {@link Connections} object containing the state
+     */
+    @Override
+    public void reset(Connections connections) {
+        connections.getActiveCells().clear();
+        connections.getWinnerCells().clear();
+        connections.getActiveSegmentOverlaps().clear();
+        connections.getMatchingSegmentOverlaps().clear();
+    }
+
 }

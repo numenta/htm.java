@@ -517,9 +517,21 @@ public class ArrayUtils {
      */
     public static List<Tuple> zip(Object[]... args) {
         List<Tuple> tuples = new ArrayList<Tuple>();
+        
+        int min = Integer.MAX_VALUE;
+        for(Object[] oa : args) {
+            if(oa.length < min) {
+                min = oa.length;
+            }
+        }
+        
         int len = args.length;
-        for (int i = 0; i < len; i++) {
-            tuples.add(new Tuple(args[i]));
+        for(int j = 0;j < min;j++) {
+            MutableTuple mt = new MutableTuple(2);
+            for (int i = 0; i < len; i++) {
+                mt.set(i, args[i][j]);
+            }
+            tuples.add(mt);
         }
 
         return tuples;
@@ -896,9 +908,10 @@ public class ArrayUtils {
      * @return
      */
     public static List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
-        ArrayList<Integer> sList = new ArrayList<Integer>(minuend);
-        sList.removeAll(subtrahend);
-        return new ArrayList<Integer>(sList);
+        return IntStream.range(0, minuend.size())
+           .boxed()
+           .map(i -> minuend.get(i) - subtrahend.get(i))
+           .collect(Collectors.toList());
     }
 
     /**
@@ -1336,19 +1349,16 @@ public class ArrayUtils {
      * @param random     a random number generator
      * @return a sample of numbers of the specified size
      */
-    public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
-        TIntHashSet temp = new TIntHashSet();
+    public static int[] sample(TIntArrayList choices, int[] selectedIndices, Random random) {
+        TIntArrayList choiceSupply = new TIntArrayList(choices);
         int upperBound = choices.size();
-        for (int i = 0; i < sampleSize; i++) {
+        for (int i = 0; i < selectedIndices.length; i++) {
             int randomIdx = random.nextInt(upperBound);
-            while (temp.contains(choices.get(randomIdx))) {
-                randomIdx = random.nextInt(upperBound);
-            }
-            temp.add(choices.get(randomIdx));
+            selectedIndices[i] = (choiceSupply.removeAt(randomIdx));
+            upperBound--;
         }
-        TIntArrayList al = new TIntArrayList(temp);
-        al.sort();
-        return al.toArray();
+        Arrays.sort(selectedIndices);
+        return selectedIndices;
     }
 
     /**

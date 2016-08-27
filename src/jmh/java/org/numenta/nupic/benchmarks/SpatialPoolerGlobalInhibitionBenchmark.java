@@ -50,7 +50,7 @@ public class SpatialPoolerGlobalInhibitionBenchmark extends AbstractAlgorithmBen
     @Override
     protected Parameters getParameters() {
         Parameters parameters = super.getParameters();
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
+        parameters.set(KEY.GLOBAL_INHIBITION, true);
         return parameters;
     }
 

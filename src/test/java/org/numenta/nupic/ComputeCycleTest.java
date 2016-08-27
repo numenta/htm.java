@@ -6,15 +6,28 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
+import org.numenta.nupic.ComputeCycle.ColumnData;
+import org.numenta.nupic.Connections.SegmentOverlap;
+import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.util.GroupBy2;
+import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.util.UniversalRandom;
+
+import javafx.util.Pair;
 
 
 public class ComputeCycleTest {
@@ -35,33 +48,13 @@ public class ComputeCycleTest {
             Arrays.asList(
                 new Cell[] { cells.get(1), cells.get(3), })));
         
-        cnx.setPredictiveCells(new LinkedHashSet<Cell>(
-            Arrays.asList(
-                new Cell[] { cells.get(2), cells.get(3), cells.get(4), cells.get(5) })));
-        
-        cnx.setSuccessfullyPredictedColumns(new LinkedHashSet<Column>(
-            Arrays.asList(new Column[] { column })));
-        
         ComputeCycle cc = new ComputeCycle(cnx);
         assertNotNull(cc.activeCells);
         assertEquals(4, cc.activeCells.size());
         assertNotNull(cc.winnerCells);
         assertEquals(2, cc.winnerCells.size());
-        assertNotNull(cc.predictiveCells);
-        assertEquals(4, cc.predictiveCells.size());
-        assertNotNull(cc.successfullyPredictedColumns);
-        assertEquals(1, cc.successfullyPredictedColumns.size());
-        
-        assertNotNull(cc.activeSegments);
-        assertTrue(cc.activeSegments.isEmpty());
-        assertNotNull(cc.learningSegments);
-        assertTrue(cc.learningSegments.isEmpty());
-        assertNotNull(cc.predictedInactiveCells);
-        assertTrue(cc.predictedInactiveCells.isEmpty());
-        assertNotNull(cc.matchingSegments);
-        assertTrue(cc.matchingSegments.isEmpty());
-        assertNotNull(cc.matchingCells);
-        assertTrue(cc.matchingCells.isEmpty());
+        assertNotNull(cc.predictiveCells());
+        assertEquals(0, cc.predictiveCells().size());
         
         ComputeCycle cc1 = new ComputeCycle(cnx);
         assertEquals(cc, cc1);
@@ -76,6 +69,81 @@ public class ComputeCycleTest {
         assertFalse(cc1.hashCode() == cc2.hashCode());
         
       
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testActiveColumnsRetrievable() {
+        TemporalMemory tm = new TemporalMemory();
+        Connections cn = new Connections();
+        Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
+        p = getDefaultParameters(p, KEY.MIN_THRESHOLD, 1);
+        p.apply(cn);
+        TemporalMemory.init(cn);
+        
+        int[] previousActiveColumns = { 0, 1, 2, 3 };
+        Set<Cell> prevWinnerCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
+        int[] activeColumnsIndices = { 4 };
+        
+        DistalDendrite matchingSegment = cn.createSegment(cn.getCell(4));
+        cn.createSynapse(matchingSegment, cn.getCell(0), 0.5);
+        
+        ComputeCycle cc = tm.compute(cn, previousActiveColumns, true);
+        assertTrue(cc.winnerCells().equals(prevWinnerCells));
+        //cc = tm.compute(cn, activeColumnsIndices, true);
+        
+        Function<Column, Column> identity = Function.identity();
+        Function<SegmentOverlap, Column> segToCol = segment -> segment.segment.getParentCell().getColumn(); 
+        
+        List<Column> activeColumns = Arrays.stream(activeColumnsIndices)
+                .sorted()
+                .mapToObj(i -> cn.getColumn(i))
+                .collect(Collectors.toList());
+        
+        GroupBy2<Column> grouper = GroupBy2.<Column>of(
+            new Pair(activeColumns, identity),
+            new Pair(new ArrayList(cn.getActiveSegmentOverlaps()), segToCol),
+            new Pair(new ArrayList(cn.getMatchingSegmentOverlaps()), segToCol));
+        
+        ComputeCycle cycle = new ComputeCycle();
+        for(Tuple t : grouper) { // Executes only once
+            ColumnData columnData = cycle.columnData.set(t);
+            assertTrue(columnData.activeColumns().equals(activeColumns));
+            assertTrue(columnData.activeSegments().isEmpty());
+            
+            List<SegmentOverlap> sos = columnData.matchingSegments();
+            assertEquals(1, sos.size());
+            assertEquals(1, sos.get(0).overlap);
+            assertEquals(0, sos.get(0).segment.getIndex());
+            assertEquals(4, sos.get(0).segment.getParentCell().getIndex());
+            
+            assertTrue(columnData.column().equals(cn.getColumn(4)));
+        }
+    }
+    
+    private Parameters getDefaultParameters(Parameters p, KEY key, Object value) {
+        Parameters retVal = p == null ? getDefaultParameters() : p;
+        retVal.set(key, value);
+        
+        return retVal;
+    }
+    
+    private Parameters getDefaultParameters() {
+        Parameters retVal = Parameters.getTemporalDefaultParameters();
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
+        retVal.set(KEY.ACTIVATION_THRESHOLD, 3);
+        retVal.set(KEY.INITIAL_PERMANENCE, 0.21);
+        retVal.set(KEY.CONNECTED_PERMANENCE, 0.5);
+        retVal.set(KEY.MIN_THRESHOLD, 2);
+        retVal.set(KEY.MAX_NEW_SYNAPSE_COUNT, 3);
+        retVal.set(KEY.PERMANENCE_INCREMENT, 0.10);
+        retVal.set(KEY.PERMANENCE_DECREMENT, 0.10);
+        retVal.set(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
+        retVal.set(KEY.RANDOM, new UniversalRandom(42));
+        retVal.set(KEY.SEED, 42);
+        
+        return retVal;
     }
 
 }

@@ -114,7 +114,7 @@ public class SpatialPooler implements Persistable {
             tieBreaker[i] = 0.01 * c.getRandom().nextDouble();
         }
         c.setTieBreaker(tieBreaker);
-
+        
         //Initialize state meta-management statistics
         c.setOverlapDutyCycles(new double[numColumns]);
         c.setActiveDutyCycles(new double[numColumns]);
@@ -686,13 +686,15 @@ public class SpatialPooler implements Persistable {
         int[] columnCoords = c.getMemory().computeCoordinates(columnIndex);
         double[] colCoords = ArrayUtils.toDoubleArray(columnCoords);
         double[] ratios = ArrayUtils.divide(
-                colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
+            colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
         double[] inputCoords = ArrayUtils.multiply(
-                ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
+            ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
         inputCoords = ArrayUtils.d_add(inputCoords, 
-                ArrayUtils.multiply(ArrayUtils.divide(
-                        ArrayUtils.toDoubleArray(c.getInputDimensions()), ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
-                        0.5));
+            ArrayUtils.multiply(ArrayUtils.divide(
+                ArrayUtils.toDoubleArray(
+                    c.getInputDimensions()), 
+                    ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
+                    0.5));
         int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
         return c.getInputMatrix().computeIndex(inputCoordInts);
     }
@@ -732,7 +734,9 @@ public class SpatialPooler implements Persistable {
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
 
-        return ArrayUtils.sample((int)Math.round(indices.size() * c.getPotentialPct()), indices, c.getRandom());
+        
+        int[] retVal = new int[(int)Math.round(indices.size() * c.getPotentialPct())];
+        return ArrayUtils.sample(indices, retVal, c.getRandom());
     }
 
     /**
@@ -821,8 +825,8 @@ public class SpatialPooler implements Persistable {
      *                  for indicating separate training vs. testing sets.
      */
     public void updateBookeepingVars(Connections c, boolean learn) {
-        c.iterationNum += 1;
-        if(learn) c.iterationLearnNum += 1;
+        c.spIterationNum += 1;
+        if(learn) c.spIterationLearnNum += 1;
     }
 
     /**
@@ -879,7 +883,7 @@ public class SpatialPooler implements Persistable {
         }
 
         //Add our fixed little bit of random noise to the scores to help break ties.
-        ArrayUtils.d_add(overlaps, c.getTieBreaker());
+        //ArrayUtils.d_add(overlaps, c.getTieBreaker());
 
         if(c.getGlobalInhibition() || c.getInhibitionRadius() > ArrayUtils.max(c.getColumnDimensions())) {
             return inhibitColumnsGlobal(c, overlaps, density);
@@ -929,7 +933,11 @@ public class SpatialPooler implements Persistable {
      *              	The overlap score for a column is defined as the number
      *              	of synapses in a "connected state" (connected synapses)
      *              	that are connected to input bits which are turned on.
-     * @return
+     * @param density   The fraction of columns to survive inhibition. This
+     *                  value is only an intended target. Since the surviving
+     *                  columns are picked in a local fashion, the exact fraction
+     *                  of surviving columns is likely to vary.
+     * @return  indices of the winning columns
      */
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
         int numCols = c.getNumColumns();

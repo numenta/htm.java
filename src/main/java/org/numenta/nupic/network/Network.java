@@ -163,8 +163,6 @@ import rx.Subscriber;
 public class Network implements Persistable {
     private static final long serialVersionUID = 1L;
 
-    public enum Mode { MANUAL, AUTO, REACTIVE };
-    
     private static final Logger LOGGER = LoggerFactory.getLogger(Network.class);
 
     private String name;
@@ -247,20 +245,6 @@ public class Network implements Persistable {
     public static Layer<?> createLayer(String name, Parameters p) {
         Network.checkName(name);
         return new Layer(name, null, p);
-    }
-    
-    /**
-     * Creates a {@link PALayer} to hold algorithmic components and returns
-     * it.
-     * 
-     * @param name  the String identifier for the specified {@link PALayer}
-     * @param p     the {@link Parameters} to use for the specified {@link PALayer}
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-    public static PALayer<?> createPALayer(String name, Parameters p) {
-        Network.checkName(name);
-        return new PALayer(name, null, p);
     }
     
     /**
@@ -431,13 +415,9 @@ public class Network implements Persistable {
     }
 
     /**
-     * If {@link Network.Mode} == {@link Mode#AUTO}, calling this 
+     * Calling this 
      * method will start the main engine thread which pulls in data
      * from the connected {@link Sensor}(s).
-     * 
-     * <em>Warning:</em> Calling this method with any other Mode than 
-     * {@link Mode#AUTO} will result in an {@link UnsupportedOperationException}
-     * being thrown.
      */
     public void start() {
         if(regions.size() < 1) {
@@ -524,17 +504,6 @@ public class Network implements Persistable {
         return isLearn;
     }
 
-    /**
-     * Returns the current {@link Mode} with which this {@link Network} is 
-     * currently configured.
-     * 
-     * @return
-     */
-    public Mode getMode() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    
     /**
      * Finds any {@link Region} containing a {@link Layer} which contains a {@link TemporalMemory} 
      * and resets them.

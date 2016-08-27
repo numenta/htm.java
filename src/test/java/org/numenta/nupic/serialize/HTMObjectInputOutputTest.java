@@ -57,7 +57,7 @@ public class HTMObjectInputOutputTest {
     private Network getLoadedHotGymNetwork() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.RANDOM, new FastRandom(42));
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 

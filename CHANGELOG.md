@@ -16,15 +16,25 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
 #### Added
+* Parameters key ```Parameters.KEY.MAX_SEGMENTS_PER_CELL```
+* Added new ```AbstractGenerator``` class which adds Python like generators (w/yield method)
+* Added new ```UniversalRandom``` RNG which has an [allegory in python](https://gist.github.com/cogmission/c4cb8feaba19595dae8ff964e18b05d0#file-universal_random-py) which can be used to compare versions 
+* Added new methods on the MTJ matrices to add and remove rows and columns
+* Added new Algorithm Foundry culled jar containing Sandia wrapper for the MTJ linear algebra lib
 * [[PR #453](https://github.com/numenta/htm.java/pull/453)] Added gradlew functionality for quick builds from scratch without any prior installation of Java or Gradle.
-* [[PR #439](https://github.com/numenta/htm.java/pull/439)] Added the SDRClassifier!
+* [[PR #439](https://github.com/numenta/htm.java/pull/439)] **Added a new SDRClassifier !!!**
 * [[PR #435](https://github.com/numenta/htm.java/pull/435)] Added ObservableTestBase class for improved AssertFailure detection in tests using Observables 
 
 #### Changed
+* ```Connections.apply()``` now sets the seed value from the ```Parameters``` object.
+* ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT``` to ```Parameters.KEY.MAX_SYNAPSES_PER_SEGMENT```
+* Parameters.(g|s)etParameterByKey to simplified get() / set()
+
 #### Fixed
+* Fixed documentation of SpatialPooler.inhibitColumnsLocal - added parameter documentation
 * [[PR #451](https://github.com/numenta/htm.java/pull/451)] Fixed not filled overlaps array in updateDutyCycles in SP
 * [[PR #435](https://github.com/numenta/htm.java/pull/435)] Fixed AssertFailure detection within onNext() method in NAPI Observable tests
-* [[PR #431](https://github.com/numenta/htm.java/pull/431)] BitHistory rescaling fix (in CLAClassifier functionality)
+* [[PR #431](https://github.com/numenta/htm.java/pull/431)] BitHistory re-scaling fix (in CLAClassifier functionality)
 * [[PR #431](https://github.com/numenta/htm.java/pull/431)] Cleaned up tabs and spaces in BitHistory
 
 ***

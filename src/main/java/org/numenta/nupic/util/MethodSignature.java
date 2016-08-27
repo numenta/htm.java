@@ -15,12 +15,12 @@ package org.numenta.nupic.util;
  * @see Tuple
  * @see #setParam(Object, int)
  */
-public class MethodSignature extends MutableTuple {
+public class MethodSignature extends MutableNamedTuple {
     
     private static final long serialVersionUID = 1L;
 
-    public MethodSignature(int maxFields) {
-        super(maxFields);
+    public MethodSignature() {
+        
     }
     
     /**
@@ -37,46 +37,41 @@ public class MethodSignature extends MutableTuple {
      *      
      *      A a = new A();
      *      B b = new B();
-     *      someMethod(ms.setParam(a, 0), ms.setParam(b, 1));
+     *      someMethod(ms.addParam(a, "A"), ms.addParam(b, "B"));
      *      
      *      -- OR --
      *      
      *      public void someMethod(MethodSignature ms) {}
-     *      someMethod(new MethodSignature(2).setParams(value1, value2));
+     *      someMethod(new MethodSignature(2).setParams(new String[] { "name1", "name2" }, value1, value2));
      *      
      *      -- OR --
      *      
      *      public void someMethod(Tuple t) {}
-     *      someMethod(new MethodSignature(2).setParams(value1, value2));
-     *      
-     *      -- OR --
-     *      // In a loop...
-     *      MethodSignature ms = new MethodSignature(2);
-     *      for(int i = 0;i < [some length];i++) {
-     *          someMethod(ms.setParams(newVal1, getNewVal2()));
-     *      }
+     *      someMethod(new MethodSignature(2).setParams(new String[] { "name1", "name2" }, value1, value2)));
      * </pre>
      * 
      * @param t         the value 
-     * @param index
+     * @param name      the name of the parameter
+     * 
      * @return
      */
-    public <T> T setParam(T t, int index) {
-        super.set(index, t);
+    public <T> T addParam(T t, String name) {
+        super.put(name, t);
         return t;
     }
     
     /**
      * Allows the setting of contents within this object in the call
      * site of a method which takes an instance of this {@link MethodSignature}
-     * object or its super class antecedents ({@link MutableTuple}, {@link Tuple})
+     * object.
      * 
-     * @param objects
-     * @return
+     * @param paramNames    the parameter names
+     * @param objects       the parameter values  
+     * @return  this {@code MethodSignature}
      * @see #setParam(Object, int)
      */
-    public MethodSignature setParams(Object... objects) {
-        System.arraycopy(objects, 0, container, 0, objects.length);
+    public MethodSignature setParams(String[] paramNames, Object... objects) {
+        remake(paramNames, objects);
         return this;
     }
 }

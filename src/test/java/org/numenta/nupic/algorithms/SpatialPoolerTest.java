@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.algorithms;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,18 +33,16 @@ import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.model.Pool;
+import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
-import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.UniversalRandom;
 
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
-
-import static org.junit.Assert.*;
 
 public class SpatialPoolerTest {
     private Parameters parameters;
@@ -52,24 +51,25 @@ public class SpatialPoolerTest {
 
     public void setupParameters() {
         parameters = Parameters.getAllDefaultParameters();
-        parameters.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 5 });//5
-        parameters.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
-        parameters.setParameterByKey(KEY.POTENTIAL_RADIUS, 3);//3
-        parameters.setParameterByKey(KEY.POTENTIAL_PCT, 0.5);//0.5
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, false);
-        parameters.setParameterByKey(KEY.LOCAL_AREA_DENSITY, -1.0);
-        parameters.setParameterByKey(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
-        parameters.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        parameters.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        parameters.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        parameters.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
-        parameters.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 10);
-        parameters.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        parameters.setParameterByKey(KEY.SEED, 42);
-        parameters.setParameterByKey(KEY.SP_VERBOSITY, 0);
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 5 });//5
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 5 });//5
+        parameters.set(KEY.POTENTIAL_RADIUS, 3);//3
+        parameters.set(KEY.POTENTIAL_PCT, 0.5);//0.5
+        parameters.set(KEY.GLOBAL_INHIBITION, false);
+        parameters.set(KEY.LOCAL_AREA_DENSITY, -1.0);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
+        parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        parameters.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
+        parameters.set(KEY.MAX_BOOST, 10.0);
+        parameters.set(KEY.SEED, 42);
+        parameters.set(KEY.SP_VERBOSITY, 0);
+        parameters.setRandom(new UniversalRandom(42));
     }
 
     private void initSP() {
@@ -208,6 +208,32 @@ public class SpatialPoolerTest {
             assertTrue(Arrays.equals(permanences, potential));
         }
     }
+    
+    @Test
+    public void testOverlapsOutput() {
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.setColumnDimensions(new int[] {3});
+        parameters.setInputDimensions(new int[] { 5 });
+        parameters.setPotentialRadius(5);
+        parameters.setNumActiveColumnsPerInhArea(5);
+        parameters.setGlobalInhibition(true);
+        parameters.setSynPermActiveInc(0.1);
+        parameters.setSynPermInactiveDec(0.1);
+        parameters.setSeed(42);
+        parameters.setRandom(new UniversalRandom(42));
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        cn.setBoostFactors(new double[] { 2.0, 2.0, 2.0 });
+        int[] inputVector = { 1, 1, 1, 1, 1 };
+        int[] activeArray = { 0, 0, 0 };
+//        int[] expOutput = { 1, 0, 0 };
+        sp.compute(cn, inputVector, activeArray, true, true);
+//        System.out.println("out = " + Arrays.toString(activeArray));
+    }
 
     /**
      * Given a specific input and initialization params the SP should return this
@@ -234,7 +260,6 @@ public class SpatialPoolerTest {
         parameters.setMaxBoost(10);
         parameters.setSynPermConnected(0.1);
         parameters.setSynPermTrimThreshold(0);
-        parameters.setRandom(new MersenneTwister(42));
         initSP();
 
         int[] inputVector = {
@@ -268,10 +293,9 @@ public class SpatialPoolerTest {
         });
 
         int[] expected = new int[] {
-                46, 61, 86, 216, 314, 543, 554, 587, 630, 675, 736, 
-                745, 834, 931, 990, 1131, 1285, 1305, 1307, 1326, 1411, 1414, 
-                1431, 1471, 1547, 1579, 1603, 1687, 1698, 1730, 1847, 
-                1859, 1885, 1893, 1895, 1907, 1934, 1978, 1984, 1990 };
+            84, 107, 212, 222, 241, 248, 249, 351, 409, 418, 438, 551, 609, 629, 
+            637, 638, 648, 662, 697, 719, 757, 835, 848, 936, 991, 1005, 1022, 1065, 
+            1092, 1247, 1264, 1347, 1511, 1540, 1745, 1769, 1786, 1838, 1844, 2023 };
 
         assertTrue(Arrays.equals(expected, real));
     }
@@ -648,6 +672,7 @@ public class SpatialPoolerTest {
         parameters.setInputDimensions(new int[] { 6/*Don't care*/ });
         parameters.setColumnDimensions(new int[] { 6 });
         parameters.setMaxBoost(10.0);
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         double[] minActiveDutyCycles = new double[6];
@@ -831,6 +856,7 @@ public class SpatialPoolerTest {
         setupParameters();
         parameters.setInputDimensions(new int[] { 5 });
         parameters.setColumnDimensions(new int[] { 5 });
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         SpatialPooler mockSP = new SpatialPooler() {
@@ -873,6 +899,7 @@ public class SpatialPoolerTest {
         setupParameters();
         parameters.setInputDimensions(new int[] { 8 });
         parameters.setColumnDimensions(new int[] { 8 });
+        parameters.setRandom(new UniversalRandom(42));
         initSP();
 
         mockSP = new SpatialPooler() {
@@ -1544,7 +1571,7 @@ public class SpatialPoolerTest {
         objMatrix.set(2, new double[] { 0.51, 0.081, 0.025, 0.089, 0.31 });
         objMatrix.set(3, new double[] { 0.18, 0.0601, 0.11, 0.011, 0.03 });
         objMatrix.set(4, new double[] { 0.011, 0.011, 0.011, 0.011, 0.011 });
-        mem.setPermanences(objMatrix);
+        mem.setProximalPermanences(objMatrix);
 
         //    	mem.setConnectedSynapses(new SparseObjectMatrix<int[]>(new int[] { 5, 5 }));
         //    	SparseObjectMatrix<int[]> syns = mem.getConnectedSynapses();
@@ -1693,7 +1720,7 @@ public class SpatialPoolerTest {
         
         ///////////////////
         // test stimulsThreshold = 3
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 3.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 3.0);
         initSP();
         
         dimensions = new int[] { 5, 10 };
@@ -1728,7 +1755,7 @@ public class SpatialPoolerTest {
 
         /////////////////
 
-        parameters.setParameterByKey(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
         initSP();
         dimensions = new int[] { 5, 10 };
         connectedSynapses = new int[][] {

@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -124,7 +125,9 @@ public class SDR {
     public static int[] asCellIndices(Collection<Cell> cells) {
         int[] retVal = new int[cells.size()];
         int i = 0;
-        for(Cell cell : cells) {
+        // Prevent ridiculous ConcurrentModificationException since "reads" mark as modifications????
+        List<Cell> newCells = new ArrayList<>(cells);
+        for(Cell cell : newCells) {
             retVal[i++] = cell.getIndex();
         }
         return retVal;

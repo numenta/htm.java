@@ -82,7 +82,8 @@ public class Parameters implements Persistable {
         defaultTemporalParams.put(KEY.ACTIVATION_THRESHOLD, 13);
         defaultTemporalParams.put(KEY.LEARNING_RADIUS, 2048);
         defaultTemporalParams.put(KEY.MIN_THRESHOLD, 10);
-        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 255);
+        defaultTemporalParams.put(KEY.MAX_SEGMENTS_PER_CELL, 255);
         defaultTemporalParams.put(KEY.INITIAL_PERMANENCE, 0.21);
         defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
@@ -103,8 +104,8 @@ public class Parameters implements Persistable {
         defaultSpatialParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
         defaultSpatialParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
         defaultSpatialParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
-        defaultSpatialParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        defaultSpatialParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.008);//0.01
+        defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.05);//0.1
         defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
         defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
         defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
@@ -186,6 +187,14 @@ public class Parameters implements Persistable {
          * The maximum number of synapses added to a segment during learning.
          */
         MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", Integer.class),
+        /**
+         * The maximum number of synapses that can be added to a segment.
+         */
+        MAX_SYNAPSES_PER_SEGMENT("maxSynapsesPerSegment", Integer.class),
+        /**
+         * The maximum number of {@link Segment}s a {@link Cell} can have.
+         */
+        MAX_SEGMENTS_PER_CELL("maxSegmentsPerCell", Integer.class),
         /**
          * Initial permanence of a new synapse
          */
@@ -456,7 +465,7 @@ public class Parameters implements Persistable {
     private static Parameters getParameters(Map<KEY, Object> map) {
         Parameters result = new Parameters();
         for (KEY key : map.keySet()) {
-            result.setParameterByKey(key, map.get(key));
+            result.set(key, map.get(key));
         }
         return result;
     }
@@ -481,7 +490,10 @@ public class Parameters implements Persistable {
         Set<KEY> presentKeys = paramMap.keySet();
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
-                beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
+                if(key == KEY.RANDOM) {
+                    ((Random)get(key)).setSeed(Long.valueOf(((int)get(KEY.SEED))));
+                }
+                beanUtil.setSimpleProperty(cn, key.fieldName, get(key));
             }
         }
     }
@@ -495,7 +507,7 @@ public class Parameters implements Persistable {
      */
     public Parameters union(Parameters p) {
         for(KEY k : p.paramMap.keySet()) {
-            setParameterByKey(k, p.getParameterByKey(k));
+            set(k, p.get(k));
         }
         return this;
     }
@@ -532,7 +544,7 @@ public class Parameters implements Persistable {
      * @param key
      * @param value
      */
-    public void setParameterByKey(KEY key, Object value) {
+    public void set(KEY key, Object value) {
         paramMap.put(key, value);
     }
 
@@ -542,7 +554,7 @@ public class Parameters implements Persistable {
      * @param key
      * @return
      */
-    public Object getParameterByKey(KEY key) {
+    public Object get(KEY key) {
         return paramMap.get(key);
     }
 
@@ -573,7 +585,7 @@ public class Parameters implements Persistable {
             String fieldName = property.getName();
             KEY propKey = KEY.getKeyByFieldName(property.getName());
             if (propKey != null) {
-                Object paramValue = this.getParameterByKey(propKey);
+                Object paramValue = this.get(propKey);
                 Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
                 
                 // KEY.POTENTIAL_RADIUS is defined as Math.min(cn.numInputs, potentialRadius) so just log...
@@ -656,10 +668,19 @@ public class Parameters implements Persistable {
     /**
      * The maximum number of synapses added to a segment during learning.
      *
-     * @param maxNewSynapseCount
+     * @param maxSynapsesPerSegment
      */
-    public void setMaxNewSynapseCount(int maxNewSynapseCount) {
-        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, maxNewSynapseCount);
+    public void setMaxSynapsesPerSegment(int maxSynapsesPerSegment) {
+        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, maxSynapsesPerSegment);
+    }
+    
+    /**
+     * The maximum number of {@link Segment}s a {@link Cell} can have.
+     *
+     * @param maxSegmentsPerCell
+     */
+    public void setMaxSegmentsPerCell(int maxSegmentsPerCell) {
+        paramMap.put(KEY.MAX_SEGMENTS_PER_CELL, maxSegmentsPerCell);
     }
 
     /**
@@ -1000,7 +1021,7 @@ public class Parameters implements Persistable {
     }
 
     private void buildParamStr(StringBuilder spatialInfo, KEY key) {
-        Object value = getParameterByKey(key);
+        Object value = get(key);
         if (value instanceof int[]) {
             value = ArrayUtils.intArrayToString(value);
         }
