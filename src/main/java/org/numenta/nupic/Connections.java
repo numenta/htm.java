@@ -229,7 +229,7 @@ public class Connections implements Persistable {
     /** The random number generator */
     protected Random random = new UniversalRandom(seed);
     
-    private Comparator<SegmentOverlap> lambda = (so1, so2) -> 
+    private Comparator<SegmentOverlap> lambda = (Comparator<SegmentOverlap> & Serializable) (so1, so2) -> 
         so1.segment.getParentCell().getIndex() * maxSegmentsPerCell - 
             so2.segment.getParentCell().getIndex() * maxSegmentsPerCell;
 
