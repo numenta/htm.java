@@ -226,7 +226,7 @@ public class QuickTest {
          * @return Tuple { active cell indices, previous predicted column indices, predicted column indices }
          */
         public Tuple tmStep(int[] sparseSPOutput, boolean learn, boolean isVerbose) {
-         // Input into the Temporal Memory
+            // Input into the Temporal Memory
             ComputeCycle cc = tm.compute(connections, sparseSPOutput, learn);
             int[] activeCellIndices = cc.activeCells().stream().mapToInt(c -> c.getIndex()).sorted().toArray();
             int[] predColumnIndices = SDR.cellsAsColumnIndices(cc.predictiveCells(), connections.cellsPerColumn);
@@ -277,7 +277,7 @@ public class QuickTest {
         public double anomalyStep(int[] sparseSPOutput, int[] prevPredictedCols, boolean isVerbose) {
             double anomalyScore = Anomaly.computeRawAnomalyScore(sparseSPOutput, prevPredictedCols);
             if(isVerbose) {
-                System.out.println("Anomaly Score: " + anomalyScore);
+                System.out.println("Anomaly Score: " + anomalyScore + "\n");
             }
             
             return anomalyScore;
@@ -511,7 +511,7 @@ public class QuickTest {
             for(int i = 0;i < Layer.input.size();i++) {
                 layer.printHeader();
                 int[] sparseSPOutput = Layer.input.get(i);
-                Tuple tmTuple = layer.tmStep(Layer.input.get(i), LEARN, IS_VERBOSE);
+                Tuple tmTuple = layer.tmStep(sparseSPOutput, LEARN, IS_VERBOSE);
                 double score = layer.anomalyStep(sparseSPOutput, (int[])tmTuple.get(1), true);
                 layer.incRecordNum();
                 
@@ -532,6 +532,8 @@ public class QuickTest {
                     Classification<Double> cla = layer.classificationStep((int[])tmTuple.get(0), (int)encTuple.get(1), value, LEARN, IS_VERBOSE);
                     double score = layer.anomalyStep((int[])spTuple.get(1), layer.prevPredictedCols, IS_VERBOSE);
                 
+                    layer.incRecordNum();
+                    
                     // Store the current prediction as previous
                     layer.storeCyclePrediction((int[])tmTuple.get(2));
                 });

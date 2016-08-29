@@ -49,6 +49,8 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * 
      * @param   c       {@link Connections} object
      */
+    
+    
     public static void init(Connections c) {
         SparseObjectMatrix<Column> matrix = c.getMemory() == null ?
             new SparseObjectMatrix<Column>(c.getColumnDimensions()) :
@@ -406,7 +408,13 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
             }
             
             // Keep permanence within min/max bounds
-            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence; 
+            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
+            
+            // Use this to examine issues caused by subtle floating point differences
+            // be careful to set the scale (1 below) to the max significant digits right of the decimal point
+            // between the permanenceIncrement and initialPermanence
+            //
+            // permanence = new BigDecimal(permanence).setScale(1, RoundingMode.HALF_UP).doubleValue(); 
             
             if(permanence < EPSILON) {
                 conn.destroySynapse(synapse);

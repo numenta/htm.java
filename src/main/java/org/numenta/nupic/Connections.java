@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -227,6 +228,10 @@ public class Connections implements Persistable {
     protected int seed = 42;
     /** The random number generator */
     protected Random random = new UniversalRandom(seed);
+    
+    private Comparator<SegmentOverlap> lambda = (so1, so2) -> 
+        so1.segment.getParentCell().getIndex() * maxSegmentsPerCell - 
+            so2.segment.getParentCell().getIndex() * maxSegmentsPerCell;
 
     
     ////////////////////////////////////////
@@ -1106,7 +1111,8 @@ public class Connections implements Persistable {
          */
         @Override
         public int compareTo(SegmentOverlap other) {
-            return segment.compareTo(other.segment);
+            return segment.getParentCell().getColumn().compareTo(
+                other.segment.getParentCell().getColumn());
         }
         @Override
         public int hashCode() {
@@ -1175,6 +1181,7 @@ public class Connections implements Persistable {
             for(Synapse synapse : cell.getReceptorSynapses(this)) {
                 Segment segment = synapse.getSegment();
                 double permanence = synapse.getPermanence();
+                
                 if(permanence - matchingPermananceThreshold > -EPSILON) {
                     numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
                     numMatchingSynapsesForSegment[segment.getIndex()][1] = 
@@ -1213,8 +1220,9 @@ public class Connections implements Persistable {
             }
         }
         
-        Collections.sort(activeSegments, (as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
-        Collections.sort(matchingSegments, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
+        
+        Collections.sort(activeSegments, lambda);//(as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
+        Collections.sort(matchingSegments,lambda);//, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
         return new Activity(activeSegments, matchingSegments);
     }
     
