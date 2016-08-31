@@ -26,6 +26,8 @@ import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
+import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.util.ArrayUtils;
@@ -185,7 +187,14 @@ public class QuickTest {
          * @param isVerbose
          * @return Tuple { encoding, bucket index }
          */
+        Encoder<?> valueEncoder = null;
         public Tuple encodingStep(DateTime timestamp, double value, boolean isVerbose) {
+            if(valueEncoder == null) {
+                List<EncoderTuple> encoderTuples = encoder.getEncoders(encoder);
+                valueEncoder = encoderTuples.get(0).getEncoder(); 
+            }
+            System.out.println("--------------------------------------------");
+            System.out.println("Record #: " + recordNum + "\n");
             Map<String, Object> encodingInput = new HashMap<String, Object>();
             encodingInput.put("value", value);
             encodingInput.put("timestamp",  timestamp);
@@ -194,8 +203,8 @@ public class QuickTest {
                 System.out.println("ScalarEncoder Output = " + Arrays.toString(encoding));
             }
             
-            int bucketIdx = encoder.getBucketIndices(value)[0];
-            
+            int bucketIdx = valueEncoder.getBucketIndices((double)value)[0];
+                        
             return new Tuple(encoding, bucketIdx);
         }
         
@@ -209,10 +218,10 @@ public class QuickTest {
         public Tuple spStep(int[] encoding, boolean learn, boolean isVerbose) {
             // Input through Spatial Pooler
             int[] output = new int[connections.getNumColumns()];
-            sp.compute(connections, encoding, output, true, true);
+            //sp.compute(connections, encoding, output, true, true);
             int[] sparseSPOutput = ArrayUtils.where(output, ArrayUtils.WHERE_1);
             if(isVerbose) {
-                System.out.println("SpatialPooler Output = " + Arrays.toString(output));
+                System.out.println("SpatialPooler Output = " + Arrays.toString(sparseSPOutput) + "\n");
             }
             
             return new Tuple(output, sparseSPOutput);
@@ -336,7 +345,7 @@ public class QuickTest {
     public static Layer createLayer() {
         UniversalRandom random = new UniversalRandom(42);
         
-//        MultiEncoder encoder = createEncoder();
+        MultiEncoder encoder = createEncoder();
         
         Parameters parameters = Parameters.getAllDefaultParameters();
         parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 104 });
@@ -382,8 +391,8 @@ public class QuickTest {
         Connections conn = new Connections();
         parameters.apply(conn);
         
-//        SpatialPooler sp = new SpatialPooler();
-//        sp.init(conn);
+        SpatialPooler sp = new SpatialPooler();
+        sp.init(conn);
         
         //////////////////////////////////////////////////////////
 //        int[] sparseSdr = testSpatialPooler(sp, conn, encoding);
@@ -416,7 +425,8 @@ public class QuickTest {
         // ...
         //////////////////////////////////////////////////////////
         
-        return new Layer(conn, null, null, tm, cl, anomalyComputer);
+        Layer layer = new Layer(conn, encoder, sp, tm, cl, anomalyComputer); 
+        return layer;
     }
     
     public static void printPreliminaryTestHeader() {
@@ -454,7 +464,7 @@ public class QuickTest {
     
     public static int[] testSpatialPooler(SpatialPooler sp, Connections conn, int[] encoding) {
         int[] dense = new int[2048];
-        sp.compute(conn, encoding, dense, true, true);
+        //sp.compute(conn, encoding, dense, true, true);
         int[] sparse = ArrayUtils.where(dense, ArrayUtils.WHERE_1);
         System.out.println("SP out = " + Arrays.toString(sparse));
         System.out.println("SP out len: " + sparse.length);
@@ -499,6 +509,8 @@ public class QuickTest {
     public static void main(String[] args) {
         boolean IS_VERBOSE = true;
         boolean LEARN = true;
+        boolean TM_ONLY = false;
+        boolean SP_ONLY = true;
         
         QuickTest.Layer layer = QuickTest.createLayer();
         
@@ -507,7 +519,7 @@ public class QuickTest {
         loadSPOutputFile();
         loadRawInputFile();
         
-        if(Layer.input != null) {
+        if(TM_ONLY) {
             for(int i = 0;i < Layer.input.size();i++) {
                 layer.printHeader();
                 int[] sparseSPOutput = Layer.input.get(i);
@@ -517,6 +529,25 @@ public class QuickTest {
                 
                 // Store the current prediction as previous
                 layer.storeCyclePrediction((int[])tmTuple.get(2));
+            }
+        }else if(SP_ONLY) {
+            DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+            try (Stream<String> stream = Files.lines(Paths.get(Layer.INPUT_PATH))) {
+                stream.forEach(l -> {
+                    String[] line = l.split("[\\s]*\\,[\\s]*");
+                    
+                    // Skip first line
+                    if(line[0].equals("timestamp")) return;
+                    
+                    DateTime timestamp = formatter.parseDateTime(line[0].trim());
+                    double value = Double.parseDouble(line[1].trim());
+                    Tuple encTuple = layer.encodingStep(timestamp, value, IS_VERBOSE);
+                    Tuple spTuple = layer.spStep((int[])encTuple.get(0), LEARN, IS_VERBOSE);
+                    
+                    layer.incRecordNum();
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }else{
             DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");

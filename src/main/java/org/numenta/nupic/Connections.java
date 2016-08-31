@@ -99,6 +99,9 @@ public class Connections implements Persistable {
     public int spIterationNum = 0;
     public int spIterationLearnNum = 0;
     public int tmIteration = 0;
+    
+    public double[] boostedOverlaps;
+    public int[] overlaps;
 
     /** A matrix representing the shape of the input. */
     protected SparseMatrix<?> inputMatrix;
@@ -227,7 +230,7 @@ public class Connections implements Persistable {
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
-    protected Random random = new UniversalRandom(seed);
+    public Random random = new UniversalRandom(seed);
     
     private Comparator<SegmentOverlap> lambda = (Comparator<SegmentOverlap> & Serializable) (so1, so2) -> 
         so1.segment.getParentCell().getIndex() * maxSegmentsPerCell - 
@@ -916,6 +919,40 @@ public class Connections implements Persistable {
      */
     public double getMaxBoost() {
         return maxBoost;
+    }
+    
+    /**
+     * Sets and Returns the boosted overlap score for each column
+     * @param boostedOverlaps
+     * @return
+     */
+    public double[] setBoostedOverlaps(double[] boostedOverlaps) {
+        return this.boostedOverlaps = boostedOverlaps;
+    }
+   
+    /**
+     * Returns the boosted overlap score for each column
+     * @return the boosted overlaps
+     */
+    public double[] getBoostedOverlaps() {
+        return boostedOverlaps;
+    }
+    
+    /**
+     * Sets and Returns the overlap score for each column
+     * @param overlaps
+     * @return
+     */
+    public int[] setOverlaps(int[] overlaps) {
+        return this.overlaps = overlaps;
+    }
+   
+    /**
+     * Returns the overlap score for each column
+     * @return the overlaps
+     */
+    public int[] getOverlaps() {
+        return overlaps;
     }
 
     /**

@@ -1358,6 +1358,7 @@ public class ArrayUtils {
             upperBound--;
         }
         Arrays.sort(selectedIndices);
+        //System.out.println("sample: " + Arrays.toString(selectedIndices));
         return selectedIndices;
     }
 
@@ -1436,6 +1437,26 @@ public class ArrayUtils {
         int count = 0;
         for (int i = 0; i < array.length; i++) {
             if (array[i] > compare) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+    
+    /**
+     * Returns the count of values in the specified array that are
+     * greater than or equal to, the specified compare value.
+     *
+     * @param compare the value to compare to
+     * @param array   the values being compared
+     *
+     * @return the count of values greater
+     */
+    public static int valueGreaterOrEqualCount(double compare, double[] array) {
+        int count = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] >= compare) {
                 count++;
             }
         }

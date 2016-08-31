@@ -134,7 +134,7 @@ public class LayerTest extends ObservableTestBase {
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
-                assertEquals(48, i.getSDR().length);
+                assertEquals(54, i.getSDR().length);
             }
         });
 
@@ -504,8 +504,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
 
         Func1<ManualInput, ManualInput> addedFunc = l -> { 
             return l.customObject("Interposed: " + Arrays.toString(l.getSDR()));
@@ -528,11 +528,11 @@ public class LayerTest extends ObservableTestBase {
             public void onNext(Inference i) {
                 if(test == 0) {
                     assertTrue(Arrays.equals(expected0, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0]", i.getCustomObject());
+                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1]", i.getCustomObject());
                 }
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
+                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
                 }
                 ++test; 
             }
@@ -717,8 +717,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
@@ -768,8 +768,8 @@ public class LayerTest extends ObservableTestBase {
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor).add(new SpatialPooler());
         
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
@@ -905,8 +905,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
 
         // First test without prime directive :-P
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
@@ -977,7 +977,7 @@ public class LayerTest extends ObservableTestBase {
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
-                assertEquals(48, i.getSDR().length);
+                assertEquals(54, i.getSDR().length);
             }
         });
 
