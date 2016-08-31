@@ -42,6 +42,7 @@ public class QuickTest {
     public static class Layer {
         private Connections connections;
         private MultiEncoder encoder;
+        @SuppressWarnings("unused")
         private SpatialPooler sp;
         private TemporalMemory tm;
         private CLAClassifier classifier;

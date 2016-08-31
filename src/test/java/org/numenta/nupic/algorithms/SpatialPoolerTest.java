@@ -142,6 +142,8 @@ public class SpatialPoolerTest {
         initSP();
 
         SpatialPooler mock = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
+
             public int[] inhibitColumns(Connections c, double[] overlaps) {
                 return new int[] { 0, 1, 2, 3, 4 };
             }
@@ -185,6 +187,8 @@ public class SpatialPoolerTest {
         initSP();
 
         SpatialPooler mock = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
+
             public int[] inhibitColumns(Connections c, double[] overlaps) {
                 return new int[] { 0, 1, 2, 3, 4 };
             }
@@ -520,6 +524,8 @@ public class SpatialPoolerTest {
 
         //Mocks to test which method gets called
         SpatialPooler inhibitColumnsGlobal = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
+
             @Override public int[] inhibitColumnsGlobal(Connections c, double[] overlap, double density) {
                 setGlobalCalled(true);
                 _density = density;
@@ -527,6 +533,7 @@ public class SpatialPoolerTest {
             }
         };
         SpatialPooler inhibitColumnsLocal = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             @Override public int[] inhibitColumnsLocal(Connections c, double[] overlap, double density) {
                 setLocalCalled(true);
                 _density = density;
@@ -676,6 +683,7 @@ public class SpatialPoolerTest {
         
         // ((3 * 4) - 1) / 2 => round up
         SpatialPooler mock = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
                 return 3;
             }
@@ -693,6 +701,7 @@ public class SpatialPoolerTest {
 
         //Test clipping at 1.0
         mock = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
                 return 0.5;
             }
@@ -710,6 +719,7 @@ public class SpatialPoolerTest {
 
         //Test rounding up
         mock = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             public double avgConnectedSpanForColumnND(Connections c, int columnIndex) {
                 return 2.4;
             }
@@ -895,6 +905,7 @@ public class SpatialPoolerTest {
         initSP();
 
         SpatialPooler mockSP = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             int returnIndex = 0;
             int[][] returnVals =  {
                     {0, 1, 2},
@@ -938,6 +949,7 @@ public class SpatialPoolerTest {
         initSP();
 
         mockSP = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             int returnIndex = 0;
             int[][] returnVals =  {
                     {0, 1, 2, 3, 4},
@@ -1403,6 +1415,7 @@ public class SpatialPoolerTest {
     public void testInitPermanence1() {
         setupParameters();
         sp = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
                 //Mock out
             }
@@ -1459,6 +1472,7 @@ public class SpatialPoolerTest {
     public void testInitPermanence2() {
         setupParameters();
         sp = new SpatialPooler() {
+            private static final long serialVersionUID = 1L;
             public void raisePermanenceToThreshold(Connections c, double[] perm, int[] maskPotential) {
                 //Mock out
             }
