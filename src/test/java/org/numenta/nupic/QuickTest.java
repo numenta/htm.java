@@ -42,7 +42,6 @@ public class QuickTest {
     public static class Layer {
         private Connections connections;
         private MultiEncoder encoder;
-        @SuppressWarnings("unused")
         private SpatialPooler sp;
         private TemporalMemory tm;
         private CLAClassifier classifier;
@@ -219,7 +218,7 @@ public class QuickTest {
         public Tuple spStep(int[] encoding, boolean learn, boolean isVerbose) {
             // Input through Spatial Pooler
             int[] output = new int[connections.getNumColumns()];
-            //sp.compute(connections, encoding, output, true, true);
+            sp.compute(connections, encoding, output, true, true);
             int[] sparseSPOutput = ArrayUtils.where(output, ArrayUtils.WHERE_1);
             if(isVerbose) {
                 System.out.println("SpatialPooler Output = " + Arrays.toString(sparseSPOutput) + "\n");
@@ -510,8 +509,8 @@ public class QuickTest {
     public static void main(String[] args) {
         boolean IS_VERBOSE = true;
         boolean LEARN = true;
-        boolean TM_ONLY = false;
-        boolean SP_ONLY = true;
+        boolean TM_ONLY = true;
+        boolean SP_ONLY = false;
         
         QuickTest.Layer layer = QuickTest.createLayer();
         
@@ -546,6 +545,9 @@ public class QuickTest {
                     Tuple spTuple = layer.spStep((int[])encTuple.get(0), LEARN, IS_VERBOSE);
                     
                     layer.incRecordNum();
+                    
+                    if(layer.recordNum == 43)
+                        System.out.println("here");
                 });
             } catch (IOException e) {
                 e.printStackTrace();

@@ -1509,7 +1509,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-
+    
     /**
      * Raises the values in the specified array by the amount specified
      * @param amount the amount to raise the values
