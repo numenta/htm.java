@@ -805,8 +805,8 @@ public class ArrayUtils {
      *
      * @param multiplicand
      * @param factor
-     * @param multiplicand adjustment
-     * @param factor       adjustment
+     * @param multiplicandAdjustment
+     * @param factorAdjustment
      *
      * @return
      * @throws IllegalArgumentException if the two argument arrays are not the same length
@@ -816,7 +816,7 @@ public class ArrayUtils {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(
-                    "The multiplicand array and the factor array must be the same length");
+                "The multiplicand array and the factor array must be the same length");
         }
         double[] product = new double[multiplicand.length];
         for (int i = 0; i < multiplicand.length; i++) {

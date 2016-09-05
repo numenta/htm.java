@@ -184,7 +184,7 @@ public class SpatialPooler implements Persistable {
      */
     public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
         if(inputVector.length != c.getNumInputs()) {
-            throw new IllegalArgumentException(
+            throw new InvalidSPParamValueException(
                     "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
                     ", From Input Vector: " + inputVector.length);
         }

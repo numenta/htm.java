@@ -1,8 +1,30 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.algorithms;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -11,6 +33,7 @@ import org.junit.Test;
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.SpatialPooler.InvalidSPParamValueException;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
@@ -235,7 +258,6 @@ public class SpatialPoolerTest {
         
         double[] boostedOverlaps = cn.getBoostedOverlaps();
         int[] overlaps = cn.getOverlaps();
-        System.out.println("out = " + Arrays.toString(activeArray));
         
         for(int i = 0;i < cn.getNumColumns();i++) {
             assertEquals(expOutput[i], overlaps[i]);
@@ -1896,5 +1918,113 @@ public class SpatialPoolerTest {
         neg.removeAll(msk);
         assertTrue(sbm.all(mask));
         assertFalse(sbm.any(neg));
+    }
+    
+    @Test
+    public void testInit() {
+        setupParameters();
+        parameters.setNumActiveColumnsPerInhArea(0);
+        parameters.setLocalAreaDensity(0);
+        
+        Connections c = new Connections();
+        parameters.apply(c);
+        
+        SpatialPooler sp = new SpatialPooler();
+        
+        // Local Area Density cannot be 0
+        try {
+            sp.init(c);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Inhibition parameters are invalid", e.getMessage());
+            assertEquals(InvalidSPParamValueException.class, e.getClass());
+        }
+        
+        // Local Area Density can't be above 0.5
+        parameters.setLocalAreaDensity(0.51);
+        c = new Connections();
+        parameters.apply(c);
+        try {
+            sp.init(c);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Inhibition parameters are invalid", e.getMessage());
+            assertEquals(InvalidSPParamValueException.class, e.getClass());
+        }
+        
+        // Local Area Density should be sane here
+        parameters.setLocalAreaDensity(0.5);
+        c = new Connections();
+        parameters.apply(c);
+        try {
+            sp.init(c);
+        }catch(Exception e) {
+            fail();
+        }
+        
+        // Num columns cannot be 0
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 0 });
+        c = new Connections();
+        parameters.apply(c);
+        try {
+            sp.init(c);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Invalid number of columns: 0", e.getMessage());
+            assertEquals(InvalidSPParamValueException.class, e.getClass());
+        }
+        
+        // Reset column dims
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 5 });
+        
+        // Num columns cannot be 0
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 0 });
+        c = new Connections();
+        parameters.apply(c);
+        try {
+            sp.init(c);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Invalid number of inputs: 0", e.getMessage());
+            assertEquals(InvalidSPParamValueException.class, e.getClass());
+        }
+    }
+    
+    @Test
+    public void testComputeInputMismatch() {
+        setupParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 2, 4 });
+        parameters.setColumnDimensions(new int[] { 5, 1 });
+        
+        Connections c = new Connections();
+        parameters.apply(c);
+        
+        int misMatchedDims = 6; // not 8
+        SpatialPooler sp = new SpatialPooler();
+        sp.init(c);
+        try {
+            sp.compute(c, new int[misMatchedDims], new int[25], true, true);
+            fail();
+        }catch(Exception e) {
+            assertEquals("Input array must be same size as the defined number"
+                + " of inputs: From Params: 8, From Input Vector: 6", e.getMessage());
+            assertEquals(InvalidSPParamValueException.class, e.getClass());
+        }
+        
+        
+        // Now Do the right thing
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 2, 4 });
+        parameters.setColumnDimensions(new int[] { 5, 1 });
+        
+        c = new Connections();
+        parameters.apply(c);
+        
+        int matchedDims = 8; // same as input dimension multiplied, above
+        sp.init(c);
+        try {
+            sp.compute(c, new int[matchedDims], new int[25], true, true);
+        }catch(Exception e) {
+            fail();
+        }
     }
 }
