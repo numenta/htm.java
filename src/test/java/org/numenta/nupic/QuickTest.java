@@ -425,7 +425,7 @@ public class QuickTest {
         // ...
         //////////////////////////////////////////////////////////
         
-        Layer layer = new Layer(conn, encoder, sp, tm, cl, anomalyComputer); 
+        Layer layer = new Layer(conn, encoder, null, tm, cl, anomalyComputer); 
         return layer;
     }
     
