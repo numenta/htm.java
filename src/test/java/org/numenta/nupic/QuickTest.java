@@ -566,9 +566,6 @@ public class QuickTest {
                     Tuple spTuple = layer.spStep((int[])encTuple.get(0), LEARN, IS_VERBOSE);
                     
                     layer.incRecordNum();
-                    
-                    if(layer.recordNum == 43)
-                        System.out.println("here");
                 });
             } catch (IOException e) {
                 e.printStackTrace();

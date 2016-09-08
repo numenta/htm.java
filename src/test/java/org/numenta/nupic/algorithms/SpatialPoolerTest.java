@@ -231,7 +231,7 @@ public class SpatialPoolerTest {
             assertTrue(Arrays.equals(permanences, potential));
         }
     }
-
+    
     @Test
     public void testOverlapsOutput() {
         parameters = Parameters.getSpatialDefaultParameters();

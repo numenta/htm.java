@@ -220,22 +220,22 @@ public class MultiEncoder extends Encoder<Object> {
     public void setValue(Encoder.Builder builder, String param, Object value)  {
         switch(param) {
             case "n":
-                builder.n((int) value);
+                builder.n(((Number)value).intValue());
                 break;
             case "w":
-                builder.w((int) value);
+                builder.w(((Number)value).intValue());
                 break;
             case "minVal":
-                builder.minVal((double) value);
+                builder.minVal(((Number)value).doubleValue());
                 break;
             case "maxVal":
-                builder.maxVal((double) value);
+                builder.maxVal(((Number)value).doubleValue());
                 break;
             case "radius":
-                builder.radius((double) value);
+                builder.radius(((Number)value).doubleValue());
                 break;
             case "resolution":
-                builder.resolution((double) value);
+                builder.resolution(((Number)value).doubleValue());
                 break;
             case "periodic":
                 builder.periodic((boolean) value);
