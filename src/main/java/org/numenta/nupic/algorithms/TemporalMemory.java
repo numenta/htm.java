@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.algorithms;
 
 import static org.numenta.nupic.util.GroupBy2.Slot.NONE;
@@ -49,6 +70,8 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * 
      * @param   c       {@link Connections} object
      */
+    
+    
     public static void init(Connections c) {
         SparseObjectMatrix<Column> matrix = c.getMemory() == null ?
             new SparseObjectMatrix<Column>(c.getColumnDimensions()) :
@@ -406,7 +429,13 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
             }
             
             // Keep permanence within min/max bounds
-            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence; 
+            permanence = permanence < 0 ? 0 : permanence > 1.0 ? 1.0 : permanence;
+            
+            // Use this to examine issues caused by subtle floating point differences
+            // be careful to set the scale (1 below) to the max significant digits right of the decimal point
+            // between the permanenceIncrement and initialPermanence
+            //
+            // permanence = new BigDecimal(permanence).setScale(1, RoundingMode.HALF_UP).doubleValue(); 
             
             if(permanence < EPSILON) {
                 conn.destroySynapse(synapse);

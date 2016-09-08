@@ -22,6 +22,11 @@
 package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.stream.IntStream;
 
 import org.junit.Test;
 
@@ -85,35 +90,70 @@ public class UniversalRandomTest {
             double o = random.nextDouble();
             assertEquals(exp[i], o, 0.0001);
         }
+     }
+    
+    @Test
+    public void testMain() {
+        PrintStream out = System.out;
         
-        /*
-        e = 83200
-        x = 0
-        x = 26
-        x = 14
-        x = 15
-        x = 38
-        x = 47
-        x = 13
-        x = 9
-        x = 15
-        x = 31
-        x = 6
-        x = 3
-        x = 0
-        x = 21
-        x = 45
-        d = 0.945
-        d = 0.2426
-        d = 0.5214
-        d = 0.0815
-        d = 0.0988
-        d = 0.5497
-        d = 0.4013
-        d = 0.4559
-        d = 0.5415
-        d = 0.2381
-
-         */
+        ByteArrayOutputStream baos = null;
+        PrintStream ps = new PrintStream(baos = new ByteArrayOutputStream());
+        System.setOut(ps);
+        
+        UniversalRandom.main(null);
+        
+        System.setOut(out);
+        
+        String output = baos.toString();
+        String[] lines = output.split("\n");
+        
+        String[] expected = {
+            "e = 83200",
+            "x = 0",
+            "x = 26",
+            "x = 14",
+            "x = 15",
+            "x = 38",
+            "x = 47",
+            "x = 13",
+            "x = 9",
+            "x = 15",
+            "x = 31",
+            "x = 6",
+            "x = 3",
+            "x = 0",
+            "x = 21",
+            "x = 45",
+            "d = 0.945",
+            "d = 0.2426",
+            "d = 0.5214",
+            "d = 0.0815",
+            "d = 0.0988",
+            "d = 0.5497",
+            "d = 0.4013",
+            "d = 0.4559",
+            "d = 0.5415",
+            "d = 0.2381"
+        };
+        
+        IntStream.range(0, expected.length).forEach(i -> assertEquals(lines[i], expected[i]));
+    }
+    
+    @Test
+    public void testNextX() {
+        UniversalRandom ur1 = new UniversalRandom(42);
+        UniversalRandom ur2 = new UniversalRandom(42);
+        assertEquals(ur1.nextX(31), ur2.next(31));
+    }
+    
+    @Test
+    public void testNext_withException() {
+        UniversalRandom ur = new UniversalRandom(42);
+        try {
+            ur.nextInt(-1);
+            fail();
+        }catch(Exception e) {
+            assertEquals("bound must be positive", e.getMessage());
+        }
     }
 }

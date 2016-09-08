@@ -805,8 +805,8 @@ public class ArrayUtils {
      *
      * @param multiplicand
      * @param factor
-     * @param multiplicand adjustment
-     * @param factor       adjustment
+     * @param multiplicandAdjustment
+     * @param factorAdjustment
      *
      * @return
      * @throws IllegalArgumentException if the two argument arrays are not the same length
@@ -816,7 +816,7 @@ public class ArrayUtils {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(
-                    "The multiplicand array and the factor array must be the same length");
+                "The multiplicand array and the factor array must be the same length");
         }
         double[] product = new double[multiplicand.length];
         for (int i = 0; i < multiplicand.length; i++) {
@@ -1358,6 +1358,7 @@ public class ArrayUtils {
             upperBound--;
         }
         Arrays.sort(selectedIndices);
+        //System.out.println("sample: " + Arrays.toString(selectedIndices));
         return selectedIndices;
     }
 
@@ -1442,6 +1443,26 @@ public class ArrayUtils {
 
         return count;
     }
+    
+    /**
+     * Returns the count of values in the specified array that are
+     * greater than or equal to, the specified compare value.
+     *
+     * @param compare the value to compare to
+     * @param array   the values being compared
+     *
+     * @return the count of values greater
+     */
+    public static int valueGreaterOrEqualCount(double compare, double[] array) {
+        int count = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] >= compare) {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     /**
      * Returns the count of values in the specified array that are
@@ -1488,7 +1509,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-
+    
     /**
      * Raises the values in the specified array by the amount specified
      * @param amount the amount to raise the values

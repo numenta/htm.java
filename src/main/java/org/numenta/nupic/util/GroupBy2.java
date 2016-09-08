@@ -141,6 +141,19 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         
         numEntries = generatorList.size();
         
+//        for(int i = 0;i < numEntries;i++) {
+//            for(Pair<Object, R> p : generatorList.get(i)) {
+//                System.out.println("generator " + i + ": " + p.getKey() + ",  " + p.getValue());
+//            }
+//            System.out.println("");
+//        }
+//        
+//        generatorList = new ArrayList<>();
+//        
+//        for(int i = 0;i < entries.length;i++) {
+//            generatorList.add(GroupBy.of(entries[i].getKey(), entries[i].getValue()));
+//        }
+        
         advanceList = new boolean[numEntries];
         Arrays.fill(advanceList, true);
         nextList = new Slot[numEntries];

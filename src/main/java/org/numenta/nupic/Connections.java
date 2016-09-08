@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -98,6 +99,9 @@ public class Connections implements Persistable {
     public int spIterationNum = 0;
     public int spIterationLearnNum = 0;
     public int tmIteration = 0;
+    
+    public double[] boostedOverlaps;
+    public int[] overlaps;
 
     /** A matrix representing the shape of the input. */
     protected SparseMatrix<?> inputMatrix;
@@ -226,7 +230,11 @@ public class Connections implements Persistable {
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
-    protected Random random = new UniversalRandom(seed);
+    public Random random = new UniversalRandom(seed);
+    
+    private Comparator<SegmentOverlap> lambda = (Comparator<SegmentOverlap> & Serializable) (so1, so2) -> 
+        so1.segment.getParentCell().getIndex() * maxSegmentsPerCell - 
+            so2.segment.getParentCell().getIndex() * maxSegmentsPerCell;
 
     
     ////////////////////////////////////////
@@ -912,6 +920,40 @@ public class Connections implements Persistable {
     public double getMaxBoost() {
         return maxBoost;
     }
+    
+    /**
+     * Sets and Returns the boosted overlap score for each column
+     * @param boostedOverlaps
+     * @return
+     */
+    public double[] setBoostedOverlaps(double[] boostedOverlaps) {
+        return this.boostedOverlaps = boostedOverlaps;
+    }
+   
+    /**
+     * Returns the boosted overlap score for each column
+     * @return the boosted overlaps
+     */
+    public double[] getBoostedOverlaps() {
+        return boostedOverlaps;
+    }
+    
+    /**
+     * Sets and Returns the overlap score for each column
+     * @param overlaps
+     * @return
+     */
+    public int[] setOverlaps(int[] overlaps) {
+        return this.overlaps = overlaps;
+    }
+   
+    /**
+     * Returns the overlap score for each column
+     * @return the overlaps
+     */
+    public int[] getOverlaps() {
+        return overlaps;
+    }
 
     /**
      * spVerbosity level: 0, 1, 2, or 3
@@ -1106,7 +1148,8 @@ public class Connections implements Persistable {
          */
         @Override
         public int compareTo(SegmentOverlap other) {
-            return segment.compareTo(other.segment);
+            return segment.getParentCell().getColumn().compareTo(
+                other.segment.getParentCell().getColumn());
         }
         @Override
         public int hashCode() {
@@ -1175,6 +1218,7 @@ public class Connections implements Persistable {
             for(Synapse synapse : cell.getReceptorSynapses(this)) {
                 Segment segment = synapse.getSegment();
                 double permanence = synapse.getPermanence();
+                
                 if(permanence - matchingPermananceThreshold > -EPSILON) {
                     numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
                     numMatchingSynapsesForSegment[segment.getIndex()][1] = 
@@ -1213,8 +1257,9 @@ public class Connections implements Persistable {
             }
         }
         
-        Collections.sort(activeSegments, (as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
-        Collections.sort(matchingSegments, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
+        
+        Collections.sort(activeSegments, lambda);//(as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
+        Collections.sort(matchingSegments,lambda);//, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
         return new Activity(activeSegments, matchingSegments);
     }
     
