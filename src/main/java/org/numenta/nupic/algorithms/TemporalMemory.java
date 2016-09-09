@@ -130,10 +130,6 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         double permanenceDecrement = conn.getPermanenceDecrement();
         for(Tuple t : grouper) {
             ColumnData columnData = cycle.columnData.set(t);
-//            System.out.println("Column: " + columnData.column());
-//            System.out.println("activeColumns: " + columnData.activeColumns());
-//            System.out.println("activeSegmentsOnCol: " + columnData.activeSegments());
-//            System.out.println("matchingSegmentsOnCol: " + columnData.matchingSegments());
             
             if(!((List<?>)t.get(1)).get(0).equals(NONE)) {
                 if(!columnData.activeSegments().isEmpty()) {
