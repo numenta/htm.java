@@ -310,16 +310,18 @@ public class ScalarEncoder extends Encoder<Double> {
 	 * @return			an encoded array
 	 */
 	public Integer getFirstOnBit(double input) {
-		if(input == SENTINEL_VALUE_FOR_MISSING_DATA) {
+		if(Double.isNaN(input)) {
 			return null;
 		}else{
 			if(input < getMinVal()) {
 				if(clipInput() && !isPeriodic()) {
-					LOGGER.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
+				    if(LOGGER.isTraceEnabled()) {
+				        LOGGER.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
+				    }
 					input = getMinVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") less than range (" +
-						getMinVal() + " - " + getMaxVal());
+						getMinVal() + " - " + getMaxVal() + ")");
 				}
 			}
 		}
@@ -327,16 +329,18 @@ public class ScalarEncoder extends Encoder<Double> {
 		if(isPeriodic()) {
 			if(input >= getMaxVal()) {
 				throw new IllegalStateException("input (" + input +") greater than periodic range (" +
-					getMinVal() + " - " + getMaxVal());
+					getMinVal() + " - " + getMaxVal() + ")");
 			}
 		}else{
 			if(input > getMaxVal()) {
 				if(clipInput()) {
-					LOGGER.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
+				    if(LOGGER.isTraceEnabled()) {
+				        LOGGER.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
+				    }
 					input = getMaxVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") greater than periodic range (" +
-						getMinVal() + " - " + getMaxVal());
+						getMinVal() + " - " + getMaxVal() + ")");
 				}
 			}
 		}

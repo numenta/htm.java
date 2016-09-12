@@ -739,7 +739,6 @@ public class SpatialPooler implements Persistable {
         //TODO: See https://github.com/numenta/nupic.core/issues/128
         indices.sort();
 
-        
         int[] retVal = new int[(int)Math.round(indices.size() * c.getPotentialPct())];
         return ArrayUtils.sample(indices, retVal, c.getRandom());
     }

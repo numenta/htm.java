@@ -31,8 +31,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
+import org.numenta.nupic.util.UniversalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +94,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	public static final long DEFAULT_SEED = 42;
 
 	// Mersenne Twister RNG, same as used with numpy.random
-	MersenneTwister rng;
+	UniversalRandom rng;
 
 	int maxOverlap;
 	int maxBuckets;
@@ -151,7 +151,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	 */
 	// TODO why are none of these parameters used..?
 	public void initEncoder(double resolution, int w, int n, Double offset, long seed) {
-		rng = (seed == -1) ? new MersenneTwister() : new MersenneTwister(seed);
+		rng = (seed == -1) ? new UniversalRandom(DEFAULT_SEED) : new UniversalRandom(seed);
 
 		initializeBucketMap(getMaxBuckets(), getOffset());
 

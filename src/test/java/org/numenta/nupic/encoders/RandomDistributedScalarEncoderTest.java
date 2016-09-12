@@ -309,7 +309,7 @@ public class RandomDistributedScalarEncoderTest {
 
 		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder2 = builder.setSeed(42).build();
-		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-1).build();
+		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-2).build();
 		//RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
 
 		int[] e1 = encoder1.encode(23.0);
