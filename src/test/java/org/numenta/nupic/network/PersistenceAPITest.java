@@ -1858,20 +1858,22 @@ public class PersistenceAPITest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        int[] expected0 = new int[] { 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0 };
-        int[] expected1 = new int[] { 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0 };
-        int[] expected2 = new int[] { 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0 };
-        int[] expected3 = new int[] { 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0 };
-        int[] expected4 = new int[] { 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0 };
-        int[] expected5 = new int[] { 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0 };
-        int[] expected6 = new int[] { 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1 };
+        int[] expected0 = new int[] { 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0 };
+        int[] expected1 = new int[] { 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
+        int[] expected2 = new int[] { 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
+        int[] expected3 = new int[] { 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0 };
+        int[] expected4 = new int[] { 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0 };
+        int[] expected5 = new int[] { 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0 };
+        int[] expected6 = new int[] { 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
         int[][] expecteds = new int[][] { expected0, expected1, expected2, expected3, expected4, expected5, expected6 };
 
-        network.observe().subscribe(new Observer<Inference>() {
+        TestObserver<Inference> tester;
+        network.observe().subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
 
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { 
+                super.onError(e);
                 e.printStackTrace(); 
             }
             @Override
@@ -1892,6 +1894,8 @@ public class PersistenceAPITest extends ObservableTestBase {
         try {
             network.lookup("r1").lookup("1").getLayerThread().join();
         }catch(Exception e) { e.printStackTrace(); }
+        
+        checkObserver(tester);
 
         return network;
     }
