@@ -315,7 +315,9 @@ public class ScalarEncoder extends Encoder<Double> {
 		}else{
 			if(input < getMinVal()) {
 				if(clipInput() && !isPeriodic()) {
-					LOGGER.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
+				    if(LOGGER.isTraceEnabled()) {
+				        LOGGER.info("Clipped input " + getName() + "=" + input + " to minval " + getMinVal());
+				    }
 					input = getMinVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") less than range (" +
@@ -332,7 +334,9 @@ public class ScalarEncoder extends Encoder<Double> {
 		}else{
 			if(input > getMaxVal()) {
 				if(clipInput()) {
-					LOGGER.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
+				    if(LOGGER.isTraceEnabled()) {
+				        LOGGER.info("Clipped input " + getName() + "=" + input + " to maxval " + getMaxVal());
+				    }
 					input = getMaxVal();
 				}else{
 					throw new IllegalStateException("input (" + input +") greater than periodic range (" +

@@ -57,11 +57,11 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
 
-public class QuickTest {
+public class RunLayer {
     public static boolean IS_VERBOSE = true;
     public static boolean LEARN = true;
-    public static boolean TM_ONLY = true;
-    public static boolean SP_ONLY = false;
+    public static boolean TM_ONLY = false;
+    public static boolean SP_ONLY = true;
     
     public static class Layer {
         private Connections connections;
@@ -339,7 +339,7 @@ public class QuickTest {
         parameters.apply(conn);
         
         SpatialPooler sp = null;
-        if(!QuickTest.TM_ONLY) {
+        if(!RunLayer.TM_ONLY) {
             sp = new SpatialPooler();
             sp.init(conn);
         }
@@ -348,7 +348,7 @@ public class QuickTest {
 //        int[] sparseSdr = testSpatialPooler(sp, conn, encoding);
         //////////////////////////////////////////////////////////
         TemporalMemory tm = null;
-        if(!QuickTest.SP_ONLY) {
+        if(!RunLayer.SP_ONLY) {
             tm = new TemporalMemory();
             TemporalMemory.init(conn);
         }
@@ -459,14 +459,9 @@ public class QuickTest {
     
     @SuppressWarnings("unused")
     public static void main(String[] args) {
-        boolean IS_VERBOSE = true;
-        boolean LEARN = true;
-        boolean TM_ONLY = true;
-        boolean SP_ONLY = false;
-        
         long start = System.currentTimeMillis();
         
-        QuickTest.Layer layer = QuickTest.createLayer();
+        RunLayer.Layer layer = RunLayer.createLayer();
         
 //        int[] prev = {624, 626, 657, 699, 708, 711, 726, 731, 741, 753, 756, 763, 770, 772, 789, 799, 811, 
 //                       814, 843, 846, 1654, 1657, 1658, 1673, 1682, 1691, 1701, 1704, 1710, 1713, 1719, 1724, 
@@ -498,10 +493,14 @@ public class QuickTest {
                     
                     DateTime timestamp = formatter.parseDateTime(line[0].trim());
                     double value = Double.parseDouble(line[1].trim());
+                    layer.printHeader();
                     Tuple encTuple = layer.encodingStep(timestamp, value, IS_VERBOSE);
                     Tuple spTuple = layer.spStep((int[])encTuple.get(0), LEARN, IS_VERBOSE);
                     
                     layer.incRecordNum();
+                    if(layer.recordNum == 200) {
+                        System.exit(0);
+                    }
                 });
             } catch (IOException e) {
                 e.printStackTrace();
