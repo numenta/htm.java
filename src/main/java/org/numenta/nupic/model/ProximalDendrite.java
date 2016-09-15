@@ -122,7 +122,7 @@ public class ProximalDendrite extends Segment implements Persistable {
      * @return
      */
     public int[] getConnectedSynapsesDense(Connections c) {
-        return c.getPotentialPools().get(index).getDenseConnections(c);
+        return c.getPotentialPools().get(index).getDenseConnected(c);
     }
 
     /**
@@ -131,6 +131,6 @@ public class ProximalDendrite extends Segment implements Persistable {
      * @return
      */
     public int[] getConnectedSynapsesSparse(Connections c) {
-        return c.getPotentialPools().get(index).getSparseConnections();
+        return c.getPotentialPools().get(index).getSparsePotential();
     }
 }

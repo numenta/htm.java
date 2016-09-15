@@ -2258,6 +2258,39 @@ public class Connections implements Persistable {
         System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
         System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
     }
+    
+    public int[][] getConnecteds() {
+        int[][] retVal = new int[getNumColumns()][];
+        for(int i = 0;i < getNumColumns();i++) {
+            Pool pool = getPotentialPools().get(i);
+            int[] indexes = pool.getDenseConnected(this);
+            retVal[i] = indexes;
+        }
+        
+        return retVal;
+    }
+    
+    public int[][] getPotentials() {
+        int[][] retVal = new int[getNumColumns()][];
+        for(int i = 0;i < getNumColumns();i++) {
+            Pool pool = getPotentialPools().get(i);
+            int[] indexes = pool.getDensePotential(this);
+            retVal[i] = indexes;
+        }
+        
+        return retVal;
+    }
+    
+    public double[][] getPermanences() {
+        double[][] retVal = new double[getNumColumns()][];
+        for(int i = 0;i < getNumColumns();i++) {
+            Pool pool = getPotentialPools().get(i);
+            double[] perm = pool.getDensePermanences(this);
+            retVal[i] = perm;
+        }
+        
+        return retVal;
+    }
 
     /**
      * {@inheritDoc}

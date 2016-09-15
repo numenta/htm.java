@@ -1920,7 +1920,7 @@ public class Layer<T> implements Persistable {
         }
         
         int[] activeColumns = new int[numColumns];
-        spatialPooler.compute(connections, input, activeColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
+        spatialPooler.compute(connections, input, activeColumns, isLearn || (sensor != null && sensor.getMetaInfo().isLearn()));
       
         return activeColumns;
     }

@@ -157,7 +157,7 @@ public class RunLayer {
         public Tuple spStep(int[] encoding, boolean learn, boolean isVerbose) {
             // Input through Spatial Pooler
             int[] output = new int[connections.getNumColumns()];
-            sp.compute(connections, encoding, output, true, true);
+            sp.compute(connections, encoding, output, true);
             int[] sparseSPOutput = ArrayUtils.where(output, ArrayUtils.WHERE_1);
             if(isVerbose) {
                 System.out.println("SpatialPooler Output = " + Arrays.toString(sparseSPOutput) + "\n");

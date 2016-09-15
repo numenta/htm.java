@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
@@ -106,6 +107,8 @@ public class UniversalRandomTest {
         
         String output = baos.toString();
         String[] lines = output.split("\n");
+        
+        Arrays.stream(lines).forEach(System.out::println);
         
         String[] expected = {
             "e = 83200",

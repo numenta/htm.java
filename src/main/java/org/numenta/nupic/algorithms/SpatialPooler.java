@@ -182,7 +182,7 @@ public class SpatialPooler implements Persistable {
      *                          and has many uses. For example, you might want to feed in
      *                          various inputs and examine the resulting SDR's.
      */
-    public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn, boolean stripNeverLearned) {
+    public void compute(Connections c, int[] inputVector, int[] activeArray, boolean learn) {
         if(inputVector.length != c.getNumInputs()) {
             throw new InvalidSPParamValueException(
                     "Input array must be same size as the defined number of inputs: From Params: " + c.getNumInputs() +
@@ -210,8 +210,6 @@ public class SpatialPooler implements Persistable {
                 updateInhibitionRadius(c);
                 updateMinDutyCycles(c);
             }
-        }else if(stripNeverLearned){
-            activeColumns = stripUnlearnedColumns(c, activeColumns);
         }
 
         Arrays.fill(activeArray, 0);
@@ -456,7 +454,7 @@ public class SpatialPooler implements Persistable {
         for(int i = 0;i < activeColumns.length;i++) {
             Pool pool = c.getPotentialPools().get(activeColumns[i]);
             double[] perm = pool.getDensePermanences(c);
-            int[] indexes = pool.getSparseConnections();
+            int[] indexes = pool.getSparsePotential();
             ArrayUtils.raiseValuesBy(permChanges, perm);
             Column col = c.getColumn(activeColumns[i]);
             updatePermanencesForColumn(c, perm, col, indexes, true);
@@ -482,7 +480,7 @@ public class SpatialPooler implements Persistable {
             Pool pool = c.getPotentialPools().get(weakColumns[i]);
             double[] perm = pool.getSparsePermanences();
             ArrayUtils.raiseValuesBy(c.getSynPermBelowStimulusInc(), perm);
-            int[] indexes = pool.getSparseConnections();
+            int[] indexes = pool.getSparsePotential();
             Column col = c.getColumn(weakColumns[i]);
             updatePermanencesForColumnSparse(c, perm, col, indexes, true);
         }
@@ -695,12 +693,13 @@ public class SpatialPooler implements Persistable {
             colCoords, ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0);
         double[] inputCoords = ArrayUtils.multiply(
             ArrayUtils.toDoubleArray(c.getInputDimensions()), ratios, 0, 0);
-        inputCoords = ArrayUtils.d_add(inputCoords, 
-            ArrayUtils.multiply(ArrayUtils.divide(
-                ArrayUtils.toDoubleArray(
-                    c.getInputDimensions()), 
+        inputCoords = ArrayUtils.d_add(
+            inputCoords, 
+            ArrayUtils.multiply(
+                ArrayUtils.divide(
+                    ArrayUtils.toDoubleArray(c.getInputDimensions()), 
                     ArrayUtils.toDoubleArray(c.getColumnDimensions()), 0, 0), 
-                    0.5));
+                0.5));
         int[] inputCoordInts = ArrayUtils.clip(ArrayUtils.toIntArray(inputCoords), c.getInputDimensions(), -1);
         return c.getInputMatrix().computeIndex(inputCoordInts);
     }

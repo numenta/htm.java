@@ -238,7 +238,7 @@ public class QuickDayTest {
             int bucketIdx = encoder.getBucketIndices(value)[0];
 
             //Input through spatial pooler
-            spatialPooler.compute(memory, encoding, output, true, true);
+            spatialPooler.compute(memory, encoding, output, true);
             System.out.println("SpatialPooler Output = " + Arrays.toString(output));
 
             // Let the SpatialPooler train independently (warm up) first
