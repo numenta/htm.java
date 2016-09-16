@@ -175,7 +175,7 @@ public class SpatialPoolerTest {
         int[] inputVector = new int[] { 1, 0, 1, 0, 1, 0, 0, 1, 1 };
         int[] activeArray = new int[] { 0, 0, 0, 0, 0 };
         for(int i = 0;i < 20;i++) {
-            mock.compute(mem, inputVector, activeArray, true, true);
+            mock.compute(mem, inputVector, activeArray, true);
         }
 
         for(int i = 0;i < mem.getNumColumns();i++) {
@@ -220,7 +220,7 @@ public class SpatialPoolerTest {
         int[] inputVector = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         int[] activeArray = new int[] { 0, 0, 0, 0, 0 };
         for(int i = 0;i < 20;i++) {
-            mock.compute(mem, inputVector, activeArray, true, true);
+            mock.compute(mem, inputVector, activeArray, true);
         }
 
         for(int i = 0;i < mem.getNumColumns();i++) {
@@ -254,7 +254,7 @@ public class SpatialPoolerTest {
         int[] inputVector = { 1, 1, 1, 1, 1 };
         int[] activeArray = { 0, 0, 0 };
         int[] expOutput = { 2, 1, 0 };
-        sp.compute(cn, inputVector, activeArray, true, true);
+        sp.compute(cn, inputVector, activeArray, true);
         
         double[] boostedOverlaps = cn.getBoostedOverlaps();
         int[] overlaps = cn.getOverlaps();
@@ -311,7 +311,7 @@ public class SpatialPoolerTest {
 
         int[] activeArray = new int[2048];
 
-        sp.compute(mem, inputVector, activeArray, true, false);
+        sp.compute(mem, inputVector, activeArray, true);
 
         int[] real = ArrayUtils.where(activeArray, new Condition.Adapter<Object>() {
             public boolean eval(int n) {
@@ -1127,9 +1127,14 @@ public class SpatialPoolerTest {
 
         double[][] truePermanences = new double[][] {
             { 0.300, 0.110, 0.080, 0.140, 0.000, 0.000, 0.000, 0.000 },
+        //     Inc     Dec    Dec    Inc    -      -      -      -
             { 0.250, 0.000, 0.000, 0.000, 0.280, 0.110, 0.000, 0.440 },
+        //     Inc     -      -      -      Inc    Dec    -      Dec
             { 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.210, 0.000 },
+        //      -      -     Trim    -      -      -      Inc    -
             { 0.040, 0.000, 0.000, 0.000, 0.000, 0.000, 0.178, 0.000 }
+        //      -      -      -      -      -      -      -      -     // Only cols 0,1,2 are active 
+                                                                       // (see 'activeColumns' below)
         };
 
         Condition<?> cond = new Condition.Adapter<Integer>() {
@@ -2003,7 +2008,7 @@ public class SpatialPoolerTest {
         SpatialPooler sp = new SpatialPooler();
         sp.init(c);
         try {
-            sp.compute(c, new int[misMatchedDims], new int[25], true, true);
+            sp.compute(c, new int[misMatchedDims], new int[25], true);
             fail();
         }catch(Exception e) {
             assertEquals("Input array must be same size as the defined number"
@@ -2022,7 +2027,7 @@ public class SpatialPoolerTest {
         int matchedDims = 8; // same as input dimension multiplied, above
         sp.init(c);
         try {
-            sp.compute(c, new int[matchedDims], new int[25], true, true);
+            sp.compute(c, new int[matchedDims], new int[25], true);
         }catch(Exception e) {
             fail();
         }

@@ -114,6 +114,8 @@ public class Synapse implements Persistable, Comparable<Synapse> {
      */
     public void setPermanence(Connections c, double perm) {
         this.permanence = perm;
+        
+        // On proximal dendrite which has no presynaptic cell
         if(sourceCell == null) {
             pool.updatePool(c, this, perm);
         }

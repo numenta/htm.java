@@ -101,6 +101,27 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
     /**
      * Feeds input record through TM, performing inference and learning.
      * 
+     * Updates :
+     *  -   activeCells
+     *  -   winnerCells
+     *  -   activeSegments
+     *  -   matchingSegments
+     *  
+     *  <pre>
+     *  Pseudocode:
+     *  for each column
+     *    if column is active and has active distal dendrite segments
+     *      call activatePredictedColumn
+     *    if column is active and doesn't have active distal dendrite segments
+     *      call burstColumn
+     *    if column is inactive and has matching distal dendrite segments
+     *      call punishPredictedColumn
+     *  for each distal dendrite segment with activity >= activationThreshold
+     *    mark the segment as active
+     *  for each distal dendrite segment with unconnected activity >= minThreshold
+     *    mark the segment as matching
+     *  </pre>
+     * 
      * @param   conn                    The column/cell structure and connectivity
      * @param   activeColumnIndices     Indexes of Columns active during the current cycle
      * @param   learn                   Whether or not learning is enabled
@@ -170,6 +191,20 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
     }
     
     /**
+     * Indicates the start of a new sequence and resets the sequence
+     * state of the TM.
+     * 
+     * @param connections   The {@link Connections} object containing the state
+     */
+    @Override
+    public void reset(Connections connections) {
+        connections.getActiveCells().clear();
+        connections.getWinnerCells().clear();
+        connections.getActiveSegmentOverlaps().clear();
+        connections.getMatchingSegmentOverlaps().clear();
+    }
+    
+    /**
      * <p>
      * Determines which cells in a predicted column should be added to
      * winner cells list and calls adaptSegment on the segments that correctly
@@ -188,14 +223,14 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * </p>
      * 
      * @param conn                      {@link Connections} instance for the tm 
-     * @param activeSegments            A iterable of SegmentOverlap objects for the
+     * @param activeSegments            A {@link Iterable} of SegmentOverlap objects for the
      *                                  column compute is operating on that are active
      * @param prevActiveCells           Active cells in `t-1`
      * @param permanenceIncrement       Amount by which permanences of synapses are
      *                                  incremented during learning.
      * @param permanenceDecrement       Amount by which permanences of synapses are
      *                                  decremented during learning.
-     * @param learn
+     * @param learn                     Determines if permanences are adjusted
      * @return      A list of predicted cells that will be added to active cells and winner cells.
      */
     public List<Cell> activatePredictedColumn(Connections conn, List<SegmentOverlap> activeSegments,
@@ -241,9 +276,8 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * </pre>
      * </p>
      * 
-     * @param conn                      Connections instance for the tm
-     * @param excitedColumn             Excited Column instance from 
-     *                                  {@link #excitedColumnsGenerator(int[], List, List, Connections)}
+     * @param conn                      Connections instance for the TM
+     * @param column                    Bursting {@link Column}
      * @param prevActiveCells           Active cells in `t-1`
      * @param prevWinnerCells           Winner cells in `t-1`
      * @param initialPermanence         Initial permanence of a new synapse.
@@ -254,6 +288,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * @param permanenceDecrement       Amount by which permanences of synapses
                                         are incremented during learning
      * @param random                    Random number generator
+     * @param learn                     Whether or not learning is enabled
      * 
      * @return  Tuple containing:
      *                  cells       list of the processed column's cells
@@ -306,7 +341,9 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * </p>
      *   
      * @param conn                              Connections instance for the tm
-     * @param excitedColumn                     Excited Column instance from excitedColumnsGenerator
+     * @param matchingSegments                  An iterable of SegmentOverlap objects
+     *                                          for the column compute is operating on
+     *                                          that are matching; None if empty
      * @param prevActiveCells                   Active cells in `t-1`
      * @param predictedSegmentDecrement         Amount by which permanences of synapses
      *                                          are decremented during learning.
@@ -321,6 +358,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         }
     }
     
+    
     ////////////////////////////////
     //       Helper Functions     //
     ////////////////////////////////
@@ -332,8 +370,6 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * @param conn      Connections instance for the tm
      * @param cells     List of {@link Cell}s
      * @param random    Random Number Generator
-     * @param learn     Added learn to keep from creating data structures
-     *                  for holding segments when learning is off.
      * 
      * @return  the least used {@code Cell}
      */
@@ -445,18 +481,4 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
         }
     }
     
-    /**
-     * Indicates the start of a new sequence and resets the sequence
-     * state of the TM.
-     * 
-     * @param connections   The {@link Connections} object containing the state
-     */
-    @Override
-    public void reset(Connections connections) {
-        connections.getActiveCells().clear();
-        connections.getWinnerCells().clear();
-        connections.getActiveSegmentOverlaps().clear();
-        connections.getMatchingSegmentOverlaps().clear();
-    }
-
 }

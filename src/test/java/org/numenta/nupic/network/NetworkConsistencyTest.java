@@ -412,7 +412,7 @@ public class NetworkConsistencyTest {
             
             //Input through spatial pooler
             int[] output = new int[columnCount];
-            spatialPooler.compute(memory, encoding, output, true, true);
+            spatialPooler.compute(memory, encoding, output, true);
             if(doPrintout) System.out.println("SpatialPooler Output = " + Arrays.toString(output));
             
             //Input through temporal memory

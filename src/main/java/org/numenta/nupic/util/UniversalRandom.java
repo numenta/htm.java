@@ -29,8 +29,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 /**
  * <p>
@@ -112,6 +114,76 @@ public class UniversalRandom extends Random {
         Arrays.sort(selectedIndices);
         //System.out.println("sample: " + Arrays.toString(selectedIndices));
         return selectedIndices;
+    }
+    
+    /**
+     * Returns an array of floating point values of the specified shape
+     * 
+     * @param rows      the number of rows
+     * @param cols      the number of cols
+     * @return
+     */
+    public double[][] rand(int rows, int cols) {
+        double[][] retval = new double[rows][cols];
+        for(int i = 0;i < rows;i++) {
+            for(int j = 0;j < cols;j++) {
+                retval[i][j] = nextDouble();
+            }
+        }
+        return retval;
+    }
+    
+    /**
+     * Returns an array of binary values of the specified shape whose
+     * total number of "1's" will reflect the sparsity specified.
+     * 
+     * @param rows          the number of rows
+     * @param cols          the number of cols
+     * @param sparsity      number between 0 and 1, indicating percentage
+     *                      of "on" bits
+     * @return
+     */
+    public int[][] binDistrib(int rows, int cols, double sparsity) {
+        double[][] rand = rand(rows, cols);
+        
+        for(int i = 0;i < rand.length;i++) {
+            TIntArrayList sub = new TIntArrayList(
+                ArrayUtils.where(rand[i], new Condition.Adapter<Double>() {
+                    @Override public boolean eval(double d) {
+                        return d >= sparsity;
+                    }
+                }));
+            
+            int sublen = sub.size();
+            int target = (int)(sparsity * cols);
+            
+            if(sublen < target) {
+                int[] full = IntStream.range(0, cols).toArray();
+                TIntHashSet subSet = new TIntHashSet(sub);
+                TIntArrayList toFill = new TIntArrayList(
+                    Arrays.stream(full)
+                        .filter(d -> !subSet.contains(d))
+                        .toArray());
+                int cnt = toFill.size();
+                for(int x = 0;x < target - sublen;x++, cnt--) {
+                    int ind = nextInt(cnt);
+                    int item = toFill.removeAt(ind);
+                    rand[i][item] = sparsity;
+                }
+            }else if(sublen > target) {
+                int cnt = sublen;
+                for(int x = 0;x < sublen - target;x++, cnt--) {
+                    int ind = nextInt(cnt);
+                    int item = sub.removeAt(ind);
+                    rand[i][item] = 0.0;
+                }
+            }
+        }
+        
+        int[][] retval = Arrays.stream(rand)
+            .map(da -> Arrays.stream(da).mapToInt(d -> d >= sparsity ? 1 : 0).toArray())
+            .toArray(int[][]::new);
+        return retval;
     }
     
     @Override
