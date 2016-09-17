@@ -82,7 +82,8 @@ public class Parameters implements Persistable {
         defaultTemporalParams.put(KEY.ACTIVATION_THRESHOLD, 13);
         defaultTemporalParams.put(KEY.LEARNING_RADIUS, 2048);
         defaultTemporalParams.put(KEY.MIN_THRESHOLD, 10);
-        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 255);
+        defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultTemporalParams.put(KEY.MAX_SYNAPSES_PER_SEGMENT, 255);
         defaultTemporalParams.put(KEY.MAX_SEGMENTS_PER_CELL, 255);
         defaultTemporalParams.put(KEY.INITIAL_PERMANENCE, 0.21);
         defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
