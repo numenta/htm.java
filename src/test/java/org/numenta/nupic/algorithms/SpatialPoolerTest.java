@@ -64,11 +64,10 @@ public class SpatialPoolerTest {
         parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
         parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.1);
         parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
         parameters.set(KEY.MAX_BOOST, 10.0);
-        parameters.set(KEY.SP_VERBOSITY, 0);
         parameters.setRandom(new UniversalRandom(42));
     }
     
@@ -85,12 +84,11 @@ public class SpatialPoolerTest {
         parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.008);
         parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.05);
         parameters.set(KEY.SYN_PERM_CONNECTED, 0.10);
-        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
-        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.001);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.001);
         parameters.set(KEY.DUTY_CYCLE_PERIOD, 1000);
         parameters.set(KEY.MAX_BOOST, 10.0);
         parameters.set(KEY.SEED, 42);
-        parameters.set(KEY.SP_VERBOSITY, 0);
         parameters.setRandom(new UniversalRandom(42));
     }
 
@@ -123,8 +121,7 @@ public class SpatialPoolerTest {
         assertEquals(10, mem.getDutyCyclePeriod(), 0);
         assertEquals(10.0, mem.getMaxBoost(), 0);
         assertEquals(42, mem.getSeed());
-        assertEquals(0, mem.getSpVerbosity());
-
+        
         assertEquals(5, mem.getNumInputs());
         assertEquals(5, mem.getNumColumns());
     }
@@ -150,8 +147,8 @@ public class SpatialPoolerTest {
         parameters.setStimulusThreshold(1);
         parameters.setSynPermInactiveDec(0.01);
         parameters.setSynPermActiveInc(0.1);
-        parameters.setMinPctOverlapDutyCycle(0.1);
-        parameters.setMinPctActiveDutyCycle(0.1);
+        parameters.setMinPctOverlapDutyCycles(0.1);
+        parameters.setMinPctActiveDutyCycles(0.1);
         parameters.setDutyCyclePeriod(10);
         parameters.setMaxBoost(10);
         parameters.setSynPermTrimThreshold(0);
@@ -201,8 +198,8 @@ public class SpatialPoolerTest {
         parameters.setStimulusThreshold(1);
         parameters.setSynPermInactiveDec(0.01);
         parameters.setSynPermActiveInc(0.1);
-        parameters.setMinPctOverlapDutyCycle(0.1);
-        parameters.setMinPctActiveDutyCycle(0.1);
+        parameters.setMinPctOverlapDutyCycles(0.1);
+        parameters.setMinPctActiveDutyCycles(0.1);
         parameters.setDutyCyclePeriod(10);
         parameters.setMaxBoost(10);
         parameters.setSynPermConnected(0.1);
@@ -284,8 +281,8 @@ public class SpatialPoolerTest {
         parameters.setStimulusThreshold(0);
         parameters.setSynPermInactiveDec(0.01);
         parameters.setSynPermActiveInc(0.1);
-        parameters.setMinPctOverlapDutyCycle(0.001);
-        parameters.setMinPctActiveDutyCycle(0.001);
+        parameters.setMinPctOverlapDutyCycles(0.001);
+        parameters.setMinPctActiveDutyCycles(0.001);
         parameters.setDutyCyclePeriod(1000);
         parameters.setMaxBoost(10);
         initSP();

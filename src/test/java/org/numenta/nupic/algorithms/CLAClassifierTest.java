@@ -24,13 +24,17 @@ package org.numenta.nupic.algorithms;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import gnu.trove.list.array.TIntArrayList;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.numenta.nupic.network.Persistence;
+import org.numenta.nupic.network.PersistenceAPI;
+import org.numenta.nupic.serialize.SerialConfig;
+
+import gnu.trove.list.array.TIntArrayList;
 
 public class CLAClassifierTest {
 	private CLAClassifier classifier;
@@ -224,13 +228,21 @@ public class CLAClassifierTest {
 		result = classifier.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		recordNum += 1;
 		
-		String json = classifier.serialize();
+		// Configure serializer
+		SerialConfig config = new SerialConfig("testSerializeClassifier", SerialConfig.SERIAL_TEST_DIR);
+        
+        PersistenceAPI api = Persistence.get(config);
+        
+        // 1. serialize
+        byte[] data = api.write(classifier, "testSerializeClassifier");
+
+        // 2. deserialize
+        CLAClassifier serialized = api.read(data);
 		
 		//Using the deserialized classifier, continue test
-		CLAClassifier c = CLAClassifier.deSerialize(json);
 		classification.put("bucketIdx", 4);
 		classification.put("actValue", 34.7);
-		result = c.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
+		result = serialized.compute(recordNum, classification, new int[] { 1, 5, 9 }, true, true);
 		recordNum += 1;
 		
 		assertTrue(Arrays.equals(new int[] { 1 }, result.stepSet()));

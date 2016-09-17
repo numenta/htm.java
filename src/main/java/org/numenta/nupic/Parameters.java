@@ -90,7 +90,6 @@ public class Parameters implements Persistable {
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
         defaultTemporalParams.put(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
-        defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
         defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
         defaultParams.putAll(DEFAULTS_TEMPORAL);
@@ -110,11 +109,10 @@ public class Parameters implements Persistable {
         defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
         defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
         defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
-        defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
+        defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.001);
+        defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.001);
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
         defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
-        defaultSpatialParams.put(KEY.SP_VERBOSITY, 0);
         defaultSpatialParams.put(KEY.LEARN, true);
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
@@ -222,7 +220,7 @@ public class Parameters implements Persistable {
          */
         PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 9.0),
         /** Remove this and add Logging (slf4j) */
-        TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
+        //TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
         
 
         /////////// Spatial Pooler Parameters ///////////
@@ -239,11 +237,11 @@ public class Parameters implements Persistable {
         SYN_PERM_CONNECTED("synPermConnected", Double.class, 0.0, 1.0),
         SYN_PERM_BELOW_STIMULUS_INC("synPermBelowStimulusInc", Double.class, 0.0, 1.0),
         SYN_PERM_TRIM_THRESHOLD("synPermTrimThreshold", Double.class, 0.0, 1.0),
-        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", Double.class),//TODO add range here?
-        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),//TODO add range here?
+        MIN_PCT_OVERLAP_DUTY_CYCLES("minPctOverlapDutyCycles", Double.class),//TODO add range here?
+        MIN_PCT_ACTIVE_DUTY_CYCLES("minPctActiveDutyCycles", Double.class),//TODO add range here?
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
-        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
+        //SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
         
         ///////////// SpatialPooler / Network Parameter(s) /////////////
         /** Number of cycles to send through the SP before forwarding data to the rest of the network. */
@@ -938,8 +936,8 @@ public class Parameters implements Persistable {
      *
      * @param minPctOverlapDutyCycles
      */
-    public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycles) {
-        paramMap.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, minPctOverlapDutyCycles);
+    public void setMinPctOverlapDutyCycles(double minPctOverlapDutyCycles) {
+        paramMap.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, minPctOverlapDutyCycles);
     }
 
     /**
@@ -957,8 +955,8 @@ public class Parameters implements Persistable {
      *
      * @param minPctActiveDutyCycles
      */
-    public void setMinPctActiveDutyCycle(double minPctActiveDutyCycles) {
-        paramMap.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, minPctActiveDutyCycles);
+    public void setMinPctActiveDutyCycles(double minPctActiveDutyCycles) {
+        paramMap.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, minPctActiveDutyCycles);
     }
 
     /**

@@ -244,13 +244,13 @@ public class ParametersTest {
     @Test
     public void testSize() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(49, params.size());
+        assertEquals(47, params.size());
     }
 
     @Test
     public void testKeys() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertTrue(params.keys() != null && params.keys().size() == 49); 
+        assertTrue(params.keys() != null && params.keys().size() == 47); 
     }
 
     @Test

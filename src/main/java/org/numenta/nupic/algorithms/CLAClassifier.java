@@ -33,10 +33,6 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -68,8 +64,6 @@ import gnu.trove.list.array.TIntArrayList;
  * @author David Ray
  * @see BitHistory
  */
-@JsonSerialize(using=CLAClassifierSerializer.class)
-@JsonDeserialize(using=CLAClassifierDeserializer.class)
 public class CLAClassifier implements Persistable {
     private static final long serialVersionUID = 1L;
 
@@ -365,28 +359,4 @@ public class CLAClassifier implements Persistable {
         return sb.toString();
     }
 
-    public String serialize() {
-        String json = null;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            json = mapper.writeValueAsString(this);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        return json;
-    }
-
-    public static CLAClassifier deSerialize(String jsonStrategy) {
-        ObjectMapper om = new ObjectMapper();
-        CLAClassifier c = null;
-        try {
-            Object o = om.readValue(jsonStrategy, CLAClassifier.class);
-            c = (CLAClassifier)o;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return c;
-    }
 }
