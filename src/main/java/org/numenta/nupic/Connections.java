@@ -2253,12 +2253,21 @@ public class Connections implements Persistable {
         System.out.println("learningRadius             = " + getLearningRadius());
         System.out.println("minThreshold               = " + getMinThreshold());
         System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        System.out.println("maxSynapsesPerSegment      = " + getMaxSynapsesPerSegment());
+        System.out.println("maxSegmentsPerCell         = " + getMaxSegmentsPerCell());
         System.out.println("initialPermanence          = " + getInitialPermanence());
         System.out.println("connectedPermanence        = " + getConnectedPermanence());
         System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
         System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
+        System.out.println("predictedSegmentDecrement  = " + getPredictedSegmentDecrement());
     }
     
+    /**
+     * Returns a 2 Dimensional array of 1's and 0's indicating
+     * which of the column's pool members are above the connected
+     * threshold, and therefore considered "connected"
+     * @return
+     */
     public int[][] getConnecteds() {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
@@ -2270,6 +2279,11 @@ public class Connections implements Persistable {
         return retVal;
     }
     
+    /**
+     * Returns a 2 Dimensional array of 1's and 0's indicating
+     * which input bits belong to which column's pool.
+     * @return
+     */
     public int[][] getPotentials() {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
@@ -2281,6 +2295,11 @@ public class Connections implements Persistable {
         return retVal;
     }
     
+    /**
+     * Returns a 2 Dimensional array of the permanences for SP
+     * proximal dendrite column pooled connections.
+     * @return
+     */
     public double[][] getPermanences() {
         double[][] retVal = new double[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
