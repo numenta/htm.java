@@ -193,9 +193,9 @@ public class BitHistory implements Persistable {
     private String pFormatArray(double[] arr) {
         StringBuilder sb = new StringBuilder("[ ");
         for(double d : arr) {
-            sb.append(String.format("%.2f", d));
+            sb.append(String.format("%.2f ", d));
         }
-        sb.append(" ]");
+        sb.append("]");
         return sb.toString();
     }
 }

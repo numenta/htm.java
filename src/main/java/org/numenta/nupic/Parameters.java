@@ -670,7 +670,7 @@ public class Parameters implements Persistable {
      * @param maxSynapsesPerSegment
      */
     public void setMaxSynapsesPerSegment(int maxSynapsesPerSegment) {
-        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, maxSynapsesPerSegment);
+        paramMap.put(KEY.MAX_SYNAPSES_PER_SEGMENT, maxSynapsesPerSegment);
     }
     
     /**
@@ -680,6 +680,14 @@ public class Parameters implements Persistable {
      */
     public void setMaxSegmentsPerCell(int maxSegmentsPerCell) {
         paramMap.put(KEY.MAX_SEGMENTS_PER_CELL, maxSegmentsPerCell);
+    }
+    
+    /**
+     * The maximum number of new synapses
+     * @param count
+     */
+    public void setMaxNewSynapseCount(int count) {
+        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, count);
     }
 
     /**

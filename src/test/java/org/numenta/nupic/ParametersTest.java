@@ -278,6 +278,14 @@ public class ParametersTest {
 
         boolean b = all.logDiff(connections);
         assertTrue(b);
+        
+        try {
+            all.logDiff(null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("cn Object is required and can not be null", e.getMessage());
+        }
     }
 
     @Test
@@ -296,9 +304,6 @@ public class ParametersTest {
         params.setMinThreshold(42);
         assertEquals(42, params.get(KEY.MIN_THRESHOLD));
 
-        params.setMaxSynapsesPerSegment(42);
-        assertEquals(42, params.get(KEY.MAX_NEW_SYNAPSE_COUNT));
-
         params.setSeed(42);
         assertEquals(42, params.get(KEY.SEED));
 
@@ -313,6 +318,15 @@ public class ParametersTest {
 
         params.setPermanenceDecrement(0.11);
         assertEquals(0.11, params.get(KEY.PERMANENCE_DECREMENT));
+        
+        params.setMaxSegmentsPerCell(11);
+        assertEquals(11, params.get(KEY.MAX_SEGMENTS_PER_CELL));
+        
+        params.setMaxSynapsesPerSegment(22);
+        assertEquals(22, params.get(KEY.MAX_SYNAPSES_PER_SEGMENT));
+        
+        params.setMaxNewSynapseCount(32);
+        assertEquals(32, params.get(KEY.MAX_NEW_SYNAPSE_COUNT));
 
     }
 
