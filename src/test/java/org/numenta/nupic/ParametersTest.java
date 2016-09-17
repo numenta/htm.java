@@ -190,6 +190,14 @@ public class ParametersTest {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '2.0' not in range. Range[0.0-1.0]", e.getMessage());
         }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, -0.6);
+            fail();
+        }catch(Exception e) {
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '-0.6' not in range. Range[0.0-1.0]", e.getMessage());
+        }
 
         try {
             KEY.SYN_PERM_ACTIVE_INC.checkRange(null);
@@ -207,13 +215,28 @@ public class ParametersTest {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of type mismatch. The required type is class java.lang.Double", e.getMessage());
         }
+        
+        // Check values _AT_ the min / max (should pass)
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 0.0);
+            assertEquals(0.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 1.0);
+            assertEquals(1.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
 
         // Positive test
         try {
             params.set(KEY.SYN_PERM_ACTIVE_INC, 0.8);
             assertEquals(0.8, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
         }catch(Exception e) {
-
+            fail();
         }
 
     }

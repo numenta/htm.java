@@ -371,9 +371,9 @@ public class Parameters implements Persistable {
                 throw new IllegalArgumentException("checkRange argument can not be null");
             }
             return (min == null && max == null) ||
-                   (min != null && max == null && min.doubleValue() <= value.doubleValue()) ||
-                   (max != null && min == null && value.doubleValue() < value.doubleValue()) ||
-                   (min != null && min.doubleValue() <= value.doubleValue() && max != null && value.doubleValue() < max.doubleValue());
+                   (min != null && max == null &&  value.doubleValue() >= min.doubleValue()) ||
+                   (max != null && min == null && value.doubleValue() <= max.doubleValue()) ||
+                   (min != null && value.doubleValue() >= min.doubleValue() && max != null && value.doubleValue() <= max.doubleValue());
         }
 
     }
