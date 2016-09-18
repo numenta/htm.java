@@ -22,8 +22,8 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     mavenCentral()
 
-    flatDir {
-        dirs 'libs'
+    maven {
+        url 'http://metaware.us/maven3'
     }
 }
 
@@ -54,9 +54,9 @@ dependencies {
 	compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
 	compile group: 'de.ruedigermoeller', name: 'fst', version: '2.45'
 	compile group: 'com.cedarsoftware', name: 'java-util', version: '1.19.3'
+	compile group: 'algorithmfoundry', name: 'algorithmfoundry-shade-culled', version:'1.3'
 	testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version:'1.1.2'
-    compile group: 'algorithmfoundry', name: 'algorithmfoundry-shade-culled', version:'1.3'
 }
 
 /////////////////////////////////////////////////////////////////

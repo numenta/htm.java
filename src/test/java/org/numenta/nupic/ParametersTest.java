@@ -190,6 +190,14 @@ public class ParametersTest {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '2.0' not in range. Range[0.0-1.0]", e.getMessage());
         }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, -0.6);
+            fail();
+        }catch(Exception e) {
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '-0.6' not in range. Range[0.0-1.0]", e.getMessage());
+        }
 
         try {
             KEY.SYN_PERM_ACTIVE_INC.checkRange(null);
@@ -207,13 +215,28 @@ public class ParametersTest {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of type mismatch. The required type is class java.lang.Double", e.getMessage());
         }
+        
+        // Check values _AT_ the min / max (should pass)
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 0.0);
+            assertEquals(0.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 1.0);
+            assertEquals(1.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
 
         // Positive test
         try {
             params.set(KEY.SYN_PERM_ACTIVE_INC, 0.8);
             assertEquals(0.8, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
         }catch(Exception e) {
-
+            fail();
         }
 
     }
@@ -221,13 +244,13 @@ public class ParametersTest {
     @Test
     public void testSize() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(48, params.size());
+        assertEquals(47, params.size());
     }
 
     @Test
     public void testKeys() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertTrue(params.keys() != null && params.keys().size() == 48); 
+        assertTrue(params.keys() != null && params.keys().size() == 47); 
     }
 
     @Test
@@ -255,6 +278,14 @@ public class ParametersTest {
 
         boolean b = all.logDiff(connections);
         assertTrue(b);
+        
+        try {
+            all.logDiff(null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("cn Object is required and can not be null", e.getMessage());
+        }
     }
 
     @Test
@@ -273,9 +304,6 @@ public class ParametersTest {
         params.setMinThreshold(42);
         assertEquals(42, params.get(KEY.MIN_THRESHOLD));
 
-        params.setMaxSynapsesPerSegment(42);
-        assertEquals(42, params.get(KEY.MAX_NEW_SYNAPSE_COUNT));
-
         params.setSeed(42);
         assertEquals(42, params.get(KEY.SEED));
 
@@ -290,6 +318,15 @@ public class ParametersTest {
 
         params.setPermanenceDecrement(0.11);
         assertEquals(0.11, params.get(KEY.PERMANENCE_DECREMENT));
+        
+        params.setMaxSegmentsPerCell(11);
+        assertEquals(11, params.get(KEY.MAX_SEGMENTS_PER_CELL));
+        
+        params.setMaxSynapsesPerSegment(22);
+        assertEquals(22, params.get(KEY.MAX_SYNAPSES_PER_SEGMENT));
+        
+        params.setMaxNewSynapseCount(32);
+        assertEquals(32, params.get(KEY.MAX_NEW_SYNAPSE_COUNT));
 
     }
 

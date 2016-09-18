@@ -3,6 +3,7 @@ package org.numenta.nupic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -564,6 +565,32 @@ public class ConnectionsTest {
         assertTrue(con.getActiveCells().isEmpty());
     }
     
+    @Test
+    public void testGetPrintString() {
+        Parameters p = getParameters();
+        Connections con = new Connections();
+        p.apply(con);
+        TemporalMemory.init(con);
+        
+        String output = con.getPrintString();
+        assertEquals(1369, output.length());
+        
+        Set<String> fieldSet = Parameters.getEncoderDefaultParameters().keys().stream().
+            map(k -> k.getFieldName()).collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        for(KEY k : p.keys()) {
+            // Exclude Encoder fields
+            if(fieldSet.contains(k.getFieldName())) {
+                continue;
+            }
+            if(output.indexOf(k.getFieldName()) == -1) {
+                System.out.println("missing: " + k.getFieldName());
+                fail();
+            }
+            assertTrue(output.indexOf(k.getFieldName()) != -1);
+        }
+    }
+    
     public static Parameters getParameters() {
         Parameters parameters = Parameters.getAllDefaultParameters();
         parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 8 });
@@ -581,12 +608,11 @@ public class ConnectionsTest {
         parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         parameters.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.1);
         parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
         parameters.set(KEY.MAX_BOOST, 10.0);
         parameters.set(KEY.SEED, 42);
-        parameters.set(KEY.SP_VERBOSITY, 0);
         
         //Temporal Memory specific
         parameters.set(KEY.INITIAL_PERMANENCE, 0.2);
@@ -600,4 +626,5 @@ public class ConnectionsTest {
         
         return parameters;
     }
+    
 }

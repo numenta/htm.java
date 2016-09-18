@@ -91,13 +91,12 @@ public abstract class AbstractAlgorithmBenchmark {
         parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         parameters.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
         parameters.set(KEY.SYN_PERM_CONNECTED, 0.1);
-        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.1);
-        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.1);
+        parameters.set(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.1);
+        parameters.set(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.1);
         parameters.set(KEY.DUTY_CYCLE_PERIOD, 10);
         parameters.set(KEY.MAX_BOOST, 10.0);
         parameters.set(KEY.SEED, 42);
-        parameters.set(KEY.SP_VERBOSITY, 0);
-
+        
         //Temporal Memory specific
         parameters.set(KEY.INITIAL_PERMANENCE, 0.4);
         parameters.set(KEY.CONNECTED_PERMANENCE, 0.5);

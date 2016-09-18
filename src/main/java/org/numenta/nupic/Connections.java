@@ -22,7 +22,9 @@
 
 package org.numenta.nupic;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -82,8 +84,7 @@ public class Connections implements Persistable {
     private double predictedSegmentDecrement = 0.0;
     private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
-    private int spVerbosity = 0;
-
+    
     private int numInputs = 1;  //product of input dimensions
     private int numColumns = 1; //product of column dimensions
 
@@ -152,12 +153,6 @@ public class Connections implements Persistable {
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
     protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-//    protected Set<Cell> matchingCells = new LinkedHashSet<Cell>();
-//    protected Set<Column> successfullyPredictedColumns = new LinkedHashSet<Column>();
-//    protected Set<DistalDendrite> activeSegments = new LinkedHashSet<DistalDendrite>();
-//    protected Set<DistalDendrite> learningSegments = new LinkedHashSet<DistalDendrite>();
-//    protected Set<DistalDendrite> matchingSegments = new LinkedHashSet<DistalDendrite>();
-    
     protected List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
     protected List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
 
@@ -956,24 +951,6 @@ public class Connections implements Persistable {
     }
 
     /**
-     * spVerbosity level: 0, 1, 2, or 3
-     *
-     * @param spVerbosity
-     */
-    public void setSpVerbosity(int spVerbosity) {
-        this.spVerbosity = spVerbosity;
-    }
-
-    /**
-     * Returns the verbosity setting.
-     * see {@link #setSpVerbosity(int)}
-     * @return  the verbosity setting.
-     */
-    public int getSpVerbosity() {
-        return spVerbosity;
-    }
-
-    /**
      * Sets the synPermTrimThreshold
      * @param threshold
      */
@@ -1022,14 +999,6 @@ public class Connections implements Persistable {
      */
     public double getSynPermMax() {
         return synPermMax;
-    }
-
-    /**
-     * Returns the output setting for verbosity
-     * @return
-     */
-    public int getVerbosity() {
-        return spVerbosity;
     }
 
     /**
@@ -2245,7 +2214,6 @@ public class Connections implements Persistable {
         System.out.println("minPctActiveDutyCycle      = " + getMinPctActiveDutyCycles());
         System.out.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
         System.out.println("maxBoost                   = " + getMaxBoost());
-        System.out.println("spVerbosity                = " + getSpVerbosity());
         System.out.println("version                    = " + getVersion());
 
         System.out.println("\n------------ TemporalMemory Parameters ------------------");
@@ -2253,12 +2221,73 @@ public class Connections implements Persistable {
         System.out.println("learningRadius             = " + getLearningRadius());
         System.out.println("minThreshold               = " + getMinThreshold());
         System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        System.out.println("maxSynapsesPerSegment      = " + getMaxSynapsesPerSegment());
+        System.out.println("maxSegmentsPerCell         = " + getMaxSegmentsPerCell());
         System.out.println("initialPermanence          = " + getInitialPermanence());
         System.out.println("connectedPermanence        = " + getConnectedPermanence());
         System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
         System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
+        System.out.println("predictedSegmentDecrement  = " + getPredictedSegmentDecrement());
     }
     
+    /**
+     * High verbose output useful for debugging
+     */
+    public String getPrintString() {
+        StringWriter sw;
+        PrintWriter pw = new PrintWriter(sw = new StringWriter());
+        
+        pw.println("---------------------- General -------------------------");
+        pw.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
+        pw.println("inputDimensions            = " + Arrays.toString(getInputDimensions()));
+        pw.println("cellsPerColumn             = " + getCellsPerColumn());
+        
+        pw.println("random                     = " + getRandom());
+        pw.println("seed                       = " + getSeed());
+        
+        pw.println("\n------------ SpatialPooler Parameters ------------------");
+        pw.println("numInputs                  = " + getNumInputs());
+        pw.println("numColumns                 = " + getNumColumns());
+        pw.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
+        pw.println("potentialPct               = " + getPotentialPct());
+        pw.println("potentialRadius            = " + getPotentialRadius());
+        pw.println("globalInhibition           = " + getGlobalInhibition());
+        pw.println("localAreaDensity           = " + getLocalAreaDensity());
+        pw.println("inhibitionRadius           = " + getInhibitionRadius());
+        pw.println("stimulusThreshold          = " + getStimulusThreshold());
+        pw.println("synPermActiveInc           = " + getSynPermActiveInc());
+        pw.println("synPermInactiveDec         = " + getSynPermInactiveDec());
+        pw.println("synPermConnected           = " + getSynPermConnected());
+        pw.println("synPermBelowStimulusInc    = " + getSynPermBelowStimulusInc());
+        pw.println("synPermTrimThreshold       = " + getSynPermTrimThreshold());
+        pw.println("minPctOverlapDutyCycles     = " + getMinPctOverlapDutyCycles());
+        pw.println("minPctActiveDutyCycles      = " + getMinPctActiveDutyCycles());
+        pw.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
+        pw.println("maxBoost                   = " + getMaxBoost());
+        pw.println("version                    = " + getVersion());
+
+        pw.println("\n------------ TemporalMemory Parameters ------------------");
+        pw.println("activationThreshold        = " + getActivationThreshold());
+        pw.println("learningRadius             = " + getLearningRadius());
+        pw.println("minThreshold               = " + getMinThreshold());
+        pw.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
+        pw.println("maxSynapsesPerSegment      = " + getMaxSynapsesPerSegment());
+        pw.println("maxSegmentsPerCell         = " + getMaxSegmentsPerCell());
+        pw.println("initialPermanence          = " + getInitialPermanence());
+        pw.println("connectedPermanence        = " + getConnectedPermanence());
+        pw.println("permanenceIncrement        = " + getPermanenceIncrement());
+        pw.println("permanenceDecrement        = " + getPermanenceDecrement());
+        pw.println("predictedSegmentDecrement  = " + getPredictedSegmentDecrement());
+        
+        return sw.toString();
+    }
+    
+    /**
+     * Returns a 2 Dimensional array of 1's and 0's indicating
+     * which of the column's pool members are above the connected
+     * threshold, and therefore considered "connected"
+     * @return
+     */
     public int[][] getConnecteds() {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
@@ -2270,6 +2299,11 @@ public class Connections implements Persistable {
         return retVal;
     }
     
+    /**
+     * Returns a 2 Dimensional array of 1's and 0's indicating
+     * which input bits belong to which column's pool.
+     * @return
+     */
     public int[][] getPotentials() {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
@@ -2281,6 +2315,11 @@ public class Connections implements Persistable {
         return retVal;
     }
     
+    /**
+     * Returns a 2 Dimensional array of the permanences for SP
+     * proximal dendrite column pooled connections.
+     * @return
+     */
     public double[][] getPermanences() {
         double[][] retVal = new double[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
@@ -2360,7 +2399,6 @@ public class Connections implements Persistable {
         result = prime * result + seed;
         result = prime * result + segmentCounter;
         result = prime * result + ((segments == null) ? 0 : segments.hashCode());
-        result = prime * result + spVerbosity;
         temp = Double.doubleToLongBits(stimulusThreshold);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(synPermActiveInc);
@@ -2524,8 +2562,6 @@ public class Connections implements Persistable {
             if(other.segments != null)
                 return false;
         } else if(!segments.equals(other.segments))
-            return false;
-        if(spVerbosity != other.spVerbosity)
             return false;
         if(Double.doubleToLongBits(stimulusThreshold) != Double.doubleToLongBits(other.stimulusThreshold))
             return false;
