@@ -15,8 +15,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
+* All references to "Verbosity" as its a Python convention and not Java
+* JSON CLAClassifier serializer / deserializer, replaced with new PersistenceAPI
+
 #### Added
+* Added new SpatialPooler class
+* Added new SpatialPoolerTest class
+* Added new TemporalMemory class 
+* Added new TemporalMemoryTest class
+* Added ```Connections.getPrintString()``` to return parameter printout
 * Parameters key ```Parameters.KEY.MAX_SEGMENTS_PER_CELL```
+* Parameters key ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT```
 * Added new ```UniversalRandom``` RNG which has an [allegory in python](https://gist.github.com/cogmission/c4cb8feaba19595dae8ff964e18b05d0#file-universal_random-py) which can be used to compare versions 
 * Added new methods on the MTJ matrices to add and remove rows and columns
 * Added new Algorithm Foundry culled jar containing Sandia wrapper for the MTJ linear algebra lib
@@ -26,8 +35,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 #### Changed
 * ```Connections.apply()``` now sets the seed value from the ```Parameters``` object.
-* ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT``` to ```Parameters.KEY.MAX_SYNAPSES_PER_SEGMENT```
 * Parameters.(g|s)etParameterByKey to simplified get() / set()
+* ```KEY.MIN_PCT_OVERLAP_DUTY_CYCLE``` to ```KEY.MIN_PCT_OVERLAP_DUTY_CYCLES```
+* ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLE``` to ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLES```
 
 #### Fixed
 * Fixed documentation of SpatialPooler.inhibitColumnsLocal - added parameter documentation
