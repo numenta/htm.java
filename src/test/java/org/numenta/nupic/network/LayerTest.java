@@ -1192,6 +1192,67 @@ public class LayerTest extends ObservableTestBase {
         // Check for exception during the TestObserver's onNext() execution.
         checkObserver(tester);
     }
+    
+    /**
+     * Test that the Anomaly Func can compute anomalies when no SpatialPooler
+     * is present and the input is an int[] representing pre-processed sparse
+     * SP output.
+     */
+    @Test
+    public void testTM_Only_AnomalyCompute() {
+        UniversalRandom random = new UniversalRandom(42);
+        // SP and General
+        Parameters parameters = NetworkTestHarness.getParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 104 });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        parameters.set(KEY.CELLS_PER_COLUMN, 32);
+        parameters.set(KEY.RANDOM, random);
+        parameters.set(KEY.POTENTIAL_PCT, 0.85);//0.5
+        parameters.set(KEY.GLOBAL_INHIBITION, true);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 40.0);
+        parameters.set(KEY.SYN_PERM_INACTIVE_DEC, 0.0005);
+        parameters.set(KEY.SYN_PERM_ACTIVE_INC, 0.0015);
+        parameters.set(KEY.DUTY_CYCLE_PERIOD, 1000);
+        parameters.set(KEY.MAX_BOOST, 2.0);
+        // TM
+        parameters.set(KEY.PERMANENCE_INCREMENT, 0.1);//0.05
+        parameters.set(KEY.PERMANENCE_DECREMENT, 0.1);//0.05
+        
+        Network network = Network.create("NAB Network", parameters)
+            .add(Network.createRegion("NAB Region")
+                .add(Network.createLayer("NAB Layer", parameters)
+                    .add(Anomaly.create())
+                    .add(new TemporalMemory())));
+        
+        Object[] testResults = new Object[2];
+        
+        network.observe().subscribe((inference) -> {
+            double score = inference.getAnomalyScore();
+            int record = inference.getRecordNum();
+            
+            if(testResults[0] == null && score < 1.0) {
+                testResults[0] = record;
+                testResults[1] = score;
+            }
+        }, (error) -> {
+            error.printStackTrace();
+        }, () -> {
+            // On Complete
+        });
+        
+        int[] input = { 717, 737, 739, 745, 758, 782, 793, 798, 805, 812, 833, 841, 
+                        846, 857, 1482, 1515, 1536, 1577, 1578, 1600, 1608, 1612, 1642, 
+                        1644, 1645, 1646, 1647, 1648, 1649, 1655, 1661, 1663, 1667, 1669, 
+                        1677, 1683, 1688, 1706, 1710, 1720 };
+        
+        for(int i = 0;i < 100;i++) {
+            network.compute(input);
+            if(testResults[0] != null) break;
+        }
+        
+        assertEquals(8, testResults[0]);
+        assertEquals(0.0, testResults[1]);
+    }
 
     /**
      * Test that a given layer can return an {@link Observable} capable of 
