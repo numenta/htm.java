@@ -26,6 +26,7 @@ import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -89,8 +90,9 @@ public class RunLayer {
         private static List<int[]> input;
         private static List<String> raw;
         
-//        private static String encFilePath = "/Users/cogmission/git/lscheinkman/NAB/art_daily_encoder_output_java.txt";
-//        private PrintWriter encFile = null;
+        @SuppressWarnings("unused")
+        private static String encFilePath = "/Users/cogmission/git/lscheinkman/NAB/art_daily_encoder_output_java.txt";
+        private PrintWriter encFile = null;
         
         /**
          * Makeshift Layer to contain and operate on algorithmic entities
@@ -109,12 +111,6 @@ public class RunLayer {
             this.sp = sp;
             this.tm = tm;
             this.classifier = cl;
-            
-//            try {
-//                this.encFile = new PrintWriter(new FileWriter(encFilePath));
-//            }catch(Exception e) {
-//                e.printStackTrace();
-//            }
             
             Parameters parameters = getParameters();
             // 2015-08-31 18:22:00,90
@@ -171,8 +167,7 @@ public class RunLayer {
                 List<EncoderTuple> encoderTuples = encoder.getEncoders(encoder);
                 valueEncoder = encoderTuples.get(0).getEncoder(); 
             }
-            //System.out.println("--------------------------------------------");
-            //System.out.println("Record #: " + recordNum + "\n");
+            
             Map<String, Object> encodingInput = new HashMap<String, Object>();
             encodingInput.put("value", value);
             encodingInput.put("timestamp",  timestamp);
@@ -301,7 +296,7 @@ public class RunLayer {
         
         public void writeEncOutput(int[] output) {
             try {
-//                encFile.println(Arrays.toString(output));
+                encFile.println(Arrays.toString(output));
             }catch(Exception e) {
                 e.printStackTrace();
             }
@@ -453,11 +448,7 @@ public class RunLayer {
         int[] output = encoder.encode(d);
         System.out.println("ScalarEncoder Output = " + Arrays.toString(output));
         System.out.println("len = " + output.length);
-        /*
-        String j = "[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, " +
-           "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, " +
-           "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]";
-        */
+        
         return output;
     }
     
@@ -510,13 +501,7 @@ public class RunLayer {
         
         RunLayer.MakeshiftLayer layer = RunLayer.createLayer();
         
-//        int[] prev = {624, 626, 657, 699, 708, 711, 726, 731, 741, 753, 756, 763, 770, 772, 789, 799, 811, 
-//                       814, 843, 846, 1654, 1657, 1658, 1673, 1682, 1691, 1701, 1704, 1710, 1713, 1719, 1724, 
-//                       1725, 1726, 1734, 1749, 1753, 1768, 1769, 1827 };
-//        int[] curr = { 731, 753, 763, 777, 1657, 1662, 1673, 1691, 1713, 1719, 1750, 1786, 1827 };
-//        layer.anomalyStep(curr, prev, true);
-//        if(true) System.exit(0);
-        System.out.println("\n===================================\n");
+       System.out.println("\n===================================\n");
         
         loadSPOutputFile();
         loadRawInputFile();
@@ -581,8 +566,6 @@ public class RunLayer {
             }
         }
         
-//        layer.encFile.flush();
-//        layer.encFile.close();
         System.out.println("--- " + ((System.currentTimeMillis() - start) / 1000d) + " seconds ---");
     }
 
