@@ -25,9 +25,7 @@ import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -35,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +52,9 @@ import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.network.ManualInput;
+import org.numenta.nupic.network.Network;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
@@ -61,9 +63,10 @@ public class RunLayer {
     public static boolean IS_VERBOSE = true;
     public static boolean LEARN = true;
     public static boolean TM_ONLY = false;
-    public static boolean SP_ONLY = true;
+    public static boolean SP_ONLY = false;
+    public static boolean NETWORK = true;
     
-    public static class Layer {
+    public static class MakeshiftLayer {
         private Connections connections;
         private MultiEncoder encoder;
         private SpatialPooler sp;
@@ -76,6 +79,8 @@ public class RunLayer {
         private int[] prevPredictedCols;
         private Map<String, Object> classification;
         
+        private Network network;
+        
 //        private static String INPUT_PATH = "/Users/cogmission/git/NAB/data/artificialNoAnomaly/art_daily_no_noise.csv";
 //        private static String readFile = "/Users/cogmission/git/NAB/data/artificialNoAnomaly/art_daily_sp_output.txt";
         private static String INPUT_PATH = "/Users/cogmission/git/NAB/data/realTraffic/TravelTime_387.csv";
@@ -84,8 +89,8 @@ public class RunLayer {
         private static List<int[]> input;
         private static List<String> raw;
         
-        private static String encFilePath = "/Users/cogmission/git/lscheinkman/NAB/art_daily_encoder_output_java.txt";
-        private PrintWriter encFile = null;
+//        private static String encFilePath = "/Users/cogmission/git/lscheinkman/NAB/art_daily_encoder_output_java.txt";
+//        private PrintWriter encFile = null;
         
         /**
          * Makeshift Layer to contain and operate on algorithmic entities
@@ -96,7 +101,7 @@ public class RunLayer {
          * @param tm        the {@link TemporalMemory}
          * @param cl        the {@link CLAClassifier}
          */
-        public Layer(Connections c, MultiEncoder encoder, SpatialPooler sp, 
+        public MakeshiftLayer(Connections c, MultiEncoder encoder, SpatialPooler sp, 
             TemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
             
             this.connections = c;
@@ -105,17 +110,51 @@ public class RunLayer {
             this.tm = tm;
             this.classifier = cl;
             
-            try {
-                this.encFile = new PrintWriter(new FileWriter(encFilePath));
-            }catch(Exception e) {
-                e.printStackTrace();
-            }
+//            try {
+//                this.encFile = new PrintWriter(new FileWriter(encFilePath));
+//            }catch(Exception e) {
+//                e.printStackTrace();
+//            }
+            
+            Parameters parameters = getParameters();
+            // 2015-08-31 18:22:00,90
+            network = Network.create("NAB Network", parameters)
+                .add(Network.createRegion("NAB Region")
+                    .add(Network.createLayer("NAB Layer", parameters)
+                        .add(Anomaly.create())
+                        .add(new TemporalMemory())));
+            
+            network.observe().subscribe((inference) -> {
+                double score = inference.getAnomalyScore();
+                int record = inference.getRecordNum();
+                
+                recordNum = record;
+                
+                printHeader();
+                
+                Set<Cell> act = ((ManualInput)inference).getActiveCells();
+                int[] activeColumnIndices = SDR.cellsAsColumnIndices(act, connections.cellsPerColumn);
+                Set<Cell> prev = ((ManualInput)inference).getPreviousPredictiveCells();
+                int[] prevPredColumnIndices = prev == null ? null : SDR.cellsAsColumnIndices(prev, connections.cellsPerColumn);
+                String input = Arrays.toString((int[])((ManualInput)inference).getLayerInput());
+                String prevPred = prevPredColumnIndices == null ? "null" : Arrays.toString(prevPredColumnIndices);
+                String active = Arrays.toString(activeColumnIndices);
+                System.out.println("          TemporalMemory Input: " + input);
+                System.out.println("TemporalMemory prev. predicted: " + prevPred);
+                System.out.println("         TemporalMemory active: " + active);
+                System.out.println("Anomaly Score: " + score + "\n");
+                
+            }, (error) -> {
+                error.printStackTrace();
+            }, () -> {
+                // On Complete
+            });
         }
         
         public void printHeader() {
             System.out.println("--------------------------------------------");
             System.out.println("Record #: " + recordNum + "\n");
-            System.out.println("Raw Input: " + Layer.raw.get(recordNum + 1));
+            System.out.println("Raw Input: " + MakeshiftLayer.raw.get(recordNum + 1));
         }
         
         /**
@@ -143,7 +182,7 @@ public class RunLayer {
             }
             
             int bucketIdx = valueEncoder.getBucketIndices((double)value)[0];
-            writeEncOutput(encoding);
+//            writeEncOutput(encoding);
             return new Tuple(encoding, bucketIdx);
         }
         
@@ -164,6 +203,10 @@ public class RunLayer {
             }
             
             return new Tuple(output, sparseSPOutput);
+        }
+        
+        public void networkStep(int[] sparseSPOutput, boolean learn) {
+            network.compute(sparseSPOutput);
         }
         
         /**
@@ -258,7 +301,7 @@ public class RunLayer {
         
         public void writeEncOutput(int[] output) {
             try {
-                encFile.println(Arrays.toString(output));
+//                encFile.println(Arrays.toString(output));
             }catch(Exception e) {
                 e.printStackTrace();
             }
@@ -289,10 +332,8 @@ public class RunLayer {
         return encoder;
     }
     
-    public static Layer createLayer() {
+    public static Parameters getParameters() {
         UniversalRandom random = new UniversalRandom(42);
-        
-        MultiEncoder encoder = createEncoder();
         
         Parameters parameters = Parameters.getAllDefaultParameters();
         parameters.set(KEY.INPUT_DIMENSIONS, new int[] { 104 });
@@ -324,6 +365,14 @@ public class RunLayer {
         parameters.set(KEY.PERMANENCE_INCREMENT, 0.1);//0.05
         parameters.set(KEY.PERMANENCE_DECREMENT, 0.1);//0.05
         parameters.set(KEY.ACTIVATION_THRESHOLD, 4);
+        
+        return parameters;
+    }
+    
+    public static MakeshiftLayer createLayer() {
+        MultiEncoder encoder = createEncoder();
+        
+        Parameters parameters = getParameters();
         
         //////////////////////////////////////////////////////////
 //        testRandom(random);
@@ -375,7 +424,7 @@ public class RunLayer {
         // ...
         //////////////////////////////////////////////////////////
         
-        Layer layer = new Layer(conn, encoder, sp, tm, null, anomalyComputer); 
+        MakeshiftLayer layer = new MakeshiftLayer(conn, encoder, sp, tm, null, anomalyComputer); 
         return layer;
     }
     
@@ -438,8 +487,8 @@ public class RunLayer {
     }
     
     public static void loadSPOutputFile() {
-        try (Stream<String> stream = Files.lines(Paths.get(Layer.readFile))) {
-            Layer.input = stream.map(l -> {
+        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.readFile))) {
+            MakeshiftLayer.input = stream.map(l -> {
                 String line = l.replace("[", "").replace("]",  "").trim();
                 int[] result = Arrays.stream(line.split("[\\s]*\\,[\\s]*")).mapToInt(i -> Integer.parseInt(i)).toArray();
                 return result;
@@ -450,8 +499,8 @@ public class RunLayer {
     }
     
     public static void loadRawInputFile() {
-        try (Stream<String> stream = Files.lines(Paths.get(Layer.INPUT_PATH))) {
-            Layer.raw = stream.map(l -> l.trim()).collect(Collectors.toList());
+        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.INPUT_PATH))) {
+            MakeshiftLayer.raw = stream.map(l -> l.trim()).collect(Collectors.toList());
         }catch(Exception e) {e.printStackTrace();}
     }
     
@@ -459,7 +508,7 @@ public class RunLayer {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
         
-        RunLayer.Layer layer = RunLayer.createLayer();
+        RunLayer.MakeshiftLayer layer = RunLayer.createLayer();
         
 //        int[] prev = {624, 626, 657, 699, 708, 711, 726, 731, 741, 753, 756, 763, 770, 772, 789, 799, 811, 
 //                       814, 843, 846, 1654, 1657, 1658, 1673, 1682, 1691, 1701, 1704, 1710, 1713, 1719, 1724, 
@@ -471,11 +520,15 @@ public class RunLayer {
         
         loadSPOutputFile();
         loadRawInputFile();
-        
-        if(TM_ONLY) {
-            for(int i = 0;i < Layer.input.size();i++) {
+        if(NETWORK) {
+            for(int i = 0;i < MakeshiftLayer.input.size();i++) {
+                int[] sparseSPOutput = MakeshiftLayer.input.get(i);
+                layer.networkStep(sparseSPOutput, LEARN);
+            }
+        }else if(TM_ONLY) {
+            for(int i = 0;i < MakeshiftLayer.input.size();i++) {
                 layer.printHeader();
-                int[] sparseSPOutput = Layer.input.get(i);
+                int[] sparseSPOutput = MakeshiftLayer.input.get(i);
                 Tuple tmTuple = layer.tmStep(sparseSPOutput, LEARN, IS_VERBOSE);
                 double score = layer.anomalyStep(sparseSPOutput, (int[])tmTuple.get(1), true);
                 layer.incRecordNum();
@@ -485,7 +538,7 @@ public class RunLayer {
             }
         }else if(SP_ONLY) {
             DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            try (Stream<String> stream = Files.lines(Paths.get(Layer.INPUT_PATH))) {
+            try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.INPUT_PATH))) {
                 stream.skip(1).forEach(l -> {
                     String[] line = l.split("[\\s]*\\,[\\s]*");
                     
@@ -505,7 +558,7 @@ public class RunLayer {
             }
         }else{
             DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            try (Stream<String> stream = Files.lines(Paths.get(Layer.INPUT_PATH))) {
+            try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.INPUT_PATH))) {
                 stream.skip(1).forEach(l -> {
                     String[] line = l.split("[\\s]*\\,[\\s]*");
                     DateTime timestamp = formatter.parseDateTime(line[0].trim());
@@ -528,8 +581,8 @@ public class RunLayer {
             }
         }
         
-        layer.encFile.flush();
-        layer.encFile.close();
+//        layer.encFile.flush();
+//        layer.encFile.close();
         System.out.println("--- " + ((System.currentTimeMillis() - start) / 1000d) + " seconds ---");
     }
 

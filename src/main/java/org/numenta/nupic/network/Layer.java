@@ -2326,13 +2326,16 @@ public class Layer<T> implements Persistable {
 
         public Func1<ManualInput, ManualInput> createAnomalyFunc(final Anomaly an) {
             return new Func1<ManualInput, ManualInput>() {
-
+                int isArrayInput = -1;
                 int cellsPerColumn = connections.getCellsPerColumn();
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(t1.getFeedForwardSparseActives() == null || t1.getPreviousPredictiveCells() == null) {
+                    if((hasSP() && t1.getFeedForwardSparseActives() == null) || t1.getPreviousPredictiveCells() == null) {
                         return t1.anomalyScore(1.0);
+                    }else if(!hasSP() && (isArrayInput == 1 || t1.getLayerInput().getClass().equals(int[].class))) {
+                        isArrayInput = 1;
+                        t1.feedForwardSparseActives((int[])t1.getLayerInput());
                     }
                     return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), 
                         SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));
