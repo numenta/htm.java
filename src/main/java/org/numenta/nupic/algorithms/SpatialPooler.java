@@ -81,6 +81,7 @@ public class SpatialPooler implements Persistable {
             throw new InvalidSPParamValueException("Inhibition parameters are invalid");
         }
         
+        c.doSpatialPoolerPostInit();
         initMatrices(c);
         connectAndConfigureInputs(c);
     }

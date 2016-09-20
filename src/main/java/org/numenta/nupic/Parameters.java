@@ -489,6 +489,10 @@ public class Parameters implements Persistable {
         Set<KEY> presentKeys = paramMap.keySet();
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
+                if((cn instanceof Connections) && 
+                    (key == KEY.SYN_PERM_BELOW_STIMULUS_INC || key == KEY.SYN_PERM_TRIM_THRESHOLD)) {
+                    continue;
+                }
                 if(key == KEY.RANDOM) {
                     ((Random)get(key)).setSeed(Long.valueOf(((int)get(KEY.SEED))));
                 }
