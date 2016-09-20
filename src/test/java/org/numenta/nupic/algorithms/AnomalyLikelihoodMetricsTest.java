@@ -100,7 +100,8 @@ public class AnomalyLikelihoodMetricsTest {
     public void testHashCodeAndEquals() {
         double[] likelihoods = new double[] { 0.2, 0.3 };
 
-        Sample s = new Sample(new DateTime(), 0.1, 0.1);
+        DateTime metricTime = new DateTime();
+        Sample s = new Sample(metricTime, 0.1, 0.1);
         List<Sample> samples = new ArrayList<>();
         samples.add(s);
         TDoubleList d = new TDoubleArrayList();
@@ -217,6 +218,33 @@ public class AnomalyLikelihoodMetricsTest {
         AnomalyLikelihoodMetrics metrics6 = new AnomalyLikelihoodMetrics(likelihoods, avges, params5);
 
         assertNotEquals(metrics, metrics6);
+        
+        //////////////////////////
+        // Test same Samples / Different Params
+        likelihoods = new double[] { 0.2, 0.3 };
+
+        s = new Sample(metricTime, 0.1, 0.1);
+        samples = new ArrayList<>();
+        samples.add(s);
+        d = new TDoubleArrayList();
+        d.add(0.5);
+        total = 0.4;
+        avges = (
+                new Anomaly() {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public double compute(int[] activeColumns, int[] predictedColumns, double inputValue, long timestamp) {
+                        return 0;
+                    }
+                }
+        ).new AveragedAnomalyRecordList(samples, d, total);
+        
+        Statistic stat6 = new Statistic(0.1, 0.1, 0.1);
+        MovingAverage ma6 = new MovingAverage(new TDoubleArrayList(), 1);
+        AnomalyParams params6 = new AnomalyParams(new String[] { Anomaly.KEY_DIST, Anomaly.KEY_MVG_AVG, Anomaly.KEY_HIST_LIKE}, stat6, ma6, likelihoods);
+        AnomalyLikelihoodMetrics metrics7 = new AnomalyLikelihoodMetrics(likelihoods, avges, params6);
+        
+        assertNotEquals(metrics, metrics7);
     }
 
 }
