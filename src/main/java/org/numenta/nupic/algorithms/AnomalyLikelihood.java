@@ -606,7 +606,7 @@ public class AnomalyLikelihood extends Anomaly {
     public static class AnomalyParams extends NamedTuple {
         private static final long serialVersionUID = 1L;
 
-        /** Cached Json formatting. Possible because Objects of this class is immutable */
+        /** Cached Json formatting. Possible because Objects of this class are immutable */
         private ObjectNode cachedNode;
         
         private final Statistic distribution;
@@ -747,6 +747,49 @@ public class AnomalyLikelihood extends Anomaly {
          */
         public String toJson() {
             return toJson(false);
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = super.hashCode();
+            result = prime * result + ((distribution == null) ? 0 : distribution.hashCode());
+            result = prime * result + Arrays.hashCode(historicalLikelihoods);
+            result = prime * result + ((movingAverage == null) ? 0 : movingAverage.hashCode());
+            result = prime * result + windowSize;
+            return result;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if(this == obj)
+                return true;
+            if(!super.equals(obj))
+                return false;
+            if(getClass() != obj.getClass())
+                return false;
+            AnomalyParams other = (AnomalyParams)obj;
+            if(distribution == null) {
+                if(other.distribution != null)
+                    return false;
+            } else if(!distribution.equals(other.distribution))
+                return false;
+            if(!Arrays.equals(historicalLikelihoods, other.historicalLikelihoods))
+                return false;
+            if(movingAverage == null) {
+                if(other.movingAverage != null)
+                    return false;
+            } else if(!movingAverage.equals(other.movingAverage))
+                return false;
+            if(windowSize != other.windowSize)
+                return false;
+            return true;
         }
     }
     

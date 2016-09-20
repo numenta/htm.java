@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.numenta.nupic.Connections.Activity;
 import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
@@ -573,7 +574,7 @@ public class ConnectionsTest {
         TemporalMemory.init(con);
         
         String output = con.getPrintString();
-        assertEquals(1369, output.length());
+        assertEquals(1370, output.length());
         
         Set<String> fieldSet = Parameters.getEncoderDefaultParameters().keys().stream().
             map(k -> k.getFieldName()).collect(Collectors.toCollection(LinkedHashSet::new));
@@ -589,6 +590,56 @@ public class ConnectionsTest {
             }
             assertTrue(output.indexOf(k.getFieldName()) != -1);
         }
+    }
+    
+    @Test
+    public void testDoSpatialPoolerPostInit() {
+        Parameters p = getParameters();
+        p.set(KEY.SYN_PERM_CONNECTED, 0.2);
+        p.set(KEY.SYN_PERM_ACTIVE_INC, 0.003);
+        
+        ///////////////////// First without Post Init /////////////////////
+        SpatialPooler sp = new SpatialPooler();
+        @SuppressWarnings("serial")
+        Connections conn = new Connections() {
+            @Override
+            public void doSpatialPoolerPostInit() {
+                // Override to do nothing
+            }
+        };
+        p.apply(conn);
+        sp.init(conn);
+        
+        double synPermConnected = conn.getSynPermConnected();
+        double synPermActiveInc = conn.getSynPermActiveInc();
+        double synPermBelowStimulusInc = conn.getSynPermBelowStimulusInc();
+        double synPermTrimThreshold = conn.getSynPermTrimThreshold();
+       
+        // Assert that static values (synPermConnected & synPermActiveInc) don't change,
+        // and that synPermBelowStimulusInc & synPermTrimThreshold are the defaults
+        assertEquals(0.2, synPermConnected, 0.001);
+        assertEquals(0.003, synPermActiveInc, 0.001);
+        assertEquals(0.01, synPermBelowStimulusInc, 0.001);
+        assertEquals(0.025, synPermTrimThreshold, 0.0001);
+        
+        
+        ///////////////////// Now with Post Init /////////////////////
+        sp = new SpatialPooler();
+        conn = new Connections();
+        p.apply(conn);
+        sp.init(conn);
+        
+        synPermConnected = conn.getSynPermConnected();
+        synPermActiveInc = conn.getSynPermActiveInc();
+        synPermBelowStimulusInc = conn.getSynPermBelowStimulusInc();
+        synPermTrimThreshold = conn.getSynPermTrimThreshold();
+        
+        // Assert that static values (synPermConnected & synPermActiveInc) don't change,
+        // and that synPermBelowStimulusInc & synPermTrimThreshold change due to postInit()
+        assertEquals(0.2, synPermConnected, 0.001);
+        assertEquals(0.003, synPermActiveInc, 0.001);
+        assertEquals(0.02, synPermBelowStimulusInc, 0.001); // affected by postInit()
+        assertEquals(0.0015, synPermTrimThreshold, 0.0001);   // affected by postInit()
     }
     
     public static Parameters getParameters() {

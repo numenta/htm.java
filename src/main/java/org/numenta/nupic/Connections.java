@@ -75,8 +75,8 @@ public class Connections implements Persistable {
     private double localAreaDensity = -1.0;
     private double numActiveColumnsPerInhArea;
     private double stimulusThreshold = 0;
-    private double synPermInactiveDec = 0.01;
-    private double synPermActiveInc = 0.10;
+    private double synPermInactiveDec = 0.008;
+    private double synPermActiveInc = 0.05;
     private double synPermConnected = 0.10;
     private double synPermBelowStimulusInc = synPermConnected / 10.0;
     private double minPctOverlapDutyCycles = 0.001;
@@ -242,6 +242,13 @@ public class Connections implements Persistable {
      */
     public Connections() {}
     
+    /**
+     * Sets the derived values of the {@link SpatialPooler}'s initialization.
+     */
+    public void doSpatialPoolerPostInit() {
+        synPermBelowStimulusInc = synPermConnected / 10.0;
+        synPermTrimThreshold = synPermActiveInc / 2.0;
+    }
     
     /////////////////////////////////////////
     //         General Methods             //
