@@ -117,6 +117,25 @@ public class UniversalRandom extends Random {
     }
     
     /**
+     * Fisher-Yates implementation which shuffles the array contents.
+     * 
+     * @param array     the array of ints to shuffle.
+     * @return shuffled array
+     */
+    public int[] shuffle(int[] array) {
+        int index;
+        for (int i = array.length - 1; i > 0; i--) {
+            index = nextInt(i + 1);
+            if (index != i) {
+                array[index] ^= array[i];
+                array[i] ^= array[index];
+                array[index] ^= array[i];
+            }
+        }
+        return array;
+    }
+    
+    /**
      * Returns an array of floating point values of the specified shape
      * 
      * @param rows      the number of rows
@@ -338,6 +357,16 @@ public class UniversalRandom extends Random {
         random.sampleWithPrintout(choices, selectedIndices, collectedRandoms);
         System.out.println("samples are equal ? " + Arrays.equals(expectedSample, selectedIndices));
         System.out.println("used randoms are equal ? " + collectedRandoms.equals(expectedRandoms));
+        
+        random = new UniversalRandom(42);
+        int[] coll = ArrayUtils.range(0, 10);
+        int[] before = Arrays.copyOf(coll, coll.length);
+        random.shuffle(coll);
+        System.out.println("collection before: " + Arrays.toString(before));
+        System.out.println("collection shuffled: " + Arrays.toString(coll));
+        int[] expected = { 5, 1, 8, 6, 2, 4, 7, 3, 9, 0 };
+        System.out.println(Arrays.equals(expected, coll));
+        System.out.println(!Arrays.equals(expected, before)); // not equal
     }
 
 }
