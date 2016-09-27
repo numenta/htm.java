@@ -29,8 +29,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
 import org.slf4j.Logger;
@@ -93,7 +95,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 
 	public static final long DEFAULT_SEED = 42;
 
-	// Mersenne Twister RNG, same as used with numpy.random
+	// UniversalRandom is faster than MersenneTwister, therefore is recommended
 	UniversalRandom rng;
 
 	int maxOverlap;
@@ -198,11 +200,10 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 		 */
 		bucketMap = new ConcurrentHashMap<Integer, List<Integer>>();
 		// generate the random permutation
-		ArrayList<Integer> temp = new ArrayList<Integer>(getN());
-		for (int i = 0; i < getN(); i++)
-			temp.add(i, i);
-		java.util.Collections.shuffle(temp, rng);
-		bucketMap.put(getMinIndex(), new ArrayList<Integer>(temp.subList(0, getW())));
+		int[] t = ArrayUtils.range(0, getN());
+		rng.shuffle(t);
+		bucketMap.put(getMinIndex(), 
+		    Arrays.stream(t).boxed().limit(getW()).collect(Collectors.toList()));
 
 		// How often we need to retry when generating valid encodings
 		setNumRetry(0);
@@ -761,7 +762,7 @@ public class RandomDistributedScalarEncoder extends Encoder<Double> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S> List<S> getBucketValues(Class<S> returnType) {
-		return new ArrayList<>((Collection<S>)this.bucketMap.keySet());
+		return new ArrayList<>((Collection<S>)this.bucketMap.values());
 	}
 
 	/**

@@ -82,6 +82,19 @@ class UniversalRandom(object):
         print "sample: " + str(list(selectedIndices))
         return selectedIndices;
     
+    def shuffle(self, collection):
+        """
+        Modeled after Fisher - Yates implementation
+        """
+        index = None
+        for i in range(len(collection) - 1, 0, -1):
+            index = self.nextInt(i + 1)
+            if index != i:
+                collection[index] ^= collection[i]
+                collection[i] ^= collection[index]
+                collection[index] ^= collection[i]
+        
+        return collection
     
     def rand(self, rows, cols):
         """

@@ -92,7 +92,7 @@ public class SpatialPoolerCompatibilityTest {
         int[][] inputMatrix = new UniversalRandom(42).binDistrib(numRecords, c.getNumInputs(), sparsity);
         int[][] pythonInputMatrix = getPythonInputs1();
         assertTrue(
-            IntStream.range(0, perms.length)
+            IntStream.range(0, numRecords)
                 .allMatch(i -> Arrays.equals(inputMatrix[i], pythonInputMatrix[i])));
         
         runSideBySide(sp, c, pythonInputMatrix, numRecords, new SpatialPoolerCompatibilityActives(), new SpatialPoolerCompatibilityPermanences());
