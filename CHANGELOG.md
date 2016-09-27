@@ -21,6 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * JSON CLAClassifier serializer / deserializer, replaced with new PersistenceAPI
 
 #### Added
+* [[PR #480](https://github.com/numenta/htm.java/pull/480)] Added new RDSECompatibilityTest
 * [[PR #478](https://github.com/numenta/htm.java/pull/478)] Added Post-init method to Connections to correct non-initialized derived SpatialPooler parameters.
 * [[PR #467](https://github.com/numenta/htm.java/pull/467)] Added new SpatialPoolerCompatibilityTest
 * Added new SpatialPooler class
