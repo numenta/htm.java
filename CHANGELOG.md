@@ -15,8 +15,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
-* [[Issues #470](https://github.com/numenta/htm.java/issues/470)] Removed old JSON serializer/deserializer from CLAClassifer
 * [[Issues #471](https://github.com/numenta/htm.java/issues/471)] Removed all references to "verbosity" in Connections and Parameters classes
+* [[Issues #470](https://github.com/numenta/htm.java/issues/470)] Removed old JSON serializer/deserializer from CLAClassifer 
 * All references to "Verbosity" as its a Python convention and not Java
 * JSON CLAClassifier serializer / deserializer, replaced with new PersistenceAPI
 
