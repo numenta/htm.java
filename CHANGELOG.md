@@ -15,10 +15,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased [0.6.9-SNAPSHOT]
 #### Removed
+* [[Issues #470](https://github.com/numenta/htm.java/issues/470)] Removed old JSON serializer/deserializer from CLAClassifer
+* [[Issues #471](https://github.com/numenta/htm.java/issues/471)] Removed all references to "verbosity" in Connections and Parameters classes
 * All references to "Verbosity" as its a Python convention and not Java
 * JSON CLAClassifier serializer / deserializer, replaced with new PersistenceAPI
 
 #### Added
+* [[PR #478](https://github.com/numenta/htm.java/pull/478)] Added Post-init method to Connections to correct non-initialized derived SpatialPooler parameters.
+* [[PR #467](https://github.com/numenta/htm.java/pull/467)] Added new SpatialPoolerCompatibilityTest
 * Added new SpatialPooler class
 * Added new SpatialPoolerTest class
 * Added new TemporalMemory class 
@@ -40,6 +44,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 * ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLE``` to ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLES```
 
 #### Fixed
+* [[Issues #468](https://github.com/numenta/htm.java/issues/468)] Parameters.checkRange now checks values "at" the range boundary as well.
 * Fixed documentation of SpatialPooler.inhibitColumnsLocal - added parameter documentation
 * [[PR #451](https://github.com/numenta/htm.java/pull/451)] Fixed not filled overlaps array in updateDutyCycles in SP
 * [[PR #435](https://github.com/numenta/htm.java/pull/435)] Fixed AssertFailure detection within onNext() method in NAPI Observable tests
