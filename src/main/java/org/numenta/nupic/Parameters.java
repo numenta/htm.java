@@ -97,10 +97,6 @@ public class Parameters implements Persistable {
         //////////// Spatial Pooler Parameters ///////////
         Map<KEY, Object> defaultSpatialParams = new ParametersMap();
         defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
-        /** <b>WARNING:</b> potentialRadius **must** be set to 
-         * the inputWidth if using "globalInhibition" and if not 
-         * using the Network API (which sets this automatically) 
-         */
         defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, -1);
         defaultSpatialParams.put(KEY.POTENTIAL_PCT, 0.5);
         defaultSpatialParams.put(KEY.GLOBAL_INHIBITION, false);
@@ -229,6 +225,10 @@ public class Parameters implements Persistable {
 
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", int[].class),
+        /** <b>WARNING:</b> potentialRadius **must** be set to 
+         * the inputWidth if using "globalInhibition" and if not 
+         * using the Network API (which sets this automatically) 
+         */
         POTENTIAL_RADIUS("potentialRadius", Integer.class),
         POTENTIAL_PCT("potentialPct", Double.class), //TODO add range here?
         GLOBAL_INHIBITION("globalInhibition", Boolean.class),

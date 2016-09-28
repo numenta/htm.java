@@ -516,10 +516,6 @@ public class Connections implements Persistable {
     /**
      * Returns the configured potential radius
      * 
-     * <b>WARNING:</b> potentialRadius **must** be set to 
-     * the inputWidth if using "globalInhibition" and if not 
-     * using the Network API (which sets this automatically) 
-     *
      * @return  the configured potential radius
      * @see setPotentialRadius
      */
