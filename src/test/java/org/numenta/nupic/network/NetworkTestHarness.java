@@ -218,7 +218,7 @@ public class NetworkTestHarness {
         parameters.set(KEY.CELLS_PER_COLUMN, 6);
         
         //SpatialPooler specific
-        parameters.set(KEY.POTENTIAL_RADIUS, 12);//3
+        parameters.set(KEY.POTENTIAL_RADIUS, -1);//3
         parameters.set(KEY.POTENTIAL_PCT, 0.5);//0.5
         parameters.set(KEY.GLOBAL_INHIBITION, false);
         parameters.set(KEY.LOCAL_AREA_DENSITY, -1.0);

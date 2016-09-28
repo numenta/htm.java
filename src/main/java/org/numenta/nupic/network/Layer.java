@@ -495,9 +495,7 @@ public class Layer<T> implements Persistable {
             params.setInputDimensions(upstreamDims);
             connections.setInputDimensions(upstreamDims);
         } else if(parentRegion != null && parentNetwork != null
-                && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null
-                && spatialPooler != null) {
-
+                && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null && spatialPooler != null) {
             Layer<?> curr = this;
             while((curr = curr.getPrevious()) != null) {
                 if(curr.getEncoder() != null) {
@@ -692,7 +690,7 @@ public class Layer<T> implements Persistable {
         
         return createSubscription(subscriber);
     }
-
+    
     /**
      * Allows the user to define the {@link Connections} object data structure
      * to use. Or possibly to share connections between two {@code Layer}s

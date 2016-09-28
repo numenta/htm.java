@@ -98,7 +98,7 @@ public class SpatialPoolerTest {
         parameters.apply(mem);
         sp.init(mem);
     }
-
+    
     @Test
     public void confirmSPConstruction() {
         setupParameters();
