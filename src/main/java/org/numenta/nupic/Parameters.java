@@ -97,7 +97,11 @@ public class Parameters implements Persistable {
         //////////// Spatial Pooler Parameters ///////////
         Map<KEY, Object> defaultSpatialParams = new ParametersMap();
         defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
-        defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, 16);
+        /** <b>WARNING:</b> potentialRadius **must** be set to 
+         * the inputWidth if using "globalInhibition" and if not 
+         * using the Network API (which sets this automatically) 
+         */
+        defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, -1);
         defaultSpatialParams.put(KEY.POTENTIAL_PCT, 0.5);
         defaultSpatialParams.put(KEY.GLOBAL_INHIBITION, false);
         defaultSpatialParams.put(KEY.INHIBITION_RADIUS, 0);
@@ -770,6 +774,11 @@ public class Parameters implements Persistable {
      * parameter defines a square (or hyper square) area: a
      * column will have a max square potential pool with
      * sides of length 2 * potentialRadius + 1.
+     * 
+     * <b>WARNING:</b> potentialRadius **must** be set to 
+     * the inputWidth if using "globalInhibition" and if not 
+     * using the Network API (which sets this automatically) 
+     *
      *
      * @param potentialRadius
      */

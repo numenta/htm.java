@@ -548,6 +548,7 @@ public class NetworkTest extends ObservableTestBase {
     @Test
     public void testRegionHierarchies() {
         Parameters p = NetworkTestHarness.getParameters();
+        p.setPotentialRadius(16);
         p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
         
@@ -1007,6 +1008,29 @@ public class NetworkTest extends ObservableTestBase {
         assertTrue(hasErrors(tester));
     }
     
+    @Test
+    public void testPotentialRadiusFollowsInputWidth() {
+        Parameters p = NetworkTestHarness.getParameters();
+        p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
+        p.set(KEY.INPUT_DIMENSIONS, new int[] { 200 });
+        p.set(KEY.RANDOM, new MersenneTwister(42));
+
+        Network network = Network.create("test network", p)
+                .add(Network.createRegion("r1")
+                        .add(Network.createLayer("2", p)
+                                .add(Anomaly.create())
+                                .add(new TemporalMemory())
+                                .add(new SpatialPooler())
+                                .close()));
+
+        Region r1 = network.lookup("r1");
+        Layer<?> layer2 = r1.lookup("2");
+
+        int width = layer2.calculateInputWidth();
+        assertEquals(200, width);
+        assertEquals(200, layer2.getConnections().getPotentialRadius());
+    }
+    
     ///////////////////////////////////////////////////////////////////////////////////
     //    Tests of Calculate Input Width for inter-regional and inter-layer calcs    //
     ///////////////////////////////////////////////////////////////////////////////////
@@ -1063,7 +1087,6 @@ public class NetworkTest extends ObservableTestBase {
         
         int width = layer2.calculateInputWidth();
         assertEquals(2048, width);
-        
     }
     
     @Test
@@ -1077,7 +1100,6 @@ public class NetworkTest extends ObservableTestBase {
                     .add(Network.createLayer("2", p)
                             .add(Anomaly.create())
                             .add(new TemporalMemory())
-                                    //.add(new SpatialPooler())
                             .close()));
         
         Region r1 = network.lookup("r1");
@@ -1098,7 +1120,7 @@ public class NetworkTest extends ObservableTestBase {
                         .add(Network.createLayer("2", p)
                                 .add(Anomaly.create())
                                 .add(new TemporalMemory())
-                                        .add(new SpatialPooler())
+                                .add(new SpatialPooler())
                                 .close()));
 
         Region r1 = network.lookup("r1");
@@ -1106,6 +1128,7 @@ public class NetworkTest extends ObservableTestBase {
 
         int width = layer2.calculateInputWidth();
         assertEquals(8, width);
+        assertEquals(8, layer2.getConnections().getPotentialRadius());
     }
 
     @Test
@@ -1126,6 +1149,7 @@ public class NetworkTest extends ObservableTestBase {
         
         int width = layer2.calculateInputWidth();
         assertEquals(8, width);
+        assertEquals(8, layer2.getConnections().getPotentialRadius());
     }
     
     @Test

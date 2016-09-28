@@ -48,7 +48,11 @@ import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.network.Persistence;
+import org.numenta.nupic.network.PersistenceAPI;
+import org.numenta.nupic.serialize.SerialConfig;
 import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
+import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
@@ -69,6 +73,10 @@ public class Connections implements Persistable {
     private static final double EPSILON = 0.00001;
     
     /////////////////////////////////////// Spatial Pooler Vars ///////////////////////////////////////////
+    /** <b>WARNING:</b> potentialRadius **must** be set to 
+     * the inputWidth if using "globalInhibition" and if not 
+     * using the Network API (which sets this automatically) 
+     */
     private int potentialRadius = 16;
     private double potentialPct = 0.5;
     private boolean globalInhibition = false;
@@ -243,11 +251,24 @@ public class Connections implements Persistable {
     public Connections() {}
     
     /**
+     * Returns a deep copy of this {@code Connections} object.
+     * @return a deep copy of this {@code Connections}
+     */
+    public Connections copy() {
+        PersistenceAPI api = Persistence.get(new SerialConfig());
+        byte[] myBytes = api.serializer().serialize(this);
+        return api.serializer().deSerialize(myBytes);
+    }
+    
+    /**
      * Sets the derived values of the {@link SpatialPooler}'s initialization.
      */
     public void doSpatialPoolerPostInit() {
         synPermBelowStimulusInc = synPermConnected / 10.0;
         synPermTrimThreshold = synPermActiveInc / 2.0;
+        if(potentialRadius == -1) {
+            potentialRadius = ArrayUtils.product(inputDimensions);
+        }
     }
     
     /////////////////////////////////////////
@@ -480,6 +501,11 @@ public class Connections implements Persistable {
      * parameter defines a square (or hyper square) area: a
      * column will have a max square potential pool with
      * sides of length 2 * potentialRadius + 1.
+     * 
+     * <b>WARNING:</b> potentialRadius **must** be set to 
+     * the inputWidth if using "globalInhibition" and if not 
+     * using the Network API (which sets this automatically) 
+     *
      *
      * @param potentialRadius
      */
@@ -489,11 +515,16 @@ public class Connections implements Persistable {
 
     /**
      * Returns the configured potential radius
+     * 
+     * <b>WARNING:</b> potentialRadius **must** be set to 
+     * the inputWidth if using "globalInhibition" and if not 
+     * using the Network API (which sets this automatically) 
+     *
      * @return  the configured potential radius
      * @see setPotentialRadius
      */
     public int getPotentialRadius() {
-        return Math.min(numInputs, potentialRadius);
+        return potentialRadius;
     }
 
     /**

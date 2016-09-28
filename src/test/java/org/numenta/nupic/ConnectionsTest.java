@@ -27,8 +27,23 @@ import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MersenneTwister;
 
+import com.cedarsoftware.util.DeepEquals;
+
 
 public class ConnectionsTest {
+    @Test
+    public void testCopy() {
+        Parameters retVal = Parameters.getTemporalDefaultParameters();
+        retVal.set(KEY.COLUMN_DIMENSIONS, new int[] { 32 });
+        retVal.set(KEY.CELLS_PER_COLUMN, 4);
+        
+        Connections connections = new Connections();
+        
+        retVal.apply(connections);
+        TemporalMemory.init(connections);
+        
+        assertTrue(DeepEquals.deepEquals(connections, connections.copy()));
+    }
     
     @Test
     public void testCreateSegment() {
@@ -574,7 +589,7 @@ public class ConnectionsTest {
         TemporalMemory.init(con);
         
         String output = con.getPrintString();
-        assertEquals(1370, output.length());
+        assertEquals(1371, output.length());
         
         Set<String> fieldSet = Parameters.getEncoderDefaultParameters().keys().stream().
             map(k -> k.getFieldName()).collect(Collectors.toCollection(LinkedHashSet::new));
