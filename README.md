@@ -136,7 +136,7 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 Gradle:  
 
 dependencies {
-    compile group: 'org.numenta', name: 'htm.java', version:'0.6.8'
+    compile group: 'org.numenta', name: 'htm.java', version:'0.6.9'
 }
 ```
 
@@ -146,7 +146,7 @@ Maven:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.8</version>
+    <version>0.6.9</version>
 </dependency>
 ```
 
@@ -156,7 +156,7 @@ How to get the latest SNAPSHOT build:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.9-SNAPSHOT</version>
+    <version>0.6.10-SNAPSHOT</version>
 </dependency>
 
 You also may need to include a repositories entry:
