@@ -22,10 +22,12 @@
 
 package org.numenta.nupic.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collector;
 
 import org.numenta.nupic.Persistable;
 
@@ -78,6 +80,49 @@ public class Tuple implements Persistable, Comparable<Tuple> {
 	    container = new Object[objects.length];
         for(int i = 0;i < objects.length;i++) container[i] = objects[i];
         this.hashcode = hashCode();
+	}
+	
+	/*
+	 * Private constructor for Builder use
+	 */
+	private Tuple(List<Object> l) {
+	    this(l.toArray());
+	}
+	
+	/**
+	 * Returns builder for building immutable {@code Tuple}s
+	 * @return
+	 */
+	public static Builder builder() {
+	    return new Builder();
+	}
+	
+	/**
+	 * Allows the creation of an immutable {@link Tuple}
+	 * using a "Fluent" style construction.
+	 */
+	public static class Builder {
+	    List<Object> accumulator = new ArrayList<>();
+	    public Builder add(Object o) {
+	        accumulator.add(o);
+	        return this;
+	    }
+	    
+	    /**
+	     * Creates and returns the {@link Tuple}
+	     * @return
+	     */
+	    public Tuple build() {
+	        return new Tuple(accumulator);
+	    }
+	    
+	    /**
+	     * So that this builder can be used as a custom {@link Collector}
+	     * @param b
+	     */
+	    public void addAll(Builder b) {
+	        accumulator.addAll(b.accumulator);
+	    }
 	}
 	
 	/**

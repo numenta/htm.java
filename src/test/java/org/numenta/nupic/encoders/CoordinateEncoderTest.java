@@ -365,7 +365,7 @@ public class CoordinateEncoderTest {
 		int[] newPosition;
 		for(int i = 0;i < num;i++) {
 			newPosition = dPosition == null ? initPosition : 
-				ArrayUtils.i_add(
+				ArrayUtils.add(
 					newPosition = Arrays.copyOf(initPosition, initPosition.length), 
 						ArrayUtils.multiply(dPosition, (i + 1)));
 			int newRadius = initRadius + (i + 1) * dRadius;

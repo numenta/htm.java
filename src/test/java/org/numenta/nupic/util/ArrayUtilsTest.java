@@ -40,7 +40,6 @@ import org.numenta.nupic.model.Column;
 
 public class ArrayUtilsTest {
     
-    @Test
     public void testToBytes() {
         boolean[] ba = { true, true, };
         byte[] bytes = ArrayUtils.toBytes(ba);
@@ -79,52 +78,178 @@ public class ArrayUtilsTest {
     }
     
     @Test
-    public void testSubst() {
-        int[] original = new int[] { 30, 30, 30, 30, 30 };
-        int[] substitutes = new int[] { 0, 1, 2, 3, 4 };
-        int[] substInds = new int[] { 4, 1, 3 };
+    public void testAdd() {
+        int[] ia = { 1, 1, 1, 1 };
+        int[] expected = { 2, 2, 2, 2};
+        assertTrue(Arrays.equals(expected, ArrayUtils.add(ia, 1)));
         
-        int[] expected = { 30, 1, 30, 3, 4 };
+        // add one array to another
+        expected = new int[] { 4, 4, 4, 4 };
+        assertTrue(Arrays.equals(expected, ArrayUtils.add(ia, ia)));
         
-        assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+        ///////// double version //////////
+        double[] da = { 1., 1., 1., 1. };
+        double[] d_expected = { 2., 2., 2., 2.};
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_add(da, 1.)));
+        
+        // add one array to another
+        d_expected = new double[] { 4., 4., 4., 4. };
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_add(da, da)));
     }
     
     @Test
-    public void testMaxIndex() {
-        int max = ArrayUtils.maxIndex(new int[] { 2, 4, 5 });
-        assertEquals(39, max);
+    public void testDSubtract() {
+        double[] da = { 2., 2., 2., 2. };
+        double[] d_expected = { 1.5, 1.5, 1.5, 1.5};
+        assertTrue(Arrays.equals(d_expected, ArrayUtils.d_sub(da, 0.5)));
+        
+        da = new double[] { 2., 2., 2., 2. };
+        double[] sa = new double[] { 1., 1., 1., 1. };
+        assertTrue(Arrays.equals(sa, ArrayUtils.d_sub(da, sa)));
     }
     
     @Test
-    public void testToCoordinates() {
-        int[] coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, false);
-        assertTrue(Arrays.equals(new int[] { 0, 3, 4 }, coords));
+    public void testTranspose_int() {
+        int[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
+        int[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };
+
+        int[][] result = ArrayUtils.transpose(a);
+        for(int i = 0;i < expected.length;i++) {
+            for(int j = 0;j < expected[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j]);
+            }
+        }
         
-        coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, true);
-        assertTrue(Arrays.equals(new int[] { 4, 3, 0 }, coords));
+        int[][] zero = { {} };
+        expected = new int[0][0];
+        result = ArrayUtils.transpose(zero);
+        assertEquals(expected.length, result.length);
+        assertEquals(0, result.length);
     }
     
     @Test
-    public void testArgsort() {
-        int[] args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 });
-        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+    public void testTranspose_double() {
+        double[][] a = { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } };
+        double[][] expected = { { 1, 5 }, { 2, 6, }, { 3, 7, }, { 4, 8 } };
         
-        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, -1, -1);
-        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+        double[][] result = ArrayUtils.transpose(a);
+        for(int i = 0;i < expected.length;i++) {
+            for(int j = 0;j < expected[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j], 0.);
+            }
+        }
         
-        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
-        assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
+        double[][] zero = { {} };
+        expected = new double[0][0];
+        result = ArrayUtils.transpose(zero);
+        assertEquals(expected.length, result.length);
+        assertEquals(0, result.length);
     }
     
     @Test
-    public void testShape() {
-        int[][] inputPattern = { { 2, 3, 4, 5 }, { 6, 7, 8, 9} };
-        int[] shape = ArrayUtils.shape(inputPattern);
-        assertTrue(Arrays.equals(new int[] { 2, 4 }, shape));
+    public void testDot_int() {
+        int[][] a = new int[][] { { 1, 2 }, { 3, 4 } };
+        int[][] b = new int[][] { { 1, 1 }, { 1, 1 } };
+        
+        int[][] c = ArrayUtils.dot(a, b);
+        
+        assertEquals(3, c[0][0]);
+        assertEquals(3, c[0][1]);
+        assertEquals(7, c[1][0]);
+        assertEquals(7, c[1][1]);
+        
+        // Single dimension
+        int[][] x = new int[][] { { 2, 2, 2 } };
+        b = new int[][] { { 3 }, { 3 }, { 3 } };
+        
+        c = ArrayUtils.dot(x, b);
+        
+        assertTrue(c.length == 1);
+        assertTrue(c[0].length == 1);
+        assertEquals(c[0][0], 18);
+        
+        
+        // Ensure un-aligned dimensions get reported
+        b = new int[][] { { 0, 0 }, { 0, 0 }, { 0, 0 } };
+        try {
+            ArrayUtils.dot(a, b);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().equals(IllegalArgumentException.class));
+            assertEquals("Matrix inner dimensions must agree.", e.getMessage());
+        }
+        
+        // Test 2D.1d
+        a = new int[][] { { 1, 2 }, { 3, 4 } };
+        int[] b2 = new int[] { 2, 2 };
+        int[] result = ArrayUtils.dot(a, b2);
+        assertTrue(Arrays.equals(new int[] { 6, 14 }, result));
+    }
+    
+    @Test
+    public void testDot_double() {
+        double[][] a = new double[][] { { 1., 2. }, { 3., 4. } };
+        double[][] b = new double[][] { { 1., 1. }, { 1., 1. } };
+        
+        double[][] c = ArrayUtils.dot(a, b);
+        
+        assertEquals(3, c[0][0], 0.);
+        assertEquals(3, c[0][1], 0.);
+        assertEquals(7, c[1][0], 0.);
+        assertEquals(7, c[1][1], 0.);
+        
+        // Single dimension
+        double[][] x = new double[][] { { 2., 2., 2. } };
+        b = new double[][] { { 3. }, { 3. }, { 3. } };
+        
+        c = ArrayUtils.dot(x, b);
+        
+        assertTrue(c.length == 1);
+        assertTrue(c[0].length == 1);
+        assertEquals(c[0][0], 18., 0.);
+        
+        
+        // Ensure un-aligned dimensions get reported
+        b = new double[][] { { 0., 0. }, { 0., 0. }, { 0., 0. } };
+        try {
+            ArrayUtils.dot(a, b);
+            fail();
+        }catch(Exception e) {
+            assertTrue(e.getClass().equals(IllegalArgumentException.class));
+            assertEquals("Matrix inner dimensions must agree.", e.getMessage());
+        }
+        
+        // Test 2D.1d
+        a = new double[][] { { 1., 2. }, { 3., 4. } };
+        double[] b2 = new double[] { 2., 2. };
+        double[] result = ArrayUtils.dot(a, b2);
+        assertTrue(Arrays.equals(new double[] { 6., 14. }, result));
+    }
+    
+    @Test
+    public void testTo1D() {
+        int[][] test = { { 1, 2 }, { 3, 4 } };
+        int[] expected = { 1, 2, 3, 4 };
+        int[] result = ArrayUtils.to1D(test);
+        assertTrue(Arrays.equals(expected, result));
+        
+        // Test double version
+        double[][] d_test = { { 1., 2. }, { 3., 4. } };
+        double[] d_expected = { 1., 2., 3., 4. };
+        double[] d_result = ArrayUtils.to1D(d_test);
+        assertTrue(Arrays.equals(d_expected, d_result));
+    }
+    
+    @Test
+    public void testFromCoordinate() {
+        int[] shape = { 2, 2 };
+        int[] testCoord = { 1, 1 };
+        int result = ArrayUtils.fromCoordinate(testCoord, shape);
+        assertEquals(3, result);
     }
     
     @Test 
-    public void testReshape() {
+    public void testReshape_int() {
         int[][] test = {
             { 0, 1, 2, 3, 4, 5 },
             { 6, 7, 8, 9, 10, 11 }
@@ -153,9 +278,56 @@ public class ArrayUtilsTest {
         }
         
         // Test zero-length case
-        int[] result4 = ArrayUtils.unravel(new int[0][]);
+        int[][] result4 = ArrayUtils.reshape(new int[0][], 5);
         assertNotNull(result4);
         assertTrue(result4.length == 0);
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.reshape(test, 1);
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    @Test 
+    public void testReshape_double() {
+        double[][] test = {
+            { 0, 1, 2, 3, 4, 5 },
+            { 6, 7, 8, 9, 10, 11 }
+        };
+        
+        double[][] expected = {
+            { 0, 1, 2 },
+            { 3, 4, 5 },
+            { 6, 7, 8 },
+            { 9, 10, 11 }
+        };
+        
+        double[][] result = ArrayUtils.reshape(test, 3);
+        for(int i = 0;i < result.length;i++) {
+            for(int j = 0;j < result[i].length;j++) {
+                assertEquals(expected[i][j], result[i][j], 0.);
+            }
+        }
+        
+        // Unhappy case
+        try {
+            ArrayUtils.reshape(test, 5);
+        }catch(Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+            assertEquals("12 is not evenly divisible by 5", e.getMessage());
+        }
+        
+        // Test zero-length case
+        double[][] result4 = ArrayUtils.reshape(new double[0][], 5);
+        assertNotNull(result4);
+        assertTrue(result4.length == 0);
+        
+        // Test empty array arg
+        test = new double[][]{};
+        expected = new double[0][0];
+        result = ArrayUtils.reshape(test, 1);
+        assertTrue(Arrays.equals(expected, result));
     }
     
     @Test
@@ -214,6 +386,12 @@ public class ArrayUtilsTest {
                 assertEquals(result[i][j], expected[i][j]);
             }
         }
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.rotateRight(test);
+        assertTrue(Arrays.equals(expected, result));
     }
     
     @Test
@@ -238,6 +416,143 @@ public class ArrayUtilsTest {
                 assertEquals(result[i][j], expected[i][j]);
             }
         }
+        
+        // Test empty array arg
+        test = new int[][]{};
+        expected = new int[0][0];
+        result = ArrayUtils.rotateLeft(test);
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    @Test
+    public void testSubst() {
+        int[] original = new int[] { 30, 30, 30, 30, 30 };
+        int[] substitutes = new int[] { 0, 1, 2, 3, 4 };
+        int[] substInds = new int[] { 4, 1, 3 };
+        
+        int[] expected = { 30, 1, 30, 3, 4 };
+        
+        assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+    }
+    
+    @Test
+    public void testSubst_doubles() {
+        double[] original = new double[] { 30, 30, 30, 30, 30 };
+        double[] substitutes = new double[] { 0, 1, 2, 3, 4 };
+        int[] substInds = new int[] { 4, 1, 3 };
+        
+        double[] expected = { 30, 1, 30, 3, 4 };
+        
+        assertTrue(Arrays.equals(expected, ArrayUtils.subst(original, substitutes, substInds)));
+    }
+    
+    @Test
+    public void testMin_int() {
+        int[][] protoA = { { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10} };
+        int[][] resh = ArrayUtils.reshape(protoA, 5);
+        int[] a = ArrayUtils.min(resh, 0);
+        int[] b = ArrayUtils.min(resh, 1);
+        assertTrue(Arrays.equals(new int[] { 6, 2, 3, 4, 5 }, a));
+        assertTrue(Arrays.equals(new int[] { 2, 6 }, b));
+        
+        try {
+            ArrayUtils.min(resh, 3);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("axis must be either '0' or '1'", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testMin_double() {
+        double[][] protoA = { { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10} };
+        double[][] resh = ArrayUtils.reshape(protoA, 5);
+        double[] a = ArrayUtils.min(resh, 0);
+        double[] b = ArrayUtils.min(resh, 1);
+        assertTrue(Arrays.equals(new double[] { 6, 2, 3, 4, 5 }, a));
+        assertTrue(Arrays.equals(new double[] { 2, 6 }, b));
+        
+        try {
+            ArrayUtils.min(resh, 3);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("axis must be either '0' or '1'", e.getMessage());
+        }
+    }
+    
+    /**
+     * This test has two purposes: 
+     * 1. Test specific branch in KNNClassifier learn() method
+     * 2. Test its name sake: ArrayUtils.setRangeTo()
+     */
+    @Test
+    public void testSetRangeTo() {
+        double[] thresholdedInput = { 49, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        int cellsPerCol = 5;
+        
+        // Make thresholdedInput into 2D array for calling ArrayUtils.min()
+        // thresholdedInput = { { 49, 2, 3, 4, 5 }, { 6, 7, 8, 9, 10 } };
+        double[][] burstingCols = ArrayUtils.reshape(new double[][] { thresholdedInput }, cellsPerCol);
+        // get minimum values in each row = { 2, 6 }
+        double[] bc = ArrayUtils.min(burstingCols, 1);
+        // get indexes of min = { 0, 1 }
+        bc = ArrayUtils.toDoubleArray(ArrayUtils.where(bc, ArrayUtils.GREATER_THAN_0));
+       
+        // Use produced indexes to test setRangeTo in complicated manner, 
+        // setting each value not in the calculated indexes to "0"
+        for(double col : bc) {
+            ArrayUtils.setRangeTo(
+                thresholdedInput, 
+                (((int)col) * cellsPerCol) + 1, 
+                (((int)col) * cellsPerCol) + cellsPerCol, 
+                0
+            );
+        }
+        // Every index set to zero except range start - 1 and stop
+        assertTrue(Arrays.equals(new double[] { 49, 0, 0, 0, 0, 6, 0, 0, 0, 0 }, thresholdedInput));
+    }
+    
+    @Test
+    public void testMaxIndex() {
+        int max = ArrayUtils.maxIndex(new int[] { 2, 4, 5 });
+        assertEquals(39, max);
+    }
+    
+    @Test
+    public void testToCoordinates() {
+        int[] coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, false);
+        assertTrue(Arrays.equals(new int[] { 0, 3, 4 }, coords));
+        
+        coords = ArrayUtils.toCoordinates(19, new int[] { 2, 4, 5 }, true);
+        assertTrue(Arrays.equals(new int[] { 4, 3, 0 }, coords));
+    }
+    
+    @Test
+    public void testArgsort() {
+        int[] args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 });
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+        
+        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, -1, -1);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, args));
+        
+        args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
+        
+        // Test double version
+        int[] d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, 0, 3);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2}, d_args));
+        
+        d_args = ArrayUtils.argsort(new double[] { 11, 2, 3, 7, 0 }, -1, 3);
+        assertTrue(Arrays.equals(new int[] {4, 1, 2, 3, 0}, d_args));
+    }
+    
+    @Test
+    public void testShape() {
+        int[][] inputPattern = { { 2, 3, 4, 5 }, { 6, 7, 8, 9} };
+        int[] shape = ArrayUtils.shape(inputPattern);
+        assertTrue(Arrays.equals(new int[] { 2, 4 }, shape));
     }
     
     @Test
@@ -465,16 +780,18 @@ public class ArrayUtilsTest {
         int dimSize = 14, dimNumber = 5;
         int[] dimCoordinates = new int[dimSize];
         List<int[]> dimensions = new ArrayList<int[]>();
+        
         for (int i = 0; i < dimNumber; i++) {
             for (int j = 0; j < dimSize; j++) {
                 dimCoordinates[j] = j;
             }
             dimensions.add(dimCoordinates);
         }
-        long startTime = System.currentTimeMillis();
         
+        long startTime = System.currentTimeMillis();
         List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensions);
         long take = System.currentTimeMillis() - startTime;
+        
         System.out.print("Execute in:" + take + " milliseconds");
 
         assertEquals(neighborList.size(), 537824);

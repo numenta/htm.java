@@ -25,7 +25,7 @@ package org.numenta.nupic.util;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,10 +90,17 @@ public class BeanUtil {
 
   private void setSimpleProperty(Object bean, PropertyInfo info, Object value) {
     if (info.getWriteMethod() == null) {
-      throw new IllegalArgumentException("Property '" + info.name + "' of bean " + bean.getClass().getName() +
+        try {
+            Field f = bean.getClass().getDeclaredField(info.getName());
+            f.setAccessible(true);
+            f.set(bean, value);
+        }catch(Exception e) {
+            throw new IllegalArgumentException("Property '" + info.name + "' of bean " + bean.getClass().getName() +
                                          " does not have setter method");
+        }
+    }else {
+        invokeMethod(info.getWriteMethod(), bean, value);
     }
-    invokeMethod(info.getWriteMethod(), bean, value);
   }
 
   private Object invokeMethod(Method m, Object instance, Object... args) {
@@ -102,20 +109,11 @@ public class BeanUtil {
     }
     try {
       return m.invoke(instance, args);
-    } catch (IllegalArgumentException e) {
+    } catch (Exception e) {
       final String msg = "Cannot invoke " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + e.getMessage();
       //LOG.error(msg, e);
       throw new IllegalArgumentException(msg, e);
-    } catch (IllegalAccessException e) {
-      final String msg = "Cannot invoke " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + e.getMessage();
-      //LOG.error(msg, e);
-      throw new RuntimeException(msg, e);
-    } catch (InvocationTargetException e) {
-      Throwable te = e.getTargetException() == null ? e : e.getTargetException();
-      final String msg = "Error invoking " + m.getDeclaringClass().getName() + "." + m.getName() + " - " + te.getMessage();
-      //LOG.error(msg, e);
-      throw new RuntimeException(msg, te);
-    }
+    } 
   }
 
   public PropertyInfo getPropertyInfo(Object bean, String name) {

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.joda.time.format.DateTimeFormatter;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -65,6 +66,7 @@ public class Parameters implements Persistable {
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
     private static final Map<KEY, Object> DEFAULTS_ENCODER;
+    private static final Map<KEY, Object> DEFAULTS_KNN;
 
 
     static {
@@ -135,6 +137,28 @@ public class Parameters implements Persistable {
         defaultEncoderParams.put(KEY.AUTO_CLASSIFY, Boolean.FALSE);
         DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
         defaultParams.putAll(DEFAULTS_ENCODER);
+        
+        ////////////////// KNNClassifier Defaults ///////////////////
+        Map<KEY, Object> defaultKNNParams = new ParametersMap();
+        defaultKNNParams.put(KEY.K, 1);
+        defaultKNNParams.put(KEY.EXACT, false);
+        defaultKNNParams.put(KEY.DISTANCE_NORM, 2.0);
+        defaultKNNParams.put(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
+        defaultKNNParams.put(KEY.DISTANCE_THRESHOLD, .0);
+        defaultKNNParams.put(KEY.DO_BINARIZATION, false);
+        defaultKNNParams.put(KEY.BINARIZATION_THRESHOLD, 0.5);
+        defaultKNNParams.put(KEY.USE_SPARSE_MEMORY, true);
+        defaultKNNParams.put(KEY.SPARSE_THRESHOLD, 0.1);
+        defaultKNNParams.put(KEY.RELATIVE_THRESHOLD, false);
+        defaultKNNParams.put(KEY.NUM_WINNERS, 0);
+        defaultKNNParams.put(KEY.NUM_SVD_SAMPLES, -1);
+        defaultKNNParams.put(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
+        defaultKNNParams.put(KEY.FRACTION_OF_MAX, -1.0);
+        defaultKNNParams.put(KEY.MAX_STORED_PATTERNS, -1);
+        defaultKNNParams.put(KEY.REPLACE_DUPLICATES, false);
+        defaultKNNParams.put(KEY.KNN_CELLS_PER_COL, 0);
+        DEFAULTS_KNN = Collections.unmodifiableMap(defaultKNNParams);
+        defaultParams.putAll(DEFAULTS_KNN);
 
         DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
@@ -299,7 +323,6 @@ public class Parameters implements Persistable {
         // Network Layer indicator for auto classifier generation
         AUTO_CLASSIFY("hasClassifiers", Boolean.class),
         
-        
         // How many bits to use if encoding the respective date fields.
         // e.g. Tuple(bits to use:int, radius:double)
         DATEFIELD_SEASON("season", Tuple.class), 
@@ -308,7 +331,81 @@ public class Parameters implements Persistable {
         DATEFIELD_HOLIDAY("holiday", Tuple.class),
         DATEFIELD_TOFD("timeOfDay", Tuple.class),
         DATEFIELD_CUSTOM("customDays", Tuple.class), // e.g. Tuple(bits:int, List<String>:"mon,tue,fri")
-        DATEFIELD_PATTERN("formatPattern", String.class);
+        DATEFIELD_PATTERN("formatPattern", String.class),
+        DATEFIELD_FORMATTER("dateFormatter", DateTimeFormatter.class),
+        
+        
+        ///////////// KNNClassifier Parameters //////////////
+        /** The number of nearest neighbors used in the classification of patterns. <b>Must be odd</b> */
+        K("k", Integer.class),
+        /** If true, patterns must match exactly when assigning class labels */
+        EXACT("exact", Boolean.class),
+        /** When distance method is "norm", this specifies the p value of the Lp-norm */
+        DISTANCE_NORM("distanceNorm", Double.class),
+        /** 
+         * The method used to compute distance between input patterns and prototype patterns.
+         * see({@link DistanceMethod}) 
+         */
+        DISTANCE_METHOD("distanceMethod", DistanceMethod.class),
+        /** 
+         * A threshold on the distance between learned
+         * patterns and a new pattern proposed to be learned. The distance must be
+         * greater than this threshold in order for the new pattern to be added to
+         * the classifier's memory
+         */
+        DISTANCE_THRESHOLD("distanceThreshold", Double.class),
+        /** If True, then scalar inputs will be binarized. */
+        DO_BINARIZATION("doBinarization", Boolean.class),
+        /** If doBinarization is True, this specifies the threshold for the binarization of inputs */
+        BINARIZATION_THRESHOLD("binarizationThreshold", Double.class),
+        /** If True, classifier will use a sparse memory matrix */
+        USE_SPARSE_MEMORY("useSparseMemory", Boolean.class),
+        /** 
+         * If useSparseMemory is True, input variables whose absolute values are 
+         * less than this threshold will be stored as zero
+         */
+        SPARSE_THRESHOLD("sparseThreshold", Double.class),
+        /** Flag specifying whether to multiply sparseThreshold by max value in input */
+        RELATIVE_THRESHOLD("relativeThreshold", Boolean.class),
+        /** Number of elements of the input that are stored. If 0, all elements are stored */
+        NUM_WINNERS("numWinners", Integer.class),
+        /** 
+         * Number of samples the must occur before a SVD
+         * (Singular Value Decomposition) transformation will be performed. If 0,
+         * the transformation will never be performed
+         */
+        NUM_SVD_SAMPLES("numSVDSamples", Integer.class),
+        /** 
+         * Controls dimensions kept after SVD transformation. If "adaptive", 
+         * the number is chosen automatically
+         */
+        NUM_SVD_DIMS("numSVDDims", Constants.KNN.class),
+        /**
+         * If numSVDDims is "adaptive", this controls the
+         * smallest singular value that is retained as a fraction of the largest
+         * singular value
+         */
+        FRACTION_OF_MAX("fractionOfMax", Double.class),
+        /**
+         * Limits the maximum number of the training
+         * patterns stored. When KNN learns in a fixed capacity mode, the unused
+         * patterns are deleted once the number of stored patterns is greater than
+         * maxStoredPatterns. A value of -1 is no limit
+         */
+        MAX_STORED_PATTERNS("maxStoredPatterns", Integer.class),
+        /**
+         * A boolean flag that determines whether,
+         * during learning, the classifier replaces duplicates that match exactly,
+         * even if distThreshold is 0. Should be TRUE for online learning
+         */
+        REPLACE_DUPLICATES("replaceDuplicates", Boolean.class),
+        /**
+         * If >= 1, input is assumed to be organized into
+         * columns, in the same manner as the temporal pooler AND whenever a new
+         * prototype is stored, only the start cell (first cell) is stored in any
+         * bursting column
+         */
+        KNN_CELLS_PER_COL("cellsPerCol", Integer.class);     
         
 
         private static final Map<String, KEY> fieldMap = new HashMap<>();
@@ -459,6 +556,15 @@ public class Parameters implements Persistable {
     public static Parameters getEncoderDefaultParameters() {
         return getParameters(DEFAULTS_ENCODER);
     }
+    
+    /**
+     * Factory method. Return KNNClassifier {@link Parameters} object with default values
+     * @return
+     */
+    public static Parameters getKNNDefaultParameters() {
+        return getParameters(DEFAULTS_KNN);
+    }
+    
     /**
      * Called internally to populate a {@link Parameters} object with the keys
      * and values specified in the passed in map.

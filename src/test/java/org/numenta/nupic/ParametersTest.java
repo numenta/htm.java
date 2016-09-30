@@ -37,6 +37,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.KNNClassifier;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
 
@@ -154,6 +155,31 @@ public class ParametersTest {
     }
 
     @Test
+    public void testKNNEnumAndConstantFields() {
+        Parameters params = Parameters.getKNNDefaultParameters();
+        KNNClassifier knn = KNNClassifier.builder().apply(params);
+        try {
+            params.apply(knn);
+            assertTrue(knn.getNumSVDDims() == Constants.KNN.ADAPTIVE);
+            assertTrue(knn.getDistanceMethod() == DistanceMethod.NORM); // the default
+        }catch(Exception e) {
+            fail();
+        }
+        
+        params = Parameters.getKNNDefaultParameters();
+        params.set(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
+        params.set(KEY.DISTANCE_METHOD, DistanceMethod.PCT_INPUT_OVERLAP);
+        knn = KNNClassifier.builder().apply(params);
+        try {
+            params.apply(knn);
+            assertTrue(knn.getNumSVDDims() == Constants.KNN.ADAPTIVE);
+            assertTrue(knn.getDistanceMethod() == DistanceMethod.PCT_INPUT_OVERLAP);
+        }catch(Exception e) {
+            fail();
+        }
+    }
+    
+    @Test
     public void testUnion() {
         Parameters params = Parameters.getAllDefaultParameters();
         Parameters arg = Parameters.getAllDefaultParameters();
@@ -244,13 +270,13 @@ public class ParametersTest {
     @Test
     public void testSize() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(47, params.size());
+        assertEquals(64, params.size());
     }
 
     @Test
     public void testKeys() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertTrue(params.keys() != null && params.keys().size() == 47); 
+        assertTrue(params.keys() != null && params.keys().size() == 64); 
     }
 
     @Test

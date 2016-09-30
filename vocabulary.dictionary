@@ -221,6 +221,8 @@ savvy
 uninstall
 popout
 draggable
+luminance
+payload
 exec
 terminable
 foreach
@@ -239,3 +241,4 @@ unserialized
 deserializes
 george
 xorshift
+
