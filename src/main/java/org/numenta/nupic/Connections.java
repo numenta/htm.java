@@ -2229,39 +2229,7 @@ public class Connections implements Persistable {
      * High verbose output useful for debugging
      */
     public void printParameters() {
-        System.out.println("------------ SpatialPooler Parameters ------------------");
-        System.out.println("numInputs                  = " + getNumInputs());
-        System.out.println("numColumns                 = " + getNumColumns());
-        System.out.println("cellsPerColumn             = " + getCellsPerColumn());
-        System.out.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
-        System.out.println("numActiveColumnsPerInhArea = " + getNumActiveColumnsPerInhArea());
-        System.out.println("potentialPct               = " + getPotentialPct());
-        System.out.println("potentialRadius            = " + getPotentialRadius());
-        System.out.println("globalInhibition           = " + getGlobalInhibition());
-        System.out.println("localAreaDensity           = " + getLocalAreaDensity());
-        System.out.println("inhibitionRadius           = " + getInhibitionRadius());
-        System.out.println("stimulusThreshold          = " + getStimulusThreshold());
-        System.out.println("synPermActiveInc           = " + getSynPermActiveInc());
-        System.out.println("synPermInactiveDec         = " + getSynPermInactiveDec());
-        System.out.println("synPermConnected           = " + getSynPermConnected());
-        System.out.println("minPctOverlapDutyCycle     = " + getMinPctOverlapDutyCycles());
-        System.out.println("minPctActiveDutyCycle      = " + getMinPctActiveDutyCycles());
-        System.out.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
-        System.out.println("maxBoost                   = " + getMaxBoost());
-        System.out.println("version                    = " + getVersion());
-
-        System.out.println("\n------------ TemporalMemory Parameters ------------------");
-        System.out.println("activationThreshold        = " + getActivationThreshold());
-        System.out.println("learningRadius             = " + getLearningRadius());
-        System.out.println("minThreshold               = " + getMinThreshold());
-        System.out.println("maxNewSynapseCount         = " + getMaxNewSynapseCount());
-        System.out.println("maxSynapsesPerSegment      = " + getMaxSynapsesPerSegment());
-        System.out.println("maxSegmentsPerCell         = " + getMaxSegmentsPerCell());
-        System.out.println("initialPermanence          = " + getInitialPermanence());
-        System.out.println("connectedPermanence        = " + getConnectedPermanence());
-        System.out.println("permanenceIncrement        = " + getPermanenceIncrement());
-        System.out.println("permanenceDecrement        = " + getPermanenceDecrement());
-        System.out.println("predictedSegmentDecrement  = " + getPredictedSegmentDecrement());
+        System.out.println(getPrintString());
     }
     
     /**
@@ -2275,7 +2243,6 @@ public class Connections implements Persistable {
         pw.println("columnDimensions           = " + Arrays.toString(getColumnDimensions()));
         pw.println("inputDimensions            = " + Arrays.toString(getInputDimensions()));
         pw.println("cellsPerColumn             = " + getCellsPerColumn());
-        
         pw.println("random                     = " + getRandom());
         pw.println("seed                       = " + getSeed());
         
@@ -2294,8 +2261,8 @@ public class Connections implements Persistable {
         pw.println("synPermConnected           = " + getSynPermConnected());
         pw.println("synPermBelowStimulusInc    = " + getSynPermBelowStimulusInc());
         pw.println("synPermTrimThreshold       = " + getSynPermTrimThreshold());
-        pw.println("minPctOverlapDutyCycles     = " + getMinPctOverlapDutyCycles());
-        pw.println("minPctActiveDutyCycles      = " + getMinPctActiveDutyCycles());
+        pw.println("minPctOverlapDutyCycles    = " + getMinPctOverlapDutyCycles());
+        pw.println("minPctActiveDutyCycles     = " + getMinPctActiveDutyCycles());
         pw.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
         pw.println("maxBoost                   = " + getMaxBoost());
         pw.println("version                    = " + getVersion());

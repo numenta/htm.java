@@ -589,10 +589,13 @@ public class ConnectionsTest {
         TemporalMemory.init(con);
         
         String output = con.getPrintString();
-        assertEquals(1371, output.length());
+        assertEquals(1369, output.length());
         
         Set<String> fieldSet = Parameters.getEncoderDefaultParameters().keys().stream().
             map(k -> k.getFieldName()).collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        fieldSet.addAll(Parameters.getKNNDefaultParameters().keys().stream().
+            map(k -> k.getFieldName()).collect(Collectors.toCollection(LinkedHashSet::new)));
         
         for(KEY k : p.keys()) {
             // Exclude Encoder fields
