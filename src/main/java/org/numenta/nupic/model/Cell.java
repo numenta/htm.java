@@ -46,6 +46,8 @@ public class Cell implements Comparable<Cell>, Serializable {
     private final Column column;
     /** Cash this because Cells are immutable */
     private final int hashcode;
+    /** tracks number of destroyed segments */
+    private int numDestroyedSegments;
 
 
     /**
@@ -77,61 +79,76 @@ public class Cell implements Comparable<Cell>, Serializable {
     }
 
     /**
-     * Adds a {@link Synapse} which is the receiver of signals
-     * from this {@code Cell}
-     * 
-     * @param c     the connections state of the temporal memory
-     * @param s     the Synapse to add
+     * Returns the Set of {@link Synapse}s which have this cell
+     * as their source cells.
+     *  
+     * @param   c               the connections state of the temporal memory
+     *                          return an orphaned empty set.
+     * @return  the Set of {@link Synapse}s which have this cell
+     *          as their source cells.
      */
-    public void addReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this).add(s);
-    }
-    
-    /**
-     * Removes a {@link Synapse} which is no longer a receiver of
-     * signals from this {@code Cell}
-     * 
-     * @param c     the connections state of the temporal memory
-     * @param s     the Synapse to remove
-     */
-    public void removeReceptorSynapse(Connections c, Synapse s) {
-        c.getReceptorSynapses(this).remove(s);
-        c.decrementSynapses();
+    public Set<Synapse> getReceptorSynapses(Connections c) {
+        return getReceptorSynapses(c, false);
     }
 
     /**
      * Returns the Set of {@link Synapse}s which have this cell
      * as their source cells.
      *  
-     * @param   c       the connections state of the temporal memory
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
      * @return  the Set of {@link Synapse}s which have this cell
      *          as their source cells.
      */
-    public Set<Synapse> getReceptorSynapses(Connections c) {
-        return c.getReceptorSynapses(this);
-    }
-
-    /**
-     * Returns a newly created {@link DistalDendrite}
-     * 
-     * @param   c       the connections state of the temporal memory
-     * @return          a newly created {@link DistalDendrite}
-     */
-    public DistalDendrite createSegment(Connections c) {
-        DistalDendrite dd = new DistalDendrite(this, c.incrementSegments());
-        c.getSegments(this).add(dd);
-
-        return dd;
+    public Set<Synapse> getReceptorSynapses(Connections c, boolean doLazyCreate) {
+        return c.getReceptorSynapses(this, doLazyCreate);
     }
 
     /**
      * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      * 
-     * @param   c   the connections state of the temporal memory
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
      * @return  a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
      */
     public List<DistalDendrite> getSegments(Connections c) {
-        return c.getSegments(this);
+        return getSegments(c, false);
+    }
+
+    /**
+     * Returns a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
+     * 
+     * @param   c               the connections state of the temporal memory
+     * @param doLazyCreate      create a container for future use if true, if false
+     *                          return an orphaned empty set.
+     * @return  a {@link List} of this {@code Cell}'s {@link DistalDendrite}s
+     */
+    public List<DistalDendrite> getSegments(Connections c, boolean doLazyCreate) {
+        return c.getSegments(this, doLazyCreate);
+    }
+    
+    /**
+     * Increments the number of destroyed segments for this {@code Cell}
+     */
+    public void incDestroyedSegments() {
+        numDestroyedSegments++;
+    }
+    
+    /**
+     * Decrements the number of destroyed segments for this {@code Cell}
+     */
+    public void decDestroyedSegments() {
+        numDestroyedSegments--;
+    }
+    
+    /**
+     * Returns the number of destroyed segments for this {@code Cell}
+     * @return
+     */
+    public int getNumDestroyedSegments() {
+        return numDestroyedSegments;
     }
 
     /**

@@ -50,7 +50,7 @@ public class SpatialPoolerGlobalInhibitionBenchmark extends AbstractAlgorithmBen
     @Override
     protected Parameters getParameters() {
         Parameters parameters = super.getParameters();
-        parameters.setParameterByKey(KEY.GLOBAL_INHIBITION, true);
+        parameters.set(KEY.GLOBAL_INHIBITION, true);
         return parameters;
     }
 
@@ -59,7 +59,7 @@ public class SpatialPoolerGlobalInhibitionBenchmark extends AbstractAlgorithmBen
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     public int[] measureAvgCompute_7_Times(Blackhole bh) throws InterruptedException {
         for(int i = 0;i < 7;i++) {
-            pooler.compute(memory, input[i], SDR, true, false);
+            pooler.compute(memory, input[i], SDR, true);
         }
 
         return SDR;

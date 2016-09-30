@@ -1,7 +1,7 @@
 package org.numenta.nupic.util;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -11,19 +11,6 @@ import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 
 public class NearestNeighborTest {
 
-    @Test
-    public void testInstantiation() {
-        new NearestNeighbor(40, true);
-        
-        try {
-            new NearestNeighbor(0, true);
-            fail();
-        }catch(Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("Input width must be greater than 0.", e.getMessage());
-        }
-    }
-    
     @Test
     public void testAddRow() {
 //        double[] sample = new double[] { 0, 1, 3, 7, 11 };
@@ -46,6 +33,32 @@ public class NearestNeighborTest {
         System.out.println("matrix = " + Matrices.cardinality(matrix));
         matrix.add(0, 3, 0);
         System.out.println("matrix = " + Matrices.cardinality(matrix));
+    }
+    
+    @Test
+    public void testVecLpDist() {
+        NearestNeighbor nn = new NearestNeighbor(5, 10);
+        assertNull(nn.vecLpDist(0.0, null, false));
+    }
+
+    @Test
+    public void testRightVecSumAtNZ() {
+        int[][] connectedSynapses = new int[][]{
+            {1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+            {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+            {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+            
+        int[] inputVector = new int[]{1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        int[] trueResults = new int[]{1, 1, 1, 1, 1};
+        
+        NearestNeighbor nn = new NearestNeighbor(5, 10);
+        int[] result = nn.rightVecSumAtNZ(inputVector, connectedSynapses);
+        
+        for (int i = 0; i < result.length; i++) {
+            assertEquals(trueResults[i], result[i]);
+        }
     }
 
 }

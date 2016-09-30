@@ -21,9 +21,9 @@ repositories {
     // Use 'maven central' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     mavenCentral()
-    
-    flatDir {
-       dirs 'libs'
+
+    maven {
+        url 'http://metaware.us/maven3'
     }
 }
 
@@ -32,10 +32,11 @@ test {
    outputs.upToDateWhen { false }
 }
 
-/* UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
+// UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
+
 test {
     testLogging.showStandardStreams = true
-}*/
+}
 
 dependencies {
     compile group: 'joda-time', name: 'joda-time', version: '2.5'
@@ -54,6 +55,7 @@ dependencies {
 	compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
 	compile group: 'de.ruedigermoeller', name: 'fst', version: '2.45'
 	compile group: 'com.cedarsoftware', name: 'java-util', version: '1.19.3'
+	compile group: 'algorithmfoundry', name: 'algorithmfoundry-shade-culled', version:'1.3'
 	testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version:'1.1.2'
     compile name: 'algorithmfoundry-shade-culled-1.0'
@@ -103,6 +105,23 @@ check.doLast {
     tasks.runBench.execute()
 }
 /////////////////// END jmh /////////////////////
+
+////////////////////
+//   Fat Jar      //
+////////////////////
+task fatJar(type: Jar) {
+  manifest.from jar.manifest
+  classifier = 'all'
+  from {
+    configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) }
+  } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+  }
+  with jar
+}
+
 
 /////////////////////////////////////////////////////////////////
 //                   SonaType Central Repo                     //

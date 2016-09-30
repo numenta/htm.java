@@ -176,6 +176,8 @@ public class Layer<T> implements Persistable {
     private static final long serialVersionUID = 1L;
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Layer.class);
+    
+    protected int numColumns;
 
     protected Network parentNetwork;
     protected Region parentRegion;
@@ -198,17 +200,6 @@ public class Layer<T> implements Persistable {
     private volatile Inference currentInference;
 
     FunctionFactory factory;
-
-    /** Active columns in the {@link SpatialPooler} at time "t" */
-    protected int[] feedForwardActiveColumns;
-    /** Active column indexes from the {@link SpatialPooler} at time "t" */
-    private int[] feedForwardSparseActives;
-    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t - 1" */
-    private Set<Cell> previousPredictiveCells;
-    /** Predictive {@link Cell}s in the {@link TemporalMemory} at time "t" */
-    private Set<Cell> predictiveCells;
-    /** Active {@link Cell}s in the {@link TemporalMemory} at time "t" */
-    private Set<Cell> activeCells;
 
     /** Used to track and document the # of records processed */
     private int recordNum = -1;
@@ -296,7 +287,7 @@ public class Layer<T> implements Persistable {
 
         connections = new Connections();
 
-        this.autoCreateClassifiers = (Boolean)p.getParameterByKey(KEY.AUTO_CLASSIFY);
+        this.autoCreateClassifiers = (Boolean)p.get(KEY.AUTO_CLASSIFY);
 
         factory = new FunctionFactory();
 
@@ -376,7 +367,7 @@ public class Layer<T> implements Persistable {
         }
 
         // Check to see if the Parameters include the encoder configuration.
-        if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null && e != null) {
+        if(params.get(KEY.FIELD_ENCODING_MAP) == null && e != null) {
             throw new IllegalArgumentException("The passed in Parameters must contain a field encoding map " + 
                 "specified by org.numenta.nupic.Parameters.KEY.FIELD_ENCODING_MAP");
         }
@@ -460,19 +451,19 @@ public class Layer<T> implements Persistable {
         // if specified
         if(encoder != null) {
             if(encoder.getEncoders(encoder) == null || encoder.getEncoders(encoder).size() < 1) {
-                if(params.getParameterByKey(KEY.FIELD_ENCODING_MAP) == null || ((Map<String, Map<String, Object>>)params.getParameterByKey(KEY.FIELD_ENCODING_MAP)).size() < 1) {
+                if(params.get(KEY.FIELD_ENCODING_MAP) == null || ((Map<String, Map<String, Object>>)params.get(KEY.FIELD_ENCODING_MAP)).size() < 1) {
                     LOGGER.error("No field encoding map found for specified MultiEncoder");
                     throw new IllegalStateException("No field encoding map found for specified MultiEncoder");
                 }
 
-                encoder.addMultipleEncoders((Map<String, Map<String, Object>>)params.getParameterByKey(KEY.FIELD_ENCODING_MAP));
+                encoder.addMultipleEncoders((Map<String, Map<String, Object>>)params.get(KEY.FIELD_ENCODING_MAP));
             }
 
             // Make the declared column dimensions match the actual input
             // dimensions retrieved from the encoder
             int product = 0, inputLength = 0, columnLength = 0;
-            if(((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) != (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length))
-                            || encoder.getWidth() != (product = ArrayUtils.product((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)))) {
+            if(((inputLength = ((int[])params.get(KEY.INPUT_DIMENSIONS)).length) != (columnLength = ((int[])params.get(KEY.COLUMN_DIMENSIONS)).length))
+                            || encoder.getWidth() != (product = ArrayUtils.product((int[])params.get(KEY.INPUT_DIMENSIONS)))) {
 
                 LOGGER.warn("The number of Input Dimensions (" + inputLength + ") != number of Column Dimensions " + "(" + columnLength + ") --OR-- Encoder width (" + encoder.getWidth()
                                 + ") != product of dimensions (" + product + ") -- now attempting to fix it.");
@@ -488,7 +479,7 @@ public class Layer<T> implements Persistable {
             }
         }
 
-        autoCreateClassifiers = autoCreateClassifiers != null && (autoCreateClassifiers | (Boolean)params.getParameterByKey(KEY.AUTO_CLASSIFY));
+        autoCreateClassifiers = autoCreateClassifiers != null && (autoCreateClassifiers | (Boolean)params.get(KEY.AUTO_CLASSIFY));
 
         if(autoCreateClassifiers != null && autoCreateClassifiers.booleanValue() && (factory.inference.getClassifiers() == null || factory.inference.getClassifiers().size() < 1)) {
             factory.inference.classifiers(makeClassifiers(encoder == null ? parentNetwork.getEncoder() : encoder));
@@ -504,13 +495,11 @@ public class Layer<T> implements Persistable {
             params.setInputDimensions(upstreamDims);
             connections.setInputDimensions(upstreamDims);
         } else if(parentRegion != null && parentNetwork != null
-                && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null
-                && spatialPooler != null) {
-
+                && parentRegion.equals(parentNetwork.getSensorRegion()) && encoder == null && spatialPooler != null) {
             Layer<?> curr = this;
             while((curr = curr.getPrevious()) != null) {
                 if(curr.getEncoder() != null) {
-                    int[] dims = (int[])curr.getParameters().getParameterByKey(KEY.INPUT_DIMENSIONS);
+                    int[] dims = (int[])curr.getParameters().get(KEY.INPUT_DIMENSIONS);
                     params.setInputDimensions(dims);
                     connections.setInputDimensions(dims);
                 }
@@ -522,8 +511,8 @@ public class Layer<T> implements Persistable {
             // The exact dimensions don't have to be the same but the number of
             // dimensions do!
             int inputLength, columnLength = 0;
-            if((inputLength = ((int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS)).length) != 
-                (columnLength = ((int[])params.getParameterByKey(KEY.COLUMN_DIMENSIONS)).length)) {
+            if((inputLength = ((int[])params.get(KEY.INPUT_DIMENSIONS)).length) != 
+                (columnLength = ((int[])params.get(KEY.COLUMN_DIMENSIONS)).length)) {
                 
                 LOGGER.error("The number of Input Dimensions (" + inputLength + ") is not same as the number of Column Dimensions " + 
                     "(" + columnLength + ") in Parameters! - SpatialPooler not initialized!");
@@ -535,10 +524,10 @@ public class Layer<T> implements Persistable {
 
         // Let the TemporalMemory initialize the matrix with its requirements
         if(temporalMemory != null) {
-            temporalMemory.init(connections);
+            TemporalMemory.init(connections);
         }
-
-        this.feedForwardActiveColumns = new int[connections.getNumColumns()];
+        
+        this.numColumns = connections.getNumColumns();
 
         this.isClosed = true;
 
@@ -701,7 +690,7 @@ public class Layer<T> implements Persistable {
         
         return createSubscription(subscriber);
     }
-
+    
     /**
      * Allows the user to define the {@link Connections} object data structure
      * to use. Or possibly to share connections between two {@code Layer}s
@@ -888,11 +877,11 @@ public class Layer<T> implements Persistable {
         // Preserve any input dimensions that might have been set prior to this
         // in
         // previous layers
-        int[] inputDims = (int[])params.getParameterByKey(KEY.INPUT_DIMENSIONS);
+        int[] inputDims = (int[])params.get(KEY.INPUT_DIMENSIONS);
 
         this.params = this.params.copy();
-        this.params.setParameterByKey(key, value);
-        this.params.setParameterByKey(KEY.INPUT_DIMENSIONS, inputDims);
+        this.params.set(key, value);
+        this.params.set(KEY.INPUT_DIMENSIONS, inputDims);
 
         if(key == KEY.AUTO_CLASSIFY) {
             this.autoCreateClassifiers = value == null ? false : ((Boolean)value).booleanValue();
@@ -1170,7 +1159,7 @@ public class Layer<T> implements Persistable {
      * @return the binary vector representing the current prediction.
      */
     public Set<Cell> getPredictiveCells() {
-        return predictiveCells;
+        return currentInference.getPredictiveCells();
     }
 
     /**
@@ -1179,7 +1168,7 @@ public class Layer<T> implements Persistable {
      * @return the binary vector representing the current prediction.
      */
     public Set<Cell> getPreviousPredictiveCells() {
-        return previousPredictiveCells;
+        return currentInference.getPreviousPredictiveCells();
     }
 
     /**
@@ -1190,7 +1179,7 @@ public class Layer<T> implements Persistable {
      * @return the array of active column indexes
      */
     public int[] getFeedForwardActiveColumns() {
-        return feedForwardActiveColumns;
+        return currentInference.getFeedForwardActiveColumns();
     }
 
     /**
@@ -1200,19 +1189,7 @@ public class Layer<T> implements Persistable {
      * @return
      */
     public Set<Cell> getActiveCells() {
-        return activeCells;
-    }
-
-    /**
-     * Sets the sparse form of the {@link SpatialPooler} column activations and
-     * returns the specified array.
-     * 
-     * @param activesInSparseForm       the sparse column activations
-     * @return
-     */
-    int[] feedForwardSparseActives(int[] activesInSparseForm) {
-        this.feedForwardSparseActives = activesInSparseForm;
-        return this.feedForwardSparseActives;
+        return currentInference.getActiveCells();
     }
 
     /**
@@ -1222,7 +1199,7 @@ public class Layer<T> implements Persistable {
      * @return
      */
     public int[] getFeedForwardSparseActives() {
-        return feedForwardSparseActives;
+        return currentInference.getFeedForwardSparseActives();
     }
 
     /**
@@ -1640,12 +1617,12 @@ public class Layer<T> implements Persistable {
             sequenceStart = sequenceStart.skip(recordNum + 1);
             
             Integer skipCount;
-            if(((skipCount = (Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY)) != null)) {
+            if(((skipCount = (Integer)params.get(KEY.SP_PRIMER_DELAY)) != null)) {
                 // No need to "warm up" the SpatialPooler if we're deserializing an SP
                 // that has been running... However "skipCount - recordNum" is there so 
                 // we make sure the Network has run at least long enough to satisfy the 
                 // original requested "primer delay".
-                params.setParameterByKey(KEY.SP_PRIMER_DELAY, Math.max(0, skipCount - recordNum));
+                params.set(KEY.SP_PRIMER_DELAY, Math.max(0, skipCount - recordNum));
             }
         }
         
@@ -1738,7 +1715,7 @@ public class Layer<T> implements Persistable {
         // Spatial Pooler config
         if(spatialPooler != null) {
             Integer skipCount = 0;
-            if((skipCount = ((Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY))) != null) {
+            if((skipCount = ((Integer)params.get(KEY.SP_PRIMER_DELAY))) != null) {
                 o = o.map(factory.createSpatialFunc(spatialPooler)).skip(skipCount.intValue());
             } else {
                 o = o.map(factory.createSpatialFunc(spatialPooler));
@@ -1779,7 +1756,7 @@ public class Layer<T> implements Persistable {
                 o = o.map((Func1<ManualInput, ManualInput>)node);
             } else if(node instanceof SpatialPooler) {
                 Integer skipCount = 0;
-                if((skipCount = ((Integer)params.getParameterByKey(KEY.SP_PRIMER_DELAY))) != null) {
+                if((skipCount = ((Integer)params.get(KEY.SP_PRIMER_DELAY))) != null) {
                     o = o.map(factory.createSpatialFunc(spatialPooler)).skip(skipCount.intValue());
                 } else {
                     o = o.map(factory.createSpatialFunc(spatialPooler));
@@ -1939,9 +1916,11 @@ public class Layer<T> implements Persistable {
             LOGGER.info("Layer ".concat(getName()).concat(" received zero length bit vector"));
             return input;
         }
-        spatialPooler.compute(connections, input, feedForwardActiveColumns, sensor == null || sensor.getMetaInfo().isLearn(), isLearn);
+        
+        int[] activeColumns = new int[numColumns];
+        spatialPooler.compute(connections, input, activeColumns, isLearn || (sensor != null && sensor.getMetaInfo().isLearn()));
       
-        return feedForwardActiveColumns;
+        return activeColumns;
     }
 
     /**
@@ -1963,16 +1942,14 @@ public class Layer<T> implements Persistable {
             cc = temporalMemory.compute(connections, input, isLearn);
         }
         
-        previousPredictiveCells = predictiveCells;
-        
-        // Store the predictive columns
-        mi.predictiveCells(predictiveCells = cc.predictiveCells);
+        // Store the predictive columns / simultaneously storing previous predictive in this method
+        mi.predictiveCells(cc.predictiveCells());
         // Store activeCells
-        mi.activeCells(activeCells = cc.activeCells());
+        mi.activeCells(cc.activeCells);
         // Store the Compute Cycle
         mi.computeCycle = cc;
         
-        return SDR.asCellIndices(activeCells);
+        return SDR.asCellIndices(cc.activeCells);
     }
     
     /**
@@ -2280,14 +2257,15 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(t1.getSDR().length > 0 && ArrayUtils.isSparse(t1.getSDR())) {
+                    int[] sdr = t1.getSDR();
+                    if(sdr.length > 0 && ArrayUtils.isSparse(sdr)) {
                         if(inputWidth == -1) {
                             inputWidth = calculateInputWidth();
                         }
-                        t1.sdr(ArrayUtils.asDense(t1.getSDR(), inputWidth));
+                        sdr = ArrayUtils.asDense(sdr, inputWidth);
                     }
-                    
-                    return t1.sdr(spatialInput(t1.getSDR())).feedForwardActiveColumns(t1.getSDR());
+                    sdr = spatialInput(sdr);
+                    return t1.sdr(sdr).feedForwardActiveColumns(sdr);
                 }
             };
         }
@@ -2297,12 +2275,14 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(!ArrayUtils.isSparse(t1.getSDR())) {
+                    int[] sdr = t1.getSDR();
+                    if(!ArrayUtils.isSparse(sdr)) {
                         // Set on Layer, then set sparse actives as the sdr,
                         // then set on Manual Input (t1)
-                        t1 = t1.sdr(feedForwardSparseActives(ArrayUtils.where(t1.getSDR(), ArrayUtils.WHERE_1))).feedForwardSparseActives(t1.getSDR());
+                        sdr = ArrayUtils.where(sdr, ArrayUtils.WHERE_1);
+                        t1.sdr(sdr).feedForwardSparseActives(sdr);
                     }
-                    return t1.sdr(temporalInput(t1.getSDR(), t1));
+                    return t1.sdr(temporalInput(sdr, t1));
                 }
             };
         }
@@ -2344,13 +2324,16 @@ public class Layer<T> implements Persistable {
 
         public Func1<ManualInput, ManualInput> createAnomalyFunc(final Anomaly an) {
             return new Func1<ManualInput, ManualInput>() {
-
+                int isArrayInput = -1;
                 int cellsPerColumn = connections.getCellsPerColumn();
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    if(t1.getFeedForwardSparseActives() == null || t1.getPreviousPredictiveCells() == null) {
+                    if((hasSP() && t1.getFeedForwardSparseActives() == null) || t1.getPreviousPredictiveCells() == null) {
                         return t1.anomalyScore(1.0);
+                    }else if(!hasSP() && (isArrayInput == 1 || t1.getLayerInput().getClass().equals(int[].class))) {
+                        isArrayInput = 1;
+                        t1.feedForwardSparseActives((int[])t1.getLayerInput());
                     }
                     return t1.anomalyScore(anomalyComputer.compute(t1.getFeedForwardSparseActives(), 
                         SDR.cellsAsColumnIndices(t1.getPreviousPredictiveCells(), cellsPerColumn), 0, 0));

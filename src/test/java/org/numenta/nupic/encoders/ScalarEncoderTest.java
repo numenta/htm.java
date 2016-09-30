@@ -36,6 +36,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ScalarEncoderTest {
 	private ScalarEncoder se;
@@ -66,6 +67,100 @@ public class ScalarEncoderTest {
 		int[] expected = new int[14];
 		assertTrue(Arrays.equals(expected, empty));
 	}
+	
+	@Test
+	public void testGetScalars() {
+	    setUp();
+        initSE();
+        
+	    TDoubleList scalars = se.getScalars(42.42d);
+	    assertEquals(42.42d, scalars.get(0), 0.01);
+	}
+	
+	@Test
+	public void testDecodeNull() {
+	    setUp();
+        initSE();
+        
+        DecodeResult dr = se.decode(null, "blah");
+        assertTrue(dr == null);
+	}
+	
+	@Test
+	public void testGetFirstOnBit() {
+	    setUp();
+	    builder.periodic(false);
+	    builder.clipInput(true);
+        initSE();
+        
+        int firstOnBit = -1;
+        try {
+            firstOnBit = se.getFirstOnBit(Encoder.SENTINEL_VALUE_FOR_MISSING_DATA);
+            fail();
+        }catch(Exception e) {
+            assertEquals(NullPointerException.class, e.getClass());
+        }
+        
+        // for value < min
+        assertTrue(0 == se.getFirstOnBit(0.9)); 
+        
+        // Value less than min when clipInput == false || periodic == true
+        // Should throw an exception
+        setUp();
+        builder.periodic(true);
+        builder.clipInput(true);
+        initSE();
+        try {
+            se.getFirstOnBit(0.9);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("input (0.9) less than range (1.0 - 8.0)", e.getMessage());
+        }
+        
+        // Value greater than max when periodic == true
+        // Should throw an exception
+        setUp();
+        builder.periodic(true);
+        builder.clipInput(true);
+        initSE();
+        try {
+            se.getFirstOnBit(100);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("input (100.0) greater than periodic range (1.0 - 8.0)", e.getMessage());
+            
+        }
+        
+        // Value greater than max when periodic == false && clipInput == true
+        // Should throw an exception
+        setUp();
+        builder.periodic(false);
+        builder.clipInput(true);
+        initSE();
+        firstOnBit = se.getFirstOnBit(100);
+        assertTrue(11 == firstOnBit);
+        
+        // Value greater than max when periodic == false && clipInput == false
+        // Should throw an exception
+        setUp();
+        builder.periodic(false);
+        builder.clipInput(false);
+        initSE();
+        try {
+            se.getFirstOnBit(100);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("input (100.0) greater than periodic range (1.0 - 8.0)", e.getMessage());
+        }
+        
+        setUp();
+        initSE();
+        // Normal
+        assertTrue(11 == se.getFirstOnBit(7));
+    }
 	
 	@Test
 	public void testBottomUpEncodingPeriodicEncoder() {

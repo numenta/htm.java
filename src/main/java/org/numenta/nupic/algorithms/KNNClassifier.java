@@ -218,7 +218,7 @@ public class KNNClassifier {
             
             // Allocate storage if this is the first training vector
             if(memory == null) {
-                memory = new NearestNeighbor(inputWidth, sparseSpec == 1);
+//                memory = new NearestNeighbor(inputWidth, sparseSpec == 1);
             }
             
             // Support SVD if it is on

@@ -45,7 +45,7 @@ import org.numenta.nupic.Persistable;
  * @see DistalDendrite
  * @see Connections
  */
-public class Synapse implements Persistable {
+public class Synapse implements Persistable, Comparable<Synapse> {
     /** keep it simple */
     private static final long serialVersionUID = 1L;
     
@@ -53,9 +53,10 @@ public class Synapse implements Persistable {
     private Segment segment;
     private Pool pool;
     private int synapseIndex;
+    private Integer boxedIndex;
     private int inputIndex;
     private double permanence;
-
+    private boolean destroyed;
     
     /**
      * Constructor used when setting parameters later.
@@ -78,12 +79,8 @@ public class Synapse implements Persistable {
         this.segment = segment;
         this.pool = pool;
         this.synapseIndex = index;
+        this.boxedIndex = new Integer(index);
         this.inputIndex = inputIndex;
-        
-        // If this isn't a synapse on a proximal dendrite
-        if(sourceCell != null) {
-            sourceCell.addReceptorSynapse(c, this);
-        }
     }
 
     /**
@@ -117,6 +114,8 @@ public class Synapse implements Persistable {
      */
     public void setPermanence(Connections c, double perm) {
         this.permanence = perm;
+        
+        // On proximal dendrite which has no presynaptic cell
         if(sourceCell == null) {
             pool.updatePool(c, this, perm);
         }
@@ -129,6 +128,15 @@ public class Synapse implements Persistable {
     public Segment getSegment() {
         return segment;
     }
+    
+    /**
+     * Called by {@link Connections#destroySynapse(Synapse)} to assign
+     * a reused Synapse to another presynaptic Cell
+     * @param cell  the new presynaptic cell
+     */
+    public void setPresynapticCell(Cell cell) {
+        this.sourceCell = cell;
+    }
 
     /**
      * Returns the containing {@link Cell} 
@@ -139,19 +147,19 @@ public class Synapse implements Persistable {
     }
     
     /**
-     * Removes the references to this Synapse in its associated
-     * {@link Pool} and its upstream presynapticCell's reference.
-     * 
-     * @param c
+     * Returns the flag indicating whether this segment has been destroyed.
+     * @return  the flag indicating whether this segment has been destroyed.
      */
-    public void destroy(Connections c) {
-        this.pool.destroySynapse(this);
-        if(sourceCell != null) {
-            c.getSynapses((DistalDendrite)segment).remove(this);
-            sourceCell.removeReceptorSynapse(c, this);
-        }else{
-            c.getSynapses((ProximalDendrite)segment).remove(this);
-        }
+    public boolean destroyed() {
+        return destroyed;
+    }
+    
+    /**
+     * Sets the flag indicating whether this segment has been destroyed.
+     * @param b the flag indicating whether this segment has been destroyed.
+     */
+    public void setDestroyed(boolean b) {
+        this.destroyed = b;
     }
 
     /**
@@ -165,6 +173,16 @@ public class Synapse implements Persistable {
         }
         sb.append(" ]");
         return sb.toString();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * 
+     * <em> Note: All comparisons use the segment's index only </em>
+     */
+    @Override
+    public int compareTo(Synapse arg0) {
+        return boxedIndex.compareTo(arg0.boxedIndex);
     }
 
     /* (non-Javadoc)

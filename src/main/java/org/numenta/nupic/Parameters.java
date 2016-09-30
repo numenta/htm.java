@@ -85,12 +85,13 @@ public class Parameters implements Persistable {
         defaultTemporalParams.put(KEY.LEARNING_RADIUS, 2048);
         defaultTemporalParams.put(KEY.MIN_THRESHOLD, 10);
         defaultTemporalParams.put(KEY.MAX_NEW_SYNAPSE_COUNT, 20);
+        defaultTemporalParams.put(KEY.MAX_SYNAPSES_PER_SEGMENT, 255);
+        defaultTemporalParams.put(KEY.MAX_SEGMENTS_PER_CELL, 255);
         defaultTemporalParams.put(KEY.INITIAL_PERMANENCE, 0.21);
         defaultTemporalParams.put(KEY.CONNECTED_PERMANENCE, 0.5);
         defaultTemporalParams.put(KEY.PERMANENCE_INCREMENT, 0.10);
         defaultTemporalParams.put(KEY.PERMANENCE_DECREMENT, 0.10);
         defaultTemporalParams.put(KEY.PREDICTED_SEGMENT_DECREMENT, 0.0);
-        defaultTemporalParams.put(KEY.TM_VERBOSITY, 0);
         defaultTemporalParams.put(KEY.LEARN, true);
         DEFAULTS_TEMPORAL = Collections.unmodifiableMap(defaultTemporalParams);
         defaultParams.putAll(DEFAULTS_TEMPORAL);
@@ -98,23 +99,22 @@ public class Parameters implements Persistable {
         //////////// Spatial Pooler Parameters ///////////
         Map<KEY, Object> defaultSpatialParams = new ParametersMap();
         defaultSpatialParams.put(KEY.INPUT_DIMENSIONS, new int[]{64});
-        defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, 16);
+        defaultSpatialParams.put(KEY.POTENTIAL_RADIUS, -1);
         defaultSpatialParams.put(KEY.POTENTIAL_PCT, 0.5);
         defaultSpatialParams.put(KEY.GLOBAL_INHIBITION, false);
         defaultSpatialParams.put(KEY.INHIBITION_RADIUS, 0);
         defaultSpatialParams.put(KEY.LOCAL_AREA_DENSITY, -1.0);
         defaultSpatialParams.put(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 10.0);
         defaultSpatialParams.put(KEY.STIMULUS_THRESHOLD, 0.0);
-        defaultSpatialParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.01);
-        defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        defaultSpatialParams.put(KEY.SYN_PERM_INACTIVE_DEC, 0.008);//0.01
+        defaultSpatialParams.put(KEY.SYN_PERM_ACTIVE_INC, 0.05);//0.1
         defaultSpatialParams.put(KEY.SYN_PERM_CONNECTED, 0.10);
         defaultSpatialParams.put(KEY.SYN_PERM_BELOW_STIMULUS_INC, 0.01);
         defaultSpatialParams.put(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, 0.001);
-        defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, 0.001);
+        defaultSpatialParams.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, 0.001);
+        defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.001);
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
         defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
-        defaultSpatialParams.put(KEY.SP_VERBOSITY, 0);
         defaultSpatialParams.put(KEY.LEARN, true);
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
@@ -211,6 +211,14 @@ public class Parameters implements Persistable {
          */
         MAX_NEW_SYNAPSE_COUNT("maxNewSynapseCount", Integer.class),
         /**
+         * The maximum number of synapses that can be added to a segment.
+         */
+        MAX_SYNAPSES_PER_SEGMENT("maxSynapsesPerSegment", Integer.class),
+        /**
+         * The maximum number of {@link Segment}s a {@link Cell} can have.
+         */
+        MAX_SEGMENTS_PER_CELL("maxSegmentsPerCell", Integer.class),
+        /**
          * Initial permanence of a new synapse
          */
         INITIAL_PERMANENCE("initialPermanence", Double.class, 0.0, 1.0),
@@ -236,11 +244,15 @@ public class Parameters implements Persistable {
          */
         PREDICTED_SEGMENT_DECREMENT("predictedSegmentDecrement", Double.class, 0.0, 9.0),
         /** Remove this and add Logging (slf4j) */
-        TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
+        //TM_VERBOSITY("tmVerbosity", Integer.class, 0, 10),
         
 
         /////////// Spatial Pooler Parameters ///////////
         INPUT_DIMENSIONS("inputDimensions", int[].class),
+        /** <b>WARNING:</b> potentialRadius **must** be set to 
+         * the inputWidth if using "globalInhibition" and if not 
+         * using the Network API (which sets this automatically) 
+         */
         POTENTIAL_RADIUS("potentialRadius", Integer.class),
         POTENTIAL_PCT("potentialPct", Double.class), //TODO add range here?
         GLOBAL_INHIBITION("globalInhibition", Boolean.class),
@@ -253,11 +265,11 @@ public class Parameters implements Persistable {
         SYN_PERM_CONNECTED("synPermConnected", Double.class, 0.0, 1.0),
         SYN_PERM_BELOW_STIMULUS_INC("synPermBelowStimulusInc", Double.class, 0.0, 1.0),
         SYN_PERM_TRIM_THRESHOLD("synPermTrimThreshold", Double.class, 0.0, 1.0),
-        MIN_PCT_OVERLAP_DUTY_CYCLE("minPctOverlapDutyCycles", Double.class),//TODO add range here?
-        MIN_PCT_ACTIVE_DUTY_CYCLE("minPctActiveDutyCycles", Double.class),//TODO add range here?
+        MIN_PCT_OVERLAP_DUTY_CYCLES("minPctOverlapDutyCycles", Double.class),//TODO add range here?
+        MIN_PCT_ACTIVE_DUTY_CYCLES("minPctActiveDutyCycles", Double.class),//TODO add range here?
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
-        SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
+        //SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
         
         ///////////// SpatialPooler / Network Parameter(s) /////////////
         /** Number of cycles to send through the SP before forwarding data to the rest of the network. */
@@ -459,9 +471,9 @@ public class Parameters implements Persistable {
                 throw new IllegalArgumentException("checkRange argument can not be null");
             }
             return (min == null && max == null) ||
-                   (min != null && max == null && min.doubleValue() <= value.doubleValue()) ||
-                   (max != null && min == null && value.doubleValue() < value.doubleValue()) ||
-                   (min != null && min.doubleValue() <= value.doubleValue() && max != null && value.doubleValue() < max.doubleValue());
+                   (min != null && max == null &&  value.doubleValue() >= min.doubleValue()) ||
+                   (max != null && min == null && value.doubleValue() <= max.doubleValue()) ||
+                   (min != null && value.doubleValue() >= min.doubleValue() && max != null && value.doubleValue() <= max.doubleValue());
         }
 
     }
@@ -562,7 +574,7 @@ public class Parameters implements Persistable {
     private static Parameters getParameters(Map<KEY, Object> map) {
         Parameters result = new Parameters();
         for (KEY key : map.keySet()) {
-            result.setParameterByKey(key, map.get(key));
+            result.set(key, map.get(key));
         }
         return result;
     }
@@ -587,7 +599,14 @@ public class Parameters implements Persistable {
         Set<KEY> presentKeys = paramMap.keySet();
         synchronized (paramMap) {
             for (KEY key : presentKeys) {
-                beanUtil.setSimpleProperty(cn, key.fieldName, getParameterByKey(key));
+                if((cn instanceof Connections) && 
+                    (key == KEY.SYN_PERM_BELOW_STIMULUS_INC || key == KEY.SYN_PERM_TRIM_THRESHOLD)) {
+                    continue;
+                }
+                if(key == KEY.RANDOM) {
+                    ((Random)get(key)).setSeed(Long.valueOf(((int)get(KEY.SEED))));
+                }
+                beanUtil.setSimpleProperty(cn, key.fieldName, get(key));
             }
         }
     }
@@ -601,7 +620,7 @@ public class Parameters implements Persistable {
      */
     public Parameters union(Parameters p) {
         for(KEY k : p.paramMap.keySet()) {
-            setParameterByKey(k, p.getParameterByKey(k));
+            set(k, p.get(k));
         }
         return this;
     }
@@ -638,7 +657,7 @@ public class Parameters implements Persistable {
      * @param key
      * @param value
      */
-    public void setParameterByKey(KEY key, Object value) {
+    public void set(KEY key, Object value) {
         paramMap.put(key, value);
     }
 
@@ -648,7 +667,7 @@ public class Parameters implements Persistable {
      * @param key
      * @return
      */
-    public Object getParameterByKey(KEY key) {
+    public Object get(KEY key) {
         return paramMap.get(key);
     }
 
@@ -679,7 +698,7 @@ public class Parameters implements Persistable {
             String fieldName = property.getName();
             KEY propKey = KEY.getKeyByFieldName(property.getName());
             if (propKey != null) {
-                Object paramValue = this.getParameterByKey(propKey);
+                Object paramValue = this.get(propKey);
                 Object cnValue = beanUtil.getSimpleProperty(cn, fieldName);
                 
                 // KEY.POTENTIAL_RADIUS is defined as Math.min(cn.numInputs, potentialRadius) so just log...
@@ -762,10 +781,27 @@ public class Parameters implements Persistable {
     /**
      * The maximum number of synapses added to a segment during learning.
      *
-     * @param maxNewSynapseCount
+     * @param maxSynapsesPerSegment
      */
-    public void setMaxNewSynapseCount(int maxNewSynapseCount) {
-        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, maxNewSynapseCount);
+    public void setMaxSynapsesPerSegment(int maxSynapsesPerSegment) {
+        paramMap.put(KEY.MAX_SYNAPSES_PER_SEGMENT, maxSynapsesPerSegment);
+    }
+    
+    /**
+     * The maximum number of {@link Segment}s a {@link Cell} can have.
+     *
+     * @param maxSegmentsPerCell
+     */
+    public void setMaxSegmentsPerCell(int maxSegmentsPerCell) {
+        paramMap.put(KEY.MAX_SEGMENTS_PER_CELL, maxSegmentsPerCell);
+    }
+    
+    /**
+     * The maximum number of new synapses
+     * @param count
+     */
+    public void setMaxNewSynapseCount(int count) {
+        paramMap.put(KEY.MAX_NEW_SYNAPSE_COUNT, count);
     }
 
     /**
@@ -844,6 +880,11 @@ public class Parameters implements Persistable {
      * parameter defines a square (or hyper square) area: a
      * column will have a max square potential pool with
      * sides of length 2 * potentialRadius + 1.
+     * 
+     * <b>WARNING:</b> potentialRadius **must** be set to 
+     * the inputWidth if using "globalInhibition" and if not 
+     * using the Network API (which sets this automatically) 
+     *
      *
      * @param potentialRadius
      */
@@ -1022,8 +1063,8 @@ public class Parameters implements Persistable {
      *
      * @param minPctOverlapDutyCycles
      */
-    public void setMinPctOverlapDutyCycle(double minPctOverlapDutyCycles) {
-        paramMap.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLE, minPctOverlapDutyCycles);
+    public void setMinPctOverlapDutyCycles(double minPctOverlapDutyCycles) {
+        paramMap.put(KEY.MIN_PCT_OVERLAP_DUTY_CYCLES, minPctOverlapDutyCycles);
     }
 
     /**
@@ -1041,8 +1082,8 @@ public class Parameters implements Persistable {
      *
      * @param minPctActiveDutyCycles
      */
-    public void setMinPctActiveDutyCycle(double minPctActiveDutyCycles) {
-        paramMap.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLE, minPctActiveDutyCycles);
+    public void setMinPctActiveDutyCycles(double minPctActiveDutyCycles) {
+        paramMap.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, minPctActiveDutyCycles);
     }
 
     /**
@@ -1106,7 +1147,7 @@ public class Parameters implements Persistable {
     }
 
     private void buildParamStr(StringBuilder spatialInfo, KEY key) {
-        Object value = getParameterByKey(key);
+        Object value = get(key);
         if (value instanceof int[]) {
             value = ArrayUtils.intArrayToString(value);
         }

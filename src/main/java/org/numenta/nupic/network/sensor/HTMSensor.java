@@ -159,7 +159,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
         
         Map<String, Map<String, Object>> encoderSettings;
         if(localParameters != null && 
-            (encoderSettings = (Map<String, Map<String, Object>>)localParameters.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null &&
+            (encoderSettings = (Map<String, Map<String, Object>>)localParameters.get(KEY.FIELD_ENCODING_MAP)) != null &&
                 !encoderSettings.isEmpty()) {
             
             initEncoders(encoderSettings);
@@ -594,7 +594,7 @@ public class HTMSensor<T> implements Sensor<T>, Serializable {
         this.localParameters = p;
         
         Map<String, Map<String, Object>> encoderSettings;
-        if((encoderSettings = (Map<String, Map<String, Object>>)p.getParameterByKey(KEY.FIELD_ENCODING_MAP)) != null &&
+        if((encoderSettings = (Map<String, Map<String, Object>>)p.get(KEY.FIELD_ENCODING_MAP)) != null &&
             !encodersInitted) {
             
             initEncoders(encoderSettings);

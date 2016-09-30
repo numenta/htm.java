@@ -1,31 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="src" path="src/jmh/java"/>
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry kind="src" path="src/test/java"/>
-	<classpathentry kind="src" path="src/test/resources"/>
-	<classpathentry kind="src" path="src/jmh/java"/>
-	<classpathentry kind="src" path="src/jmh/resources"/>
-	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/joda-time/joda-time/2.5/c73038a3688525aad5cf33409df483178290cd64/joda-time-2.5.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/joda-time/joda-time/2.5/2bd5124dfb9198af70cad30eb9ccbfa9cd670163/joda-time-2.5-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.chaschev/chutils/1.4/c118635bedfba9908a1393623eb725bbe47c8429/chutils-1.4.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.chaschev/chutils/1.4/436c4e8aa0dca6f2fa4a1a53abb9d790ae0eb7b3/chutils-1.4-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3/42ccaf4761f0dfdfa805c9e340d99a755907e2dd/trove4j-3.0.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3/109c5be93362e6e651e417c51d1863477a22969c/trove4j-3.0.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.4.4/d3dad1a494f94579fca4b6a1142fb15fb68f0b2f/jackson-annotations-2.4.4.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.4.4/9e1cd34eb4b59486c3261d8b5a7ff16d139b4d7f/jackson-annotations-2.4.4-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.4.4/e2ff13c3de2f5a2ab2449a3dace2b0d1c37bd8ee/jackson-databind-2.4.4.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.4.4/43a7e3856fb4b24de35cdc0627f7bb49b1e713dd/jackson-databind-2.4.4-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.10/5b338f206827d88acd890739f400a9b7664e5984/slf4j-api-1.7.10.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.10/4d2725efe68b9943ba0deaf334bb27116ca6b687/slf4j-api-1.7.10-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/io.reactivex/rxjava/1.0.10/c28ade6b57e4d4338b5fe0c9ac0e57805f1724f3/rxjava-1.0.10.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/io.reactivex/rxjava/1.0.10/b96d1a1c88ee6172811b2705323bccaa1e6435c/rxjava-1.0.10-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/de.ruedigermoeller/fst/2.45/3cc5cb8d2d2eca5f7af3a623d2fe0fcc395cdec9/fst-2.45.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/de.ruedigermoeller/fst/2.45/4f5de547b6436ed31b6ada54d9711ca6935385ba/fst-2.45-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.cedarsoftware/java-util/1.19.3/bd434c9932a7adfab0f1393f38a2063461edbb4/java-util-1.19.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.cedarsoftware/java-util/1.19.3/f115880148584e244e282cd932e829830693a7dc/java-util-1.19.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/junit/junit/4.11/4e031bb61df09069aeb2bffb4019e7a5034a4ee0/junit-4.11.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/junit/junit/4.11/28e0ad201304e4a4abf999ca0570b7cffc352c3c/junit-4.11-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.1.2/b316e9737eea25e9ddd6d88eaeee76878045c6b2/logback-classic-1.1.2.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.1.2/decd76e2c461157804473468bbdc6b8eb6d6121b/logback-classic-1.1.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.19.0-GA/50120f69224dd8684b445a6f3a5b08fe9b5c60f6/javassist-3.19.0-GA.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.19.0-GA/37e6508aeea3eef21df5b7ee3ea3c708618c1b7b/javassist-3.19.0-GA-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/2.1/87c0ea803b69252868d09308b4618f766f135a96/objenesis-2.1.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/2.1/611a57d836e2c320d59f9851d4ad587f3c8472e/objenesis-2.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.1/588c32c91544d80cc706447aa2b8037230114931/log4j-api-2.1.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.1/171e4563feb5bf66ef790a8e679557a03b378f8e/log4j-api-2.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.1/31823dcde108f2ea4a5801d1acc77869d7696533/log4j-core-2.1.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.1/6e6c4141f6d96e57fd48df5d398a122226ef92d7/log4j-core-2.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.1.2/2d23694879c2c12f125dac5076bdfd5d771cc4cb/logback-core-1.1.2.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-core/1.1.2/502e1c764542fe747896c1dc04f023acfe0e5cbc/logback-core-1.1.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.5.3/a8b8a6dfc8a17890e4c7ff8aed810763d265b68b/jackson-core-2.5.3.jar" sourcepath="/Users/cogmission/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.5.3/8bfff00c810764fd4e0fc78959b45f8734dd0c3e/jackson-core-2.5.3-sources.jar"/>
-	<classpathentry kind="lib" path="libs/algorithmfoundry-shade-culled-1.0.jar" sourcepath="/algfoundryculled/src/main/java"/>
+	<classpathentry kind="lib" path="libs/algorithmfoundry-shade-culled-1.3.jar"/>
+	<classpathentry kind="lib" path="libs/chutils-1.4.jar"/>
+	<classpathentry kind="lib" path="libs/fst-2.45.jar"/>
+	<classpathentry kind="lib" path="libs/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="libs/jackson-annotations-2.4.0.jar"/>
+	<classpathentry kind="lib" path="libs/jackson-core-2.4.4.jar"/>
+	<classpathentry kind="lib" path="libs/jackson-databind-2.4.4.jar"/>
+	<classpathentry kind="lib" path="libs/java-util-1.19.3.jar"/>
 	<classpathentry kind="lib" path="libs/jmh-core-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/joda-time-2.5.jar"/>
+	<classpathentry kind="lib" path="libs/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="libs/logback-classic-1.1.2.jar"/>
+	<classpathentry kind="lib" path="libs/logback-core-1.1.2.jar"/>
+	<classpathentry kind="lib" path="libs/objenesis-2.1.jar"/>
+	<classpathentry kind="lib" path="libs/rxjava-1.0.10.jar"/>
+	<classpathentry kind="lib" path="libs/slf4j-api-1.7.10.jar"/>
+	<classpathentry kind="lib" path="libs/trove-3.1a1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -772,17 +772,26 @@ public class ArrayUtils {
      * @param args  the array of ints to be wrapped in {@link Tuple}s
      * @return a list of tuples
      */
-    public static List<Tuple> zip(int[]... args) {
-        // Find the array with the minimum size
-        int minLength = Arrays.stream(args).mapToInt(i -> i.length).min().orElse(0);
-
-        return IntStream.range(0, minLength).mapToObj(i -> {
-            Tuple.Builder builder = Tuple.builder();
-            for(int[] ia : args) {
-                builder.add(ia[i]);
+    public static List<Tuple> zip(Object[]... args) {
+        List<Tuple> tuples = new ArrayList<Tuple>();
+        
+        int min = Integer.MAX_VALUE;
+        for(Object[] oa : args) {
+            if(oa.length < min) {
+                min = oa.length;
             }
-            return builder.build();
-        }).collect(Collectors.toList());
+        }
+        
+        int len = args.length;
+        for(int j = 0;j < min;j++) {
+            MutableTuple mt = new MutableTuple(2);
+            for (int i = 0; i < len; i++) {
+                mt.set(i, args[i][j]);
+            }
+            tuples.add(mt);
+        }
+        
+        return tuples;
     }
 
     /**
@@ -1053,8 +1062,8 @@ public class ArrayUtils {
      *
      * @param multiplicand
      * @param factor
-     * @param multiplicand adjustment
-     * @param factor       adjustment
+     * @param multiplicandAdjustment
+     * @param factorAdjustment
      *
      * @return
      * @throws IllegalArgumentException if the two argument arrays are not the same length
@@ -1064,8 +1073,9 @@ public class ArrayUtils {
 
         if (multiplicand.length != factor.length) {
             throw new IllegalArgumentException(
-                            "The multiplicand array and the factor array must be the same length");
+                "The multiplicand array and the factor array must be the same length");
         }
+        
         double[] product = new double[multiplicand.length];
         for (int i = 0; i < multiplicand.length; i++) {
             product[i] = (multiplicand[i] + multiplicandAdjustment) * (factor[i] + factorAdjustment);
@@ -1156,9 +1166,10 @@ public class ArrayUtils {
      * @return
      */
     public static List<Integer> subtract(List<Integer> subtrahend, List<Integer> minuend) {
-        ArrayList<Integer> sList = new ArrayList<Integer>(minuend);
-        sList.removeAll(subtrahend);
-        return new ArrayList<Integer>(sList);
+        return IntStream.range(0, minuend.size())
+           .boxed()
+           .map(i -> minuend.get(i) - subtrahend.get(i))
+           .collect(Collectors.toList());
     }
 
     /**
@@ -1667,19 +1678,17 @@ public class ArrayUtils {
      * @param random     a random number generator
      * @return a sample of numbers of the specified size
      */
-    public static int[] sample(int sampleSize, TIntArrayList choices, Random random) {
-        TIntHashSet temp = new TIntHashSet();
+    public static int[] sample(TIntArrayList choices, int[] selectedIndices, Random random) {
+        TIntArrayList choiceSupply = new TIntArrayList(choices);
         int upperBound = choices.size();
-        for (int i = 0; i < sampleSize; i++) {
+        for (int i = 0; i < selectedIndices.length; i++) {
             int randomIdx = random.nextInt(upperBound);
-            while (temp.contains(choices.get(randomIdx))) {
-                randomIdx = random.nextInt(upperBound);
-            }
-            temp.add(choices.get(randomIdx));
+            selectedIndices[i] = (choiceSupply.removeAt(randomIdx));
+            upperBound--;
         }
-        TIntArrayList al = new TIntArrayList(temp);
-        al.sort();
-        return al.toArray();
+        Arrays.sort(selectedIndices);
+        //System.out.println("sample: " + Arrays.toString(selectedIndices));
+        return selectedIndices;
     }
 
     /**
@@ -1763,6 +1772,26 @@ public class ArrayUtils {
 
         return count;
     }
+    
+    /**
+     * Returns the count of values in the specified array that are
+     * greater than or equal to, the specified compare value.
+     *
+     * @param compare the value to compare to
+     * @param array   the values being compared
+     *
+     * @return the count of values greater
+     */
+    public static int valueGreaterOrEqualCount(double compare, double[] array) {
+        int count = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] >= compare) {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     /**
      * Returns the count of values in the specified array that are
@@ -1809,7 +1838,7 @@ public class ArrayUtils {
         }
         return retVal;
     }
-
+    
     /**
      * Raises the values in the specified array by the amount specified
      * @param amount the amount to raise the values
@@ -2046,6 +2075,21 @@ public class ArrayUtils {
             if (array[i] > x) array[i] = y;
         }
     }
+
+    /**
+     * Sets value to "y" in "targetB" if the value in the same index in "sourceA" is bigger than "x".
+     * @param sourceA array to compare elements with X
+     * @param targetB array to set elements to Y
+     * @param x     the comparison
+     * @param y     the value to set if the comparison fails
+     */
+    public static void greaterThanXThanSetToYInB(int[] sourceA, double[] targetB, int x, double y) {
+        for (int i=0;i<sourceA.length;i++) {
+            if (sourceA[i] > x)
+                targetB[i] = y;
+        }
+    }
+
 
     /**
      * Returns the index of the max value in the specified array

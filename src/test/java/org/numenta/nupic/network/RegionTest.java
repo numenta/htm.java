@@ -37,9 +37,9 @@ import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -50,15 +50,16 @@ import org.numenta.nupic.util.MersenneTwister;
 
 import rx.Observer;
 import rx.Subscriber;
+import rx.observers.TestObserver;
 
 
-public class RegionTest {
+public class RegionTest extends ObservableTestBase {
     
     @Test
     public void testClose() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -148,7 +149,7 @@ public class RegionTest {
     public void testAutomaticClose() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -174,7 +175,7 @@ public class RegionTest {
     public void testAdd() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -200,7 +201,7 @@ public class RegionTest {
     public void testHalt() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -263,10 +264,10 @@ public class RegionTest {
     public void testInputDimensionsAutomaticallyInferredFromEncoderWidth() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         // Purposefully set this to be wrong
-        p.setParameterByKey(KEY.INPUT_DIMENSIONS, new int[] { 40, 40 });
+        p.set(KEY.INPUT_DIMENSIONS, new int[] { 40, 40 });
         
         Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -275,7 +276,7 @@ public class RegionTest {
                     .close());
             
         // Should correct the above ( {40,40} ) to have only one dimension whose width is 8 ( {8} )
-        assertTrue(Arrays.equals(new int[] { 8 }, (int[])p.getParameterByKey(KEY.INPUT_DIMENSIONS)));
+        assertTrue(Arrays.equals(new int[] { 8 }, (int[])p.get(KEY.INPUT_DIMENSIONS)));
     }
     
     /**
@@ -285,7 +286,7 @@ public class RegionTest {
     public void testEncoderPassesUpToTopLayer() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -316,14 +317,14 @@ public class RegionTest {
     public void testMultiLayerAssemblyNoSensor() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
-        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
-        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
-        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.set(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.set(KEY.MAX_BOOST, 10.0);
+        p.set(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -389,14 +390,14 @@ public class RegionTest {
     public void testIsLearn() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
-        p.setParameterByKey(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
-        p.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.1);
-        p.setParameterByKey(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        p.setParameterByKey(KEY.SYN_PERM_CONNECTED, 0.4);
-        p.setParameterByKey(KEY.MAX_BOOST, 10.0);
-        p.setParameterByKey(KEY.DUTY_CYCLE_PERIOD, 7);
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
+        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
+        p.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.set(KEY.SYN_PERM_CONNECTED, 0.4);
+        p.set(KEY.MAX_BOOST, 10.0);
+        p.set(KEY.DUTY_CYCLE_PERIOD, 7);
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -443,7 +444,7 @@ public class RegionTest {
     public void test2LayerAssemblyWithSensor() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -467,27 +468,27 @@ public class RegionTest {
         
         Region r1 = n.lookup("r1");
         // Observe the top layer
-        r1.lookup("4").observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester;
+        r1.lookup("4").observe().subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx0++], i.getEncoding()));
             }
         });
         
         // Observe the bottom layer
-        r1.lookup("2/3").observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester2;
+        r1.lookup("2/3").observe().subscribe(tester2 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx1++], i.getEncoding()));
             }
         });
         
         // Observe the Region output
-        r1.observe().subscribe(new Subscriber<Inference>() {
+        TestObserver<Inference> tester3;
+        r1.observe().subscribe(tester3 = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
-            @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 assertTrue(Arrays.equals(inputs[idx2++], i.getEncoding()));
             }
@@ -504,6 +505,10 @@ public class RegionTest {
         assertEquals(7, idx0);
         assertEquals(7, idx1);
         assertEquals(7, idx2);
+        
+        checkObserver(tester);
+        checkObserver(tester2);
+        checkObserver(tester3);
     }
 
     /**
@@ -519,7 +524,7 @@ public class RegionTest {
     public void testAlgorithmRepetitionDetection() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.RANDOM, new MersenneTwister(42));
         
         // -- No overlap
         Network n = Network.create("test network", p)

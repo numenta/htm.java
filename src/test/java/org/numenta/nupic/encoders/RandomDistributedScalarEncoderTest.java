@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -310,7 +309,7 @@ public class RandomDistributedScalarEncoderTest {
 
 		RandomDistributedScalarEncoder encoder1 = builder.setSeed(42).build();
 		RandomDistributedScalarEncoder encoder2 = builder.setSeed(42).build();
-		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-1).build();
+		RandomDistributedScalarEncoder encoder3 = builder.setSeed(-2).build();
 		//RandomDistributedScalarEncoder encoder4 = builder.setSeed(-1).build();
 
 		int[] e1 = encoder1.encode(23.0);
@@ -506,12 +505,6 @@ public class RandomDistributedScalarEncoderTest {
 		r2 = new int[] { 1, 2, 3, 4, 5, 6 };
 		assertEquals("countOverlap result is incorrect", 0,
 				rdse.countOverlap(r1, r2));
-	}
-
-	@Ignore
-	@Test
-	public void testEncodeInvalidInputType() {
-		// not valid for java as it does not follow duck typing
 	}
 
 	private List<Integer> getRangeAsList(int lowerBound, int upperBound) {

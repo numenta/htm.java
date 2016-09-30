@@ -51,53 +51,53 @@ public class ParametersTest {
         assertEquals(p1, p2);
 
         // Positive Number
-        p1.setParameterByKey(KEY.POTENTIAL_PCT, 32.0);
-        p2.setParameterByKey(KEY.POTENTIAL_PCT, 32.0);
+        p1.set(KEY.POTENTIAL_PCT, 32.0);
+        p2.set(KEY.POTENTIAL_PCT, 32.0);
         assertEquals(p1, p2);
 
         // Negative Number
-        p1.setParameterByKey(KEY.POTENTIAL_PCT, 32.0);
-        p2.setParameterByKey(KEY.POTENTIAL_PCT, 32.2);
+        p1.set(KEY.POTENTIAL_PCT, 32.0);
+        p2.set(KEY.POTENTIAL_PCT, 32.2);
         assertNotEquals(p1, p2);
-        p2.setParameterByKey(KEY.POTENTIAL_PCT, 32.0); // reset
+        p2.set(KEY.POTENTIAL_PCT, 32.0); // reset
 
         // Positive int[]
-        p1.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
-        p2.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p1.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p2.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
         assertEquals(p1, p2);
 
         // Negative int[]
-        p1.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
-        p2.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2049 });
+        p1.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        p2.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2049 });
         assertNotEquals(p1, p2);
-        p2.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 }); // reset
+        p2.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 }); // reset
 
         // Positive Field Encodings Map
         Map<String, Map<String, Object>> map = getHotGymFieldEncodingMap();
-        p1.setParameterByKey(KEY.FIELD_ENCODING_MAP, map);
-        p2.setParameterByKey(KEY.FIELD_ENCODING_MAP, map);
+        p1.set(KEY.FIELD_ENCODING_MAP, map);
+        p2.set(KEY.FIELD_ENCODING_MAP, map);
         assertEquals(p1, p2);
         
         // Negative Field Encodings Map - vary N
         Map<String, Map<String, Object>> map2 = getHotGymFieldEncodingMap_varyN();
-        p1.setParameterByKey(KEY.FIELD_ENCODING_MAP, map);
-        p2.setParameterByKey(KEY.FIELD_ENCODING_MAP, map2);
+        p1.set(KEY.FIELD_ENCODING_MAP, map);
+        p2.set(KEY.FIELD_ENCODING_MAP, map2);
         assertNotEquals(p1, p2);
         
         // Negative Field Encodings Map - vary inner Tuple value
         map2 = getHotGymFieldEncodingMap_varyDateFieldTupleValue();
-        p1.setParameterByKey(KEY.FIELD_ENCODING_MAP, map);
-        p2.setParameterByKey(KEY.FIELD_ENCODING_MAP, map2);
+        p1.set(KEY.FIELD_ENCODING_MAP, map);
+        p2.set(KEY.FIELD_ENCODING_MAP, map2);
         assertNotEquals(p1, p2);
         
         // Negative Field Encodings Map - vary Date Field Key
         map2 = getHotGymFieldEncodingMap_varyDateFieldKey();
-        p1.setParameterByKey(KEY.FIELD_ENCODING_MAP, map);
-        p2.setParameterByKey(KEY.FIELD_ENCODING_MAP, map2);
+        p1.set(KEY.FIELD_ENCODING_MAP, map);
+        p2.set(KEY.FIELD_ENCODING_MAP, map2);
         assertNotEquals(p1, p2);
         
         // Re-assert if changed back that it passes
-        p1.setParameterByKey(KEY.FIELD_ENCODING_MAP, map2);
+        p1.set(KEY.FIELD_ENCODING_MAP, map2);
         assertEquals(p1, p2);
     }
 
@@ -105,9 +105,9 @@ public class ParametersTest {
     public void testApply() {
         DummyContainer dc = new DummyContainer();
         Parameters params = Parameters.getAllDefaultParameters();
-        params.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
-        params.setParameterByKey(Parameters.KEY.POTENTIAL_PCT, 20.0);
-        params.setParameterByKey(Parameters.KEY.CELLS_PER_COLUMN, null);
+        params.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[] { 2048 });
+        params.set(Parameters.KEY.POTENTIAL_PCT, 20.0);
+        params.set(Parameters.KEY.CELLS_PER_COLUMN, null);
         params.apply(dc);
         assertTrue(Arrays.equals(new int[] { 2048 }, dc.getColumnDimensions()));
         assertEquals(20.0, dc.getPotentialPct(), 0);
@@ -116,16 +116,16 @@ public class ParametersTest {
     @Test
     public void testDefaultsAndUpdates() {
         Parameters params = Parameters.getAllDefaultParameters();
-        assertEquals(params.getParameterByKey(Parameters.KEY.CELLS_PER_COLUMN), 32);
-        assertEquals(params.getParameterByKey(Parameters.KEY.SEED), 42);
-        assertEquals(true, ((Random)params.getParameterByKey(Parameters.KEY.RANDOM)).getClass().equals(MersenneTwister.class));
+        assertEquals(params.get(Parameters.KEY.CELLS_PER_COLUMN), 32);
+        assertEquals(params.get(Parameters.KEY.SEED), 42);
+        assertEquals(true, ((Random)params.get(Parameters.KEY.RANDOM)).getClass().equals(MersenneTwister.class));
         System.out.println("All Defaults:\n" + Parameters.getAllDefaultParameters());
         System.out.println("Spatial Defaults:\n" + Parameters.getSpatialDefaultParameters());
         System.out.println("Temporal Defaults:\n" + Parameters.getTemporalDefaultParameters());
         parameters = Parameters.getSpatialDefaultParameters();
-        parameters.setParameterByKey(Parameters.KEY.INPUT_DIMENSIONS, new int[]{64, 64});
-        parameters.setParameterByKey(Parameters.KEY.COLUMN_DIMENSIONS, new int[]{32, 32});
-        parameters.setParameterByKey(Parameters.KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 0.02*64*64);
+        parameters.set(Parameters.KEY.INPUT_DIMENSIONS, new int[]{64, 64});
+        parameters.set(Parameters.KEY.COLUMN_DIMENSIONS, new int[]{32, 32});
+        parameters.set(Parameters.KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 0.02*64*64);
         System.out.println("Updated/Combined:\n" + parameters);
 
     }
@@ -167,8 +167,8 @@ public class ParametersTest {
         }
         
         params = Parameters.getKNNDefaultParameters();
-        params.setParameterByKey(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
-        params.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.PCT_INPUT_OVERLAP);
+        params.set(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
+        params.set(KEY.DISTANCE_METHOD, DistanceMethod.PCT_INPUT_OVERLAP);
         knn = KNNClassifier.builder().apply(params);
         try {
             params.apply(knn);
@@ -183,11 +183,11 @@ public class ParametersTest {
     public void testUnion() {
         Parameters params = Parameters.getAllDefaultParameters();
         Parameters arg = Parameters.getAllDefaultParameters();
-        arg.setParameterByKey(KEY.CELLS_PER_COLUMN, 5);
+        arg.set(KEY.CELLS_PER_COLUMN, 5);
 
-        assertTrue((int)params.getParameterByKey(KEY.CELLS_PER_COLUMN) != 5);
+        assertTrue((int)params.get(KEY.CELLS_PER_COLUMN) != 5);
         params.union(arg);
-        assertTrue((int)params.getParameterByKey(KEY.CELLS_PER_COLUMN) == 5);
+        assertTrue((int)params.get(KEY.CELLS_PER_COLUMN) == 5);
     }
 
     @Test
@@ -210,11 +210,19 @@ public class ParametersTest {
         Parameters params = Parameters.getAllDefaultParameters();
 
         try {
-            params.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 2.0);
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 2.0);
             fail();
         }catch(Exception e) {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '2.0' not in range. Range[0.0-1.0]", e.getMessage());
+        }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, -0.6);
+            fail();
+        }catch(Exception e) {
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertEquals("Can not set Parameters Property 'synPermActiveInc' because of value '-0.6' not in range. Range[0.0-1.0]", e.getMessage());
         }
 
         try {
@@ -227,19 +235,34 @@ public class ParametersTest {
 
         // Test catch type mismatch
         try {
-            params.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, Boolean.TRUE);
+            params.set(KEY.SYN_PERM_ACTIVE_INC, Boolean.TRUE);
             fail();
         }catch(Exception e) {
             assertEquals(e.getClass(), IllegalArgumentException.class);
             assertEquals("Can not set Parameters Property 'synPermActiveInc' because of type mismatch. The required type is class java.lang.Double", e.getMessage());
         }
+        
+        // Check values _AT_ the min / max (should pass)
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 0.0);
+            assertEquals(0.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
+        
+        try {
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 1.0);
+            assertEquals(1.0, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+        }catch(Exception e) {
+            fail();
+        }
 
         // Positive test
         try {
-            params.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.8);
-            assertEquals(0.8, (double)params.getParameterByKey(KEY.SYN_PERM_ACTIVE_INC), 0.0);
+            params.set(KEY.SYN_PERM_ACTIVE_INC, 0.8);
+            assertEquals(0.8, (double)params.get(KEY.SYN_PERM_ACTIVE_INC), 0.0);
         }catch(Exception e) {
-
+            fail();
         }
 
     }
@@ -260,27 +283,35 @@ public class ParametersTest {
     public void testClearParameter() {
         Parameters params = Parameters.getAllDefaultParameters();
 
-        assertNotNull(params.getParameterByKey(KEY.SYN_PERM_ACTIVE_INC));
+        assertNotNull(params.get(KEY.SYN_PERM_ACTIVE_INC));
 
         params.clearParameter(KEY.SYN_PERM_ACTIVE_INC);
 
-        assertNull(params.getParameterByKey(KEY.SYN_PERM_ACTIVE_INC));
+        assertNull(params.get(KEY.SYN_PERM_ACTIVE_INC));
     }
 
     @Test
     public void testLogDiff() {
         Parameters params = Parameters.getAllDefaultParameters();
 
-        assertNotNull(params.getParameterByKey(KEY.SYN_PERM_ACTIVE_INC));
+        assertNotNull(params.get(KEY.SYN_PERM_ACTIVE_INC));
 
         Connections connections = new Connections();
         params.apply(connections);
 
         Parameters all = Parameters.getAllDefaultParameters();
-        all.setParameterByKey(KEY.SYN_PERM_ACTIVE_INC, 0.9);
+        all.set(KEY.SYN_PERM_ACTIVE_INC, 0.9);
 
         boolean b = all.logDiff(connections);
         assertTrue(b);
+        
+        try {
+            all.logDiff(null);
+            fail();
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("cn Object is required and can not be null", e.getMessage());
+        }
     }
 
     @Test
@@ -288,34 +319,40 @@ public class ParametersTest {
         Parameters params = Parameters.getAllDefaultParameters();
 
         params.setCellsPerColumn(42);
-        assertEquals(42, params.getParameterByKey(KEY.CELLS_PER_COLUMN));
+        assertEquals(42, params.get(KEY.CELLS_PER_COLUMN));
 
         params.setActivationThreshold(42);
-        assertEquals(42, params.getParameterByKey(KEY.ACTIVATION_THRESHOLD));
+        assertEquals(42, params.get(KEY.ACTIVATION_THRESHOLD));
 
         params.setLearningRadius(42);
-        assertEquals(42, params.getParameterByKey(KEY.LEARNING_RADIUS));
+        assertEquals(42, params.get(KEY.LEARNING_RADIUS));
 
         params.setMinThreshold(42);
-        assertEquals(42, params.getParameterByKey(KEY.MIN_THRESHOLD));
-
-        params.setMaxNewSynapseCount(42);
-        assertEquals(42, params.getParameterByKey(KEY.MAX_NEW_SYNAPSE_COUNT));
+        assertEquals(42, params.get(KEY.MIN_THRESHOLD));
 
         params.setSeed(42);
-        assertEquals(42, params.getParameterByKey(KEY.SEED));
+        assertEquals(42, params.get(KEY.SEED));
 
         params.setInitialPermanence(0.82);
-        assertEquals(0.82, params.getParameterByKey(KEY.INITIAL_PERMANENCE));
+        assertEquals(0.82, params.get(KEY.INITIAL_PERMANENCE));
 
         params.setConnectedPermanence(0.82);
-        assertEquals(0.82, params.getParameterByKey(KEY.CONNECTED_PERMANENCE));
+        assertEquals(0.82, params.get(KEY.CONNECTED_PERMANENCE));
 
         params.setPermanenceIncrement(0.11);
-        assertEquals(0.11, params.getParameterByKey(KEY.PERMANENCE_INCREMENT));
+        assertEquals(0.11, params.get(KEY.PERMANENCE_INCREMENT));
 
         params.setPermanenceDecrement(0.11);
-        assertEquals(0.11, params.getParameterByKey(KEY.PERMANENCE_DECREMENT));
+        assertEquals(0.11, params.get(KEY.PERMANENCE_DECREMENT));
+        
+        params.setMaxSegmentsPerCell(11);
+        assertEquals(11, params.get(KEY.MAX_SEGMENTS_PER_CELL));
+        
+        params.setMaxSynapsesPerSegment(22);
+        assertEquals(22, params.get(KEY.MAX_SYNAPSES_PER_SEGMENT));
+        
+        params.setMaxNewSynapseCount(32);
+        assertEquals(32, params.get(KEY.MAX_NEW_SYNAPSE_COUNT));
 
     }
 

@@ -13,11 +13,52 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.9-SNAPSHOT]
+## Unreleased [0.6.10-SNAPSHOT]
 #### Removed
 #### Added
 #### Changed
 #### Fixed
+
+***
+
+## [v0.6.9-alpha] - 2016-09-29
+#### Removed
+* [[Issues #471](https://github.com/numenta/htm.java/issues/471)] Removed all references to "verbosity" in Connections and Parameters classes
+* [[Issues #470](https://github.com/numenta/htm.java/issues/470)] Removed old JSON serializer/deserializer from CLAClassifer 
+* All references to "Verbosity" as its a Python convention and not Java
+* JSON CLAClassifier serializer / deserializer, replaced with new PersistenceAPI
+
+#### Added
+* [[PR #480](https://github.com/numenta/htm.java/pull/480)] Added new RDSECompatibilityTest
+* [[PR #478](https://github.com/numenta/htm.java/pull/478)] Added Post-init method to Connections to correct non-initialized derived SpatialPooler parameters.
+* [[PR #467](https://github.com/numenta/htm.java/pull/467)] Added new SpatialPoolerCompatibilityTest
+* Added new SpatialPooler class
+* Added new SpatialPoolerTest class
+* Added new TemporalMemory class 
+* Added new TemporalMemoryTest class
+* Added ```Connections.getPrintString()``` to return parameter printout
+* Parameters key ```Parameters.KEY.MAX_SEGMENTS_PER_CELL```
+* Parameters key ```Parameters.KEY.MAX_NEW_SYNAPSE_COUNT```
+* Added new ```UniversalRandom``` RNG which has an [allegory in python](https://gist.github.com/cogmission/c4cb8feaba19595dae8ff964e18b05d0#file-universal_random-py) which can be used to compare versions 
+* Added new methods on the MTJ matrices to add and remove rows and columns
+* Added new Algorithm Foundry culled jar containing Sandia wrapper for the MTJ linear algebra lib
+* [[PR #453](https://github.com/numenta/htm.java/pull/453)] Added gradlew functionality for quick builds from scratch without any prior installation of Java or Gradle.
+* [[PR #439](https://github.com/numenta/htm.java/pull/439)] **Added a new SDRClassifier !!!**
+* [[PR #435](https://github.com/numenta/htm.java/pull/435)] Added ObservableTestBase class for improved AssertFailure detection in tests using Observables 
+
+#### Changed
+* ```Connections.apply()``` now sets the seed value from the ```Parameters``` object.
+* Parameters.(g|s)etParameterByKey to simplified get() / set()
+* ```KEY.MIN_PCT_OVERLAP_DUTY_CYCLE``` to ```KEY.MIN_PCT_OVERLAP_DUTY_CYCLES```
+* ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLE``` to ```KEY.MIN_PCT_ACTIVE_DUTY_CYCLES```
+
+#### Fixed
+* [[Issues #468](https://github.com/numenta/htm.java/issues/468)] Parameters.checkRange now checks values "at" the range boundary as well.
+* Fixed documentation of SpatialPooler.inhibitColumnsLocal - added parameter documentation
+* [[PR #451](https://github.com/numenta/htm.java/pull/451)] Fixed not filled overlaps array in updateDutyCycles in SP
+* [[PR #435](https://github.com/numenta/htm.java/pull/435)] Fixed AssertFailure detection within onNext() method in NAPI Observable tests
+* [[PR #431](https://github.com/numenta/htm.java/pull/431)] BitHistory re-scaling fix (in CLAClassifier functionality)
+* [[PR #431](https://github.com/numenta/htm.java/pull/431)] Cleaned up tabs and spaces in BitHistory
 
 ***
 

@@ -13,7 +13,7 @@ Chat.svg)](https://gitter.im/numenta/htm.java?utm_source=badge&utm_medium=badge&
 
 **Community-supported & ported from the** [Numenta Platform for Intelligent Computing (NuPIC) ](https://github.com/numenta/nupic) python project.
 
-_**NOTE: Minimum JavaSE version is 1.8**_
+_**NOTE: Minimum JavaSE version is 8**_
 
 <br>
 
@@ -26,6 +26,8 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 <br>
 
 ### Recent News Items...
+* HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB will be offered (soon)! (09/29/2016)
+* [HTM.java Receives New SDRClassifier!](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/algorithms/SDRClassifier.java) (07/26/2016)
 * [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
 * [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
 * [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
@@ -41,7 +43,7 @@ _**NOTE: Minimum JavaSE version is 1.8**_
 * See a glimpse of htm.java's history and read about significant events in its development.  
 
 
-### View the [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2016-05-02)
+### View the [Change Log](https://github.com/numenta/htm.java/blob/master/CHANGELOG.md) (Updated! 2016-09-27)
 * Change log itemizes the release history.
 * Contains an **"Unreleased" section** which lists changes coming in the next release as they're being worked on - (should help users keep in touch with the current evolution of htm.java)
 
@@ -134,7 +136,7 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 Gradle:  
 
 dependencies {
-    compile group: 'org.numenta', name: 'htm.java', version:'0.6.8'
+    compile group: 'org.numenta', name: 'htm.java', version:'0.6.9'
 }
 ```
 
@@ -144,7 +146,7 @@ Maven:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.8</version>
+    <version>0.6.9</version>
 </dependency>
 ```
 
@@ -154,7 +156,7 @@ How to get the latest SNAPSHOT build:
 <dependency>
     <groupId>org.numenta</groupId>
     <artifactId>htm.java</artifactId>
-    <version>0.6.9-SNAPSHOT</version>
+    <version>0.6.10-SNAPSHOT</version>
 </dependency>
 
 You also may need to include a repositories entry:

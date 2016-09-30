@@ -71,7 +71,7 @@ public class PlaygroundTest {
         ///////////////////////////////////////
         Network network = getLoadedDayOfWeekNetwork();
         
-        int cellsPerCol = (int)network.getParameters().getParameterByKey(KEY.CELLS_PER_COLUMN);
+        int cellsPerCol = (int)network.getParameters().get(KEY.CELLS_PER_COLUMN);
         
         network.observe().subscribe(new Observer<Inference>() { 
             @Override public void onCompleted() {}
@@ -114,7 +114,7 @@ public class PlaygroundTest {
     private Network getLoadedDayOfWeekNetwork() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.setParameterByKey(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.RANDOM, new FastRandom(42));
         
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
@@ -192,6 +192,7 @@ public class PlaygroundTest {
         return recordOut;
     }
     
+    @SuppressWarnings("unchecked")
     public <T> T main(String[] args) throws Exception {
         InputStream input = new FileInputStream(new File("myfile"));
         //HTMObjectInput reader = Persistence.get().serializer().getObjectInput(input);

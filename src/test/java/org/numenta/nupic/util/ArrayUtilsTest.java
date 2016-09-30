@@ -22,6 +22,7 @@
 
 package org.numenta.nupic.util;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Column;
 
 public class ArrayUtilsTest {
     
@@ -221,21 +224,6 @@ public class ArrayUtilsTest {
         double[] b2 = new double[] { 2., 2. };
         double[] result = ArrayUtils.dot(a, b2);
         assertTrue(Arrays.equals(new double[] { 6., 14. }, result));
-    }
-    
-    @Test
-    public void testZip() {
-        int[] t1 = { 1, 2, 3 };
-        int[] t2 = { 4, 5, 6 };
-        List<Tuple> tuples = ArrayUtils.zip(new int[][] { t1, t2 });
-        assertEquals(3, tuples.size());
-        assertTrue(
-            ((Integer)tuples.get(0).get(0)) == 1 &&
-            ((Integer)tuples.get(0).get(1)) == 4 &&
-            ((Integer)tuples.get(1).get(0)) == 2 &&
-            ((Integer)tuples.get(1).get(1)) == 5 &&
-            ((Integer)tuples.get(2).get(0)) == 3 &&
-            ((Integer)tuples.get(2).get(1)) == 6);
     }
     
     @Test
@@ -716,6 +704,75 @@ public class ArrayUtilsTest {
         // Test none in both
         assertTrue(Arrays.equals(expected, ArrayUtils.in1d(expected, expected)));
     }
+    
+    @Test
+    public void testTo1d() {
+        double[][] da = new double[][] { { 1., 1.}, {2., 2.}};
+        double[] expected = new double[] { 1., 1., 2., 2. };
+        assertTrue(Arrays.equals(expected, ArrayUtils.to1D(da)));
+        
+        int[][] ia = new int[][] { { 1, 1 }, { 2, 2 } };
+        int[] expectedia = new int[] { 1, 1, 2, 2 };
+        assertTrue(Arrays.equals(expectedia, ArrayUtils.to1D(ia)));
+    }
+    
+    @Test
+    public void testZip() {
+        Cell cell0 = new Cell(new Column(1, 0), 0);
+        Cell cell1 = new Cell(new Column(1, 1), 1);
+        Object[] o1 = new Object[] { cell0, cell1 };
+        Object[] o2 = new Object[] { new Integer(1), new Integer(2) };
+        
+        List<Tuple> zipped = ArrayUtils.zip(o1, o2);
+        assertEquals(2, zipped.size());
+        assertTrue(zipped.get(0).get(0) instanceof Cell && zipped.get(0).get(1) instanceof Integer);
+        assertTrue(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(1)));
+        assertTrue(zipped.get(1).get(0).equals(cell1) && zipped.get(1).get(1).equals(new Integer(2)));
+        
+        // Negative tests
+        assertFalse(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(2))); // Bad Integer
+        assertFalse(zipped.get(1).get(0).equals(cell0) && zipped.get(1).get(1).equals(new Integer(2))); // Bad Cell
+    }
+    
+    @Test
+    public void testMaximum() {
+        double value = 6.7;
+        double[] input = new double[] { 3.2, 6.8 };
+        double[] expected = new double[] { 6.7, 6.8 };
+        
+        double[] result = ArrayUtils.maximum(input, value);
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    @Test
+    public void testRoundDivide() {
+        assertEquals(2.35, 4.7 / 2, 0.01);
+        assertEquals(2.45, 4.9 / 2, 0.01);
+        assertEquals(2.70, 5.4 / 2, 0.01);
+        
+        double[] inputDividend = new double[] { 4.7, 4.9, 5.4 };
+        double[] inputDivisor = new double[] { 2., 2., 2. };
+        
+        double[] expected0 = new double[] { 2.4, 2.5, 2.7 };
+        double[] expected1 = new double[] { 2.0, 2.0, 3.0 };
+        
+        double[] result = ArrayUtils.roundDivide(inputDividend, inputDivisor, 2);
+        assertTrue(Arrays.equals(expected0, result));
+        
+        double[] result2 = ArrayUtils.roundDivide(inputDividend, inputDivisor, 1);
+        assertTrue(Arrays.equals(expected1, result2));
+    }
+    
+    @Test
+    public void testSubtract() {
+        // minuend - subtrahend = difference
+        List<Integer> minuend = Arrays.asList(new Integer[] { 2, 2, 2 });
+        List<Integer> subtrahend = Arrays.asList(new Integer[] { 0, 1, 2 });
+        List<Integer> difference = Arrays.asList(new Integer[] { 2, 1, 0 });
+        
+        List<Integer> result = ArrayUtils.subtract(subtrahend, minuend);
+        assertEquals(difference, result);
+    }
 
     @Test
     public void testRecursiveCoordinatesAssemble() throws InterruptedException {
@@ -862,4 +919,32 @@ public class ArrayUtilsTest {
 	    double[] overlaps = new double[] { 1, 2, 1, 4, 8, 3, 12, 5, 4, 1 };
 	    assertTrue(Arrays.equals(new int[] { 6, 4, 7 }, ArrayUtils.nGreatest(overlaps, 3)));
 	}
+
+    @Test
+    public void testGreaterThanXFunctions() {
+        int[] overlaps = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        double[] overlapArray = new double[overlaps.length];
+        ArrayUtils.greaterThanXThanSetToYInB(overlaps, overlapArray, 0, 1);
+        assertArrayEquals(new double[] {  0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0 }, overlapArray, 0.0001);
+
+        int[] arrayInt = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        ArrayUtils.greaterThanXThanSetToY(arrayInt, 0, 1);
+        assertArrayEquals(new int[] { 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0}, arrayInt);
+
+        double[] arrayDouble = new double[] { 0, 5, 3, 0, 2, 0, 0, 7, 1, 2, 0};
+        ArrayUtils.greaterThanXThanSetToY(arrayDouble, 0, 2);
+        assertArrayEquals(new double[] { 0, 2, 2, 0, 2, 0, 0, 2, 2, 2, 0}, arrayDouble, 0.0001);
+    }
+
+
+    @Test
+    public void testArgmax()
+    {
+        int[] iarray = new int[] { 0, 1, 0, 0, 3, 0, 6, 7, 1, 2, 0};
+        double[] darray = new double[] { 0, 1, 10, 0, 3, 0, 6, 7, 1, 2, 0};
+        assertEquals(ArrayUtils.argmax(iarray), 7 );
+        assertEquals(ArrayUtils.argmax(darray), 2 );
+    }
+
+
 }

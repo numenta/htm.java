@@ -68,23 +68,23 @@ public class KNNClassifierTest {
     @Test
     public void testParameterBuild() {
         Parameters p = Parameters.getKNNDefaultParameters();
-        p.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
-        p.setParameterByKey(KEY.DISTANCE_NORM, 12.5);
-        p.setParameterByKey(KEY.K, 42);
-        p.setParameterByKey(KEY.EXACT, true);
-        p.setParameterByKey(KEY.DISTANCE_THRESHOLD, 2.3);
-        p.setParameterByKey(KEY.DO_BINARIZATION, true);
-        p.setParameterByKey(KEY.BINARIZATION_THRESHOLD, 3.0);
-        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
-        p.setParameterByKey(KEY.USE_SPARSE_MEMORY, true);
-        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 349.0);
-        p.setParameterByKey(KEY.NUM_WINNERS, 100);
-        p.setParameterByKey(KEY.NUM_SVD_SAMPLES, 4);
-        p.setParameterByKey(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
-        p.setParameterByKey(KEY.FRACTION_OF_MAX, .84);
-        p.setParameterByKey(KEY.MAX_STORED_PATTERNS, 30);
-        p.setParameterByKey(KEY.REPLACE_DUPLICATES, true);
-        p.setParameterByKey(KEY.KNN_CELLS_PER_COL, 32);
+        p.set(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
+        p.set(KEY.DISTANCE_NORM, 12.5);
+        p.set(KEY.K, 42);
+        p.set(KEY.EXACT, true);
+        p.set(KEY.DISTANCE_THRESHOLD, 2.3);
+        p.set(KEY.DO_BINARIZATION, true);
+        p.set(KEY.BINARIZATION_THRESHOLD, 3.0);
+        p.set(KEY.RELATIVE_THRESHOLD, true);
+        p.set(KEY.USE_SPARSE_MEMORY, true);
+        p.set(KEY.SPARSE_THRESHOLD, 349.0);
+        p.set(KEY.NUM_WINNERS, 100);
+        p.set(KEY.NUM_SVD_SAMPLES, 4);
+        p.set(KEY.NUM_SVD_DIMS, Constants.KNN.ADAPTIVE);
+        p.set(KEY.FRACTION_OF_MAX, .84);
+        p.set(KEY.MAX_STORED_PATTERNS, 30);
+        p.set(KEY.REPLACE_DUPLICATES, true);
+        p.set(KEY.KNN_CELLS_PER_COL, 32);
         
         KNNClassifier knn = initClassifier(p);
         
@@ -110,30 +110,30 @@ public class KNNClassifierTest {
     @Test
     public void sparsifyVector() {
         Parameters p = Parameters.getKNNDefaultParameters();
-        p.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
-        p.setParameterByKey(KEY.DISTANCE_NORM, 2.0);
+        p.set(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
+        p.set(KEY.DISTANCE_NORM, 2.0);
         
         KNNClassifier classifier = initClassifier(p);
         double[] inputPattern = { 0, 1, 3, 7, 11 };
         double[] outputPattern = classifier.sparsifyVector(inputPattern, true);
         assertTrue(Arrays.equals(inputPattern, outputPattern));
         
-        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
-        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
+        p.set(KEY.RELATIVE_THRESHOLD, true);
+        p.set(KEY.SPARSE_THRESHOLD, 0.2);
         classifier = initClassifier(p);
         outputPattern = classifier.sparsifyVector(inputPattern, true);
         assertTrue(Arrays.equals(new double[] { 0, 0, 3, 7, 11 }, outputPattern));
         
-        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
-        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
-        p.setParameterByKey(KEY.NUM_WINNERS, 2);
+        p.set(KEY.RELATIVE_THRESHOLD, true);
+        p.set(KEY.SPARSE_THRESHOLD, 0.2);
+        p.set(KEY.NUM_WINNERS, 2);
         classifier = initClassifier(p);
         outputPattern = classifier.sparsifyVector(inputPattern, true);
         assertTrue(Arrays.equals(new double[] { 0, 0, 0, 0, 0 }, outputPattern));
         
-        p.setParameterByKey(KEY.RELATIVE_THRESHOLD, true);
-        p.setParameterByKey(KEY.SPARSE_THRESHOLD, 0.2);
-        p.setParameterByKey(KEY.DO_BINARIZATION, true);
+        p.set(KEY.RELATIVE_THRESHOLD, true);
+        p.set(KEY.SPARSE_THRESHOLD, 0.2);
+        p.set(KEY.DO_BINARIZATION, true);
         p.clearParameter(KEY.NUM_WINNERS);
         classifier = initClassifier(p);
         outputPattern = classifier.sparsifyVector(inputPattern, true);
@@ -143,8 +143,8 @@ public class KNNClassifierTest {
     @Test
     public void testDistanceMetrics() {
         Parameters p = Parameters.getKNNDefaultParameters();
-        p.setParameterByKey(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
-        p.setParameterByKey(KEY.DISTANCE_NORM, 2.0);
+        p.set(KEY.DISTANCE_METHOD, DistanceMethod.NORM);
+        p.set(KEY.DISTANCE_NORM, 2.0);
         
         KNNClassifier classifier = initClassifier(p);
         

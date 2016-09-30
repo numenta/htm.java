@@ -21,7 +21,7 @@ public class MetricsTraceTest {
         parameters.apply(connections);
         
         TemporalMemory temporalMemory = new TemporalMemory();
-        temporalMemory.init(connections);
+        TemporalMemory.init(connections);
         MonitoredTemporalMemory monitoredTM = new MonitoredTemporalMemory(temporalMemory, connections);
         
         Metric metric = new Metric(monitoredTM, "Test", Arrays.asList(2.3, 3.4, 5.5, 6.6, 7.7));

@@ -22,6 +22,8 @@
 
 package org.numenta.nupic.model;
 
+import java.util.stream.IntStream;
+
 import org.numenta.nupic.Connections;
 import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
@@ -76,7 +78,6 @@ public class Pool implements Persistable {
      * @param permanence
      */
     public void setPermanence(Connections c, Synapse s, double permanence) {
-        updatePool(c, s, permanence);
         s.setPermanence(c, permanence);
     }
 
@@ -91,7 +92,7 @@ public class Pool implements Persistable {
         if(synapsesBySourceIndex.get(inputIndex) == null) {
             synapsesBySourceIndex.put(inputIndex, s);
         }
-        if(permanence > c.getSynPermConnected()) {
+        if(permanence >= c.getSynPermConnected()) {
             synapseConnections.add(inputIndex);
         }else {
             synapseConnections.remove(inputIndex);
@@ -152,26 +153,35 @@ public class Pool implements Persistable {
      * (input vector bit or lateral cell)
      * @return the sparse array
      */
-    public int[] getSparseConnections() {
+    public int[] getSparsePotential() {
         return ArrayUtils.reverse(synapsesBySourceIndex.keys());
     }
-
+    
     /**
-     * Returns a dense array representing the potential pool bits
-     * with the connected bits set to 1. 
-     * 
-     * Note: Only called from tests for now...
-     * @param c
-     * @return
+     * Returns a dense binary array containing 1's where the input bits are part
+     * of this pool.
+     * @param c     the {@link Connections}
+     * @return  dense binary array of member inputs
      */
-    public int[] getDenseConnections(Connections c) {
-        int[] retVal = new int[c.getNumInputs()];
-        for(int inputIndex : synapseConnections.toArray()) {
-            retVal[inputIndex] = 1;
-        }
-        return retVal;
+    public int[] getDensePotential(Connections c) {
+        return IntStream.range(0, c.getNumInputs())
+            .map(i -> synapsesBySourceIndex.containsKey(i) ? 1 : 0)
+            .toArray();
     }
     
+    /**
+     * Returns an binary array whose length is equal to the number of inputs;
+     * and where 1's are set in the indexes of this pool's assigned bits.
+     * 
+     * @param   c   {@link Connections}
+     * @return the sparse array
+     */
+    public int[] getDenseConnected(Connections c) {
+        return IntStream.range(0, c.getNumInputs())
+            .map(i -> synapseConnections.contains(i) ? 1 : 0)
+            .toArray();
+    }
+
     /**
      * Destroys any references this {@code Pool} maintains on behalf
      * of the specified {@link Synapse}
