@@ -21,7 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## [v0.6.9] - 2016-09-29
+## [v0.6.9-alpha] - 2016-09-29
 #### Removed
 * [[Issues #471](https://github.com/numenta/htm.java/issues/471)] Removed all references to "verbosity" in Connections and Parameters classes
 * [[Issues #470](https://github.com/numenta/htm.java/issues/470)] Removed old JSON serializer/deserializer from CLAClassifer 
