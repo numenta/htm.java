@@ -515,6 +515,56 @@ public class ArrayUtils {
      * @param args  the array of Objects to be wrapped in {@link Tuple}s
      * @return a list of tuples
      */
+    public static List<Tuple> zip(List<?>... args) {
+        List<Tuple> tuples = new ArrayList<Tuple>();
+        
+        int min = Arrays.stream(args).mapToInt(i -> i.size()).min().orElse(0);
+        
+        int len = args.length;
+        for(int j = 0;j < min;j++) {
+            MutableTuple mt = new MutableTuple(len);
+            for (int i = 0; i < len; i++) {
+                mt.set(i, args[i].get(j));
+            }
+            tuples.add(mt);
+        }
+
+        return tuples;
+    }
+    
+    /**
+     * Return a list of tuples, where each tuple contains the i-th element
+     * from each of the argument sequences.  The returned list is
+     * truncated in length to the length of the shortest argument sequence.
+     *
+     * @param args  the array of Objects to be wrapped in {@link Tuple}s
+     * @return a list of tuples
+     */
+    public static List<Tuple> zip(int[]... args) {
+        List<Tuple> tuples = new ArrayList<Tuple>();
+        
+        int min = Arrays.stream(args).mapToInt(i -> i.length).min().orElse(0);
+        
+        int len = args.length;
+        for(int j = 0;j < min;j++) {
+            MutableTuple mt = new MutableTuple(len);
+            for (int i = 0; i < len; i++) {
+                mt.set(i, args[i][j]);
+            }
+            tuples.add(mt);
+        }
+
+        return tuples;
+    }
+    
+    /**
+     * Return a list of tuples, where each tuple contains the i-th element
+     * from each of the argument sequences.  The returned list is
+     * truncated in length to the length of the shortest argument sequence.
+     *
+     * @param args  the array of Objects to be wrapped in {@link Tuple}s
+     * @return a list of tuples
+     */
     public static List<Tuple> zip(Object[]... args) {
         List<Tuple> tuples = new ArrayList<Tuple>();
         
