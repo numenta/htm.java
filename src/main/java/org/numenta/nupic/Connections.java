@@ -92,6 +92,7 @@ public class Connections implements Persistable {
     private double predictedSegmentDecrement = 0.0;
     private int dutyCyclePeriod = 1000;
     private double maxBoost = 10.0;
+    private boolean wrapAround = true;
     
     private int numInputs = 1;  //product of input dimensions
     private int numColumns = 1; //product of column dimensions
@@ -948,6 +949,25 @@ public class Connections implements Persistable {
      */
     public double getMaxBoost() {
         return maxBoost;
+    }
+    
+    /**
+     * Specifies whether neighborhoods wider than the 
+     * borders wrap around to the other side.
+     * @param b
+     */
+    public void setWrapAround(boolean b) {
+        this.wrapAround = b;
+    }
+    
+    /**
+     * Returns a flag indicating whether neighborhoods
+     * wider than the borders, wrap around to the other
+     * side.
+     * @return
+     */
+    public boolean isWrapAround() {
+        return wrapAround;
     }
     
     /**
@@ -2294,9 +2314,10 @@ public class Connections implements Persistable {
         pw.println("synPermConnected           = " + getSynPermConnected());
         pw.println("synPermBelowStimulusInc    = " + getSynPermBelowStimulusInc());
         pw.println("synPermTrimThreshold       = " + getSynPermTrimThreshold());
-        pw.println("minPctOverlapDutyCycles     = " + getMinPctOverlapDutyCycles());
-        pw.println("minPctActiveDutyCycles      = " + getMinPctActiveDutyCycles());
+        pw.println("minPctOverlapDutyCycles    = " + getMinPctOverlapDutyCycles());
+        pw.println("minPctActiveDutyCycles     = " + getMinPctActiveDutyCycles());
         pw.println("dutyCyclePeriod            = " + getDutyCyclePeriod());
+        pw.println("wrapAround                 = " + isWrapAround());
         pw.println("maxBoost                   = " + getMaxBoost());
         pw.println("version                    = " + getVersion());
 
