@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
@@ -134,7 +135,7 @@ public class LayerTest extends ObservableTestBase {
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
-                assertEquals(54, i.getSDR().length);
+                assertEquals(42, i.getSDR().length);
             }
         });
 
@@ -504,8 +505,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
 
         Func1<ManualInput, ManualInput> addedFunc = l -> { 
             return l.customObject("Interposed: " + Arrays.toString(l.getSDR()));
@@ -528,11 +529,11 @@ public class LayerTest extends ObservableTestBase {
             public void onNext(Inference i) {
                 if(test == 0) {
                     assertTrue(Arrays.equals(expected0, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1]", i.getCustomObject());
+                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0]", i.getCustomObject());
                 }
                 if(test == 1) {
                     assertTrue(Arrays.equals(expected1, i.getSDR()));
-                    assertEquals("Interposed: [1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1]", i.getCustomObject());
+                    assertEquals("Interposed: [1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]", i.getCustomObject());
                 }
                 ++test; 
             }
@@ -717,8 +718,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
 
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
 
@@ -768,8 +769,8 @@ public class LayerTest extends ObservableTestBase {
         Layer<int[]> l = new Layer<>(n);
         l.add(htmSensor).add(new SpatialPooler());
         
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
             int test = 0;
@@ -829,8 +830,8 @@ public class LayerTest extends ObservableTestBase {
             @Override
             public void onNext(Inference output) {
                 if(seq / 7 >= timeUntilStable) {
-//                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
-//                        ", \t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
+                    System.out.println("seq: " + (seq) + "  --> " + (test) + "  output = " + Arrays.toString(output.getSDR()) +
+                        ", \t\t\t\t cols = " + Arrays.toString(SDR.asColumnIndices(output.getSDR(), l.getConnections().getCellsPerColumn())));
                     assertTrue(output.getSDR().length >= 5);
                 }
                 
@@ -905,8 +906,8 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1 };
-        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1 };
+        final int[] expected0 = new int[] { 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+        final int[] expected1 = new int[] { 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
 
         // First test without prime directive :-P
         Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), null, null, null);
@@ -977,7 +978,7 @@ public class LayerTest extends ObservableTestBase {
             @Override
             public void onNext(Inference i) {
                 assertNotNull(i);
-                assertEquals(54, i.getSDR().length);
+                assertEquals(42, i.getSDR().length);
             }
         });
 
