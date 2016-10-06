@@ -21,10 +21,8 @@
  */
 package org.numenta.nupic.algorithms;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.IntStream;
 
 import org.numenta.nupic.Connections;
@@ -36,7 +34,9 @@ import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.SparseBinaryMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Topology;
 
+import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
@@ -98,6 +98,10 @@ public class SpatialPooler implements Persistable {
             mem = new SparseObjectMatrix<>(c.getColumnDimensions()) : mem);
         
         c.setInputMatrix(new SparseBinaryMatrix(c.getInputDimensions()));
+        
+        // Initiate the topologies
+        c.setColumnTopology(new Topology(c.getColumnDimensions()));
+        c.setInputTopology(new Topology(c.getInputDimensions()));
 
         //Calculate numInputs and numColumns
         int numInputs = c.getInputMatrix().getMaxIndex() + 1;
@@ -143,7 +147,7 @@ public class SpatialPooler implements Persistable {
         // activated.
         int numColumns = c.getNumColumns();
         for(int i = 0;i < numColumns;i++) {
-            int[] potential = mapPotential(c, i, true);
+            int[] potential = mapPotential(c, i, c.isWrapAround());
             Column column = c.getColumn(i);
             c.getPotentialPools().set(i, column.createPotentialPool(c, potential));
             double[] perm = initPermanence(c, potential, i, c.getInitConnectedPct());
@@ -242,7 +246,6 @@ public class SpatialPooler implements Persistable {
         active.removeAll(aboveZero);
         TIntArrayList l = new TIntArrayList(active);
         l.sort();
-        //return l;
         
         return Arrays.stream(activeColumns).filter(i -> c.getActiveDutyCycles()[i] > 0).toArray();
     }
@@ -287,17 +290,27 @@ public class SpatialPooler implements Persistable {
      * 
      * @param c
      */
-    public void updateMinDutyCyclesLocal(Connections c) {
+    public void updateMinDutyCyclesLocal(final Connections c) {
         int len = c.getNumColumns();
-        for(int i = 0;i < len;i++) {
-            int[] maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), true).toArray();
-            c.getMinOverlapDutyCycles()[i] = ArrayUtils.max(
-                    ArrayUtils.sub(c.getOverlapDutyCycles(), maskNeighbors)) *
-                    c.getMinPctOverlapDutyCycles();
-            c.getMinActiveDutyCycles()[i] = ArrayUtils.max(
-                    ArrayUtils.sub(c.getActiveDutyCycles(), maskNeighbors)) *
-                    c.getMinPctActiveDutyCycles();
-        }
+        int inhibitionRadius = c.getInhibitionRadius();
+        double[] activeDutyCycles = c.getActiveDutyCycles();
+        double minPctActiveDutyCycles = c.getMinPctActiveDutyCycles();
+        double[] overlapDutyCycles = c.getOverlapDutyCycles();
+        double minPctOverlapDutyCycles = c.getMinPctOverlapDutyCycles();
+        
+        // Parallelize for speed up
+        IntStream.range(0, len).forEach(i -> {
+            int[] neighborhood = getColumnNeighborhood(c, i, inhibitionRadius);
+            
+            double maxActiveDuty = ArrayUtils.max(
+                ArrayUtils.sub(activeDutyCycles, neighborhood));
+            double maxOverlapDuty = ArrayUtils.max(
+                ArrayUtils.sub(overlapDutyCycles, neighborhood));
+            
+            c.getMinActiveDutyCycles()[i] = maxActiveDuty * minPctActiveDutyCycles;
+                
+            c.getMinOverlapDutyCycles()[i] = maxOverlapDuty * minPctOverlapDutyCycles;
+        });
     }
 
     /**
@@ -385,7 +398,7 @@ public class SpatialPooler implements Persistable {
         double diameter = avgConnectedSpan * avgColumnsPerInput(c);
         double radius = (diameter - 1) / 2.0d;
         radius = Math.max(1, radius);
-        c.setInhibitionRadius((int)Math.round(radius));
+        c.setInhibitionRadius((int)(radius + 0.5));
     }
     
     /**
@@ -733,14 +746,14 @@ public class SpatialPooler implements Persistable {
      * @return
      */
     public int[] mapPotential(Connections c, int columnIndex, boolean wrapAround) {
-        int index = mapColumn(c, columnIndex);
-        TIntArrayList indices = getNeighborsND(c, index, c.getInputMatrix(), c.getPotentialRadius(), wrapAround);
-        indices.add(index);
-        //TODO: See https://github.com/numenta/nupic.core/issues/128
-        indices.sort();
-
-        int[] retVal = new int[(int)Math.round(indices.size() * c.getPotentialPct())];
-        return ArrayUtils.sample(indices, retVal, c.getRandom());
+        int centerInput = mapColumn(c, columnIndex);
+        int[] columnInputs = getInputNeighborhood(c, centerInput, c.getPotentialRadius()); 
+        
+        // Select a subset of the receptive field to serve as the
+        // the potential pool
+        int numPotential = (int)(columnInputs.length * c.getPotentialPct() + 0.5);
+        int[] retVal = new int[numPotential];
+        return ArrayUtils.sample(columnInputs, retVal, c.getRandom());
     }
     
     /**
@@ -836,20 +849,35 @@ public class SpatialPooler implements Persistable {
      * @return  indices of the winning columns
      */
     public int[] inhibitColumnsLocal(Connections c, double[] overlaps, double density) {
-        int numCols = c.getNumColumns();
-        int[] activeColumns = new int[numCols];
-        double addToWinners = ArrayUtils.max(overlaps) / 1000.0;
-        for(int i = 0;i < numCols;i++) {
-            TIntArrayList maskNeighbors = getNeighborsND(c, i, c.getMemory(), c.getInhibitionRadius(), false);
-            double[] overlapSlice = ArrayUtils.sub(overlaps, maskNeighbors.toArray());
-            int numActive = (int)(0.5 + density * (maskNeighbors.size() + 1));
-            int numBigger = ArrayUtils.valueGreaterCount(overlaps[i], overlapSlice);
-            if(numBigger < numActive) {
-                activeColumns[i] = 1;
-                overlaps[i] += addToWinners;
+        double addToWinners = ArrayUtils.max(overlaps) / 1000.0d;
+        if(addToWinners == 0) {
+            addToWinners = 0.001;
+        }
+        double[] tieBrokenOverlaps = Arrays.copyOf(overlaps, overlaps.length);
+        
+        TIntList winners = new TIntArrayList();
+        double stimulusThreshold = c.getStimulusThreshold();
+        int inhibitionRadius = c.getInhibitionRadius();
+        for(int i = 0;i < overlaps.length;i++) {
+            int column = i;
+            if(overlaps[column] >= stimulusThreshold) {
+               int[] neighborhood = getColumnNeighborhood(c, column, inhibitionRadius);
+               double[] neighborhoodOverlaps = ArrayUtils.sub(tieBrokenOverlaps, neighborhood);
+               
+               long numBigger = Arrays.stream(neighborhoodOverlaps)
+                   .parallel()
+                   .filter(d -> d > overlaps[column])
+                   .count();
+               
+               int numActive = (int)(0.5 + density * neighborhood.length);
+               if(numBigger < numActive) {
+                   winners.add(column);
+                   tieBrokenOverlaps[column] += addToWinners;
+               }
             }
         }
-        return ArrayUtils.where(activeColumns, ArrayUtils.INT_GREATER_THAN_0);
+
+        return winners.toArray();
     }
     
     /**
@@ -931,69 +959,69 @@ public class SpatialPooler implements Persistable {
         return ArrayUtils.divide(overlaps, c.getConnectedCounts().getTrueCounts());
     }
     
-    /**
-     * Similar to _getNeighbors1D and _getNeighbors2D (Not included in this implementation), 
-     * this function Returns a list of indices corresponding to the neighbors of a given column. 
-     * Since the permanence values are stored in such a way that information about topology
-     * is lost. This method allows for reconstructing the topology of the inputs,
-     * which are flattened to one array. Given a column's index, its neighbors are
-     * defined as those columns that are 'radius' indices away from it in each
-     * dimension. The method returns a list of the flat indices of these columns.
-     * 
-     * @param c                     matrix configured to this {@code SpatialPooler}'s dimensions
-     *                              for transformation work.
-     * @param columnIndex           The index identifying a column in the permanence, potential
-     *                              and connectivity matrices.
-     * @param topology              A {@link SparseMatrix} with dimensionality info.
-     * @param inhibitionRadius      Indicates how far away from a given column are other
-     *                              columns to be considered its neighbors. In the previous 2x3
-     *                              example, each column with coordinates:
-     *                              [2+/-radius, 3+/-radius] is considered a neighbor.
-     * @param wrapAround            A boolean value indicating whether to consider columns at
-     *                              the border of a dimensions to be adjacent to columns at the
-     *                              other end of the dimension. For example, if the columns are
-     *                              laid out in one dimension, columns 1 and 10 will be
-     *                              considered adjacent if wrapAround is set to true:
-     *                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-     *               
-     * @return              a list of the flat indices of these columns
-     */
-    public TIntArrayList getNeighborsND(Connections c, int columnIndex, SparseMatrix<?> topology, int inhibitionRadius, boolean wrapAround) {
-        final int[] dimensions = topology.getDimensions();
-        int[] columnCoords = topology.computeCoordinates(columnIndex);
-        List<int[]> dimensionCoords = new ArrayList<>();
-
-        for(int i = 0;i < dimensions.length;i++) {
-            int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
-            int[] curRange = new int[range.length];
-
-            if(wrapAround) {
-                for(int j = 0;j < curRange.length;j++) {
-                    curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], dimensions[i]);
-                }
-            }else{
-                final int idx = i;
-                curRange = ArrayUtils.retainLogicalAnd(range, 
-                    new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
-                        new Condition.Adapter<Integer>() {
-                            @Override public boolean eval(int n) { return n < dimensions[idx]; }
-                        }
-                    }
-                );
-            }
-            dimensionCoords.add(ArrayUtils.unique(curRange));
-        }
-
-        List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
-        TIntArrayList neighbors = new TIntArrayList(neighborList.size());
-        int size = neighborList.size();
-        for(int i = 0;i < size;i++) {
-            int flatIndex = topology.computeIndex(neighborList.get(i), false);
-            if(flatIndex == columnIndex) continue;
-            neighbors.add(flatIndex);
-        }
-        return neighbors;
-    }
+//    /**
+//     * Similar to _getNeighbors1D and _getNeighbors2D (Not included in this implementation), 
+//     * this function Returns a list of indices corresponding to the neighbors of a given column. 
+//     * Since the permanence values are stored in such a way that information about topology
+//     * is lost. This method allows for reconstructing the topology of the inputs,
+//     * which are flattened to one array. Given a column's index, its neighbors are
+//     * defined as those columns that are 'radius' indices away from it in each
+//     * dimension. The method returns a list of the flat indices of these columns.
+//     * 
+//     * @param c                     matrix configured to this {@code SpatialPooler}'s dimensions
+//     *                              for transformation work.
+//     * @param columnIndex           The index identifying a column in the permanence, potential
+//     *                              and connectivity matrices.
+//     * @param topology              A {@link SparseMatrix} with dimensionality info.
+//     * @param inhibitionRadius      Indicates how far away from a given column are other
+//     *                              columns to be considered its neighbors. In the previous 2x3
+//     *                              example, each column with coordinates:
+//     *                              [2+/-radius, 3+/-radius] is considered a neighbor.
+//     * @param wrapAround            A boolean value indicating whether to consider columns at
+//     *                              the border of a dimensions to be adjacent to columns at the
+//     *                              other end of the dimension. For example, if the columns are
+//     *                              laid out in one dimension, columns 1 and 10 will be
+//     *                              considered adjacent if wrapAround is set to true:
+//     *                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+//     *               
+//     * @return              a list of the flat indices of these columns
+//     */
+//    public TIntArrayList getNeighborsND(Connections c, int columnIndex, SparseMatrix<?> topology, int inhibitionRadius, boolean wrapAround) {
+//        final int[] dimensions = topology.getDimensions();
+//        int[] columnCoords = topology.computeCoordinates(columnIndex);
+//        List<int[]> dimensionCoords = new ArrayList<>();
+//
+//        for(int i = 0;i < dimensions.length;i++) {
+//            int[] range = ArrayUtils.range(columnCoords[i] - inhibitionRadius, columnCoords[i] + inhibitionRadius + 1);
+//            int[] curRange = new int[range.length];
+//
+//            if(wrapAround) {
+//                for(int j = 0;j < curRange.length;j++) {
+//                    curRange[j] = (int)ArrayUtils.positiveRemainder(range[j], dimensions[i]);
+//                }
+//            }else{
+//                final int idx = i;
+//                curRange = ArrayUtils.retainLogicalAnd(range, 
+//                    new Condition[] { ArrayUtils.GREATER_OR_EQUAL_0,
+//                        new Condition.Adapter<Integer>() {
+//                            @Override public boolean eval(int n) { return n < dimensions[idx]; }
+//                        }
+//                    }
+//                );
+//            }
+//            dimensionCoords.add(ArrayUtils.unique(curRange));
+//        }
+//
+//        List<int[]> neighborList = ArrayUtils.dimensionsToCoordinateList(dimensionCoords);
+//        TIntArrayList neighbors = new TIntArrayList(neighborList.size());
+//        int size = neighborList.size();
+//        for(int i = 0;i < size;i++) {
+//            int flatIndex = topology.computeIndex(neighborList.get(i), false);
+//            if(flatIndex == columnIndex) continue;
+//            neighbors.add(flatIndex);
+//        }
+//        return neighbors;
+//    }
     
     /**
      * Returns true if enough rounds have passed to warrant updates of
@@ -1019,6 +1047,42 @@ public class SpatialPooler implements Persistable {
     public void updateBookeepingVars(Connections c, boolean learn) {
         c.spIterationNum += 1;
         if(learn) c.spIterationLearnNum += 1;
+    }
+    
+    /**
+     * Gets a neighborhood of columns.
+     * 
+     * Simply calls topology.neighborhood or topology.wrappingNeighborhood
+     * 
+     * A subclass can insert different topology behavior by overriding this method.
+     * 
+     * @param c                     the {@link Connections} memory encapsulation
+     * @param centerColumn          The center of the neighborhood.
+     * @param inhibitionRadius      Span of columns included in each neighborhood
+     * @return                      The columns in the neighborhood (1D)
+     */
+    public int[] getColumnNeighborhood(Connections c, int centerColumn, int inhibitionRadius) {
+        return c.isWrapAround() ? 
+            c.getColumnTopology().wrappingNeighborhood(centerColumn, inhibitionRadius) :
+                c.getColumnTopology().neighborhood(centerColumn, inhibitionRadius);
+    }
+    
+    /**
+     * Gets a neighborhood of inputs.
+     * 
+     * Simply calls topology.wrappingNeighborhood or topology.neighborhood.
+     * 
+     * A subclass can insert different topology behavior by overriding this method.
+     * 
+     * @param c                     the {@link Connections} memory encapsulation
+     * @param centerInput           The center of the neighborhood.
+     * @param potentialRadius       Span of the input field included in each neighborhood
+     * @return                      The input's in the neighborhood. (1D)
+     */
+    public int[] getInputNeighborhood(Connections c, int centerInput, int potentialRadius) {
+        return c.isWrapAround() ? 
+            c.getInputTopology().wrappingNeighborhood(centerInput, potentialRadius) :
+                c.getInputTopology().neighborhood(centerInput, potentialRadius);
     }
     
     /**

@@ -56,6 +56,7 @@ import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
+import org.numenta.nupic.util.Topology;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
 
@@ -112,7 +113,11 @@ public class Connections implements Persistable {
     
     public double[] boostedOverlaps;
     public int[] overlaps;
-
+    
+    /** Manages input neighborhood transformations */
+    private Topology inputTopology;
+    /** Manages column neighborhood transformations */
+    private Topology columnTopology;
     /** A matrix representing the shape of the input. */
     protected SparseMatrix<?> inputMatrix;
     /**
@@ -153,8 +158,8 @@ public class Connections implements Persistable {
 
     private double[] overlapDutyCycles;
     private double[] activeDutyCycles;
-    private double[] minOverlapDutyCycles;
-    private double[] minActiveDutyCycles;
+    private volatile double[] minOverlapDutyCycles;
+    private volatile double[] minActiveDutyCycles;
     private double[] boostFactors;
 
     /////////////////////////////////////// Temporal Memory Vars ///////////////////////////////////////////
@@ -379,6 +384,44 @@ public class Connections implements Persistable {
      */
     public SparseObjectMatrix<Column> getMemory() {
         return memory;
+    }
+    
+    /**
+     * Returns the {@link Topology} overseeing input 
+     * neighborhoods.
+     * @return 
+     */
+    public Topology getInputTopology() {
+        return inputTopology;
+    }
+    
+    /**
+     * Sets the {@link Topology} overseeing input 
+     * neighborhoods.
+     * 
+     * @param topology  the input Topology
+     */
+    public void setInputTopology(Topology topology) {
+        this.inputTopology = topology;
+    }
+    
+    /**
+     * Returns the {@link Topology} overseeing {@link Column} 
+     * neighborhoods.
+     * @return
+     */
+    public Topology getColumnTopology() {
+        return columnTopology;
+    }
+    
+    /**
+     * Sets the {@link Topology} overseeing {@link Column} 
+     * neighborhoods.
+     * 
+     * @param topology  the column Topology
+     */
+    public void setColumnTopology(Topology topology) {
+        this.columnTopology = topology;
     }
 
     /**
@@ -1071,6 +1114,10 @@ public class Connections implements Persistable {
         return overlapDutyCycles;
     }
 
+    /**
+     * Sets the overlap duty cycles
+     * @param overlapDutyCycles
+     */
     public void setOverlapDutyCycles(double[] overlapDutyCycles) {
         this.overlapDutyCycles = overlapDutyCycles;
     }

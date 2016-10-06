@@ -1411,6 +1411,28 @@ public class ArrayUtils {
         //System.out.println("sample: " + Arrays.toString(selectedIndices));
         return selectedIndices;
     }
+    
+    /**
+     * Returns a random, sorted, and  unique array of the specified sample size of
+     * selections from the specified list of choices.
+     *
+     * @param sampleSize the number of selections in the returned sample
+     * @param choices    the list of choices to select from
+     * @param random     a random number generator
+     * @return a sample of numbers of the specified size
+     */
+    public static int[] sample(int[] choices, int[] selectedIndices, Random random) {
+        TIntArrayList choiceSupply = new TIntArrayList(choices);
+        int upperBound = choices.length;
+        for (int i = 0; i < selectedIndices.length; i++) {
+            int randomIdx = random.nextInt(upperBound);
+            selectedIndices[i] = (choiceSupply.removeAt(randomIdx));
+            upperBound--;
+        }
+        Arrays.sort(selectedIndices);
+        //System.out.println("sample: " + Arrays.toString(selectedIndices));
+        return selectedIndices;
+    }
 
     /**
      * Returns a double[] filled with random doubles of the specified size.

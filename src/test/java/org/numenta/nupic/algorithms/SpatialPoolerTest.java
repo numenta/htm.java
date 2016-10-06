@@ -39,7 +39,6 @@ import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;
 import org.numenta.nupic.util.SparseBinaryMatrix;
-import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.UniversalRandom;
 
@@ -221,8 +220,6 @@ public class SpatialPoolerTest {
         }
 
         for(int i = 0;i < mem.getNumColumns();i++) {
-            System.out.println(Arrays.toString((int[])mem.getConnectedCounts().getSlice(i)));
-            System.out.println(Arrays.toString(mem.getPotentialPools().get(i).getDensePermanences(mem)));
             int[] permanences = ArrayUtils.toIntArray(mem.getPotentialPools().get(i).getDensePermanences(mem));
             int[] potential = (int[])mem.getConnectedCounts().getSlice(i);
             assertTrue(Arrays.equals(permanences, potential));
@@ -380,7 +377,7 @@ public class SpatialPoolerTest {
         assertEquals(2, sp.mapColumn(mem, 2));
         assertEquals(3, sp.mapColumn(mem, 3));
 
-        // Test 1D with same dimensions of length 1
+        // Test 1D with dimensions of length 1
         setupParameters();
         parameters.setColumnDimensions(new int[] { 1 });
         parameters.setInputDimensions(new int[] { 1 });
@@ -399,6 +396,16 @@ public class SpatialPoolerTest {
         assertEquals(52, sp.mapColumn(mem, 5));
         assertEquals(58, sp.mapColumn(mem, 7));
         assertEquals(418, sp.mapColumn(mem, 47));
+        
+        // Test 2D with some input dimensions smaller than column dimensions.
+        setupParameters();
+        parameters.setColumnDimensions(new int[] { 4, 4 });
+        parameters.setInputDimensions(new int[] { 3, 5 });
+        initSP();
+        
+        assertEquals(0, sp.mapColumn(mem, 0));
+        assertEquals(4, sp.mapColumn(mem, 3));
+        assertEquals(14, sp.mapColumn(mem, 15));
     }
     
     @Test
@@ -408,6 +415,7 @@ public class SpatialPoolerTest {
         parameters.setColumnDimensions(new int[] { 4 });
         parameters.setPotentialRadius(2);
         parameters.setPotentialPct(1);
+        parameters.set(KEY.WRAP_AROUND, false);
         initSP();
 
         assertEquals(12, mem.getInputDimensions()[0]);
@@ -423,7 +431,8 @@ public class SpatialPoolerTest {
         mask = sp.mapPotential(mem, 2, false);
         assertTrue(Arrays.equals(expected, mask));
 
-        // Test with wrapAround and potentialPct = 1        
+        // Test with wrapAround and potentialPct = 1
+        mem.setWrapAround(true);
         expected = new int[] { 0, 1, 2, 3, 11 };
         mask = sp.mapPotential(mem, 0, true);
         assertTrue(Arrays.equals(expected, mask));
@@ -434,6 +443,7 @@ public class SpatialPoolerTest {
 
         // Test with wrapAround and potentialPct < 1
         parameters.setPotentialPct(0.5);
+        parameters.set(KEY.WRAP_AROUND, true);
         initSP();
 
         int[] supersetMask = new int[] { 0, 1, 2, 3, 11 }; 
@@ -502,6 +512,7 @@ public class SpatialPoolerTest {
         parameters.setColumnDimensions(new int[] { 1 });
         parameters.setPotentialRadius(2);
         parameters.setPotentialPct(1);
+        parameters.set(KEY.WRAP_AROUND, false);
         initSP();
 
         //Test without wrapAround and potentialPct = 1
@@ -917,98 +928,53 @@ public class SpatialPoolerTest {
     
     @Test
     public void testUpdateMinDutyCycleLocal() {
-        setupParameters();
+        setupDefaultParameters();
         parameters.setInputDimensions(new int[] { 5 });
-        parameters.setColumnDimensions(new int[] { 5 });
-        parameters.setRandom(new UniversalRandom(42));
-        initSP();
-
-        SpatialPooler mockSP = new SpatialPooler() {
-            private static final long serialVersionUID = 1L;
-            int returnIndex = 0;
-            int[][] returnVals =  {
-                    {0, 1, 2},
-                    {1, 2, 3},
-                    {2, 3, 4},
-                    {0, 2, 3},
-                    {0, 1, 3}};
-            @Override
-            public TIntArrayList getNeighborsND(
-                    Connections c, int columnIndex, SparseMatrix<?> topology, int radius, boolean wrapAround) {
-                return new TIntArrayList(returnVals[returnIndex++]);
-            }
-        };
-
-        mem.setMinPctOverlapDutyCycles(0.04);
-        mem.setOverlapDutyCycles(new double[] { 1.4, 0.5, 1.2, 0.8, 0.1 });
-        double[] trueMinOverlapDutyCycles = new double[] {
-                0.04*1.4, 0.04*1.2, 0.04*1.2, 0.04*1.4, 0.04*1.4 };
-
-        mem.setMinPctActiveDutyCycles(0.02);
-        mem.setActiveDutyCycles(new double[] { 0.4, 0.5, 0.2, 0.18, 0.1 });
-        double[] trueMinActiveDutyCycles = new double[] {
-                0.02*0.5, 0.02*0.5, 0.02*0.2, 0.02*0.4, 0.02*0.5 };
-
-        double[] mins = new double[mem.getNumColumns()];
-        Arrays.fill(mins, 0);
-        mem.setMinOverlapDutyCycles(mins);
-        mem.setMinActiveDutyCycles(Arrays.copyOf(mins, mins.length));
-        mockSP.updateMinDutyCyclesLocal(mem);
-        for(int i = 0;i < trueMinOverlapDutyCycles.length;i++) {
-            assertEquals(trueMinOverlapDutyCycles[i], mem.getMinOverlapDutyCycles()[i], 0.01);
-            assertEquals(trueMinActiveDutyCycles[i], mem.getMinActiveDutyCycles()[i], 0.01);
-        }
-
-        ///////////////////////
-
-        setupParameters();
-        parameters.setInputDimensions(new int[] { 8 });
         parameters.setColumnDimensions(new int[] { 8 });
-        parameters.setRandom(new UniversalRandom(42));
+        parameters.set(KEY.WRAP_AROUND, false);
         initSP();
-
-        mockSP = new SpatialPooler() {
-            private static final long serialVersionUID = 1L;
-            int returnIndex = 0;
-            int[][] returnVals =  {
-                    {0, 1, 2, 3, 4},
-                    {1, 2, 3, 4, 5},
-                    {2, 3, 4, 6, 7},
-                    {0, 2, 4, 6},
-                    {1, 6},
-                    {3, 5, 7},
-                    {1, 4, 5, 6},
-                    {2, 3, 6, 7}};
-            @Override
-            public TIntArrayList getNeighborsND(
-                    Connections c, int columnIndex, SparseMatrix<?> topology, int radius, boolean wrapAround) {
-                return new TIntArrayList(returnVals[returnIndex++]);
-            }
-        };
-
-        mem.setMinPctOverlapDutyCycles(0.01);
-        mem.setOverlapDutyCycles(new double[] { 1.2, 2.7, 0.9, 1.1, 4.3, 7.1, 2.3, 0.0 });
-        trueMinOverlapDutyCycles = new double[] {
-                0.01*4.3, 0.01*7.1, 0.01*4.3, 0.01*4.3, 
-                0.01*2.7, 0.01*7.1, 0.01*7.1, 0.01*2.3 };
-
-        mem.setMinPctActiveDutyCycles(0.03);
-        mem.setActiveDutyCycles(new double[] { 0.14, 0.25, 0.125, 0.33, 0.27, 0.11, 0.76, 0.31 });
-        trueMinActiveDutyCycles = new double[] {
-                0.03*0.33, 0.03*0.33, 0.03*0.76, 0.03*0.76, 
-                0.03*0.76, 0.03*0.33, 0.03*0.76, 0.03*0.76 };
-
-        mins = new double[mem.getNumColumns()];
-        Arrays.fill(mins, 0);
-        mem.setMinOverlapDutyCycles(mins);
-        mem.setMinActiveDutyCycles(Arrays.copyOf(mins, mins.length));
-        mockSP.updateMinDutyCyclesLocal(mem);
-        for(int i = 0;i < trueMinOverlapDutyCycles.length;i++) {
-            //          System.out.println(i + ") " + trueMinOverlapDutyCycles[i] + "  -  " +  mem.getMinOverlapDutyCycles()[i]);
-            //          System.out.println(i + ") " + trueMinActiveDutyCycles[i] + "  -  " +  mem.getMinActiveDutyCycles()[i]);
-            assertEquals(trueMinOverlapDutyCycles[i], mem.getMinOverlapDutyCycles()[i], 0.01);
-            assertEquals(trueMinActiveDutyCycles[i], mem.getMinActiveDutyCycles()[i], 0.01);
-        }
+        
+        mem.setInhibitionRadius(1);
+        mem.setOverlapDutyCycles(new double[] { 0.7, 0.1, 0.5, 0.01, 0.78, 0.55, 0.1, 0.001 });
+        mem.setActiveDutyCycles(new double[] { 0.9, 0.3, 0.5, 0.7, 0.1, 0.01, 0.08, 0.12 });
+        mem.setMinPctActiveDutyCycles(0.1);
+        mem.setMinPctOverlapDutyCycles(0.2);
+        sp.updateMinDutyCyclesLocal(mem);
+        
+        double[] resultMinActiveDutyCycles = mem.getMinActiveDutyCycles();
+        double[] expected0 = { 0.09, 0.09, 0.07, 0.07, 0.07, 0.01, 0.012, 0.012 };
+        IntStream.range(0, expected0.length)
+            .forEach(i -> assertEquals(expected0[i], resultMinActiveDutyCycles[i], 0.01));
+        
+        double[] resultMinOverlapDutyCycles = mem.getMinOverlapDutyCycles();
+        double[] expected1 = new double[] { 0.14, 0.14, 0.1, 0.156, 0.156, 0.156, 0.11, 0.02 };
+        IntStream.range(0, expected1.length)
+            .forEach(i -> assertEquals(expected1[i], resultMinOverlapDutyCycles[i], 0.01));
+        
+        // wrapAround = true
+        setupDefaultParameters();
+        parameters.setInputDimensions(new int[] { 5 });
+        parameters.setColumnDimensions(new int[] { 8 });
+        parameters.set(KEY.WRAP_AROUND, true);
+        initSP();
+        
+        mem.setInhibitionRadius(1);
+        mem.setOverlapDutyCycles(new double[] { 0.7, 0.1, 0.5, 0.01, 0.78, 0.55, 0.1, 0.001 });
+        mem.setActiveDutyCycles(new double[] { 0.9, 0.3, 0.5, 0.7, 0.1, 0.01, 0.08, 0.12 });
+        mem.setMinPctActiveDutyCycles(0.1);
+        mem.setMinPctOverlapDutyCycles(0.2);
+        sp.updateMinDutyCyclesLocal(mem);
+        
+        double[] resultMinActiveDutyCycles2 = mem.getMinActiveDutyCycles();
+        double[] expected2 = { 0.09, 0.09, 0.07, 0.07, 0.07, 0.01, 0.012, 0.09 };
+        IntStream.range(0, expected2.length)
+            .forEach(i -> assertEquals(expected2[i], resultMinActiveDutyCycles2[i], 0.01));
+        
+        double[] resultMinOverlapDutyCycles2 = mem.getMinOverlapDutyCycles();
+        double[] expected3 = new double[] { 0.14, 0.14, 0.1, 0.156, 0.156, 0.156, 0.11, 0.14 };
+        IntStream.range(0, expected3.length)
+            .forEach(i -> assertEquals(expected3[i], resultMinOverlapDutyCycles2[i], 0.01));
+        
     }
     
     @Test
@@ -1605,7 +1571,7 @@ public class SpatialPoolerTest {
     @Test
     public void testInhibitColumnsLocal() {
         setupParameters();
-        parameters.setInputDimensions(new int[] { 10 });
+        parameters.setInputDimensions(new int[] { 5 });
         parameters.setColumnDimensions(new int[] { 10 });
         initSP();
 
@@ -1613,314 +1579,331 @@ public class SpatialPoolerTest {
         mem.setInhibitionRadius(2);
         double density = 0.5;
         double[] overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
-        int[] trueActive = new int[] {1, 2, 5, 6, 9};
+                                       //  L  W  W  L  L  W  W   L   W    W (wrapAround=true)
+                                       //  L  W  W  L  L  W  W   L   L    W (wrapAround=false)
+        
+        mem.setWrapAround(true);
+        int[] trueActive = new int[] {1, 2, 5, 6, 8, 9};
         int[] active = sp.inhibitColumnsLocal(mem, overlaps, density);
         assertTrue(Arrays.equals(trueActive, active));
+        
+        mem.setWrapAround(false);
+        trueActive = new int[] {1, 2, 5, 6, 9};
+        active = sp.inhibitColumnsLocal(mem, overlaps, density);
+        assertTrue(Arrays.equals(trueActive, active));
 
-        setupParameters();
-        parameters.setInputDimensions(new int[] { 10 });
-        parameters.setColumnDimensions(new int[] { 10 });
-        initSP();
-        //Internally calculated during init, to overwrite we put after init
+        density = 0.5;
         mem.setInhibitionRadius(3);
         overlaps = new double[] { 1, 2, 7, 0, 3, 4, 16, 1, 1.5, 1.7 };
-        trueActive = new int[] { 1, 2, 5, 6 };
+                              //  L  W  W  L  W  W  W   L   L    W (wrapAround=true)
+                              //  L  W  W  L  W  W  W   L   L    L (wrapAround=false)
+        
+        mem.setWrapAround(true);
+        trueActive = new int[] { 1, 2, 4, 5, 6, 9 };
         active = sp.inhibitColumnsLocal(mem, overlaps, density);
-        //Commented out in Python version because it is wrong?
-        //assertTrue(Arrays.equals(trueActive, active));
-
+        assertTrue(Arrays.equals(trueActive, active));
+        
+        mem.setWrapAround(false);
+        trueActive = new int[] { 1, 2, 4, 5, 6, 9 };
+        active = sp.inhibitColumnsLocal(mem, overlaps, density);
+        assertTrue(Arrays.equals(trueActive, active));
+        
         // Test add to winners
         density = 0.3333;
-        setupParameters();
-        parameters.setInputDimensions(new int[] { 10 });
-        parameters.setColumnDimensions(new int[] { 10 });
-        initSP();
-        //Internally calculated during init, to overwrite we put after init
         mem.setInhibitionRadius(3);
         overlaps = new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+                              //  W  W  L  L  W  W  L  L  L  L (wrapAround=true)
+                              //  W  W  L  L  W  W  L  L  W  L (wrapAround=false)
+        
+        mem.setWrapAround(true);
+        trueActive = new int[] { 0, 1, 4, 5 };
+        active = sp.inhibitColumnsLocal(mem, overlaps, density);
+        assertTrue(Arrays.equals(trueActive, active));
+        
+        mem.setWrapAround(false);
         trueActive = new int[] { 0, 1, 4, 5, 8 };
         active = sp.inhibitColumnsLocal(mem, overlaps, density);
         assertTrue(Arrays.equals(trueActive, active));
     }
     
-    /**
-     * As coded in the Python test
-     */
-    @Test
-    public void testGetNeighborsND() {
-        //This setup isn't relevant to this test
-        setupParameters();
-        parameters.setInputDimensions(new int[] { 9, 5 });
-        parameters.setColumnDimensions(new int[] { 5, 5 });
-        initSP();
-        ////////////////////// Test not part of Python port /////////////////////
-        int[] result = sp.getNeighborsND(mem, 2, mem.getInputMatrix(), 3, true).toArray();
-        int[] expected = new int[] { 
-                0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
-                13, 14, 15, 16, 17, 18, 19, 30, 31, 32, 33, 
-                34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 
-        };
-        for(int i = 0;i < result.length;i++) {
-            assertEquals(expected[i], result[i]);
-        }
-        /////////////////////////////////////////////////////////////////////////
-        setupParameters();
-        int[] dimensions = new int[] { 5, 7, 2 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        int radius = 1;
-        int x = 1;
-        int y = 3;
-        int z = 2;
-        int columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
-        int[] neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        String expect = "[18, 19, 20, 21, 22, 23, 32, 33, 34, 36, 37, 46, 47, 48, 49, 50, 51]";
-        assertEquals(expect, ArrayUtils.print1DArray(neighbors));
-
-        /////////////////////////////////////////
-        setupParameters();
-        dimensions = new int[] { 5, 7, 9 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        radius = 3;
-        x = 0;
-        y = 0;
-        z = 3;
-        columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
-        neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        expect = "[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 24, 25, 26, "
-                + "27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 51, "
-                + "52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 69, 70, 71, 72, 73, 74, "
-                + "75, 78, 79, 80, 81, 82, 83, 84, 87, 88, 89, 90, 91, 92, 93, 96, 97, 98, 99, "
-                + "100, 101, 102, 105, 106, 107, 108, 109, 110, 111, 114, 115, 116, 117, 118, 119, "
-                + "120, 123, 124, 125, 126, 127, 128, 129, 132, 133, 134, 135, 136, 137, 138, 141, "
-                + "142, 143, 144, 145, 146, 147, 150, 151, 152, 153, 154, 155, 156, 159, 160, 161, "
-                + "162, 163, 164, 165, 168, 169, 170, 171, 172, 173, 174, 177, 178, 179, 180, 181, "
-                + "182, 183, 186, 187, 188, 190, 191, 192, 195, 196, 197, 198, 199, 200, 201, 204, "
-                + "205, 206, 207, 208, 209, 210, 213, 214, 215, 216, 217, 218, 219, 222, 223, 224, "
-                + "225, 226, 227, 228, 231, 232, 233, 234, 235, 236, 237, 240, 241, 242, 243, 244, "
-                + "245, 246, 249, 250, 251, 252, 253, 254, 255, 258, 259, 260, 261, 262, 263, 264, "
-                + "267, 268, 269, 270, 271, 272, 273, 276, 277, 278, 279, 280, 281, 282, 285, 286, "
-                + "287, 288, 289, 290, 291, 294, 295, 296, 297, 298, 299, 300, 303, 304, 305, 306, "
-                + "307, 308, 309, 312, 313, 314]";
-        assertEquals(expect, ArrayUtils.print1DArray(neighbors));
-
-        /////////////////////////////////////////
-        setupParameters();
-        dimensions = new int[] { 5, 10, 7, 6 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-
-        radius = 4;
-        int w = 2;
-        x = 5;
-        y = 6;
-        z = 2;
-        columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x, w });
-        neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        TIntHashSet trueNeighbors = new TIntHashSet();
-        for(int i = -radius;i <= radius;i++) {
-            for(int j = -radius;j <= radius;j++) {
-                for(int k = -radius;k <= radius;k++) {
-                    for(int m = -radius;m <= radius;m++) {
-                        int zprime = (int)ArrayUtils.positiveRemainder((z + i), dimensions[0]);
-                        int yprime = (int)ArrayUtils.positiveRemainder((y + j), dimensions[1]);
-                        int xprime = (int)ArrayUtils.positiveRemainder((x + k), dimensions[2]);
-                        int wprime = (int)ArrayUtils.positiveRemainder((w + m), dimensions[3]);
-                        trueNeighbors.add(mem.getInputMatrix().computeIndex(new int[] { zprime, yprime, xprime, wprime }));
-                    }
-                }
-            }
-        }
-        trueNeighbors.remove(columnIndex);
-        int[] tneighbors = ArrayUtils.unique(trueNeighbors.toArray());
-        assertEquals(ArrayUtils.print1DArray(tneighbors), ArrayUtils.print1DArray(neighbors));
-
-        /////////////////////////////////////////
-        //Tests from getNeighbors1D from Python unit test
-        setupParameters();
-        dimensions = new int[] { 8 };
-        parameters.setColumnDimensions(dimensions);
-        parameters.setInputDimensions(dimensions);
-        initSP();
-        AbstractSparseBinaryMatrix sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
-        radius = 1;
-        columnIndex = 3;
-        int[] mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        TIntArrayList msk = new TIntArrayList(mask);
-        TIntArrayList neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //////
-        setupParameters();
-        dimensions = new int[] { 8 };
-        parameters.setInputDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
-        radius = 2;
-        columnIndex = 3;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //Wrap around
-        setupParameters();
-        dimensions = new int[] { 8 };
-        parameters.setInputDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
-        radius = 2;
-        columnIndex = 0;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //Radius too big
-        setupParameters();
-        dimensions = new int[] { 8 };
-        parameters.setInputDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
-        radius = 20;
-        columnIndex = 6;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //These are all the same tests from 2D
-        setupParameters();
-        dimensions = new int[] { 6, 5 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        int[][] input = new int[][] { 
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {0, 1, 1, 1, 0},
-            {0, 1, 0, 1, 0},
-            {0, 1, 1, 1, 0},
-            {0, 0, 0, 0, 0}};
-            for(int i = 0;i < input.length;i++) {
-                for(int j = 0;j < input[i].length;j++) {
-                    if(input[i][j] == 1) 
-                        sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
-                }
-            }
-        radius = 1;
-        columnIndex = 3*5 + 2;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        ////////
-        setupParameters();
-        dimensions = new int[] { 6, 5 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        input = new int[][] { 
-            {0, 0, 0, 0, 0},
-            {1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1},
-            {1, 1, 0, 1, 1},
-            {1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1}};
-        for(int i = 0;i < input.length;i++) {
-            for(int j = 0;j < input[i].length;j++) {
-                if(input[i][j] == 1) 
-                    sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
-            }
-        }
-        radius = 2;
-        columnIndex = 3*5 + 2;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //Radius too big
-        setupParameters();
-        dimensions = new int[] { 6, 5 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        input = new int[][] { 
-            {1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1},
-            {1, 1, 0, 1, 1},
-            {1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1}};
-            for(int i = 0;i < input.length;i++) {
-                for(int j = 0;j < input[i].length;j++) {
-                    if(input[i][j] == 1) 
-                        sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
-                }
-            }
-        radius = 7;
-        columnIndex = 3*5 + 2;
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-
-        //Wrap-around
-        setupParameters();
-        dimensions = new int[] { 6, 5 };
-        parameters.setInputDimensions(dimensions);
-        parameters.setColumnDimensions(dimensions);
-        initSP();
-        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
-        input = new int[][] { 
-            {1, 0, 0, 1, 1},
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0},
-            {1, 0, 0, 1, 1},
-            {1, 0, 0, 1, 0}};
-        for(int i = 0;i < input.length;i++) {
-            for(int j = 0;j < input[i].length;j++) {
-                if(input[i][j] == 1) 
-                    sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
-            }
-        }
-        radius = 1;
-        columnIndex = sbm.getMaxIndex();
-        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
-        msk = new TIntArrayList(mask);
-        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
-        neg.removeAll(msk);
-        assertTrue(sbm.all(mask));
-        assertFalse(sbm.any(neg));
-    }
+//    /**
+//     * As coded in the Python test
+//     */
+//    @Test
+//    public void testGetNeighborsND() {
+//        //This setup isn't relevant to this test
+//        setupParameters();
+//        parameters.setInputDimensions(new int[] { 9, 5 });
+//        parameters.setColumnDimensions(new int[] { 5, 5 });
+//        initSP();
+//        ////////////////////// Test not part of Python port /////////////////////
+//        int[] result = sp.getNeighborsND(mem, 2, mem.getInputMatrix(), 3, true).toArray();
+//        int[] expected = new int[] { 
+//                0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+//                13, 14, 15, 16, 17, 18, 19, 30, 31, 32, 33, 
+//                34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44 
+//        };
+//        for(int i = 0;i < result.length;i++) {
+//            assertEquals(expected[i], result[i]);
+//        }
+//        /////////////////////////////////////////////////////////////////////////
+//        setupParameters();
+//        int[] dimensions = new int[] { 5, 7, 2 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        int radius = 1;
+//        int x = 1;
+//        int y = 3;
+//        int z = 2;
+//        int columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
+//        int[] neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        String expect = "[18, 19, 20, 21, 22, 23, 32, 33, 34, 36, 37, 46, 47, 48, 49, 50, 51]";
+//        assertEquals(expect, ArrayUtils.print1DArray(neighbors));
+//
+//        /////////////////////////////////////////
+//        setupParameters();
+//        dimensions = new int[] { 5, 7, 9 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        radius = 3;
+//        x = 0;
+//        y = 0;
+//        z = 3;
+//        columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x });
+//        neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        expect = "[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 24, 25, 26, "
+//                + "27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 42, 43, 44, 45, 46, 47, 48, 51, "
+//                + "52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 69, 70, 71, 72, 73, 74, "
+//                + "75, 78, 79, 80, 81, 82, 83, 84, 87, 88, 89, 90, 91, 92, 93, 96, 97, 98, 99, "
+//                + "100, 101, 102, 105, 106, 107, 108, 109, 110, 111, 114, 115, 116, 117, 118, 119, "
+//                + "120, 123, 124, 125, 126, 127, 128, 129, 132, 133, 134, 135, 136, 137, 138, 141, "
+//                + "142, 143, 144, 145, 146, 147, 150, 151, 152, 153, 154, 155, 156, 159, 160, 161, "
+//                + "162, 163, 164, 165, 168, 169, 170, 171, 172, 173, 174, 177, 178, 179, 180, 181, "
+//                + "182, 183, 186, 187, 188, 190, 191, 192, 195, 196, 197, 198, 199, 200, 201, 204, "
+//                + "205, 206, 207, 208, 209, 210, 213, 214, 215, 216, 217, 218, 219, 222, 223, 224, "
+//                + "225, 226, 227, 228, 231, 232, 233, 234, 235, 236, 237, 240, 241, 242, 243, 244, "
+//                + "245, 246, 249, 250, 251, 252, 253, 254, 255, 258, 259, 260, 261, 262, 263, 264, "
+//                + "267, 268, 269, 270, 271, 272, 273, 276, 277, 278, 279, 280, 281, 282, 285, 286, "
+//                + "287, 288, 289, 290, 291, 294, 295, 296, 297, 298, 299, 300, 303, 304, 305, 306, "
+//                + "307, 308, 309, 312, 313, 314]";
+//        assertEquals(expect, ArrayUtils.print1DArray(neighbors));
+//
+//        /////////////////////////////////////////
+//        setupParameters();
+//        dimensions = new int[] { 5, 10, 7, 6 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//
+//        radius = 4;
+//        int w = 2;
+//        x = 5;
+//        y = 6;
+//        z = 2;
+//        columnIndex = mem.getInputMatrix().computeIndex(new int[] { z, y, x, w });
+//        neighbors = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        TIntHashSet trueNeighbors = new TIntHashSet();
+//        for(int i = -radius;i <= radius;i++) {
+//            for(int j = -radius;j <= radius;j++) {
+//                for(int k = -radius;k <= radius;k++) {
+//                    for(int m = -radius;m <= radius;m++) {
+//                        int zprime = (int)ArrayUtils.positiveRemainder((z + i), dimensions[0]);
+//                        int yprime = (int)ArrayUtils.positiveRemainder((y + j), dimensions[1]);
+//                        int xprime = (int)ArrayUtils.positiveRemainder((x + k), dimensions[2]);
+//                        int wprime = (int)ArrayUtils.positiveRemainder((w + m), dimensions[3]);
+//                        trueNeighbors.add(mem.getInputMatrix().computeIndex(new int[] { zprime, yprime, xprime, wprime }));
+//                    }
+//                }
+//            }
+//        }
+//        trueNeighbors.remove(columnIndex);
+//        int[] tneighbors = ArrayUtils.unique(trueNeighbors.toArray());
+//        assertEquals(ArrayUtils.print1DArray(tneighbors), ArrayUtils.print1DArray(neighbors));
+//
+//        /////////////////////////////////////////
+//        //Tests from getNeighbors1D from Python unit test
+//        setupParameters();
+//        dimensions = new int[] { 8 };
+//        parameters.setColumnDimensions(dimensions);
+//        parameters.setInputDimensions(dimensions);
+//        initSP();
+//        AbstractSparseBinaryMatrix sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        sbm.set(new int[] { 2, 4 }, new int[] { 1, 1 }, true);
+//        radius = 1;
+//        columnIndex = 3;
+//        int[] mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        TIntArrayList msk = new TIntArrayList(mask);
+//        TIntArrayList neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //////
+//        setupParameters();
+//        dimensions = new int[] { 8 };
+//        parameters.setInputDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        sbm.set(new int[] { 1, 2, 4, 5 }, new int[] { 1, 1, 1, 1 }, true);
+//        radius = 2;
+//        columnIndex = 3;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //Wrap around
+//        setupParameters();
+//        dimensions = new int[] { 8 };
+//        parameters.setInputDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        sbm.set(new int[] { 1, 2, 6, 7 }, new int[] { 1, 1, 1, 1 }, true);
+//        radius = 2;
+//        columnIndex = 0;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //Radius too big
+//        setupParameters();
+//        dimensions = new int[] { 8 };
+//        parameters.setInputDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        sbm.set(new int[] { 0, 1, 2, 3, 4, 5, 7 }, new int[] { 1, 1, 1, 1, 1, 1, 1 }, true);
+//        radius = 20;
+//        columnIndex = 6;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //These are all the same tests from 2D
+//        setupParameters();
+//        dimensions = new int[] { 6, 5 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        int[][] input = new int[][] { 
+//            {0, 0, 0, 0, 0},
+//            {0, 0, 0, 0, 0},
+//            {0, 1, 1, 1, 0},
+//            {0, 1, 0, 1, 0},
+//            {0, 1, 1, 1, 0},
+//            {0, 0, 0, 0, 0}};
+//            for(int i = 0;i < input.length;i++) {
+//                for(int j = 0;j < input[i].length;j++) {
+//                    if(input[i][j] == 1) 
+//                        sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
+//                }
+//            }
+//        radius = 1;
+//        columnIndex = 3*5 + 2;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        ////////
+//        setupParameters();
+//        dimensions = new int[] { 6, 5 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        input = new int[][] { 
+//            {0, 0, 0, 0, 0},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 0, 1, 1},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 1, 1, 1}};
+//        for(int i = 0;i < input.length;i++) {
+//            for(int j = 0;j < input[i].length;j++) {
+//                if(input[i][j] == 1) 
+//                    sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
+//            }
+//        }
+//        radius = 2;
+//        columnIndex = 3*5 + 2;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //Radius too big
+//        setupParameters();
+//        dimensions = new int[] { 6, 5 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        input = new int[][] { 
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 0, 1, 1},
+//            {1, 1, 1, 1, 1},
+//            {1, 1, 1, 1, 1}};
+//            for(int i = 0;i < input.length;i++) {
+//                for(int j = 0;j < input[i].length;j++) {
+//                    if(input[i][j] == 1) 
+//                        sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
+//                }
+//            }
+//        radius = 7;
+//        columnIndex = 3*5 + 2;
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//
+//        //Wrap-around
+//        setupParameters();
+//        dimensions = new int[] { 6, 5 };
+//        parameters.setInputDimensions(dimensions);
+//        parameters.setColumnDimensions(dimensions);
+//        initSP();
+//        sbm = (AbstractSparseBinaryMatrix)mem.getInputMatrix();
+//        input = new int[][] { 
+//            {1, 0, 0, 1, 1},
+//            {0, 0, 0, 0, 0},
+//            {0, 0, 0, 0, 0},
+//            {0, 0, 0, 0, 0},
+//            {1, 0, 0, 1, 1},
+//            {1, 0, 0, 1, 0}};
+//        for(int i = 0;i < input.length;i++) {
+//            for(int j = 0;j < input[i].length;j++) {
+//                if(input[i][j] == 1) 
+//                    sbm.set(sbm.computeIndex(new int[] { i, j }), 1);
+//            }
+//        }
+//        radius = 1;
+//        columnIndex = sbm.getMaxIndex();
+//        mask = sp.getNeighborsND(mem, columnIndex, mem.getInputMatrix(), radius, true).toArray();
+//        msk = new TIntArrayList(mask);
+//        neg = new TIntArrayList(ArrayUtils.range(0, dimensions[0]));
+//        neg.removeAll(msk);
+//        assertTrue(sbm.all(mask));
+//        assertFalse(sbm.any(neg));
+//    }
     
     @Test
     public void testInit() {
