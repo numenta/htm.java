@@ -17,6 +17,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 #### Removed
 #### Added
 #### Changed
+* [[PR #486](https://github.com/numenta/htm.java/pull/486)] Updated the SpatialPooler and all unit/compatibility tests to be in sync with latest NuPIC version (Updated: 2016-09-22 SHA a3587db662ddc365ed371c81eb4166a41ad4bc3d)
 #### Fixed
 
 ***
