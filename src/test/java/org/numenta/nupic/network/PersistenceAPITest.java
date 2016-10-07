@@ -1287,8 +1287,9 @@ public class PersistenceAPITest extends ObservableTestBase {
                 m.put("timestamp", dateEncoder.parse(sa[0]));
                 m.put("consumption", Double.parseDouble(sa[1]));
 //                System.out.println(m);
-                Inference inf = network.computeImmediate(m);
-                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
+//                Inference inf = network.computeImmediate(m);
+                network.computeImmediate(m);
+//                System.out.println("" + inf.getRecordNum() + ", " + inf.getAnomalyScore());
             }
             network.reset();
         }
@@ -1858,13 +1859,13 @@ public class PersistenceAPITest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        int[] expected0 = new int[] { 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0 };
-        int[] expected1 = new int[] { 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-        int[] expected2 = new int[] { 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0 };
-        int[] expected3 = new int[] { 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0 };
-        int[] expected4 = new int[] { 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0 };
-        int[] expected5 = new int[] { 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0 };
-        int[] expected6 = new int[] { 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+        int[] expected0 = new int[] { 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+        int[] expected1 = new int[] { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+        int[] expected2 = new int[] { 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
+        int[] expected3 = new int[] { 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0 };
+        int[] expected4 = new int[] { 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0 };
+        int[] expected5 = new int[] { 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 };
+        int[] expected6 = new int[] { 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0 };
         int[][] expecteds = new int[][] { expected0, expected1, expected2, expected3, expected4, expected5, expected6 };
 
         TestObserver<Inference> tester;

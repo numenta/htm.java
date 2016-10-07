@@ -402,6 +402,37 @@ public class ArrayUtilsTest {
     }
     
     @Test
+    public void testZip_ArrayOfLists() {
+        Cell cell0 = new Cell(new Column(1, 0), 0);
+        Cell cell1 = new Cell(new Column(1, 1), 1);
+        List<?> o1 = Arrays.asList(new Cell[] { cell0, cell1 });
+        List<?> o2 = Arrays.asList(new Integer[] { new Integer(1), new Integer(2) });
+        List<?> o3 = Arrays.asList(new Double[] { 2.3, 4.5 });
+        
+        List<Tuple> zipped = ArrayUtils.zip(o1, o2, o3);
+        assertEquals(2, zipped.size());
+        assertTrue(zipped.get(0).get(0) instanceof Cell && zipped.get(0).get(1) instanceof Integer);
+        assertTrue(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(1)) && zipped.get(0).get(2).equals(new Double(2.3)));
+        assertTrue(zipped.get(1).get(0).equals(cell1) && zipped.get(1).get(1).equals(new Integer(2)) && zipped.get(1).get(2).equals(new Double(4.5)));
+        
+        // Negative tests
+        assertFalse(zipped.get(0).get(0).equals(cell0) && zipped.get(0).get(1).equals(new Integer(2))); // Bad Integer
+        assertFalse(zipped.get(1).get(0).equals(cell0) && zipped.get(1).get(1).equals(new Integer(2))); // Bad Cell
+    }
+    
+    @Test
+    public void testZip_ArrayOfIntArrays() {
+        int[] o1 = { 3, 4 };
+        int[] o2 = { 5, 5 };
+        int[] o3 = { -1, 7 };
+        
+        List<Tuple> zipped = ArrayUtils.zip(o1, o2, o3);
+        assertEquals(2, zipped.size());
+        assertTrue(Arrays.equals((int[])zipped.get(0).all().stream().mapToInt(i -> (int)i).toArray(), new int[] { 3, 5, -1 }));
+        assertTrue(Arrays.equals((int[])zipped.get(1).all().stream().mapToInt(i -> (int)i).toArray(), new int[] { 4, 5, 7 }));
+    }
+    
+    @Test
     public void testZip() {
         Cell cell0 = new Cell(new Column(1, 0), 0);
         Cell cell1 = new Cell(new Column(1, 1), 1);

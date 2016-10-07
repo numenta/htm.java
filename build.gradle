@@ -33,10 +33,11 @@ test {
 }
 
 // UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
-
+/*
 test {
     testLogging.showStandardStreams = true
 }
+*/
 
 dependencies {
     compile group: 'joda-time', name: 'joda-time', version: '2.5'

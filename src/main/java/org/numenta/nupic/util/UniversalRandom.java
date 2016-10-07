@@ -132,7 +132,7 @@ public class UniversalRandom extends Random {
                 array[index] ^= array[i];
             }
         }
-        System.out.println("shuffle: " + Arrays.toString(array));
+        //System.out.println("shuffle: " + Arrays.toString(array));
         return array;
     }
     

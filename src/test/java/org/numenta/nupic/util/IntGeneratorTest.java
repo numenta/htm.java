@@ -67,4 +67,46 @@ public class IntGeneratorTest {
         assertTrue(generator.next() == 30);
         assertFalse(generator.hasNext());
     }
+    
+    @Test
+    public void testGet() {
+        IntGenerator generator = IntGenerator.of(0, 31);
+        assertEquals(0, generator.get());
+        assertEquals(0, (int)generator.next());
+        assertEquals(1, generator.get());
+        assertEquals(1, generator.get());
+        assertEquals(1, (int)generator.next());
+        assertEquals(2, (int)generator.next());
+        assertEquals(3, generator.get());
+    }
+    
+    @Test 
+    public void testSize() {
+        IntGenerator generator = IntGenerator.of(-4, -4);
+        assertEquals(0, generator.size());
+        assertEquals(-4, (int)generator.next());
+        assertEquals(-4, (int)generator.next());
+        assertFalse(generator.hasNext());
+    }
+    
+    @Test
+    public void testReset() {
+        IntGenerator generator = IntGenerator.of(0, 31);
+        assertEquals(0, generator.get());
+        assertEquals(0, (int)generator.next());
+        assertEquals(1, generator.get());
+        assertEquals(1, generator.get());
+        assertEquals(1, (int)generator.next());
+        assertEquals(2, (int)generator.next());
+        assertEquals(3, generator.get());
+        
+        generator.reset();
+        assertEquals(0, generator.get());
+        assertEquals(0, (int)generator.next());
+        assertEquals(1, generator.get());
+        assertEquals(1, generator.get());
+        assertEquals(1, (int)generator.next());
+        assertEquals(2, (int)generator.next());
+        assertEquals(3, generator.get());
+    }
 }

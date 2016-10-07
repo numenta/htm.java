@@ -90,8 +90,8 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix im
      */
     protected void sliceError(int... coordinates) {
         throw new IllegalArgumentException(
-                "This method only returns the array holding the specified index: " + 
-                        Arrays.toString(coordinates));
+            "This method only returns the array holding the specified maximum index: " + 
+                    Arrays.toString(dimensions));
     }
     
     /**
@@ -101,14 +101,16 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix im
     protected int[] getSliceIndexes(int[] coordinates) {
         int[] dimensions = getDimensions();
         // check for valid coordinates
-        if (coordinates.length >= dimensions.length)
+        if (coordinates.length >= dimensions.length) {
             sliceError(coordinates);
+        }
 
         int sliceDimensionsLength = dimensions.length - coordinates.length;
         int[] sliceDimensions = (int[]) Array.newInstance(int.class, sliceDimensionsLength);
 
-        for (int i = coordinates.length ; i < dimensions.length; i++) 
+        for (int i = coordinates.length ; i < dimensions.length; i++) { 
             sliceDimensions[i - coordinates.length] = dimensions[i];
+        }
 
         int[] elementCoordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
         int sliceSize = Arrays.stream(sliceDimensions).reduce((n,i) -> n*i).getAsInt();
@@ -252,8 +254,9 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix im
     public void clearStatistics(int row) {
         trueCounts[row] = 0;
         
-        for (int index : getSliceIndexes(new int[] { row }))
+        for (int index : getSliceIndexes(new int[] { row })) {
             set(index, 0);
+        }
     }
 
     /**
@@ -284,8 +287,9 @@ public abstract class AbstractSparseBinaryMatrix extends AbstractSparseMatrix im
     public int[] getSparseIndices() {
         TIntList indexes = new TIntArrayList();
         for (int i = 0; i <= getMaxIndex(); i ++) {
-            if (get(i) > 0)
+            if (get(i) > 0) {
                 indexes.add(i);
+            }
         }
         
         return indexes.toArray();

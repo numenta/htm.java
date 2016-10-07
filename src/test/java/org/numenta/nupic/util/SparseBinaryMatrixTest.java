@@ -79,8 +79,8 @@ public class SparseBinaryMatrixTest {
                 sm.getSlice(0, 4);
                 fail();
             } catch (Exception e) {
-                assertEquals("This method only returns the array holding the specified index: " +
-                        Arrays.toString(new int[]{0, 4}), e.getMessage());
+                assertEquals("This method only returns the array holding the specified maximum index: " +
+                    Arrays.toString(sm.getDimensions()), e.getMessage());
             }
     }
 
@@ -224,6 +224,7 @@ public class SparseBinaryMatrixTest {
         }
         System.out.println("slice:" + ArrayUtils.intArrayToString(slice));
         assertEquals(1, slice[4]);
+        
         /*update first row to true, other to false*/
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {

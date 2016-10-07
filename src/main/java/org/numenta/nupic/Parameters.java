@@ -113,6 +113,7 @@ public class Parameters implements Persistable {
         defaultSpatialParams.put(KEY.MIN_PCT_ACTIVE_DUTY_CYCLES, 0.001);
         defaultSpatialParams.put(KEY.DUTY_CYCLE_PERIOD, 1000);
         defaultSpatialParams.put(KEY.MAX_BOOST, 10.0);
+        defaultSpatialParams.put(KEY.WRAP_AROUND, true);
         defaultSpatialParams.put(KEY.LEARN, true);
         DEFAULTS_SPATIAL = Collections.unmodifiableMap(defaultSpatialParams);
         defaultParams.putAll(DEFAULTS_SPATIAL);
@@ -245,7 +246,7 @@ public class Parameters implements Persistable {
         MIN_PCT_ACTIVE_DUTY_CYCLES("minPctActiveDutyCycles", Double.class),//TODO add range here?
         DUTY_CYCLE_PERIOD("dutyCyclePeriod", Integer.class),//TODO add range here?
         MAX_BOOST("maxBoost", Double.class), //TODO add range here?
-        //SP_VERBOSITY("spVerbosity", Integer.class, 0, 10),
+        WRAP_AROUND("wrapAround", Boolean.class),
         
         ///////////// SpatialPooler / Network Parameter(s) /////////////
         /** Number of cycles to send through the SP before forwarding data to the rest of the network. */
