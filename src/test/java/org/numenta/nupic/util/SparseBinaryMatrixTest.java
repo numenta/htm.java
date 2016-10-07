@@ -218,12 +218,14 @@ public class SparseBinaryMatrixTest {
                 }
             }
         }
-        int[] slice = (int[])sm.getSlice(4, 4);
+        
         for (int i = 0; i < 5; i++) {
             assertEquals(1, sm.getTrueCount(i));
         }
-        System.out.println("slice:" + ArrayUtils.intArrayToString(slice));
+        
+        int[] slice = (int[])sm.getSlice(4, 4);
         assertEquals(1, slice[4]);
+        
         /*update first row to true, other to false*/
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {

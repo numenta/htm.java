@@ -56,7 +56,7 @@ public interface Generator<T> extends Iterator<T>, Iterable<T>, Serializable {
      */
     static <T> Generator<T> of(List<T> l, Generator<Integer> i) {
         /**
-         *  Inner implementation of an {@code AbstractGenerator} for {@code DistalDendrite}s 
+         *  Inner implementation of an {@code Generator}
          */
         return new Generator<T>() {
             private static final long serialVersionUID = 1L;

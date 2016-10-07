@@ -71,7 +71,11 @@ public class SpatialPoolerCompatibilityTest {
         int[][] potentials = c.getPotentials();
         int[][] connecteds = c. getConnecteds();
         double[][] perms = c.getPermanences();
-        
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Used to write the 3 needed outputs to be inserted in the initialization //
+        // part of the SP compatibility test                                       //
+        /////////////////////////////////////////////////////////////////////////////
 //        for(int[] pots : potentials) {
 //            System.out.println(Arrays.toString(pots));
 //        }
@@ -100,12 +104,8 @@ public class SpatialPoolerCompatibilityTest {
                     return IntStream.range(0, perms[d].length).allMatch(i -> {
                         return areEqualDouble(perms[d][i], expectedInitialPerms[d][i], 4); 
                     });
-                    
                 }));
             
-            
-        
-        
         // Set the percentage of 1's in the test inputs
         double sparsity = 0.4d;
         int[][] inputMatrix = new UniversalRandom(42).binDistrib(numRecords, c.getNumInputs(), sparsity);
@@ -117,9 +117,19 @@ public class SpatialPoolerCompatibilityTest {
         runSideBySide(sp, c, pythonInputMatrix, numRecords, new SpatialPoolerCompatibilityActives(), new SpatialPoolerCompatibilityPermanences());
     }
     
+    /**
+     * Used to specify the number of places after the decimal for which
+     * the comparison should be made.
+     * 
+     * @param a             the first double to compare
+     * @param b             the second double to compare
+     * @param precision     the number of places after the decimal point
+     * @return  a flag indicating whether the two specified doubles are equal
+     *          at the specified precision.
+     */
     public static boolean areEqualDouble(double a, double b, int precision) {
         return Math.abs(a - b) <= Math.pow(10, -precision);
-     }
+    }
     
     /**
      * Main loop of the test which calls compute and then compares the {@link SpatialPooler}'s
@@ -200,9 +210,7 @@ public class SpatialPoolerCompatibilityTest {
     private void comparePermanences(Connections c, SpatialPoolerCompatibilityPermanences compats, int iteration) {
         double[][] comp = getPermsForIteration(compats, iteration);
         double[][] actual = c.getPermanences();
-        //System.out.println("\nComparing permanences for iteration: " + iteration);
         for(int i = 0;i < comp.length;i++) {
-            //System.out.println("tested for comp: " + Arrays.toString(comp[i]) + "  actual: " + Arrays.toString(actual[i]) + " -- col = " + i);
             for(int j = 0;j < comp[i].length;j++) {
                 try {
                     assertEquals(comp[i][j], actual[i][j], 0.0001);
