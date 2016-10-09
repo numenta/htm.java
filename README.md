@@ -73,7 +73,7 @@ See the blog: [Join the Cogmission](http://www.cogmission.ai)
 ## Versioning
 (Tracked according to core algorithms)  
 
-| Core Algorithms | NuPIC Date    |HTM.Java Date | Latest NuPIC SHA | Latest HTM.Java SHA | Status|
+| Core Algorithm  | NuPIC Date    |HTM.Java Date | Latest NuPIC SHA | Latest HTM.Java SHA | Status|
 | --------------- |:-------------:|:------------:|:----------------:|:-------------------:|:-----:|
 | SpatialPooler   | 2016-10-05    | 2016-10-07   |[commit](https://github.com/numenta/nupic/commit/7e77ecba4ffdd4991cfd87972de6211101e6661e)|[commit](https://github.com/numenta/htm.java/commit/2cdcee1fcc5f6c18c2c48b4b553c49879c1256bb#diff-22f96ea06fd0c2b3593c755cbccf0a8b)| Sync'd
 | TemporalMemory  | 2016-08-15    | 2016-09-16   |[commit](https://github.com/numenta/nupic/commit/bba0c63dcc386cac216ab726366e6e32af98967d#diff-e9ba1e72c0fd6d9b4f05ef4117d3cfee)|[commit](https://github.com/numenta/htm.java/commit/d1b92a3c490c3e3c7f3961277db77f8637bdd2bb#diff-a256ffe5036e54bc46675ba068385cd0)| Behind
