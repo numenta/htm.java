@@ -80,7 +80,7 @@ See the blog: [Join the Cogmission](http://www.cogmission.ai)
 
 <sub><sup>**NOTE:** "Behind" status does not imply _**any**_ lack of operational ability. The ```master``` branch of HTM.Java will always be _**fully**_ operational. 
 <br>
-Any fully critical feature addition to NuPIC will _**always**_ be matched (sync'd) ASAP, however due to ongoing updates, the algortithms within NuPIC may reach ahead for a short period of time while HTM.Java is busy porting the difference(s). We are committed to keeping  HTM.Java up to date with NuPIC at _**all**_ times.</sup></sub>
+Any fully critical feature addition to NuPIC will _**always**_ be matched (sync'd) ASAP, however due to ongoing updates, the algortithms within NuPIC may reach ahead for a short period of time while the HTM Community is busy porting the difference(s). We are committed to keeping HTM.Java up to date with NuPIC at _**all**_ times.</sup></sub>
 ***
 
 ## Project Goals
