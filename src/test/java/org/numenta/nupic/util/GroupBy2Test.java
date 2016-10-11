@@ -30,7 +30,7 @@ import java.util.function.Function;
 import org.junit.Test;
 import org.numenta.nupic.util.GroupBy2.Slot;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
 
 public class GroupBy2Test {
     
