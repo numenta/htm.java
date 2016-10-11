@@ -250,6 +250,23 @@ public class AnomalyLikelihoodTest {
     public void testEstimateAnomalyLikelihoodsMalformedRecords() {
         // Skipped due to impossibility of forming bad Sample objects in Java
     }
+
+	/**
+	 * This tests the anomalyProbability method with a number of calls that will
+	 * trigger copying of the sample array.
+	 */
+	@Test
+	public void testAnomalyProbabilityArrayCopying() {
+		Map<String, Object> params = new HashMap<>();
+		params.put(KEY_MODE, Mode.LIKELIHOOD);
+		params.put(AnomalyLikelihood.KEY_LEARNING_PERIOD, 300);
+		params.put(AnomalyLikelihood.KEY_ESTIMATION_SAMPLES, 300);
+		an = (AnomalyLikelihood) Anomaly.create(params);
+
+		for (int i = 0; i < 2000; i++) {
+			an.anomalyProbability(0.07, .5, null);
+		}
+	}
     
     /**
      * This calls estimateAnomalyLikelihoods with various values of skipRecords
