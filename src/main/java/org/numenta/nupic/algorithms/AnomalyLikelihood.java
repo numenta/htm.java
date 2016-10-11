@@ -214,7 +214,8 @@ public class AnomalyLikelihood extends Anomaly {
             distribution = nullDistribution();
         }else{
             TDoubleList samples = records.getMetrics();
-            distribution = estimateNormal(samples.toArray(skipRecords, samples.size()), true);
+            final int numRecordsToCopy = samples.size() - skipRecords;
+            distribution = estimateNormal(samples.toArray(skipRecords, numRecordsToCopy), true);
             
             /*  Taken from the Python Documentation
                
@@ -226,7 +227,7 @@ public class AnomalyLikelihood extends Anomaly {
              
              */
             samples = records.getSamples();
-            Statistic metricDistribution = estimateNormal(samples.toArray(skipRecords, samples.size()), false);
+            Statistic metricDistribution = estimateNormal(samples.toArray(skipRecords, numRecordsToCopy), false);
             
             if(metricDistribution.variance < 1.5e-5) {
                 distribution = nullDistribution();
