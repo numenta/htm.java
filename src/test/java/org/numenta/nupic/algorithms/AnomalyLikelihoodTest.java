@@ -99,7 +99,18 @@ public class AnomalyLikelihoodTest {
         }
         return false;
     }
-    
+
+	/**
+	 * This test attempts to find the anomaly-probability after create an
+	 * AnomalyLikelihood instance with default values for the learning period
+	 * and estimation samples. This used to generate an exception stating that
+	 * you must have at least one anomaly score.
+	 */
+	@Test
+	public void testConstructorWithDefaultLearningPeriodAndEstimationSamples() {
+		this.an.anomalyProbability(0.75, 0.5, null);
+	}
+
     @Test
     public void testNormalProbability() {
         TObjectDoubleMap<String> p = new TObjectDoubleHashMap<>();
