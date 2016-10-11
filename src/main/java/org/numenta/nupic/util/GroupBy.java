@@ -24,7 +24,7 @@ package org.numenta.nupic.util;
 import java.util.List;
 import java.util.function.Function;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
 
 
 /**

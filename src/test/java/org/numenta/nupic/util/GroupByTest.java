@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.DistalDendrite;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
 
 public class GroupByTest {
 

@@ -27,7 +27,7 @@ import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
 
 
 public class ComputeCycleTest {

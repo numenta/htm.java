@@ -48,7 +48,7 @@ import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Tuple;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
 
 public class TemporalMemory implements ComputeDecorator, Serializable {
     private static final long serialVersionUID = 1L;
