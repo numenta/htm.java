@@ -130,7 +130,7 @@ public class AnomalyLikelihood extends Anomaly {
         this.isWeighted = isWeighted;
         this.claLearningPeriod = claLearningPeriod == VALUE_NONE ? this.claLearningPeriod : claLearningPeriod;
         this.estimationSamples = estimationSamples == VALUE_NONE ? this.estimationSamples : estimationSamples;
-        this.probationaryPeriod = claLearningPeriod + estimationSamples;
+        this.probationaryPeriod = this.claLearningPeriod + this.estimationSamples;
         // How often we re-estimate the Gaussian distribution. The ideal is to
         // re-estimate every iteration but this is a performance hit. In general the
         // system is not very sensitive to this number as long as it is small
