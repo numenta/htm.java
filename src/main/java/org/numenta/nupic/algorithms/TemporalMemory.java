@@ -1,3 +1,24 @@
+/* ---------------------------------------------------------------------
+ * Numenta Platform for Intelligent Computing (NuPIC)
+ * Copyright (C) 2016, Numenta, Inc.  Unless you have an agreement
+ * with Numenta, Inc., for a separate license for this software code, the
+ * following terms and conditions apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses.
+ *
+ * http://numenta.org/licenses/
+ * ---------------------------------------------------------------------
+ */
 package org.numenta.nupic.algorithms;
 
 import static org.numenta.nupic.util.GroupBy2.Slot.NONE;
@@ -7,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -188,7 +210,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
 	    Activity activity = conn.computeActivity(cycle.activeCells, conn.getConnectedPermanence());
 	    
 	    List<DistalDendrite> activeSegments = IntStream.range(0, activity.numActiveConnected.length)
-	        .filter(i -> activity.numActivePotential[i] >= conn.getMinThreshold())
+	        .filter(i -> activity.numActiveConnected[i] >= conn.getActivationThreshold())
 	        .mapToObj(i -> conn.segmentForFlatIdx(i))
 	        .collect(Collectors.toList());
 	    
@@ -201,6 +223,13 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
 	    Collections.sort(matchingSegments, conn.segmentPositionSortKey);
 	    
 	    conn.lastActivity = activity;
+	    conn.setActiveCells(new LinkedHashSet<>(cycle.activeCells));
+        conn.setWinnerCells(new LinkedHashSet<>(cycle.winnerCells));
+        conn.setActiveSegments(activeSegments);
+        conn.setMatchingSegments(matchingSegments);
+        // Forces generation of the predictive cells from the above active segments
+        conn.clearPredictiveCells();
+        cycle.predictiveCells = conn.getPredictiveCells();
 	    
 	    if(learn) {
 	        activeSegments.stream().forEach(s -> conn.recordSegmentActivity(s));

@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.6.10-SNAPSHOT'
+version = '0.6.9-SNAPSHOT'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
@@ -12,7 +12,7 @@ targetCompatibility = 1.8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.10-SNAPSHOT'
+        attributes 'Implementation-Title': 'htm.java', 'Implementation-Version': '0.6.9-SNAPSHOT'
     }
 }
 
@@ -32,14 +32,12 @@ test {
    outputs.upToDateWhen { false }
 }
 
+// UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
+/*
 test {
-    // UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
-    //testLogging.showStandardStreams = true
-   
-    testLogging {
-        events "PASSED", "FAILED", "SKIPPED"
-    }
+    testLogging.showStandardStreams = true
 }
+*/
 
 dependencies {
     compile group: 'joda-time', name: 'joda-time', version: '2.5'
@@ -51,12 +49,15 @@ dependencies {
         exclude(module: 'commons-io')
     }
     compile group: 'net.sf.trove4j', name: 'trove4j', version:'3.0.3'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.4.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.4.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.4.4'
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.10'
-	compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
-	compile group: 'de.ruedigermoeller', name: 'fst', version: '2.45'
-	compile group: 'com.cedarsoftware', name: 'java-util', version: '1.19.3'
-	compile group: 'algorithmfoundry', name: 'algorithmfoundry-shade-culled', version:'1.3'
-	testCompile group: 'junit', name: 'junit', version:'4.11'
+    compile group: 'io.reactivex', name: 'rxjava', version: '1.0.10'
+    compile group: 'de.ruedigermoeller', name: 'fst', version: '2.45'
+    compile group: 'com.cedarsoftware', name: 'java-util', version: '1.19.3'
+    compile group: 'algorithmfoundry', name: 'algorithmfoundry-shade-culled', version:'1.3'
+    testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version:'1.1.2'
 }
 

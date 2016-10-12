@@ -1790,7 +1790,17 @@ public class Connections implements Persistable {
      * @return
      */
     public Set<Cell> getPredictiveCells() {
-        
+        if(predictiveCells.isEmpty()) {
+            Cell previousCell = null;
+            Cell currCell = null;
+            
+            List<DistalDendrite> temp = new ArrayList<>(activeSegments);
+            for(DistalDendrite activeSegment : temp) {
+                if((currCell = activeSegment.getParentCell()) != previousCell) {
+                    predictiveCells.add(previousCell = currCell);
+                }
+            }
+        }
         return predictiveCells;
     }
     

@@ -45,10 +45,7 @@ public class ComputeCycle implements Persistable {
     public Set<Cell> winnerCells = new LinkedHashSet<>();
     public List<DistalDendrite> activeSegments = new ArrayList<>();
     public List<DistalDendrite> matchingSegments = new ArrayList<>();
-    
-    
-    /** Force access through accessor because this list is created lazily */
-    private Set<Cell> predictiveCells = new LinkedHashSet<>();
+    public Set<Cell> predictiveCells = new LinkedHashSet<>();
         
     
     /**
@@ -94,12 +91,16 @@ public class ComputeCycle implements Persistable {
      * @return
      */
     public Set<Cell> predictiveCells() {
-        if(predictiveCells.isEmpty()) {
+        if(predictiveCells.isEmpty()) { 
+            Cell previousCell = null;
+            Cell currCell = null;
+            
             for(DistalDendrite activeSegment : activeSegments) {
-                predictiveCells.add(activeSegment.getParentCell());
+                if((currCell = activeSegment.getParentCell()) != previousCell) {
+                    predictiveCells.add(previousCell = currCell);
+                }
             }
         }
-        
         return predictiveCells;
     }
     
