@@ -32,7 +32,6 @@ import org.numenta.nupic.model.DistalDendrite;
 
 import chaschev.lang.Pair;
 
-
 public class GroupByTest {
 
     @Test

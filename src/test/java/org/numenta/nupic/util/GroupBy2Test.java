@@ -32,7 +32,6 @@ import org.numenta.nupic.util.GroupBy2.Slot;
 
 import chaschev.lang.Pair;
 
-
 public class GroupBy2Test {
     
     private List<Slot<?>> none = Arrays.asList(Slot.empty());

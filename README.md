@@ -26,6 +26,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 <br>
 
 ## Recent News Items...
+* [HTM.Java Receives new SpatialPooler](https://github.com/numenta/htm.java/pull/486) - Fully Updated! (10/06/2016)
 * HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB will be offered (soon)! (09/29/2016)
 * [HTM.java Receives New SDRClassifier!](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/algorithms/SDRClassifier.java) (07/26/2016)
 * [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
@@ -34,10 +35,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 * [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
 * HTM.java Recieves [Docker Reference-Build Implementation](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment) (03/26/2016)  
 * **HTM.java Becomes Build-able With OpenJDK** (03/26/2016)  
-* [HTM.java Receives Speed Increase Optimizations & Roots out Indeterminacy!](http://lists.numenta.org/pipermail/nupic-hackers_lists.numenta.org/2016-January/004422.html) (01/05/2016)
-* **Network API Rework** for [improved input classification!](http://www.cogmission.ai/2015/10/23/putting-out-fires-with-gasoline/) - (10/23/2015)
-* **Use HTM.java for the new** [Numenta HTM Challenge!](http://htmchallenge.devpost.com) - (Sept. 18th - Nov.6th)
-* **HTM.java Receives newly updated and re-written TemporalMemory and MonitorMixinFramework** - for test reporting and monitoring (08/23/2015)
+
 
 ### [News Archives...](https://github.com/numenta/htm.java/wiki/News-Archives...)
 * See a glimpse of htm.java's history and read about significant events in its development.  
@@ -73,11 +71,14 @@ See the blog: [Join the Cogmission](http://www.cogmission.ai)
 ## Versioning
 (Tracked according to core algorithms)  
 
-| Core Algorithms | NuPIC Date    |HTM.Java Date | Latest NuPIC SHA | Latest HTM.Java SHA | Status|
+| Core Algorithm  | NuPIC Date    |HTM.Java Date | Latest NuPIC SHA | Latest HTM.Java SHA | Status|
 | --------------- |:-------------:|:------------:|:----------------:|:-------------------:|:-----:|
 | SpatialPooler   | 2016-10-05    | 2016-10-07   |[commit](https://github.com/numenta/nupic/commit/7e77ecba4ffdd4991cfd87972de6211101e6661e)|[commit](https://github.com/numenta/htm.java/commit/2cdcee1fcc5f6c18c2c48b4b553c49879c1256bb#diff-22f96ea06fd0c2b3593c755cbccf0a8b)| Sync'd
 | TemporalMemory  | 2016-08-15    | 2016-09-16   |[commit](https://github.com/numenta/nupic/commit/bba0c63dcc386cac216ab726366e6e32af98967d#diff-e9ba1e72c0fd6d9b4f05ef4117d3cfee)|[commit](https://github.com/numenta/htm.java/commit/d1b92a3c490c3e3c7f3961277db77f8637bdd2bb#diff-a256ffe5036e54bc46675ba068385cd0)| Behind
 
+<sub><sup>**NOTE:** "Behind" status does not imply _**any**_ lack of operational ability. The ```master``` branch of HTM.Java will always be _**fully**_ operational. 
+<br>
+Any fully critical feature addition to NuPIC will _**always**_ be matched (sync'd) ASAP, however due to ongoing updates, the algortithms within NuPIC may reach ahead for a short period of time while the HTM Community is busy porting the difference(s). We are committed to keeping HTM.Java up to date with NuPIC at _**all**_ times.</sup></sub>
 ***
 
 ## Project Goals

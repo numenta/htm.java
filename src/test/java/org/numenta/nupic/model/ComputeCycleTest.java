@@ -27,8 +27,6 @@ import org.numenta.nupic.util.UniversalRandom;
 
 import chaschev.lang.Pair;
 
-
-
 public class ComputeCycleTest {
 
     @Test

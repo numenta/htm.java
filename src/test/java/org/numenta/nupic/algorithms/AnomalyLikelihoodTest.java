@@ -95,7 +95,18 @@ public class AnomalyLikelihoodTest {
         }
         return false;
     }
-    
+
+	/**
+	 * This test attempts to find the anomaly-probability after create an
+	 * AnomalyLikelihood instance with default values for the learning period
+	 * and estimation samples. This used to generate an exception stating that
+	 * you must have at least one anomaly score.
+	 */
+	@Test
+	public void testConstructorWithDefaultLearningPeriodAndEstimationSamples() {
+		this.an.anomalyProbability(0.75, 0.5, null);
+	}
+
     @Test
     public void testNormalProbability() {
         TObjectDoubleMap<String> p = new TObjectDoubleHashMap<>();
@@ -235,6 +246,23 @@ public class AnomalyLikelihoodTest {
     public void testEstimateAnomalyLikelihoodsMalformedRecords() {
         // Skipped due to impossibility of forming bad Sample objects in Java
     }
+
+	/**
+	 * This tests the anomalyProbability method with a number of calls that will
+	 * trigger copying of the sample array.
+	 */
+	@Test
+	public void testAnomalyProbabilityArrayCopying() {
+		Map<String, Object> params = new HashMap<>();
+		params.put(KEY_MODE, Mode.LIKELIHOOD);
+		params.put(AnomalyLikelihood.KEY_LEARNING_PERIOD, 300);
+		params.put(AnomalyLikelihood.KEY_ESTIMATION_SAMPLES, 300);
+		an = (AnomalyLikelihood) Anomaly.create(params);
+
+		for (int i = 0; i < 2000; i++) {
+			an.anomalyProbability(0.07, .5, null);
+		}
+	}
     
     /**
      * This calls estimateAnomalyLikelihoods with various values of skipRecords

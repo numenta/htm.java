@@ -118,7 +118,7 @@ public class AnomalyLikelihood extends Anomaly {
         this.isWeighted = isWeighted;
         this.claLearningPeriod = claLearningPeriod == VALUE_NONE ? this.claLearningPeriod : claLearningPeriod;
         this.estimationSamples = estimationSamples == VALUE_NONE ? this.estimationSamples : estimationSamples;
-        this.probationaryPeriod = claLearningPeriod + estimationSamples;
+        this.probationaryPeriod = this.claLearningPeriod + this.estimationSamples;
         // How often we re-estimate the Gaussian distribution. The ideal is to
         // re-estimate every iteration but this is a performance hit. In general the
         // system is not very sensitive to this number as long as it is small
@@ -202,7 +202,8 @@ public class AnomalyLikelihood extends Anomaly {
             distribution = nullDistribution();
         }else{
             TDoubleList samples = records.getMetrics();
-            distribution = estimateNormal(samples.toArray(skipRecords, samples.size()), true);
+            final int numRecordsToCopy = samples.size() - skipRecords;
+            distribution = estimateNormal(samples.toArray(skipRecords, numRecordsToCopy), true);
             
             /*  Taken from the Python Documentation
                
@@ -214,7 +215,7 @@ public class AnomalyLikelihood extends Anomaly {
              
              */
             samples = records.getSamples();
-            Statistic metricDistribution = estimateNormal(samples.toArray(skipRecords, samples.size()), false);
+            Statistic metricDistribution = estimateNormal(samples.toArray(skipRecords, numRecordsToCopy), false);
             
             if(metricDistribution.variance < 1.5e-5) {
                 distribution = nullDistribution();

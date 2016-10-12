@@ -32,6 +32,7 @@ import chaschev.lang.Pair;
 /**
  * Temporal Memory implementation in Java.
  * 
+ * @author Numenta
  * @author cogmission
  */
 public class TemporalMemory implements ComputeDecorator, Serializable{

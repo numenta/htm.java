@@ -36,11 +36,11 @@ import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Topology;
 
+import chaschev.lang.Pair;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
-import javafx.util.Pair;
 
 /**
  * Handles the relationships between the columns of a region 
@@ -811,10 +811,10 @@ public class SpatialPooler implements Persistable {
         
         Comparator<Pair<Integer, Double>> comparator = 
             (p1, p2) -> { 
-                int p1key = p1.getKey();
-                int p2key = p2.getKey();
-                double p1val = p1.getValue();
-                double p2val = p2.getValue();
+                int p1key = p1.getFirst();
+                int p2key = p2.getFirst();
+                double p1val = p1.getSecond();
+                double p2val = p2.getSecond();
                 if(Math.abs(p2val - p1val) < 0.000000001) {
                     return Math.abs(p2key - p1key) < 0.000000001 ? 0 : p2key > p1key ? 1 : -1;
                 } else {
@@ -824,7 +824,7 @@ public class SpatialPooler implements Persistable {
         int[] inhibit = IntStream.range(0,overlaps.length)
             .mapToObj(i-> new Pair<>(i,overlaps[i]))
             .sorted(comparator)
-            .mapToInt(Pair<Integer,Double>::getKey)
+            .mapToInt(Pair<Integer,Double>::getFirst)
             .limit(numActive)
             .sorted()
             .toArray();
