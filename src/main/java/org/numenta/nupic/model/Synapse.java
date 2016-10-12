@@ -22,9 +22,6 @@
 
 package org.numenta.nupic.model;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
-
 /**
  * Represents a connection with varying strength which when above 
  * a configured threshold represents a valid connection. 
@@ -62,6 +59,23 @@ public class Synapse implements Persistable, Comparable<Synapse> {
      * Constructor used when setting parameters later.
      */
     public Synapse() {}
+    
+    /**
+     * Constructs a new {@code Synapse} for a {@link DistalDendrite}
+     * @param sourceCell    the {@link Cell} which will activate this {@code Synapse};
+     * @param segment       the owning dendritic segment
+     * @param pool          this {@link Pool} of which this synapse is a member
+     * @param index         this {@code Synapse}'s index
+     * @param permanence    
+     */
+    public Synapse(Cell presynapticCell, Segment segment, int index, double permanence) {
+        this.sourceCell = presynapticCell;
+        this.segment = segment;
+        this.synapseIndex = index;
+        this.boxedIndex = new Integer(index);
+        this.inputIndex = presynapticCell.getIndex();
+        this.permanence = permanence;
+    }
 
     /**
      * Constructs a new {@code Synapse}

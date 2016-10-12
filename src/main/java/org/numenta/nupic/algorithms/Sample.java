@@ -23,7 +23,7 @@
 package org.numenta.nupic.algorithms;
 
 import org.joda.time.DateTime;
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * A sample data point or record consisting of a timestamp, value, and score.

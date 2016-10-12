@@ -49,11 +49,9 @@ import java.util.stream.Stream;
 
 import org.junit.AfterClass;
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.AnomalyLikelihood;
@@ -63,11 +61,13 @@ import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.Sample;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.Persistence.PersistenceAccess;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
@@ -137,7 +137,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Network network = Network.create("test network", p).add(Network.createRegion("r1")
             .add(Network.createLayer("1", p)
                 .add(Anomaly.create())
-                .add(new TemporalMemory())
+                .add(new OldTemporalMemory())
                 .add(new SpatialPooler())));
         
         PersistenceAPI pa = Persistence.get(new SerialConfig(null, SerialConfig.SERIAL_TEST_DIR));
@@ -198,7 +198,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Connections con = new Connections();
         p.apply(con);
 
-        TemporalMemory.init(con);
+        OldTemporalMemory.init(con);
 
         SerialConfig config = new SerialConfig("testSerializeConnections", SerialConfig.SERIAL_TEST_DIR);
         PersistenceAPI api = Persistence.get(config);
@@ -1690,7 +1690,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(l2 = Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("3", p)
                     .add(new SpatialPooler())
                     .using(l2.getConnections()))
@@ -1698,7 +1698,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new TemporalMemory())
+                    .add(new OldTemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("days-of-week-stream.csv"))))))
@@ -1723,7 +1723,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new TemporalMemory())
+                .add(new OldTemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
 
@@ -1739,14 +1739,14 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new TemporalMemory()))
+                    .add(new OldTemporalMemory()))
                 .add(Network.createLayer("3", p)
                     .add(new SpatialPooler()))
                 .connect("2", "3"))
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new TemporalMemory())
+                    .add(new OldTemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
@@ -1771,7 +1771,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new TemporalMemory())
+                .add(new OldTemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
 
@@ -1787,7 +1787,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new TemporalMemory())
+                .add(new OldTemporalMemory())
                 .add(new SpatialPooler())));
                 
         return network;
@@ -1806,7 +1806,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new TemporalMemory())
+                .add(new OldTemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
 
@@ -1932,7 +1932,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("1", p)
-                    .add(new TemporalMemory())
+                    .add(new OldTemporalMemory())
                     .add(sensor)));
 
         network.start();

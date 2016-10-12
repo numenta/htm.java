@@ -24,9 +24,6 @@ package org.numenta.nupic.model;
 
 import java.util.List;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
-
 public class ProximalDendrite extends Segment implements Persistable {
     /** keep it simple */
     private static final long serialVersionUID = 1L;

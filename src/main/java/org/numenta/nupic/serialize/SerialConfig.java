@@ -29,15 +29,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 
-import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.BitHistory;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.model.ProximalDendrite;
 import org.numenta.nupic.model.Segment;

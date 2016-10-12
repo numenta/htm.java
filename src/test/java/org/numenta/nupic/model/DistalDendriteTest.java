@@ -26,10 +26,9 @@ import static org.junit.Assert.*;
 import java.util.Set;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.util.UniversalRandom;
 
 public class DistalDendriteTest {
@@ -40,7 +39,7 @@ public class DistalDendriteTest {
         Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
         p = getDefaultParameters(p, KEY.MIN_THRESHOLD, 1);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         Set<Cell> prevWinnerCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
         

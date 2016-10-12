@@ -25,7 +25,7 @@ package org.numenta.nupic.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * Implementation of a sparse matrix which contains binary integer

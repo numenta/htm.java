@@ -26,18 +26,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.datagen.PatternMachine;
 import org.numenta.nupic.datagen.SequenceMachine;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 import org.numenta.nupic.util.ArrayUtils;
 
 
 public class AbstractTemporalMemoryTest {
-    protected TemporalMemory temporalMemory;
+    protected OldTemporalMemory temporalMemory;
     protected Parameters parameters;
     protected Connections connections;
     protected PatternMachine patternMachine;
@@ -50,8 +50,8 @@ public class AbstractTemporalMemoryTest {
         this.connections = new Connections();
         parameters.apply(connections);
         
-        temporalMemory = new TemporalMemory();
-        TemporalMemory.init(connections);
+        temporalMemory = new OldTemporalMemory();
+        OldTemporalMemory.init(connections);
         tm = new MonitoredTemporalMemory(temporalMemory, connections);
         
         this.patternMachine = pm;

@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.Anomaly.AveragedAnomalyRecordList;
 import org.numenta.nupic.algorithms.AnomalyLikelihood.AnomalyParams;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * Container class to hold the results of {@link AnomalyLikelihood} estimations

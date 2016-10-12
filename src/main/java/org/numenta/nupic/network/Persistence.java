@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.serialize.SerialConfig;
 import org.numenta.nupic.serialize.SerializerCore;
 import org.slf4j.Logger;

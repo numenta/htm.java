@@ -22,8 +22,8 @@
 
 package org.numenta.nupic.util;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.Persistable;
 
 import gnu.trove.set.hash.TIntHashSet;
 

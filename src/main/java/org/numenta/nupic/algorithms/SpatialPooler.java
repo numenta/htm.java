@@ -25,9 +25,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Condition;

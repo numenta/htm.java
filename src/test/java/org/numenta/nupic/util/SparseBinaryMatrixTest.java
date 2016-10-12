@@ -32,10 +32,10 @@ import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.model.Connections;
 
 public class SparseBinaryMatrixTest {
 

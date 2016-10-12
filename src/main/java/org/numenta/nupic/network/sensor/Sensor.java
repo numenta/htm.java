@@ -25,7 +25,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.network.Network;
 
 import rx.Observable;

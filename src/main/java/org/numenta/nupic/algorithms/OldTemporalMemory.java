@@ -34,15 +34,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.ComputeCycle.ColumnData;
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Connections.Activity;
-import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.Synapse;
+import org.numenta.nupic.model.ComputeCycle.ColumnData;
+import org.numenta.nupic.model.Connections.Activity;
+import org.numenta.nupic.model.Connections.SegmentOverlap;
 import org.numenta.nupic.monitor.ComputeDecorator;
 import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.SparseObjectMatrix;
@@ -50,7 +50,7 @@ import org.numenta.nupic.util.Tuple;
 
 import javafx.util.Pair;
 
-public class TemporalMemory implements ComputeDecorator, Serializable {
+public class OldTemporalMemory implements ComputeDecorator, Serializable {
     private static final long serialVersionUID = 1L;
     
     private static final double EPSILON = 0.00001;
@@ -60,7 +60,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      * anatomy needed by this {@code TemporalMemory} to implement its algorithms.
      * 
      * The connections object holds the {@link Column} and {@link Cell} infrastructure,
-     * and is used by both the {@link SpatialPooler} and {@link TemporalMemory}. Either of
+     * and is used by both the {@link SpatialPooler} and {@link OldTemporalMemory}. Either of
      * these can be used separately, and therefore this Connections object may have its
      * Columns and Cells initialized by either the init method of the SpatialPooler or the
      * init method of the TemporalMemory. We check for this so that complete initialization
@@ -219,6 +219,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable {
      *     (learning) for each active distal dendrite segment
      *         strengthen active synapses
      *         weaken inactive synapses
+     *         
      * </pre>
      * </p>
      * 

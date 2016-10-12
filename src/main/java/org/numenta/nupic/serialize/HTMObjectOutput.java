@@ -3,7 +3,7 @@ package org.numenta.nupic.serialize;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.nustaq.serialization.FSTConfiguration;
 import org.nustaq.serialization.FSTObjectOutput;
 

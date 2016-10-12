@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.numenta.nupic.Connections;
+import org.numenta.nupic.model.Connections;
 
 public class DeltaEncoder extends AdaptiveScalarEncoder {
 	

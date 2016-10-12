@@ -23,7 +23,7 @@ package org.numenta.nupic.network.sensor;
 
 import java.util.function.Consumer;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.network.Layer;
 import org.numenta.nupic.network.Network;
 

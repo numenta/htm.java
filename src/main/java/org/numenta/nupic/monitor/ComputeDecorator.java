@@ -21,8 +21,8 @@
  */
 package org.numenta.nupic.monitor;
 
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
+import org.numenta.nupic.model.ComputeCycle;
+import org.numenta.nupic.model.Connections;
 
 /**
  * Decorator interface for main algorithms 

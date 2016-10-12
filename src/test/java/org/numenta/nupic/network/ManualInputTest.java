@@ -10,10 +10,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
-import org.numenta.nupic.ComputeCycle;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.util.NamedTuple;
 
 

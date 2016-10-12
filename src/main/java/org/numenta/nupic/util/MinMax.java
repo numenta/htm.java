@@ -22,7 +22,7 @@
 
 package org.numenta.nupic.util;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * Holds two values, a min and a max. Can later be developed to

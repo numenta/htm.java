@@ -47,13 +47,16 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.ComputeCycle;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.ManualInput;
 import org.numenta.nupic.network.Network;
 import org.numenta.nupic.util.ArrayUtils;
@@ -71,7 +74,7 @@ public class RunLayer {
         private Connections connections;
         private MultiEncoder encoder;
         private SpatialPooler sp;
-        private TemporalMemory tm;
+        private OldTemporalMemory tm;
         private CLAClassifier classifier;
         @SuppressWarnings("unused")
         private Anomaly anomaly;
@@ -100,11 +103,11 @@ public class RunLayer {
          * @param c         the {@link Connections} object.
          * @param encoder   the {@link MultiEncoder}
          * @param sp        the {@link SpatialPooler}
-         * @param tm        the {@link TemporalMemory}
+         * @param tm        the {@link OldTemporalMemory}
          * @param cl        the {@link CLAClassifier}
          */
         public MakeshiftLayer(Connections c, MultiEncoder encoder, SpatialPooler sp, 
-            TemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
+            OldTemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
             
             this.connections = c;
             this.encoder = encoder;
@@ -118,7 +121,7 @@ public class RunLayer {
                 .add(Network.createRegion("NAB Region")
                     .add(Network.createLayer("NAB Layer", parameters)
                         .add(Anomaly.create())
-                        .add(new TemporalMemory())));
+                        .add(new OldTemporalMemory())));
             
             network.observe().subscribe((inference) -> {
                 double score = inference.getAnomalyScore();
@@ -129,9 +132,9 @@ public class RunLayer {
                 printHeader();
                 
                 Set<Cell> act = ((ManualInput)inference).getActiveCells();
-                int[] activeColumnIndices = SDR.cellsAsColumnIndices(act, connections.cellsPerColumn);
+                int[] activeColumnIndices = SDR.cellsAsColumnIndices(act, connections.getCellsPerColumn());
                 Set<Cell> prev = ((ManualInput)inference).getPreviousPredictiveCells();
-                int[] prevPredColumnIndices = prev == null ? null : SDR.cellsAsColumnIndices(prev, connections.cellsPerColumn);
+                int[] prevPredColumnIndices = prev == null ? null : SDR.cellsAsColumnIndices(prev, connections.getCellsPerColumn());
                 String input = Arrays.toString((int[])((ManualInput)inference).getLayerInput());
                 String prevPred = prevPredColumnIndices == null ? "null" : Arrays.toString(prevPredColumnIndices);
                 String active = Arrays.toString(activeColumnIndices);
@@ -215,9 +218,9 @@ public class RunLayer {
             // Input into the Temporal Memory
             ComputeCycle cc = tm.compute(connections, sparseSPOutput, learn);
             int[] activeCellIndices = cc.activeCells().stream().mapToInt(c -> c.getIndex()).sorted().toArray();
-            int[] predColumnIndices = SDR.cellsAsColumnIndices(cc.predictiveCells(), connections.cellsPerColumn);
+            int[] predColumnIndices = SDR.cellsAsColumnIndices(cc.predictiveCells(), connections.getCellsPerColumn());
             int[] activeColumns = Arrays.stream(activeCellIndices)
-                .map(cell -> cell / connections.cellsPerColumn)
+                .map(cell -> cell / connections.getCellsPerColumn())
                 .distinct()
                 .sorted()
                 .toArray();
@@ -389,10 +392,10 @@ public class RunLayer {
         //////////////////////////////////////////////////////////
 //        int[] sparseSdr = testSpatialPooler(sp, conn, encoding);
         //////////////////////////////////////////////////////////
-        TemporalMemory tm = null;
+        OldTemporalMemory tm = null;
         if(!RunLayer.SP_ONLY) {
-            tm = new TemporalMemory();
-            TemporalMemory.init(conn);
+            tm = new OldTemporalMemory();
+            OldTemporalMemory.init(conn);
         }
         
         //////////////////////////////////////////////////////////
@@ -463,7 +466,7 @@ public class RunLayer {
         return sparse;
     }
     
-    public static Tuple testTemporalMemory(TemporalMemory tm, Connections conn, int[] sparseSPOutput) {
+    public static Tuple testTemporalMemory(OldTemporalMemory tm, Connections conn, int[] sparseSPOutput) {
         int[] expected = { 
                 0, 87, 96, 128, 145, 151, 163, 180, 183, 218, 233, 242, 250, 260, 
                 264, 289, 290, 303, 312, 313, 334, 335, 337, 342, 346, 347, 353, 355, 356, 357, 

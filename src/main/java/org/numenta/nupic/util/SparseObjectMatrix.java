@@ -24,7 +24,7 @@ package org.numenta.nupic.util;
 
 import java.util.Arrays;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /** 
  * <h3>MersenneTwister and MersenneTwisterFast</h3>

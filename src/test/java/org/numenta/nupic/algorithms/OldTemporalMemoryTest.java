@@ -13,18 +13,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.util.UniversalRandom;
 import org.nustaq.serialization.FSTConfiguration;
 
-public class TemporalMemoryTest { 
+public class OldTemporalMemoryTest { 
     
     private Parameters getDefaultParameters() {
         Parameters retVal = Parameters.getTemporalDefaultParameters();
@@ -60,11 +60,11 @@ public class TemporalMemoryTest {
 
     @Test
     public void testActivateCorrectlyPredictiveCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -85,11 +85,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testBurstUnpredictedColumns() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] activeColumns = { 0 };
         Set<Cell> burstingCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
@@ -101,11 +101,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testZeroActiveColumns() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         Cell cell4 = cn.getCell(4);
@@ -130,11 +130,11 @@ public class TemporalMemoryTest {
 
     @Test
     public void testPredictedActiveCellsAreAlwaysWinners() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -159,14 +159,14 @@ public class TemporalMemoryTest {
     
     @Test
     public void testReinforcedCorrectlyActiveSegments() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.INITIAL_PERMANENCE, 0.2);
         p = getDefaultParameters(p, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.PERMANENCE_DECREMENT, 0.08);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -190,12 +190,12 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNoGrowthOnCorrectlyActiveSegments() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.INITIAL_PERMANENCE, 0.2);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -215,11 +215,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testReinforcedSelectedMatchingSegmentInBurstingColumn() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.PERMANENCE_DECREMENT, 0.08);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -248,11 +248,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNoChangeToNonSelectedMatchingSegmentsInBurstingColumn() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.PERMANENCE_DECREMENT, 0.08);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -280,11 +280,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNoChangeToMatchingSegmentsInPredictedActiveColumn() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };
@@ -319,11 +319,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNoNewSegmentIfNotEnoughWinnerCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 2);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] zeroColumns = {};
         int[] activeColumns = { 0 };
@@ -336,11 +336,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNewSegmentAddSynapsesToSubsetOfWinnerCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 2);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0, 1, 2 };
         int[] activeColumns = { 4 };
@@ -367,11 +367,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testNewSegmentAddSynapsesToAllWinnerCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0, 1, 2 };
         int[] activeColumns = { 4 };
@@ -400,12 +400,12 @@ public class TemporalMemoryTest {
     
     @Test
     public void testMatchingSegmentAddSynapsesToSubsetOfWinnerCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
         p = getDefaultParameters(p, KEY.MIN_THRESHOLD, 1);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0, 1, 2, 3 };
         Set<Cell> prevWinnerCells = cn.getCellSet(new int[] { 0, 1, 2, 3 });
@@ -431,12 +431,12 @@ public class TemporalMemoryTest {
     
     @Test
     public void testMatchingSegmentAddSynapsesToAllWinnerCells() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
         p = getDefaultParameters(p, KEY.MIN_THRESHOLD, 1);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0, 1 };
         Set<Cell> prevWinnerCells = cn.getCellSet(new int[] { 0, 1 });
@@ -460,13 +460,13 @@ public class TemporalMemoryTest {
     
     @Test
     public void testDestroyWeakSynapseOnWrongPrediction() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.INITIAL_PERMANENCE, 0.2);
         p = getDefaultParameters(p, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         Cell[] previousActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
@@ -487,13 +487,13 @@ public class TemporalMemoryTest {
     
     @Test
     public void testDestroyWeakSynapseOnActiveReinforce() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.INITIAL_PERMANENCE, 0.2);
         p = getDefaultParameters(p, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         Cell[] previousActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
@@ -514,7 +514,7 @@ public class TemporalMemoryTest {
     
     @Test
     public void testRecycleWeakestSynapseToMakeRoomForNewSynapse() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
         p.set(KEY.COLUMN_DIMENSIONS, new int[] { 100 });
@@ -523,7 +523,7 @@ public class TemporalMemoryTest {
         p = getDefaultParameters(p, KEY.PERMANENCE_DECREMENT, 0.02);
         p.set(KEY.MAX_SYNAPSES_PER_SEGMENT, 3);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         assertEquals(3, cn.getMaxSynapsesPerSegment());
         
@@ -549,7 +549,7 @@ public class TemporalMemoryTest {
     
     @Test
     public void testRecycleLeastRecentlyActiveSegmentToMakeRoomForNewSegment() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.CELLS_PER_COLUMN, 1);
         p = getDefaultParameters(p, KEY.INITIAL_PERMANENCE, 0.5);
@@ -557,7 +557,7 @@ public class TemporalMemoryTest {
         p = getDefaultParameters(p, KEY.PERMANENCE_DECREMENT, 0.02);
         p.set(KEY.MAX_SEGMENTS_PER_CELL, 2);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] prevActiveColumns1 = { 0, 1, 2 };
         int[] prevActiveColumns2 = { 3, 4, 5 };
@@ -595,13 +595,13 @@ public class TemporalMemoryTest {
     
     @Test
     public void testDestroySegmentsWithTooFewSynapsesToBeMatching() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.INITIAL_PERMANENCE, .2);
         p = getDefaultParameters(p, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] prevActiveColumns = { 0 };
         Cell[] prevActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
@@ -625,13 +625,13 @@ public class TemporalMemoryTest {
     
     @Test
     public void testPunishMatchingSegmentsInInactiveColumns() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.INITIAL_PERMANENCE, 0.2);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] prevActiveColumns = { 0 };
         Cell[] prevActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
@@ -667,13 +667,13 @@ public class TemporalMemoryTest {
         boolean grewOnCell2 = false;
         
         for(int seed = 0;seed < 100;seed++) {
-            TemporalMemory tm = new TemporalMemory();
+            OldTemporalMemory tm = new OldTemporalMemory();
             Connections cn = new Connections();
             Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
             p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
             p = getDefaultParameters(p, KEY.SEED, seed);
             p.apply(cn);
-            TemporalMemory.init(cn);
+            OldTemporalMemory.init(cn);
             
             int[] prevActiveColumns = { 1, 2, 3, 4 };
             Cell[] prevActiveCells = { cn.getCell(4), cn.getCell(5), cn.getCell(6), cn.getCell(7) };
@@ -730,13 +730,13 @@ public class TemporalMemoryTest {
     
     @Test
     public void testConnectionsNeverChangeWhenLearningDisabled() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.MAX_NEW_SYNAPSE_COUNT, 4);
         p = getDefaultParameters(p, KEY.PREDICTED_SEGMENT_DECREMENT, 0.02);
         p = getDefaultParameters(p, KEY.INITIAL_PERMANENCE, 0.2);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         int[] prevActiveColumns = { 0 };
         Cell[] prevActiveCells = { cn.getCell(0), cn.getCell(1), cn.getCell(2), cn.getCell(3) };
@@ -768,12 +768,12 @@ public class TemporalMemoryTest {
     
     @Test
     public void testLeastUsedCell() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = getDefaultParameters(null, KEY.COLUMN_DIMENSIONS, new int[] { 2 });
         p = getDefaultParameters(p, KEY.CELLS_PER_COLUMN, 2);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         DistalDendrite dd = cn.createSegment(cn.getCell(0));
         cn.createSynapse(dd, cn.getCell(3), 0.3);
@@ -785,11 +785,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testAdaptSegment() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = Parameters.getAllDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         DistalDendrite dd = cn.createSegment(cn.getCell(0));
         Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.6);
@@ -805,11 +805,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testAdaptSegmentToMax() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = Parameters.getAllDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         DistalDendrite dd = cn.createSegment(cn.getCell(0));
         Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.9);
@@ -824,11 +824,11 @@ public class TemporalMemoryTest {
     
     @Test
     public void testAdaptSegmentToMin() {
-        TemporalMemory tm = new TemporalMemory();
+        OldTemporalMemory tm = new OldTemporalMemory();
         Connections cn = new Connections();
         Parameters p = Parameters.getAllDefaultParameters();
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         DistalDendrite dd = cn.createSegment(cn.getCell(0));
         Synapse s1 = cn.createSynapse(dd, cn.getCell(23), 0.1);
@@ -845,7 +845,7 @@ public class TemporalMemoryTest {
         p.set(KEY.COLUMN_DIMENSIONS, new int[] { 64, 64 });
         p.set(KEY.CELLS_PER_COLUMN, 32);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         assertEquals(64 * 64, cn.getNumColumns());
     }
@@ -857,7 +857,7 @@ public class TemporalMemoryTest {
         p.set(KEY.COLUMN_DIMENSIONS, new int[] { 64, 64 });
         p.set(KEY.CELLS_PER_COLUMN, 32);
         p.apply(cn);
-        TemporalMemory.init(cn);
+        OldTemporalMemory.init(cn);
         
         assertEquals(64 * 64 * 32, cn.getCells().length);
     }

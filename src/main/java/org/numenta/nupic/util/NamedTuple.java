@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * Immutable tuple which adds associative lookup functionality.

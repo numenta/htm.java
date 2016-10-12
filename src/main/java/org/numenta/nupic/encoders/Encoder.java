@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.numenta.nupic.FieldMetaType;
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.MinMax;
 import org.numenta.nupic.util.SparseObjectMatrix;

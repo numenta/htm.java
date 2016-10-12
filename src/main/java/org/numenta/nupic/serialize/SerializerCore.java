@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.network.PersistenceAPI;
 import org.nustaq.serialization.FSTConfiguration;
 import org.slf4j.Logger;

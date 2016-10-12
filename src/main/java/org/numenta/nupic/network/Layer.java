@@ -33,23 +33,23 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.joda.time.DateTime;
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.Persistable;
-import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.ComputeCycle;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.Persistable;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -188,7 +188,7 @@ public class Layer<T> implements Persistable {
     protected HTMSensor<?> sensor;
     protected MultiEncoder encoder;
     protected SpatialPooler spatialPooler;
-    protected TemporalMemory temporalMemory;
+    protected OldTemporalMemory temporalMemory;
     private Boolean autoCreateClassifiers;
     private Anomaly anomalyComputer;
 
@@ -354,12 +354,12 @@ public class Layer<T> implements Persistable {
      * @param e                         (optional) The Network API only uses a {@link MultiEncoder} at
      *                                  the top level because of its ability to delegate to child encoders.
      * @param sp                        (optional) {@link SpatialPooler}
-     * @param tm                        (optional) {@link TemporalMemory}
+     * @param tm                        (optional) {@link OldTemporalMemory}
      * @param autoCreateClassifiers     (optional) Indicates that the {@link Parameters} object
      *                                  contains the configurations necessary to create the required encoders.
      * @param a                         (optional) An {@link Anomaly} computer.
      */
-    public Layer(Parameters params, MultiEncoder e, SpatialPooler sp, TemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
+    public Layer(Parameters params, MultiEncoder e, SpatialPooler sp, OldTemporalMemory tm, Boolean autoCreateClassifiers, Anomaly a) {
 
         // Make sure we have a valid parameters object
         if(params == null) {
@@ -524,7 +524,7 @@ public class Layer<T> implements Persistable {
 
         // Let the TemporalMemory initialize the matrix with its requirements
         if(temporalMemory != null) {
-            TemporalMemory.init(connections);
+            OldTemporalMemory.init(connections);
         }
         
         this.numColumns = connections.getNumColumns();
@@ -538,7 +538,7 @@ public class Layer<T> implements Persistable {
     
     /**
      * Called from {@link FunctionFactory#createSpatialFunc(SpatialPooler)} and from {@link #close()}
-     * to calculate the size of the input vector given the output source either being a {@link TemporalMemory}
+     * to calculate the size of the input vector given the output source either being a {@link OldTemporalMemory}
      * or a {@link SpatialPooler} - from this {@link Region} or a previous {@link Region}.
      * 
      * @return  the length of the input vector
@@ -579,7 +579,7 @@ public class Layer<T> implements Persistable {
 
     /**
      * For internal use only. Returns a flag indicating whether this {@link Layer}
-     * contains a {@link TemporalMemory}
+     * contains a {@link OldTemporalMemory}
      * @return
      */
     boolean hasTM() {
@@ -793,12 +793,12 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Adds a {@link TemporalMemory} to this {@code Layer}
+     * Adds a {@link OldTemporalMemory} to this {@code Layer}
      * 
      * @param tm    the added TemporalMemory
      * @return this Layer instance (in fluent-style)
      */
-    public Layer<T> add(TemporalMemory tm) {
+    public Layer<T> add(OldTemporalMemory tm) {
         if(isClosed) {
             throw new IllegalStateException("Layer already \"closed\"");
         }
@@ -1183,7 +1183,7 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Returns the {@link Cell}s activated in the {@link TemporalMemory} at time
+     * Returns the {@link Cell}s activated in the {@link OldTemporalMemory} at time
      * "t"
      * 
      * @return
@@ -1240,7 +1240,7 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Resets the {@link TemporalMemory} if it exists.
+     * Resets the {@link OldTemporalMemory} if it exists.
      */
     public void reset() {
         if(temporalMemory == null) {
@@ -1252,7 +1252,7 @@ public class Layer<T> implements Persistable {
 
     /**
      * Returns a flag indicating whether this {@code Layer} contains a
-     * {@link TemporalMemory}.
+     * {@link OldTemporalMemory}.
      * 
      * @return
      */
@@ -1761,7 +1761,7 @@ public class Layer<T> implements Persistable {
                 } else {
                     o = o.map(factory.createSpatialFunc(spatialPooler));
                 }
-            } else if(node instanceof TemporalMemory) {
+            } else if(node instanceof OldTemporalMemory) {
                 o = o.map(factory.createTemporalFunc(temporalMemory));
             }
         }
@@ -1924,7 +1924,7 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Called internally to invoke the {@link TemporalMemory}
+     * Called internally to invoke the {@link OldTemporalMemory}
      * 
      * @param input     the current input vector
      * @param mi        the current input inference container
@@ -2270,7 +2270,7 @@ public class Layer<T> implements Persistable {
             };
         }
 
-        public Func1<ManualInput, ManualInput> createTemporalFunc(final TemporalMemory tm) {
+        public Func1<ManualInput, ManualInput> createTemporalFunc(final OldTemporalMemory tm) {
             return new Func1<ManualInput, ManualInput>() {
 
                 @Override

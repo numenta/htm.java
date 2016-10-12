@@ -31,7 +31,10 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import javafx.util.Pair;
+import org.numenta.nupic.util.GroupBy2.Slot;
+
+import chaschev.lang.Pair;
+
 
 /**
  * An Java extension to groupby in Python's itertools. Allows to walk across n sorted lists
@@ -136,7 +139,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         generatorList = new ArrayList<>();
         
         for(int i = 0;i < entries.length;i++) {
-            generatorList.add(GroupBy.of(entries[i].getKey(), entries[i].getValue()));
+            generatorList.add(GroupBy.of(entries[i].getFirst(), entries[i].getSecond()));
         }
         
         numEntries = generatorList.size();
@@ -203,7 +206,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
         
         for(int i = 0;i < numEntries;i++) {
             if(isEligibleList(i, minKeyVal)) {
-                ((List<Object>)retVal.get(i + 1)).add(nextList[i].get().getKey());
+                ((List<Object>)retVal.get(i + 1)).add(nextList[i].get().getFirst());
                 drainKey(retVal, i, minKeyVal);
                 advanceList[i] = true;
             }else{
@@ -236,7 +239,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     private boolean nextMinKey() {
         return Arrays.stream(nextList)
             .filter(opt -> opt.isPresent())
-            .map(opt -> opt.get().getValue())
+            .map(opt -> opt.get().getSecond())
             .min((k, k2) -> k.compareTo(k2))
             .map(k -> { minKeyVal = k; return k; } )
             .isPresent();
@@ -253,7 +256,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
      * @return  true if so, false if not
      */
     private boolean isEligibleList(int listIdx, Object targetKey) {
-       return nextList[listIdx].isPresent() && nextList[listIdx].get().getValue().equals(targetKey);
+       return nextList[listIdx].isPresent() && nextList[listIdx].get().getSecond().equals(targetKey);
     }
     
     /**
@@ -269,9 +272,9 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
     @SuppressWarnings("unchecked")
     private void drainKey(Tuple retVal, int listIdx, R targetVal) {
         while(generatorList.get(listIdx).hasNext()) {
-            if(generatorList.get(listIdx).peek().getValue().equals(targetVal)) {
+            if(generatorList.get(listIdx).peek().getSecond().equals(targetVal)) {
                 nextList[listIdx] = Slot.of(generatorList.get(listIdx).next());
-                ((List<Object>)retVal.get(listIdx + 1)).add(nextList[listIdx].get().getKey());
+                ((List<Object>)retVal.get(listIdx + 1)).add(nextList[listIdx].get().getFirst());
             }else{
                 nextList[listIdx] = Slot.empty();
                 break;

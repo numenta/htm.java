@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Deque;
 import org.numenta.nupic.util.Tuple;

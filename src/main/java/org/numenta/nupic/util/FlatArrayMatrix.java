@@ -24,7 +24,7 @@ package org.numenta.nupic.util;
 
 import java.util.Arrays;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * {@link FlatMatrix} implementation that store objects in a flat object array.

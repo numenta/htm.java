@@ -37,6 +37,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.Tuple;
 

@@ -41,14 +41,14 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.OldTemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.Layer.FunctionFactory;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
@@ -119,7 +119,7 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.RANDOM, new UniversalRandom(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         // Test that we get the expected exception if there hasn't been any processing.
         try {
@@ -156,7 +156,7 @@ public class LayerTest extends ObservableTestBase {
     @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        Layer<?> l = Network.createLayer("l1", p).add(new TemporalMemory());
+        Layer<?> l = Network.createLayer("l1", p).add(new OldTemporalMemory());
         try {
             l.reset();
             assertTrue(l.hasTemporalMemory());
@@ -177,7 +177,7 @@ public class LayerTest extends ObservableTestBase {
     public void testResetRecordNum() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         @SuppressWarnings("unchecked")
-        Layer<int[]> l = (Layer<int[]>)Network.createLayer("l1", p).add(new TemporalMemory());
+        Layer<int[]> l = (Layer<int[]>)Network.createLayer("l1", p).add(new OldTemporalMemory());
         l.subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -819,7 +819,7 @@ public class LayerTest extends ObservableTestBase {
         final int[][] inputs = { input1, input2, input3, input4, input5, input6, input7 };
 
         
-        Layer<int[]> l = new Layer<>(p, null, null, new TemporalMemory(), null, null);
+        Layer<int[]> l = new Layer<>(p, null, null, new OldTemporalMemory(), null, null);
         
         int timeUntilStable = 600;
 
@@ -873,7 +873,7 @@ public class LayerTest extends ObservableTestBase {
         inputs[5] = new int[] { 0, 0, 0, 0, 1, 1, 1, 0 };
         inputs[6] = new int[] { 0, 0, 0, 0, 0, 1, 1, 1 };
 
-        Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), null, null);
+        Layer<int[]> l = new Layer<>(p, null, new SpatialPooler(), new OldTemporalMemory(), null, null);
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
@@ -971,7 +971,7 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.RANDOM, new UniversalRandom(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
@@ -1011,7 +1011,7 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
             @Override public void onCompleted() {}
@@ -1058,7 +1058,7 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         int[][] inputs = new int[7][8];
         inputs[0] = new int[] { 1, 1, 0, 0, 0, 0, 0, 1 };
@@ -1137,7 +1137,7 @@ public class LayerTest extends ObservableTestBase {
         assertTrue(cellsPerColumn > 0);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         TestObserver<Inference> tester;
         l.subscribe(tester = new TestObserver<Inference>() {
@@ -1223,7 +1223,7 @@ public class LayerTest extends ObservableTestBase {
             .add(Network.createRegion("NAB Region")
                 .add(Network.createLayer("NAB Layer", parameters)
                     .add(Anomaly.create())
-                    .add(new TemporalMemory())));
+                    .add(new OldTemporalMemory())));
         
         Object[] testResults = new Object[2];
         
@@ -1266,7 +1266,7 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.RANDOM, new MersenneTwister(42));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
-        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
 
         final List<int[]> emissions = new ArrayList<int[]>();
         Observable<Inference> o = l.observe();
@@ -1329,7 +1329,7 @@ public class LayerTest extends ObservableTestBase {
         Layer<?> l = Network.createLayer("TestLayer", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(anomalyComputer)
-            .add(new TemporalMemory())
+            .add(new OldTemporalMemory())
             .add(new SpatialPooler())
             .add(Sensor.create(
                 FileSensor::create, 
@@ -1381,7 +1381,7 @@ public class LayerTest extends ObservableTestBase {
         Layer<?> l = Network.createLayer("TestLayer", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(anomalyComputer)
-            .add(new TemporalMemory())
+            .add(new OldTemporalMemory())
             .add(new SpatialPooler())
             .add(Sensor.create(
                 FileSensor::create, 
@@ -1435,7 +1435,7 @@ public class LayerTest extends ObservableTestBase {
         l = Network.createLayer("TestLayer", p)
             .alterParameter(KEY.AUTO_CLASSIFY, true)
             .add(anomalyComputer)
-            .add(new TemporalMemory())
+            .add(new OldTemporalMemory())
             .add(new SpatialPooler())
             .add(anomalyComputer)
             .add(MultiEncoder.builder().name("").build());
@@ -1514,8 +1514,8 @@ public class LayerTest extends ObservableTestBase {
     @Test
     public void testEquality() {
         Parameters p = Parameters.getAllDefaultParameters();
-        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
-        Layer<Map<String, Object>> l2 = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l2 = new Layer<>(p, null, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
         
         assertTrue(l.equals(l));
         assertFalse(l.equals(null));
@@ -1543,7 +1543,7 @@ public class LayerTest extends ObservableTestBase {
     @Test
     public void testInferInputDimensions() {
         Parameters p = Parameters.getAllDefaultParameters();
-        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
+        Layer<Map<String, Object>> l = new Layer<>(p, null, new SpatialPooler(), new OldTemporalMemory(), Boolean.TRUE, null);
         
         int[] dims = l.inferInputDimensions(16384, 2);
         assertTrue(Arrays.equals(new int[] { 128, 128 }, dims));

@@ -1,4 +1,4 @@
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,18 +16,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
-import org.numenta.nupic.ComputeCycle.ColumnData;
-import org.numenta.nupic.Connections.SegmentOverlap;
+import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.algorithms.TemporalMemory.ColumnData;
+import org.numenta.nupic.model.OldConnections.SegmentOverlap;
 import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
 
-import javafx.util.Pair;
+import chaschev.lang.Pair;
+
 
 
 public class ComputeCycleTest {
@@ -102,20 +101,19 @@ public class ComputeCycleTest {
         
         GroupBy2<Column> grouper = GroupBy2.<Column>of(
             new Pair(activeColumns, identity),
-            new Pair(new ArrayList(cn.getActiveSegmentOverlaps()), segToCol),
-            new Pair(new ArrayList(cn.getMatchingSegmentOverlaps()), segToCol));
+            new Pair(new ArrayList(cn.getActiveSegments()), segToCol),
+            new Pair(new ArrayList(cn.getMatchingSegments()), segToCol));
         
-        ComputeCycle cycle = new ComputeCycle();
+        ColumnData columnData = new ColumnData();
         for(Tuple t : grouper) { // Executes only once
-            ColumnData columnData = cycle.columnData.set(t);
+            columnData = columnData.set(t);
             assertTrue(columnData.activeColumns().equals(activeColumns));
             assertTrue(columnData.activeSegments().isEmpty());
             
-            List<SegmentOverlap> sos = columnData.matchingSegments();
+            List<DistalDendrite> sos = columnData.matchingSegments();
             assertEquals(1, sos.size());
-            assertEquals(1, sos.get(0).overlap);
-            assertEquals(0, sos.get(0).segment.getIndex());
-            assertEquals(4, sos.get(0).segment.getParentCell().getIndex());
+            assertEquals(0, sos.get(0).getIndex());
+            assertEquals(4, sos.get(0).getParentCell().getIndex());
             
             assertTrue(columnData.column().equals(cn.getColumn(4)));
         }

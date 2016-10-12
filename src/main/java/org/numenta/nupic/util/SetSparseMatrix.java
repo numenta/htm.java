@@ -3,7 +3,7 @@ package org.numenta.nupic.util;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 
 /**
  * {@link SparseMatrix} implementation that use a {@link Set} to store indexes.

@@ -1,26 +1,4 @@
-/* ---------------------------------------------------------------------
- * Numenta Platform for Intelligent Computing (NuPIC)
- * Copyright (C) 2014, Numenta, Inc.  Unless you have an agreement
- * with Numenta, Inc., for a separate license for this software code, the
- * following terms and conditions apply:
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero Public License version 3 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Affero Public License for more details.
- *
- * You should have received a copy of the GNU Affero Public License
- * along with this program.  If not, see http://www.gnu.org/licenses.
- *
- * http://numenta.org/licenses/
- * ---------------------------------------------------------------------
- */
-
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -39,15 +17,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.model.DistalDendrite;
-import org.numenta.nupic.model.Pool;
-import org.numenta.nupic.model.ProximalDendrite;
-import org.numenta.nupic.model.Segment;
-import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.network.Persistence;
 import org.numenta.nupic.network.PersistenceAPI;
 import org.numenta.nupic.serialize.SerialConfig;
@@ -57,8 +29,9 @@ import org.numenta.nupic.util.FlatMatrix;
 import org.numenta.nupic.util.SparseMatrix;
 import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Topology;
-import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
+
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * Contains the definition of the interconnected structural state of the {@link SpatialPooler} and
@@ -109,7 +82,7 @@ public class Connections implements Persistable {
     private double version = 1.0;
     public int spIterationNum = 0;
     public int spIterationLearnNum = 0;
-    public int tmIteration = 0;
+    public long tmIteration = 0;
     
     public double[] boostedOverlaps;
     public int[] overlaps;
@@ -166,10 +139,10 @@ public class Connections implements Persistable {
 
     protected Set<Cell> activeCells = new LinkedHashSet<Cell>();
     protected Set<Cell> winnerCells = new LinkedHashSet<Cell>();
-    protected Set<Cell> predictiveCells = new LinkedHashSet<Cell>();
-    protected List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
-    protected List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
-
+    protected Set<Cell> predictiveCells = new LinkedHashSet<>();
+    protected List<DistalDendrite> activeSegments = new ArrayList<>();
+    protected List<DistalDendrite> matchingSegments = new ArrayList<>();
+    
     /** Total number of columns */
     protected int[] columnDimensions = new int[] { 2048 };
     /** Total number of cells per column */
@@ -231,34 +204,53 @@ public class Connections implements Persistable {
     protected Map<Segment, List<Synapse>> proximalSynapses;
 
     /** Helps index each new Segment */
+    @Deprecated
     protected int segmentCounter = -1;
     /** Helps index each new proximal Synapse */
     protected int proximalSynapseCounter = -1;
     /** Helps index each new distal Synapse */
+    @Deprecated
     protected int distalSynapseCounter = -1;
+    /** Global tracker of the next available segment index */
+    protected int nextFlatIdx;
+    /** Global counter incremented for each DD segment creation*/
+    protected int nextSegmentOrdinal;
+    /** Global counter incremented for each DD synapse creation*/
+    protected int nextSynapseOrdinal;
+    /** Total number of synapses */
+    protected long numSynapses;
+    /** Used for recycling {@link DistalDendrite} indexes */
+    protected TIntArrayList freeFlatIdxs = new TIntArrayList();
+    /** Indexed segments by their global index (can contain nulls) */
+    protected List<DistalDendrite> segmentForFlatIdx = new ArrayList<>();
+    /** Stores each cycle's most recent activity */
+    public Activity lastActivity;
     /** The default random number seed */
     protected int seed = 42;
     /** The random number generator */
     public Random random = new UniversalRandom(seed);
     
-    private Comparator<SegmentOverlap> lambda = (Comparator<SegmentOverlap> & Serializable) (so1, so2) -> 
-        so1.segment.getParentCell().getIndex() * maxSegmentsPerCell - 
-            so2.segment.getParentCell().getIndex() * maxSegmentsPerCell;
+    /** Sorting Lambda used for sorting active and matching segments */
+    public Comparator<DistalDendrite> segmentPositionSortKey = (s1,s2) -> {
+        double c1 = s1.getParentCell().getIndex() + ((double)(s1.getOrdinal() / (double)nextSegmentOrdinal));
+        double c2 = s2.getParentCell().getIndex() + ((double)(s2.getOrdinal() / (double)nextSegmentOrdinal));
+        return c1 == c2 ? 0 : c1 > c2 ? 1 : -1;
+    };
 
     
     ////////////////////////////////////////
-    //       Connections Constructor      //
+    //       OldConnections Constructor      //
     ////////////////////////////////////////
     /**
-     * Constructs a new {@code Connections} object. This object
+     * Constructs a new {@code OldConnections} object. This object
      * is usually configured via the {@link Parameters#apply(Object)}
      * method.
      */
     public Connections() {}
     
     /**
-     * Returns a deep copy of this {@code Connections} object.
-     * @return a deep copy of this {@code Connections}
+     * Returns a deep copy of this {@code OldConnections} object.
+     * @return a deep copy of this {@code OldConnections}
      */
     public Connections copy() {
         PersistenceAPI api = Persistence.get(new SerialConfig());
@@ -531,7 +523,6 @@ public class Connections implements Persistable {
      */
     public void setNumColumns(int n) {
         this.numColumns = n;
-        this.paOverlaps = new double[n];
     }
 
     /**
@@ -1142,7 +1133,7 @@ public class Connections implements Persistable {
      * Applies the dense array values which aren't -1 to the array containing
      * the active duty cycles of the column corresponding to the index specified.
      * The length of the specified array must be as long as the configured number
-     * of columns of this {@code Connections}' column configuration.
+     * of columns of this {@code OldConnections}' column configuration.
      *
      * @param	denseActiveDutyCycles	a dense array containing values to set.
      */
@@ -1154,188 +1145,137 @@ public class Connections implements Persistable {
         }
     }
 
+    /**
+     * Returns the minOverlapDutyCycles.
+     * @return	the minOverlapDutyCycles.
+     */
     public double[] getMinOverlapDutyCycles() {
         return minOverlapDutyCycles;
     }
 
+    /**
+     * Sets the minOverlapDutyCycles
+     * @param minOverlapDutyCycles	the minOverlapDutyCycles
+     */
     public void setMinOverlapDutyCycles(double[] minOverlapDutyCycles) {
         this.minOverlapDutyCycles = minOverlapDutyCycles;
     }
 
+    /**
+     * Returns the minActiveDutyCycles
+     * @return	the minActiveDutyCycles
+     */
     public double[] getMinActiveDutyCycles() {
         return minActiveDutyCycles;
     }
 
+    /**
+     * Sets the minActiveDutyCycles
+     * @param minActiveDutyCycles	the minActiveDutyCycles
+     */
     public void setMinActiveDutyCycles(double[] minActiveDutyCycles) {
         this.minActiveDutyCycles = minActiveDutyCycles;
     }
 
+    /**
+     * Returns the array of boost factors
+     * @return	the array of boost factors
+     */
     public double[] getBoostFactors() {
         return boostFactors;
     }
 
+    /**
+     * Sets the array of boost factors
+     * @param boostFactors	the array of boost factors
+     */
     public void setBoostFactors(double[] boostFactors) {
         this.boostFactors = boostFactors;
     }
-
     
-    ////////////////////////////////////////
-    //       TemporalMemory Methods       //
-    ////////////////////////////////////////
+    
+	////////////////////////////////////////
+	//       TemporalMemory Methods       //
+	////////////////////////////////////////
     
     /**
-     * Return type from {@link Connections#computeActivity(Set, double, int, double, int, boolean)}
+     * Return type from {@link OldConnections#computeActivity(Set, double, int, double, int, boolean)}
      */
     public static class Activity implements Serializable {
-        /** default serial */
+    	/** default serial */
         private static final long serialVersionUID = 1L;
-        public List<SegmentOverlap> activeSegments;
-        public List<SegmentOverlap> matchingSegments;
-        public Activity(List<SegmentOverlap> actives, List<SegmentOverlap> matching) {
-            this.activeSegments = actives;
-            this.matchingSegments = matching;
-        }
         
-        public String toString() {
-            return "\nactives = " + activeSegments + "\nmatching = " + matchingSegments;
+        public int[] numActiveConnected;
+        public int[] numActivePotential;
+        
+        public Activity(int[] numConnected, int[] numPotential) {
+            this.numActiveConnected = numConnected;
+            this.numActivePotential = numPotential;
         }
     }
     
     /**
-     * Accounting class used during {@link Connections#computeActivity(Collection, double, int, double, int, boolean)}
+     * Compute each segment's number of active synapses for a given input.
+     * In the returned lists, a segment's active synapse count is stored at index
+     * `segment.flatIdx`.
+     * 
+     * @param activePresynapticCells
+     * @param connectedPermanence
+     * @return
      */
-    public static class SegmentOverlap implements Serializable, Comparable<SegmentOverlap> {
-        /** default serial */
-        private static final long serialVersionUID = 1L;
-        public DistalDendrite segment;
-        public int overlap;
-        public SegmentOverlap(DistalDendrite dd, int overlap) {
-            this.segment = dd;
-            this.overlap = overlap;
+    public Activity computeActivity(Collection<Cell> activePresynapticCells, double connectedPermanence) {
+        int[] numActiveConnectedSynapsesForSegment = new int[nextFlatIdx];
+        int[] numActivePotentialSynapsesForSegment = new int[nextFlatIdx];
+        
+        double threshold = connectedPermanence - EPSILON;
+        
+        for(Cell cell : activePresynapticCells) {
+            for(Synapse synapse : getReceptorSynapses(cell)) {
+                int flatIdx = synapse.getSegment().getIndex();
+                ++numActivePotentialSynapsesForSegment[flatIdx];
+                if(synapse.getPermanence() > threshold) {
+                    ++numActiveConnectedSynapsesForSegment[flatIdx];
+                }
+            }
         }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int compareTo(SegmentOverlap other) {
-            return segment.getParentCell().getColumn().compareTo(
-                other.segment.getParentCell().getColumn());
-        }
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + overlap;
-            result = prime * result + ((segment == null) ? 0 : segment.hashCode());
-            return result;
-        }
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            SegmentOverlap other = (SegmentOverlap) obj;
-            if (overlap != other.overlap)
-                return false;
-            if (segment == null) {
-                if (other.segment != null)
-                    return false;
-            } else if (!segment.equals(other.segment))
-                return false;
-            return true;
-        }
+        
+    	return lastActivity = new Activity(
+    	    numActiveConnectedSynapsesForSegment, 
+    	        numActivePotentialSynapsesForSegment);
     }
     
     /**
-     * Returns a {@link Tuple} containing the active and matching segments given
-     * a set of active cells.
+     * Returns the last {@link Activity} computed during the most
+     * recently executed cycle.
      * 
-     * @param activeInput                       currently active cells
-     * @param activePermanenceThreshold         permanence threshold for a synapse 
-     *                                          to be considered active
-     * @param activeSynapseThreshold            number of synapses needed for a
-     *                                          segment to be considered active
-     * @param matchingPermananceThreshold       permanence threshold for a
-     *                                          synapse to be considered matching
-     * @param matchingSynapseThreshold          number of synapses needed for a
-     *                                          segment to be considered matching
-     * @param recordIteration                   boolean to determine if we should
-     *                                          update the lastUsedIteration on
-     *                                          active segments and the internal
-     *                                          iteration variable
-     *                                          
-     * <p>
-     * Notes: activeSegments and matchingSegments are sorted by the cell they are on.
-     * 
-     * @return  an {@link Activity} containing: activeSegments, matchingSegments
+     * @return  the last activity to be computed.
      */
-    public Activity computeActivity(Collection<Cell> activeInput, double activePermanenceThreshold,
-        int activeSynapseThreshold, double matchingPermananceThreshold, int matchingSynapseThreshold,
-            boolean recordIteration) {
-        
-        int nextSegmentIdx = getSegmentCount();
-        
-        // Object[][] = segments and their counts (i.e. { {segment, count}, {segment, count} } )
-        Object[][] numActiveSynapsesForSegment = new Object[nextSegmentIdx][2];
-        Arrays.stream(numActiveSynapsesForSegment).forEach(arr -> arr[1] = 0);
-        Object[][] numMatchingSynapsesForSegment = new Object[nextSegmentIdx][2];
-        Arrays.stream(numMatchingSynapsesForSegment).forEach(arr -> arr[1] = 0);
-        
-        for(Cell cell : activeInput) {
-            for(Synapse synapse : cell.getReceptorSynapses(this)) {
-                Segment segment = synapse.getSegment();
-                double permanence = synapse.getPermanence();
-                
-                if(permanence - matchingPermananceThreshold > -EPSILON) {
-                    numMatchingSynapsesForSegment[segment.getIndex()][0] = segment;
-                    numMatchingSynapsesForSegment[segment.getIndex()][1] = 
-                        ((int)numMatchingSynapsesForSegment[segment.getIndex()][1]) + 1;
-                    
-                    if(permanence - activePermanenceThreshold > -EPSILON) {
-                        numActiveSynapsesForSegment[segment.getIndex()][0] = segment;
-                        numActiveSynapsesForSegment[segment.getIndex()][1] = 
-                            ((int)numActiveSynapsesForSegment[segment.getIndex()][1]) + 1;
-                    }
-                }
-            }
-        }
-        
-        if(recordIteration) {
-            tmIteration++;
-        }
-        
-        List<SegmentOverlap> activeSegments = new ArrayList<>();
-        List<SegmentOverlap> matchingSegments = new ArrayList<>();
-        for(int i = 0;i < nextSegmentIdx;i++) {
-            if(((int)numActiveSynapsesForSegment[i][1]) >= activeSynapseThreshold) {
-                activeSegments.add(new SegmentOverlap(((DistalDendrite)numActiveSynapsesForSegment[i][0]),
-                    (int)numActiveSynapsesForSegment[i][1]));
-                
-                if(recordIteration) {
-                    ((DistalDendrite)numActiveSynapsesForSegment[i][0]).setLastUsedIteration(tmIteration);
-                }
-            }
-        }
-        
-        for(int i = 0;i < nextSegmentIdx;i++) {
-            if(((int)numMatchingSynapsesForSegment[i][1]) >= matchingSynapseThreshold) {
-                matchingSegments.add(new SegmentOverlap(((DistalDendrite)numMatchingSynapsesForSegment[i][0]),
-                    (int)numMatchingSynapsesForSegment[i][1]));
-            }
-        }
-        
-        
-        Collections.sort(activeSegments, lambda);//(as1, as2) -> as1.segment.getIndex() - as2.segment.getIndex());
-        Collections.sort(matchingSegments,lambda);//, (ms1, ms2) -> ms1.segment.getIndex() - ms2.segment.getIndex());
-        return new Activity(activeSegments, matchingSegments);
+    public Activity getLastActivity() {
+        return lastActivity;
     }
     
-    /////////////////////////////////////////////////////////////////
-    //     Segment (Specifically, Distal Dendrite) Operations      //
-    /////////////////////////////////////////////////////////////////
+    /**
+     * Record the fact that a segment had some activity. This information is
+     * used during segment cleanup.
+     * 
+     * @param segment		the segment for which to record activity
+     */
+    public void recordSegmentActivity(DistalDendrite segment) {
+    	segment.setLastUsedIteration(tmIteration);
+    }
+    
+    /**
+     * Mark the passage of time. This information is used during segment
+     * cleanup.
+     */
+    public void startNewIteration() {
+    	++tmIteration;
+    }
+    
+    
+	/////////////////////////////////////////////////////////////////
+	//     Segment (Specifically, Distal Dendrite) Operations      //
+	/////////////////////////////////////////////////////////////////
     
     /**
      * Adds a new {@link DistalDendrite} segment on the specified {@link Cell},
@@ -1345,37 +1285,29 @@ public class Connections implements Persistable {
      * @return  the newly created segment or a reused segment
      */
     public DistalDendrite createSegment(Cell cell) {
-        while(numSegments(cell) >= maxSegmentsPerCell) {
+    	while(numSegments(cell) >= maxSegmentsPerCell) {
             destroySegment(leastRecentlyUsedSegment(cell));
         }
-        
-        DistalDendrite segment = null; 
-        
-        if(cell.getNumDestroyedSegments() > 0) {
-            boolean found = false;
-            for(DistalDendrite dd : getSegments(cell, true)) {
-                if(dd.destroyed()) {
-                    found = true;
-                    segment = dd;
-                    break;
-                }
-            }
-            
-            if(!found) {
-                throw new IllegalStateException("Failed to find a destroyed segment.");
-            }
-            
-            segment.setDestroyed(false);
-            cell.decDestroyedSegments();
-            incrementSegments();
-        }else{
-            segment = new DistalDendrite(cell, incrementSegments());
-            getSegments(cell, true).add(segment);
-        }
-
-        segment.setLastUsedIteration(tmIteration);
-        
-        return segment;
+    	
+    	int flatIdx;
+    	int len;
+    	if((len = freeFlatIdxs.size()) > 0) {
+    		flatIdx = freeFlatIdxs.get(len - 1);
+    		freeFlatIdxs.remove(len - 1, 1);
+    	}else{
+    		flatIdx = nextFlatIdx;
+    		segmentForFlatIdx.add(null);
+    		++nextFlatIdx;
+    	}
+    	
+    	int ordinal = nextSegmentOrdinal;
+    	++nextSegmentOrdinal;
+    	
+    	DistalDendrite segment = new DistalDendrite(cell, flatIdx, tmIteration, ordinal);
+    	getSegments(cell, true).add(segment);
+    	segmentForFlatIdx.set(flatIdx, segment);
+    	
+    	return segment;
     }
     
     /**
@@ -1383,27 +1315,22 @@ public class Connections implements Persistable {
      * @param segment   the segment to destroy
      */
     public void destroySegment(DistalDendrite segment) {
-        if(!segment.destroyed()) {
-           for(Synapse synapse : getSynapses(segment)) {
-               if(!synapse.destroyed()) {
-                   Cell cell = synapse.getPresynapticCell();
-                   Set<Synapse> presynapticSynapses = getReceptorSynapses(cell);
-                   presynapticSynapses.remove(synapse);
-                   
-                   if(presynapticSynapses.isEmpty()) {
-                       receptorSynapses.remove(cell);
-                   }
-                   
-                   distalSynapseCounter--;
-               }
-           }
-           
-           getSynapses(segment).clear();
-           segment.setNumDestroyedSynapses(0);
-           segment.setDestroyed(true);
-           segment.getParentCell().incDestroyedSegments();
-           segmentCounter--;
-        }
+    	// Remove the synapses from all data structures outside this Segment.
+    	List<Synapse> synapses = getSynapses(segment);
+    	int len = synapses.size();
+    	getSynapses(segment).stream().forEach(s -> removeSynapseFromPresynapticMap(s));
+    	numSynapses -= len;
+    	
+    	// Remove the segment from the cell's list.
+    	getSegments(segment.getParentCell()).remove(segment);
+    	
+    	// Remove the segment from the map
+    	distalSynapses.remove(segment);
+    	
+    	// Free the flatIdx and remove the final reference so the Segment can be
+        // garbage-collected.
+    	freeFlatIdxs.add(segment.getIndex());
+    	segmentForFlatIdx.set(segment.getIndex(), null);
     }
     
     /**
@@ -1416,17 +1343,17 @@ public class Connections implements Persistable {
      */
     private DistalDendrite leastRecentlyUsedSegment(Cell cell) {
         List<DistalDendrite> segments = getSegments(cell, false);
-        DistalDendrite min = null;
-        int minIteration = Integer.MAX_VALUE;
+        DistalDendrite minSegment = null;
+        long minIteration = Long.MAX_VALUE;
         
         for(DistalDendrite dd : segments) {
-            if(!dd.destroyed() && dd.lastUsedIteration() < minIteration) {
-                min = dd;
+            if(dd.lastUsedIteration() < minIteration) {
+            	minSegment = dd;
                 minIteration = dd.lastUsedIteration();
             }
         }
         
-        return min;
+        return minSegment;
     }
     
     /**
@@ -1447,10 +1374,10 @@ public class Connections implements Persistable {
      */
     public int numSegments(Cell optionalCellArg) {
         if(optionalCellArg != null) {
-            return getSegments(optionalCellArg).size() - optionalCellArg.getNumDestroyedSegments();
+            return getSegments(optionalCellArg).size();
         }
         
-        return segmentCounter + 1;
+        return nextFlatIdx - freeFlatIdxs.size();
     }
     
     /**
@@ -1490,25 +1417,19 @@ public class Connections implements Persistable {
     }
     
     /**
-     * Returns the filtered list of {@link DistalDendrites} that are not marked 
-     * as destroyed, for the specified {@link Cell}
-     *  
-     * @param cell      the Cell for which non-destroyed segments are returned
-     * @return
+     * Get the segment with the specified flatIdx.
+     * @param index		The segment's flattened list index.
+     * @return	the {@link DistalDendrite} who's index matches.
      */
-    public List<DistalDendrite> unDestroyedSegmentsForCell(Cell cell) {
-        return segments == null || segments.get(cell) == null ?
-            Collections.emptyList() :
-                segments.get(cell)
-                    .stream()
-                    .filter(v -> !v.destroyed())
-                    .collect(Collectors.toList());
+    public DistalDendrite segmentForFlatIdx(int index) {
+    	return segmentForFlatIdx.get(index);
     }
     
     /**
      * Returns the segment counter
      * @return
      */
+    @Deprecated
     public int getSegmentCount() {
         return segmentCounter + 1;
     }
@@ -1517,6 +1438,7 @@ public class Connections implements Persistable {
      * Increments and returns the incremented count.
      * @return
      */
+    @Deprecated
     public int incrementSegments() {
         return ++segmentCounter;
     }
@@ -1525,6 +1447,7 @@ public class Connections implements Persistable {
      * Decrements and returns the decremented count.
      * @return
      */
+    @Deprecated
     public int decrementSegments() {
         return --segmentCounter;
     }
@@ -1547,6 +1470,38 @@ public class Connections implements Persistable {
         return new LinkedHashMap<>(segments);
     }
     
+    /**
+     * Set by the {@link TemporalMemory} following a compute cycle.
+     * @param l
+     */
+    public void setActiveSegments(List<DistalDendrite> l) {
+        this.activeSegments = l;
+    }
+    
+    /**
+     * Retrieved by the {@link TemporalMemorty} prior to a compute cycle.
+     * @return
+     */
+    public List<DistalDendrite> getActiveSegments() {
+        return activeSegments;
+    }
+    
+    /**
+     * Set by the {@link TemporalMemory} following a compute cycle.
+     * @param l
+     */
+    public void setMatchingSegments(List<DistalDendrite> l) {
+        this.matchingSegments = l;
+    }
+    
+    /**
+     * Retrieved by the {@link TemporalMemorty} prior to a compute cycle.
+     * @return
+     */
+    public List<DistalDendrite> getMatchingSegments() {
+        return matchingSegments;
+    }
+    
     
     /////////////////////////////////////////////////////////////////
     //                    Synapse Operations                       //
@@ -1567,32 +1522,15 @@ public class Connections implements Persistable {
         }
         
         Synapse synapse = null;
-        boolean found = false;
-        if(segment.getNumDestroyedSynapses() > 0) {
-            for(Synapse s : getSynapses(segment)) {
-                if(s.destroyed()) {
-                    synapse = s;
-                    found = true;
-                    break;
-                }
-            }
-            
-            if(!found) {
-                throw new IllegalStateException("Failed to find a destroyed synapse");
-            }
-            
-            synapse.setDestroyed(false);
-            segment.decDestroyedSynapses();
-            incrementDistalSynapses();
-            synapse.setPresynapticCell(presynapticCell);
-        }else{
-            getSynapses(segment).add(
-                synapse = new Synapse(
-                    this, presynapticCell, segment, null, incrementDistalSynapses(), presynapticCell.getIndex()));
-        }
-        
+	    getSynapses(segment).add(
+	        synapse = new Synapse(
+	            presynapticCell, segment, nextSynapseOrdinal, permanence));
+	    
         getReceptorSynapses(presynapticCell, true).add(synapse);
-        synapse.setPermanence(this, permanence);
+        
+        ++nextSynapseOrdinal;
+        
+        ++numSynapses;
         
         return synapse;
     }
@@ -1602,18 +1540,27 @@ public class Connections implements Persistable {
      * @param synapse   the Synapse to destroy
      */
     public void destroySynapse(Synapse synapse) {
-        if(!synapse.destroyed()) {
-            Set<Synapse> presynapticSynapses;
-            Cell cell = synapse.getPresynapticCell();
-            (presynapticSynapses = getReceptorSynapses(cell, false)).remove(synapse);
-            
-            if(presynapticSynapses.isEmpty()) {
-                receptorSynapses.remove(cell);
-            }
-            
-            synapse.setDestroyed(true);
-            ((DistalDendrite)synapse.getSegment()).incDestroyedSynapses();
-            decrementDistalSynapses();
+        --numSynapses;
+        
+        removeSynapseFromPresynapticMap(synapse);
+        
+        getSynapses((DistalDendrite)synapse.getSegment()).remove(synapse);
+    }
+    
+    /**
+     * Removes the specified {@link Synapse} from its
+     * pre-synaptic {@link Cell}'s map of synapses it 
+     * activates.
+     * 
+     * @param synapse   the synapse to remove
+     */
+    public void removeSynapseFromPresynapticMap(Synapse synapse) {
+    	Set<Synapse> presynapticSynapses;
+        Cell cell = synapse.getPresynapticCell();
+        (presynapticSynapses = getReceptorSynapses(cell, false)).remove(synapse);
+        
+        if(presynapticSynapses.isEmpty()) {
+            receptorSynapses.remove(cell);
         }
     }
     
@@ -1625,7 +1572,7 @@ public class Connections implements Persistable {
      * @return  Synapse object on the segment with the minimal permanence
      */
     private Synapse minPermanenceSynapse(DistalDendrite dd) {
-        List<Synapse> synapses = unDestroyedSynapsesForSegment(dd);
+        List<Synapse> synapses = getSynapses(dd).stream().sorted().collect(Collectors.toList());
         Synapse min = null;
         double minPermanence = Double.MAX_VALUE;
         
@@ -1644,8 +1591,8 @@ public class Connections implements Persistable {
      * 
      * @return  either the total number of synapses
      */
-    public int numSynapses() {
-        return distalSynapseCounter + 1;
+    public long numSynapses() {
+        return numSynapses(null);
     }
     
     /**
@@ -1655,12 +1602,12 @@ public class Connections implements Persistable {
      * @param optionalSegmentArg    an optional Segment to specify the context of the synapse count.
      * @return  either the total number of synapses or the number on a specified segment.
      */
-    public int numSynapses(DistalDendrite optionalSegmentArg) {
+    public long numSynapses(DistalDendrite optionalSegmentArg) {
         if(optionalSegmentArg != null) {
-            return getSynapses(optionalSegmentArg).size() - optionalSegmentArg.getNumDestroyedSynapses();
+            return getSynapses(optionalSegmentArg).size();
         }
         
-        return distalSynapseCounter + 1;
+        return numSynapses;
     }
     
     /**
@@ -1750,22 +1697,6 @@ public class Connections implements Persistable {
     }
     
     /**
-     * Returns the filtered list of {@link Synapses} that are not marked 
-     * as destroyed, for the specified {@link DistalDendrite} segment.
-     *  
-     * @param cell      the Cell for which non-destroyed segments are returned
-     * @return  the filtered list of {@link Synapses}
-     */
-    public List<Synapse> unDestroyedSynapsesForSegment(DistalDendrite dd) {
-        return distalSynapses == null || distalSynapses.get(dd) == null ?
-            Collections.emptyList() :
-                distalSynapses.get(dd)
-                    .stream()
-                    .filter(v -> !v.destroyed())
-                    .collect(Collectors.toList());
-    }
-    
-    /**
      * Returns the count of {@link Synapse}s on
      * {@link DistalDendrite}s
      * @return
@@ -1818,13 +1749,6 @@ public class Connections implements Persistable {
         activeCells.clear();
         winnerCells.clear();
         predictiveCells.clear();
-        activeSegOverlaps.clear();
-        matchingSegOverlaps.clear();
-//        matchingCells.clear();
-//        matchingSegments.clear();
-//        successfullyPredictedColumns.clear();
-//        activeSegments.clear();
-//        learningSegments.clear();
     }
 
     /**
@@ -1866,13 +1790,7 @@ public class Connections implements Persistable {
      * @return
      */
     public Set<Cell> getPredictiveCells() {
-        if(predictiveCells.isEmpty()) {
-            List<SegmentOverlap> temp = new ArrayList<>(activeSegOverlaps);
-            Collections.sort(temp);
-            for(SegmentOverlap activeSegment : temp) {
-                predictiveCells.add(activeSegment.segment.getParentCell());
-            }
-        }
+        
         return predictiveCells;
     }
     
@@ -1883,38 +1801,6 @@ public class Connections implements Persistable {
         this.predictiveCells.clear();
     }
 
-    /**
-     * Returns the Set of active {@link SegmentOverlap}s
-     * @return
-     */
-    public List<SegmentOverlap> getActiveSegmentOverlaps() {
-        return activeSegOverlaps;
-    }
-
-    /**
-     * Sets the {@link Set} of active {@link SegmentOverlap}s
-     * @param segments
-     */
-    public void setActiveSegmentOverlaps(List<SegmentOverlap> segments) {
-        this.activeSegOverlaps = segments;
-    }
-
-    /**
-     * Returns the Set of matching {@link SegmentOverlap}s
-     * @return
-     */
-    public List<SegmentOverlap> getMatchingSegmentOverlaps() {
-        return matchingSegOverlaps;
-    }
-
-    /**
-     * Sets the Set of matching {@link SegmentOverlap}s
-     * @param segments
-     */
-    public void setMatchingSegmentOverlaps(List<SegmentOverlap> segments) {
-        this.matchingSegOverlaps = segments;
-    }
-    
     /**
      * Returns the column at the specified index.
      * @param index
@@ -2394,7 +2280,7 @@ public class Connections implements Persistable {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            int[] indexes = pool.getDenseConnected(this);
+            int[] indexes = pool.getDenseConnected(new Connections());
             retVal[i] = indexes;
         }
         
@@ -2410,7 +2296,7 @@ public class Connections implements Persistable {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            int[] indexes = pool.getDensePotential(this);
+            int[] indexes = pool.getDensePotential(new Connections());
             retVal[i] = indexes;
         }
         
@@ -2426,7 +2312,7 @@ public class Connections implements Persistable {
         double[][] retVal = new double[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            double[] perm = pool.getDensePermanences(this);
+            double[] perm = pool.getDensePermanences(new Connections());
             retVal[i] = perm;
         }
         
@@ -2462,12 +2348,10 @@ public class Connections implements Persistable {
         result = prime * result + ((inputMatrix == null) ? 0 : inputMatrix.hashCode());
         result = prime * result + spIterationLearnNum;
         result = prime * result + spIterationNum;
-        result = prime * result + tmIteration;
+        result = prime * result + (new Long(tmIteration)).intValue();
         result = prime * result + learningRadius;
         temp = Double.doubleToLongBits(localAreaDensity);
         result = prime * result + (int)(temp ^ (temp >>> 32));
-        result = prime * result + ((activeSegOverlaps == null) ? 0 : activeSegOverlaps.hashCode());
-        result = prime * result + ((matchingSegOverlaps == null) ? 0 : matchingSegOverlaps.hashCode());
         temp = Double.doubleToLongBits(maxBoost);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + maxNewSynapseCount;
@@ -2549,16 +2433,6 @@ public class Connections implements Persistable {
         } else if(!activeCells.equals(other.activeCells))
             return false;
         if(!Arrays.equals(activeDutyCycles, other.activeDutyCycles))
-            return false;
-        if(activeSegOverlaps == null) {
-            if(other.activeSegOverlaps != null)
-                return false;
-        } else if(!activeSegOverlaps.equals(other.activeSegOverlaps))
-            return false;
-        if(matchingSegOverlaps == null) {
-            if(other.matchingSegOverlaps != null)
-                return false;
-        } else if(!matchingSegOverlaps.equals(other.matchingSegOverlaps))
             return false;
         if(!Arrays.equals(boostFactors, other.boostFactors))
             return false;
@@ -2708,5 +2582,4 @@ public class Connections implements Persistable {
             return false;
         return true;
     }
-
 }

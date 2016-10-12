@@ -24,8 +24,6 @@ package org.numenta.nupic.model;
 
 import java.util.stream.IntStream;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 
 import gnu.trove.map.TIntObjectMap;

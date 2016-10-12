@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.util.ArrayUtils;
 
 import gnu.trove.map.TIntObjectMap;
