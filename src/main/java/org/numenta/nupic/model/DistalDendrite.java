@@ -26,9 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.numenta.nupic.Connections;
-import org.numenta.nupic.Persistable;
-
 /**
  * Represents a proximal or distal dendritic segment. Segments are owned by
  * {@link Cell}s and in turn own {@link Synapse}s which are obversely connected
@@ -44,24 +41,23 @@ public class DistalDendrite extends Segment implements Persistable {
     
     private Cell cell;
     
-    private int lastUsedIteration;
+    private long lastUsedIteration;
     
-    private int numDestroyedSynapses;
-    
-    private boolean destroyed;
+    public int ordinal = -1;
     
     /**
      * Constructs a new {@code Segment} object with the specified owner
      * {@link Cell} and the specified index.
      * 
      * @param cell      the owner
-     * @param index     this {@code Segment}'s index.
+     * @param flatIdx     this {@code Segment}'s index.
      */
-    public DistalDendrite(Cell cell, int index) {
-        super(index);
+    public DistalDendrite(Cell cell, int flatIdx, long lastUsedIteration, int ordinal) {
+        super(flatIdx);
         
         this.cell = cell;
-        this.index = index;
+        this.ordinal = ordinal;
+        this.lastUsedIteration = lastUsedIteration;
     }
 
     /**
@@ -107,7 +103,7 @@ public class DistalDendrite extends Segment implements Persistable {
      * Sets the last iteration in which this segment was active.
      * @param iteration
      */
-    public void setLastUsedIteration(int iteration) {
+    public void setLastUsedIteration(long iteration) {
         this.lastUsedIteration = iteration;
     }
     
@@ -115,57 +111,27 @@ public class DistalDendrite extends Segment implements Persistable {
      * Returns the iteration in which this segment was last active.
      * @return  the iteration in which this segment was last active.
      */
-    public int lastUsedIteration() {
+    public long lastUsedIteration() {
         return lastUsedIteration;
     }
     
     /**
-     * Returns the flag indicating whether this {@code DistalDendrite} has been destroyed.
-     * @return  the flag indicating whether this segment has been destroyed.
+     * Returns this {@code DistalDendrite} segment's ordinal
+     * @return	this segment's ordinal
      */
-    public boolean destroyed() {
-        return destroyed;
-    }
-    
+    public int getOrdinal() {
+		return ordinal;
+	}
+
     /**
-     * Sets the flag indicating whether this {@code DistalDendrite} has been destroyed.
-     * @param b the flag indicating whether this segment has been destroyed.
+     * Sets the ordinal value (used for age determination) on this segment.
+     * @param ordinal	the age or order of this segment
      */
-    public void setDestroyed(boolean b) {
-        this.destroyed = b;
-    }
-    
-    /**
-     * Increments the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
-     */
-    public void incDestroyedSynapses() {
-        numDestroyedSynapses++;
-    }
-    
-    /**
-     * Decrements the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
-     */
-    public void decDestroyedSynapses() {
-        numDestroyedSynapses--;
-    }
-    
-    /**
-     * Returns the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
-     * @return
-     */
-    public int getNumDestroyedSynapses() {
-        return numDestroyedSynapses;
-    }
-    
-    /**
-     * Sets the number of destroyed {@link Synapse}s for this {@code DistalDendrite}
-     * @param num   the current number of destroyed synapses
-     */
-    public void setNumDestroyedSynapses(int num) {
-        this.numDestroyedSynapses = num;
-    }
-    
-    /**
+	public void setOrdinal(int ordinal) {
+		this.ordinal = ordinal;
+	}
+
+	/**
      * {@inheritDoc}
      */
     @Override

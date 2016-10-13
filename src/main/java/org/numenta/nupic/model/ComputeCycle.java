@@ -20,22 +20,14 @@
  * ---------------------------------------------------------------------
  */
 
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.numenta.nupic.Connections.SegmentOverlap;
 import org.numenta.nupic.algorithms.TemporalMemory;
-import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Column;
-import org.numenta.nupic.util.GroupBy2;
-import org.numenta.nupic.util.GroupBy2.Slot;
-import org.numenta.nupic.util.Tuple;
 
 /**
  * Contains a snapshot of the state attained during one computational
@@ -51,14 +43,9 @@ public class ComputeCycle implements Persistable {
     
     public Set<Cell> activeCells = new LinkedHashSet<>();
     public Set<Cell> winnerCells = new LinkedHashSet<>();
-    public List<SegmentOverlap> activeSegOverlaps = new ArrayList<>();
-    public List<SegmentOverlap> matchingSegOverlaps = new ArrayList<>();
-    
-    
-    /** Force access through accessor because this list is created lazily */
-    private Set<Cell> predictiveCells = new LinkedHashSet<>();
-    /** Used for one cycle's typed output translation from the tuple created */
-    public ColumnData columnData = new ColumnData();
+    public List<DistalDendrite> activeSegments = new ArrayList<>();
+    public List<DistalDendrite> matchingSegments = new ArrayList<>();
+    public Set<Cell> predictiveCells = new LinkedHashSet<>();
         
     
     /**
@@ -77,8 +64,8 @@ public class ComputeCycle implements Persistable {
         this.activeCells = new LinkedHashSet<>(c.activeCells);
         this.winnerCells = new LinkedHashSet<>(c.winnerCells);
         this.predictiveCells = new LinkedHashSet<>(c.predictiveCells);
-        this.activeSegOverlaps = new ArrayList<>(c.activeSegOverlaps);
-        this.matchingSegOverlaps = new ArrayList<>(c.matchingSegOverlaps);
+        this.activeSegments = new ArrayList<>(c.activeSegments);
+        this.matchingSegments = new ArrayList<>(c.matchingSegments);
     }
     
     /**
@@ -104,47 +91,19 @@ public class ComputeCycle implements Persistable {
      * @return
      */
     public Set<Cell> predictiveCells() {
-        if(predictiveCells.isEmpty()) {
-            for(SegmentOverlap activeSegment : activeSegOverlaps) {
-                predictiveCells.add(activeSegment.segment.getParentCell());
+        if(predictiveCells.isEmpty()) { 
+            Cell previousCell = null;
+            Cell currCell = null;
+            
+            for(DistalDendrite activeSegment : activeSegments) {
+                if((currCell = activeSegment.getParentCell()) != previousCell) {
+                    predictiveCells.add(previousCell = currCell);
+                }
             }
         }
-        
         return predictiveCells;
     }
     
-    /**
-     * Used in the {@link TemporalMemory#compute(Connections, int[], boolean)} method
-     * to make pulling values out of the {@link GroupBy2} more readable and named.
-     */
-    @SuppressWarnings("unchecked")
-    public static class ColumnData implements Serializable {
-        /** Default Serial */
-        private static final long serialVersionUID = 1L;
-        Tuple t;
-        
-        public ColumnData() {}
-        
-        public ColumnData(Tuple t) {
-            this.t = t;
-        }
-        
-        public Column column() { return (Column)t.get(0); }
-        public List<Column> activeColumns() { return (List<Column>)t.get(1); }
-        public List<SegmentOverlap> activeSegments() { 
-            return ((List<?>)t.get(2)).get(0).equals(Slot.empty()) ? 
-                Collections.emptyList() :
-                    (List<SegmentOverlap>)t.get(2); 
-        }
-        public List<SegmentOverlap> matchingSegments() {
-            return ((List<?>)t.get(3)).get(0).equals(Slot.empty()) ? 
-                Collections.emptyList() :
-                    (List<SegmentOverlap>)t.get(3); 
-        }
-        
-        public ColumnData set(Tuple t) { this.t = t; return this; }
-    }
-
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
@@ -155,8 +114,8 @@ public class ComputeCycle implements Persistable {
         result = prime * result + ((activeCells == null) ? 0 : activeCells.hashCode());
         result = prime * result + ((predictiveCells == null) ? 0 : predictiveCells.hashCode());
         result = prime * result + ((winnerCells == null) ? 0 : winnerCells.hashCode());
-        result = prime * result + ((activeSegOverlaps == null) ? 0 : activeSegOverlaps.hashCode());
-        result = prime * result + ((matchingSegOverlaps == null) ? 0 : matchingSegOverlaps.hashCode());
+        result = prime * result + ((activeSegments == null) ? 0 : activeSegments.hashCode());
+        result = prime * result + ((matchingSegments == null) ? 0 : matchingSegments.hashCode());
         return result;
     }
 
@@ -187,15 +146,15 @@ public class ComputeCycle implements Persistable {
                 return false;
         } else if(!winnerCells.equals(other.winnerCells))
             return false;
-        if(activeSegOverlaps == null) {
-            if(other.activeSegOverlaps != null)
+        if(activeSegments == null) {
+            if(other.activeSegments != null)
                 return false;
-        } else if(!activeSegOverlaps.equals(other.activeSegOverlaps))
+        } else if(!activeSegments.equals(other.activeSegments))
             return false;
-        if(matchingSegOverlaps == null) {
-            if(other.matchingSegOverlaps != null)
+        if(matchingSegments == null) {
+            if(other.matchingSegments != null)
                 return false;
-        } else if(!matchingSegOverlaps.equals(other.matchingSegOverlaps))
+        } else if(!matchingSegments.equals(other.matchingSegments))
             return false;
         return true;
     }

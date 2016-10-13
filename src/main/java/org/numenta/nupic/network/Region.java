@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.joda.time.DateTime;
-import org.numenta.nupic.Persistable;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

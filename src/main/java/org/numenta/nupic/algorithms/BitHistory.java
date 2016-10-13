@@ -22,7 +22,7 @@
 
 package org.numenta.nupic.algorithms;
 
-import org.numenta.nupic.Persistable;
+import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.util.ArrayUtils;
 
 import gnu.trove.list.TDoubleList;

@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.numenta.nupic.Connections;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 
 import com.bethecoder.table.AsciiTableInstance;

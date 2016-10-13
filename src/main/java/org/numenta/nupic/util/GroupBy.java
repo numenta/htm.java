@@ -26,7 +26,6 @@ import java.util.function.Function;
 
 import chaschev.lang.Pair;
 
-
 /**
  * <p>
  * Allegory to the Python itertools.groupby. Objects of this class

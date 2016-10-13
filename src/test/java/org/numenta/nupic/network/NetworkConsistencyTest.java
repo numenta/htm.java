@@ -14,25 +14,25 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.AfterClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.ComputeCycle;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
 import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.FastRandom;
+import org.numenta.nupic.util.UniversalRandom;
 
 import com.cedarsoftware.util.DeepEquals;
 
@@ -60,7 +60,7 @@ public class NetworkConsistencyTest {
     
     private static boolean doPrintout = false;
     
-    private static final int SAMPLE_WEEK = new FastRandom().nextInt(125);
+    private static final int SAMPLE_WEEK = new UniversalRandom(42).nextInt(125);
     
     @AfterClass
     public static void compare() {
@@ -135,7 +135,7 @@ public class NetworkConsistencyTest {
     /**
      * Rudimentary test of the anomaly computation.
      */
-    @Ignore
+    @Test
     public void testComputeAnomaly_4of6() {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -147,7 +147,7 @@ public class NetworkConsistencyTest {
     /**
      * Rudimentary test of the anomaly computation.
      */
-    @Ignore
+    @Test
     public void testComputeAnomaly_5of7() {
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);

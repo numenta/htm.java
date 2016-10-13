@@ -31,7 +31,10 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import org.numenta.nupic.util.GroupBy2.Slot;
+
 import chaschev.lang.Pair;
+
 
 /**
  * An Java extension to groupby in Python's itertools. Allows to walk across n sorted lists

@@ -26,8 +26,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-import org.numenta.nupic.Connections;
-
 /**
  * Software implementation of a neuron in the neocortical region.
  * 
@@ -46,9 +44,7 @@ public class Cell implements Comparable<Cell>, Serializable {
     private final Column column;
     /** Cash this because Cells are immutable */
     private final int hashcode;
-    /** tracks number of destroyed segments */
-    private int numDestroyedSegments;
-
+    
 
     /**
      * Constructs a new {@code Cell} object
@@ -129,28 +125,6 @@ public class Cell implements Comparable<Cell>, Serializable {
         return c.getSegments(this, doLazyCreate);
     }
     
-    /**
-     * Increments the number of destroyed segments for this {@code Cell}
-     */
-    public void incDestroyedSegments() {
-        numDestroyedSegments++;
-    }
-    
-    /**
-     * Decrements the number of destroyed segments for this {@code Cell}
-     */
-    public void decDestroyedSegments() {
-        numDestroyedSegments--;
-    }
-    
-    /**
-     * Returns the number of destroyed segments for this {@code Cell}
-     * @return
-     */
-    public int getNumDestroyedSegments() {
-        return numDestroyedSegments;
-    }
-
     /**
      * {@inheritDoc}
      */

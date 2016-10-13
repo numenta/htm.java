@@ -22,13 +22,6 @@
 
 package org.numenta.nupic.algorithms;
 
-import gnu.trove.iterator.TDoubleIterator;
-import gnu.trove.list.TDoubleList;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.map.TObjectDoubleMap;
-
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,14 +33,9 @@ import org.numenta.nupic.util.NamedTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.TObjectDoubleMap;
 
 /**
  * <p>The anomaly likelihood computer.</p>
@@ -607,9 +595,6 @@ public class AnomalyLikelihood extends Anomaly {
     public static class AnomalyParams extends NamedTuple {
         private static final long serialVersionUID = 1L;
 
-        /** Cached Json formatting. Possible because Objects of this class are immutable */
-        private ObjectNode cachedNode;
-        
         private final Statistic distribution;
         private final MovingAverage movingAverage;
         private final double[] historicalLikelihoods;
@@ -666,90 +651,6 @@ public class AnomalyLikelihood extends Anomaly {
             return windowSize;
         }
         
-        /**
-         * Lazily creates and returns a JSON ObjectNode containing this {@code AnomalyParams}' data.
-         * 
-         * @param factory
-         * @return
-         */
-        public ObjectNode toJsonNode(JsonNodeFactory factory) {
-            if(cachedNode == null) {
-                ObjectNode distribution = factory.objectNode();
-                distribution.put(KEY_MEAN, this.distribution.mean);
-                distribution.put(KEY_VARIANCE, this.distribution.variance);
-                distribution.put(KEY_STDEV, this.distribution.stdev);
-                
-                double[] historicalLikelihoods = (double[])get(KEY_HIST_LIKE);
-                ArrayNode historics = factory.arrayNode();
-                for(double d : historicalLikelihoods) {
-                    historics.add(d);
-                }
-                
-                ObjectNode mvgAvg = factory.objectNode();
-                mvgAvg.put(KEY_WINDOW_SIZE, windowSize);
-                
-                ArrayNode histVals = factory.arrayNode();
-                TDoubleList hVals = this.movingAverage.getSlidingWindow();
-                for(TDoubleIterator it = hVals.iterator();it.hasNext();) {
-                    histVals.add(it.next());
-                }
-                mvgAvg.set(KEY_HIST_VALUES, histVals);
-                mvgAvg.put(KEY_TOTAL, this.movingAverage.getTotal());
-                
-                cachedNode = factory.objectNode();
-                cachedNode.set(KEY_DIST, distribution);
-                cachedNode.set(KEY_HIST_LIKE, historics);
-                cachedNode.set(KEY_MVG_AVG, mvgAvg);
-            }
-            
-            return cachedNode;
-        }
-        
-        /**
-         * Returns the processed Json Node with possible pretty print indentation
-         * formatting if the flag specified is true.
-         * 
-         * @param doPrettyPrint
-         * @return
-         */
-        public String toJson(boolean doPrettyPrint) {
-            // Create the node factory that gives us nodes.
-            JsonNodeFactory factory = new JsonNodeFactory(false);
-     
-            // create a json factory to write the tree node as json. for the example
-            // we just write to console
-            JsonFactory jsonFactory = new JsonFactory();
-            JsonGenerator generator = null;
-            StringWriter out = new StringWriter();
-            try {
-                 generator = jsonFactory.createGenerator(out);
-            }catch(IOException e) {
-                LOG.error("Error while creating JsonGenerator", e);
-            }
-            
-            ObjectMapper mapper = new ObjectMapper();
-            if(doPrettyPrint) {
-                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            }
-            try {
-                mapper.writeTree(generator, toJsonNode(factory));
-            } catch(JsonProcessingException e) {
-                LOG.error("Error while writing json", e);
-            } catch(IOException e) {
-                LOG.error("Error while writing json", e);
-            }
-            
-            return out.getBuffer().toString();
-        }
-        
-        /**
-         * Returns the processed Json Node as a String
-         * @return
-         */
-        public String toJson() {
-            return toJson(false);
-        }
-
         /* (non-Javadoc)
          * @see java.lang.Object#hashCode()
          */

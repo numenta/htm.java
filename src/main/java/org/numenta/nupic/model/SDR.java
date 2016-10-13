@@ -19,7 +19,7 @@
  * http://numenta.org/licenses/
  * ---------------------------------------------------------------------
  */
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,9 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
-
-import org.numenta.nupic.model.Cell;
-import org.numenta.nupic.model.Column;
 
 /**
  * <p>

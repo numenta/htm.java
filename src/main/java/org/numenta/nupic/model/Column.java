@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 

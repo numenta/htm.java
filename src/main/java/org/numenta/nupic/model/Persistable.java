@@ -1,4 +1,4 @@
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
 import java.io.Serializable;
 

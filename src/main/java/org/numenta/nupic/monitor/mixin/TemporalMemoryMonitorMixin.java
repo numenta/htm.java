@@ -31,12 +31,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Synapse;
 import org.numenta.nupic.monitor.ComputeDecorator;
@@ -474,8 +474,8 @@ public interface TemporalMemoryMonitorMixin extends MonitorMixinBase {
             new LinkedHashSet<Integer>(Connections.asCellIndexes(cnx.getActiveCells())));
         ((IndicesTrace)getTraceMap().get("activeColumns")).items.add(
             Arrays.stream(activeColumns).boxed().collect(Collectors.toCollection(LinkedHashSet::new)));
-        ((CountsTrace)getTraceMap().get("numSegments")).items.add(cnx.getSegmentCount());
-        ((CountsTrace)getTraceMap().get("numSynapses")).items.add(cnx.getDistalSynapseCount());
+        ((CountsTrace)getTraceMap().get("numSegments")).items.add(cnx.numSegments());
+        ((CountsTrace)getTraceMap().get("numSynapses")).items.add((int)(cnx.numSynapses() ^ (cnx.numSynapses() >>> 32)));
         ((StringsTrace)getTraceMap().get("sequenceLabels")).items.add(sequenceLabel);
         ((BoolsTrace)getTraceMap().get("resets")).items.add(resetActive());
         

@@ -88,9 +88,9 @@ public class GroupByTest {
         assertEquals(12, c1.getCell(3).getIndex());
         assertEquals(16, c1.getCell(7).getIndex());
         
-        DistalDendrite dd0 = new DistalDendrite(c0.getCell(7), 0);
-        DistalDendrite dd1 = new DistalDendrite(c1.getCell(3 /* Col 1's Cells start at 9 */), 1);
-        DistalDendrite dd2 = new DistalDendrite(c1.getCell(7/* Col 1's Cells start at 9 */), 2);
+        DistalDendrite dd0 = new DistalDendrite(c0.getCell(7), 0, 0, 0);
+        DistalDendrite dd1 = new DistalDendrite(c1.getCell(3 /* Col 1's Cells start at 9 */), 1, 0, 1);
+        DistalDendrite dd2 = new DistalDendrite(c1.getCell(7/* Col 1's Cells start at 9 */), 2, 0, 2);
         
         List<DistalDendrite> l = Arrays.asList(
             new DistalDendrite[] { dd0, dd1, dd2 });

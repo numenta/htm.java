@@ -1,4 +1,4 @@
-package org.numenta.nupic;
+package org.numenta.nupic.model;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Connections;
+import org.numenta.nupic.model.SDR;
 
 
 public class SDRTest {

@@ -30,16 +30,16 @@ import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.Test;
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.SDR;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.ProximalDendrite;
+import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.network.sensor.ObservableSensor;
 import org.numenta.nupic.network.sensor.Publisher;
@@ -269,24 +269,24 @@ public class AlgorithmDeterminacyTest {
         //Test Segment equality
         Column column1 = new Column(2, 0);
         Cell cell1 = new Cell(column1, 0);
-        Segment s1 = new DistalDendrite(cell1, 0);
+        Segment s1 = new DistalDendrite(cell1, 0, 1, 0);
         assertTrue(s1.equals(s1)); // test ==
         assertFalse(s1.equals(null));
         
-        Segment s2 = new DistalDendrite(cell1, 0);
+        Segment s2 = new DistalDendrite(cell1, 0, 1, 0);
         assertTrue(s1.equals(s2));
         
         Cell cell2 = new Cell(column1, 0);
-        Segment s3 = new DistalDendrite(cell2, 0);
+        Segment s3 = new DistalDendrite(cell2, 0, 1, 0);
         assertTrue(s1.equals(s3));        
         
         //Segment's Cell has different index
         Cell cell3 = new Cell(column1, 1);
-        Segment s4 = new DistalDendrite(cell3, 0);
+        Segment s4 = new DistalDendrite(cell3, 0, 1, 0);
         assertFalse(s1.equals(s4));
         
         //Segment has different index
-        Segment s5 = new DistalDendrite(cell3, 1);
+        Segment s5 = new DistalDendrite(cell3, 1, 1, 0);
         assertFalse(s4.equals(s5));
         assertTrue(s5.toString().equals("1"));
         assertEquals(-1, s4.compareTo(s5));

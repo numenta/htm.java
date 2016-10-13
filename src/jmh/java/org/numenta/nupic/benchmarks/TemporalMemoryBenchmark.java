@@ -24,7 +24,7 @@ package org.numenta.nupic.benchmarks;
 
 import java.util.concurrent.TimeUnit;
 
-import org.numenta.nupic.ComputeCycle;
+import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.util.ArrayUtils;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;

@@ -6,9 +6,9 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.monitor.MonitoredTemporalMemory;
 
 

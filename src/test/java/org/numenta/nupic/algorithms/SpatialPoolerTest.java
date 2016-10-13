@@ -30,10 +30,10 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.SpatialPooler.InvalidSPParamValueException;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.Pool;
 import org.numenta.nupic.util.AbstractSparseBinaryMatrix;
 import org.numenta.nupic.util.ArrayUtils;

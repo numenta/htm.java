@@ -38,7 +38,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-import org.numenta.nupic.Connections;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
@@ -47,6 +46,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.network.sensor.FileSensor;
 import org.numenta.nupic.network.sensor.HTMSensor;
 import org.numenta.nupic.network.sensor.ObservableSensor;
@@ -679,12 +679,15 @@ public class NetworkTest extends ObservableTestBase {
     public void testNetworkComputeWithNoSensor() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.set(KEY.GLOBAL_INHIBITION, true);
         p.set(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
-        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.008);
         p.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         p.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        p.set(KEY.SYN_PERM_CONNECTED, 0.4);
-        p.set(KEY.MAX_BOOST, 10.0);
+        p.set(KEY.SYN_PERM_CONNECTED, 0.1);
+        p.set(KEY.PERMANENCE_INCREMENT, 0.10);
+        p.set(KEY.PERMANENCE_DECREMENT, 0.10);
+        p.set(KEY.MAX_BOOST, 1.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
         p.set(KEY.RANDOM, new MersenneTwister(42));
         
@@ -714,8 +717,12 @@ public class NetworkTest extends ObservableTestBase {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
-//                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+//                Set<Cell> prevPred = i.getPreviousPredictiveCells();
+//                if(prevPred == null) {
+//                    prevPred = Collections.emptySet();
+//                }
+//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(SDR.cellsAsColumnIndices(prevPred, 6)) +
+//                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
 //                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });

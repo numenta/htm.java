@@ -24,8 +24,8 @@ package org.numenta.nupic.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.numenta.nupic.ComputeCycle;
-import org.numenta.nupic.Connections;
+import org.numenta.nupic.model.ComputeCycle;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.monitor.mixin.TemporalMemoryMonitorMixin;
 import org.numenta.nupic.monitor.mixin.Trace;
 
