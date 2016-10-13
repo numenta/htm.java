@@ -70,7 +70,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
      * anatomy needed by this {@code TemporalMemory} to implement its algorithms.
      * 
      * The connections object holds the {@link Column} and {@link Cell} infrastructure,
-     * and is used by both the {@link SpatialPooler} and {@link OldTemporalMemory}. Either of
+     * and is used by both the {@link SpatialPooler} and {@link TemporalMemory}. Either of
      * these can be used separately, and therefore this Connections object may have its
      * Columns and Cells initialized by either the init method of the SpatialPooler or the
      * init method of the TemporalMemory. We check for this so that complete initialization
@@ -222,6 +222,9 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
 	    Collections.sort(activeSegments, conn.segmentPositionSortKey);
 	    Collections.sort(matchingSegments, conn.segmentPositionSortKey);
 	    
+	    cycle.activeSegments = activeSegments;
+	    cycle.matchingSegments = matchingSegments;
+	    
 	    conn.lastActivity = activity;
 	    conn.setActiveCells(new LinkedHashSet<>(cycle.activeCells));
         conn.setWinnerCells(new LinkedHashSet<>(cycle.winnerCells));
@@ -229,7 +232,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
         conn.setMatchingSegments(matchingSegments);
         // Forces generation of the predictive cells from the above active segments
         conn.clearPredictiveCells();
-        cycle.predictiveCells = conn.getPredictiveCells();
+        conn.getPredictiveCells();
 	    
 	    if(learn) {
 	        activeSegments.stream().forEach(s -> conn.recordSegmentActivity(s));
@@ -541,7 +544,7 @@ public class TemporalMemory implements ComputeDecorator, Serializable{
     }
     
 	/**
-     * Used in the {@link OldTemporalMemory#compute(Connections, int[], boolean)} method
+     * Used in the {@link TemporalMemory#compute(Connections, int[], boolean)} method
      * to make pulling values out of the {@link GroupBy2} more readable and named.
      */
     @SuppressWarnings("unchecked")

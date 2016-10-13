@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.joda.time.DateTime;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.model.Persistable;
 import org.numenta.nupic.network.sensor.Sensor;
@@ -419,7 +419,7 @@ public class Region implements Persistable {
     }
     
     /**
-     * Finds any {@link Layer} containing a {@link OldTemporalMemory} 
+     * Finds any {@link Layer} containing a {@link TemporalMemory} 
      * and resets them.
      */
     public void reset() {

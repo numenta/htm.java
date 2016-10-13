@@ -34,7 +34,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 //import org.numenta.nupic.algorithms.ClassifierResult;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Cell;
@@ -90,7 +90,7 @@ public class QuickDayTest {
                 .resolution(1);
         ScalarEncoder encoder = dayBuilder.build();
         SpatialPooler sp = new SpatialPooler();
-        OldTemporalMemory tm = new OldTemporalMemory();
+        TemporalMemory tm = new TemporalMemory();
         CLAClassifier classifier = new CLAClassifier(new TIntArrayList(new int[] { 1 }), 0.1, 0.3, 0);
 
         Layer<Double> layer = getLayer(params, encoder, sp, tm, classifier);
@@ -147,7 +147,7 @@ public class QuickDayTest {
         l.input(input, recordNum, sequenceNum);
     }
 
-    public static Layer<Double> getLayer(Parameters p, ScalarEncoder e, SpatialPooler s, OldTemporalMemory t, CLAClassifier c) {
+    public static Layer<Double> getLayer(Parameters p, ScalarEncoder e, SpatialPooler s, TemporalMemory t, CLAClassifier c) {
         Layer<Double> l = new LayerImpl(p, e, s, t, c);
         return l;
     }
@@ -175,7 +175,7 @@ public class QuickDayTest {
 
         private ScalarEncoder encoder;
         private SpatialPooler spatialPooler;
-        private OldTemporalMemory temporalMemory;
+        private TemporalMemory temporalMemory;
         private CLAClassifier classifier;
         private Map<String, Object> classification = new LinkedHashMap<String, Object>();
 
@@ -187,7 +187,7 @@ public class QuickDayTest {
         private int[] actual;
         private int[] lastPredicted;
 
-        public LayerImpl(Parameters p, ScalarEncoder e, SpatialPooler s, OldTemporalMemory t, CLAClassifier c) {
+        public LayerImpl(Parameters p, ScalarEncoder e, SpatialPooler s, TemporalMemory t, CLAClassifier c) {
             this.params = p;
             this.encoder = e;
             this.spatialPooler = s;
@@ -196,7 +196,7 @@ public class QuickDayTest {
 
             params.apply(memory);
             spatialPooler.init(memory);
-            OldTemporalMemory.init(memory);
+            TemporalMemory.init(memory);
 
             columnCount = memory.getPotentialPools().getMaxIndex() + 1; //If necessary, flatten multi-dimensional index
             cellsPerColumn = memory.getCellsPerColumn();

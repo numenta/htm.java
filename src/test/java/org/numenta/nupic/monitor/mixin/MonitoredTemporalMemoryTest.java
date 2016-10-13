@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
@@ -21,8 +21,8 @@ public class MonitoredTemporalMemoryTest {
 
     @Test
     public void test_mmPrettyPrintConnections() {
-        MonitoredTemporalMemory mtm = new MonitoredTemporalMemory(new OldTemporalMemory(), new Connections());
-        prepConstructs((OldTemporalMemory)mtm.getMonitor(), mtm.getConnections());
+        MonitoredTemporalMemory mtm = new MonitoredTemporalMemory(new TemporalMemory(), new Connections());
+        prepConstructs((TemporalMemory)mtm.getMonitor(), mtm.getConnections());
         
         String expected =
             "Segments: (format => (#) [(source cell=permanence ...),       ...]\n" +
@@ -42,10 +42,10 @@ public class MonitoredTemporalMemoryTest {
         assertTrue(expected.equals(s));
     }
     
-    public void prepConstructs(OldTemporalMemory tm, Connections cn) {
+    public void prepConstructs(TemporalMemory tm, Connections cn) {
         Parameters p = getDefaultParameters();
         p.apply(cn);
-        OldTemporalMemory.init(cn);
+        TemporalMemory.init(cn);
         
         int[] previousActiveColumns = { 0 };
         int[] activeColumns = { 1 };

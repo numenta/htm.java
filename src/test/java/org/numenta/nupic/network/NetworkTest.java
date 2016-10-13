@@ -43,7 +43,7 @@ import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.model.Connections;
@@ -81,7 +81,7 @@ public class NetworkTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         Network network = new Network("ResetTestNetwork", p)
             .add(Network.createRegion("r1")
-                .add(Network.createLayer("l1", p).add(new OldTemporalMemory())));
+                .add(Network.createLayer("l1", p).add(new TemporalMemory())));
         try {
             network.reset();
             assertTrue(network.lookup("r1").lookup("l1").hasTemporalMemory());
@@ -105,7 +105,7 @@ public class NetworkTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         Network network = new Network("ResetRecordNumNetwork", p)
             .add(Network.createRegion("r1")
-                .add(Network.createLayer("l1", p).add(new OldTemporalMemory())));
+                .add(Network.createLayer("l1", p).add(new TemporalMemory())));
         network.observe().subscribe(new Observer<Inference>() {
             @Override public void onCompleted() {}
             @Override public void onError(Throwable e) { e.printStackTrace(); }
@@ -216,7 +216,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
@@ -277,7 +277,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
@@ -493,7 +493,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
@@ -556,12 +556,12 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())))
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
@@ -643,26 +643,26 @@ public class NetworkTest extends ObservableTestBase {
                         .add(Sensor.create(FileSensor::create, SensorParams.create(
                             Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))
                         .add(new SpatialPooler())
-                        .add(new OldTemporalMemory())
+                        .add(new TemporalMemory())
                         .add(Anomaly.create(anomalyParams))
                 )
                     .add(Network.createLayer("1", p)            // Add another Layer, and the Region internally connects it to the 
                         .add(new SpatialPooler())               // previously added Layer
                         .using(new Connections())               // Test adding connections after one element and before another
-                        .add(new OldTemporalMemory())
+                        .add(new TemporalMemory())
                         .add(Anomaly.create(anomalyParams))
                 ))            
                 .add(Network.createRegion("r2")
                     .add(Network.createLayer("2/3", p)
                         .add(new SpatialPooler())
                         .using(new Connections()) // Test adding connections after one element and before another
-                        .add(new OldTemporalMemory())
+                        .add(new TemporalMemory())
                         .add(Anomaly.create(anomalyParams))
                 ))
                 .add(Network.createRegion("r3")
                     .add(Network.createLayer("1", p)
                         .add(new SpatialPooler())
-                        .add(new OldTemporalMemory())
+                        .add(new TemporalMemory())
                         .add(Anomaly.create(anomalyParams))
                             .using(new Connections()) // Test adding connections after elements which use them.
                 ))
@@ -679,12 +679,15 @@ public class NetworkTest extends ObservableTestBase {
     public void testNetworkComputeWithNoSensor() {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.set(KEY.GLOBAL_INHIBITION, true);
         p.set(KEY.COLUMN_DIMENSIONS, new int[] { 30 });
-        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
+        p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.008);
         p.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         p.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
-        p.set(KEY.SYN_PERM_CONNECTED, 0.4);
-        p.set(KEY.MAX_BOOST, 10.0);
+        p.set(KEY.SYN_PERM_CONNECTED, 0.1);
+        p.set(KEY.PERMANENCE_INCREMENT, 0.10);
+        p.set(KEY.PERMANENCE_DECREMENT, 0.10);
+        p.set(KEY.MAX_BOOST, 1.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
         p.set(KEY.RANDOM, new MersenneTwister(42));
         
@@ -698,7 +701,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new OldTemporalMemory()))
+                    .add(new TemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build()))
@@ -714,8 +717,12 @@ public class NetworkTest extends ObservableTestBase {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @Override public void onNext(Inference i) {
                 // UNCOMMENT TO VIEW STABILIZATION OF PREDICTED FIELDS
-//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(i.getPreviousPrediction()) +
-//                    "   -   " + Arrays.toString(i.getSparseActives()) + " - " + 
+//                Set<Cell> prevPred = i.getPreviousPredictiveCells();
+//                if(prevPred == null) {
+//                    prevPred = Collections.emptySet();
+//                }
+//                System.out.println("Day: " + r1.getInput() + " - predictions: " + Arrays.toString(SDR.cellsAsColumnIndices(prevPred, 6)) +
+//                    "   -   " + Arrays.toString(i.getFeedForwardSparseActives()) + " - " + 
 //                    ((int)Math.rint(((Number)i.getClassification("dayOfWeek").getMostProbableValue(1)).doubleValue())));
             }
         });
@@ -768,7 +775,7 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build())));
         
@@ -819,7 +826,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new OldTemporalMemory()))
+                    .add(new TemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(MultiEncoder.builder().name("").build()))
@@ -843,7 +850,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)
-                    .add(new OldTemporalMemory()))
+                    .add(new TemporalMemory()))
                 .add(Network.createLayer("4", p)
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
@@ -862,7 +869,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createRegion("r1")
                     .add(Network.createLayer("1", p)
                         .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                        .add(new OldTemporalMemory())
+                        .add(new TemporalMemory())
                         .add(new SpatialPooler())
                         .add(Sensor.create(FileSensor::create, SensorParams.create(
                             Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))));
@@ -900,7 +907,7 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("1", p)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(htmSensor)));
 
@@ -962,7 +969,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(htmSensor)));
 
@@ -1019,7 +1026,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createRegion("r1")
                         .add(Network.createLayer("2", p)
                                 .add(Anomaly.create())
-                                .add(new OldTemporalMemory())
+                                .add(new TemporalMemory())
                                 .add(new SpatialPooler())
                                 .close()));
 
@@ -1044,12 +1051,12 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())))
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
                     .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE)
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())
                     .add(Sensor.create(FileSensor::create, SensorParams.create(
                         Keys::path, "", ResourceLocator.path("rec-center-hourly.csv"))))))
@@ -1072,7 +1079,7 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler())))
             .add(Network.createRegion("r2")
                 .add(Network.createLayer("1", p)
@@ -1099,7 +1106,7 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createRegion("r1")
                     .add(Network.createLayer("2", p)
                             .add(Anomaly.create())
-                            .add(new OldTemporalMemory())
+                            .add(new TemporalMemory())
                             .close()));
         
         Region r1 = network.lookup("r1");
@@ -1119,7 +1126,7 @@ public class NetworkTest extends ObservableTestBase {
                 .add(Network.createRegion("r1")
                         .add(Network.createLayer("2", p)
                                 .add(Anomaly.create())
-                                .add(new OldTemporalMemory())
+                                .add(new TemporalMemory())
                                 .add(new SpatialPooler())
                                 .close()));
 
@@ -1165,7 +1172,7 @@ public class NetworkTest extends ObservableTestBase {
                     .add(new SpatialPooler()))
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create())
-                    .add(new OldTemporalMemory())
+                    .add(new TemporalMemory())
                     .add(new SpatialPooler()))
                 .connect("1", "2"));
                     
@@ -1279,7 +1286,7 @@ public class NetworkTest extends ObservableTestBase {
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
                 .add(Anomaly.create())
-                .add(new OldTemporalMemory())
+                .add(new TemporalMemory())
                 .add(new SpatialPooler())
                 .add(sensor)));
         

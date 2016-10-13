@@ -210,14 +210,14 @@ public class UniversalRandom extends Random {
     public double nextDouble() {
         int nd = nextInt(10000);
         double retVal = new BigDecimal(nd * .0001d, MATH_CONTEXT).doubleValue();
-        //System.out.println("nextDouble: " + retVal);
+        System.out.println("nextDouble: " + retVal);
         return retVal;
     }
     
     @Override
     public int nextInt() {
         int retVal = nextInt(Integer.MAX_VALUE);
-        //System.out.println("nextIntNB: " + retVal);
+        System.out.println("nextIntNB: " + retVal);
         return retVal;
     }
     
@@ -241,7 +241,7 @@ public class UniversalRandom extends Random {
                 ;
             */
         }
-        //System.out.println("nextInt(" + bound + "): " + r);
+        System.out.println("nextInt(" + bound + "): " + r);
         return r;
     }
     

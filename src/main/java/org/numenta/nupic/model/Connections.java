@@ -203,14 +203,8 @@ public class Connections implements Persistable {
     public Map<Segment, List<Synapse>> distalSynapses;
     protected Map<Segment, List<Synapse>> proximalSynapses;
 
-    /** Helps index each new Segment */
-    @Deprecated
-    protected int segmentCounter = -1;
     /** Helps index each new proximal Synapse */
     protected int proximalSynapseCounter = -1;
-    /** Helps index each new distal Synapse */
-    @Deprecated
-    protected int distalSynapseCounter = -1;
     /** Global tracker of the next available segment index */
     protected int nextFlatIdx;
     /** Global counter incremented for each DD segment creation*/
@@ -231,7 +225,7 @@ public class Connections implements Persistable {
     public Random random = new UniversalRandom(seed);
     
     /** Sorting Lambda used for sorting active and matching segments */
-    public Comparator<DistalDendrite> segmentPositionSortKey = (s1,s2) -> {
+    public Comparator<DistalDendrite> segmentPositionSortKey = (Comparator<DistalDendrite> & Serializable)(s1,s2) -> {
         double c1 = s1.getParentCell().getIndex() + ((double)(s1.getOrdinal() / (double)nextSegmentOrdinal));
         double c2 = s2.getParentCell().getIndex() + ((double)(s2.getOrdinal() / (double)nextSegmentOrdinal));
         return c1 == c2 ? 0 : c1 > c2 ? 1 : -1;
@@ -239,7 +233,7 @@ public class Connections implements Persistable {
 
     
     ////////////////////////////////////////
-    //       OldConnections Constructor      //
+    //       Connections Constructor      //
     ////////////////////////////////////////
     /**
      * Constructs a new {@code OldConnections} object. This object
@@ -249,8 +243,8 @@ public class Connections implements Persistable {
     public Connections() {}
     
     /**
-     * Returns a deep copy of this {@code OldConnections} object.
-     * @return a deep copy of this {@code OldConnections}
+     * Returns a deep copy of this {@code Connections} object.
+     * @return a deep copy of this {@code Connections}
      */
     public Connections copy() {
         PersistenceAPI api = Persistence.get(new SerialConfig());
@@ -1199,7 +1193,7 @@ public class Connections implements Persistable {
 	////////////////////////////////////////
     
     /**
-     * Return type from {@link OldConnections#computeActivity(Set, double, int, double, int, boolean)}
+     * Return type from {@link Connections#computeActivity(Set, double, int, double, int, boolean)}
      */
     public static class Activity implements Serializable {
     	/** default serial */
@@ -1425,33 +1419,6 @@ public class Connections implements Persistable {
     	return segmentForFlatIdx.get(index);
     }
     
-    /**
-     * Returns the segment counter
-     * @return
-     */
-    @Deprecated
-    public int getSegmentCount() {
-        return segmentCounter + 1;
-    }
-
-    /**
-     * Increments and returns the incremented count.
-     * @return
-     */
-    @Deprecated
-    public int incrementSegments() {
-        return ++segmentCounter;
-    }
-
-    /**
-     * Decrements and returns the decremented count.
-     * @return
-     */
-    @Deprecated
-    public int decrementSegments() {
-        return --segmentCounter;
-    }
-
     /**
      * Returns the index of the {@link Column} owning the cell which owns 
      * the specified segment.
@@ -1694,44 +1661,6 @@ public class Connections implements Persistable {
         }
 
         return retVal;
-    }
-    
-    /**
-     * Returns the count of {@link Synapse}s on
-     * {@link DistalDendrite}s
-     * @return
-     */
-    public int getDistalSynapseCount() {
-        return distalSynapseCounter + 1;
-    }
-
-    /**
-     * Sets the count of {@link Synapse}s on
-     * {@link DistalDendrites}
-     * 
-     * @param i
-     */
-    public void setDistalSynapseCount(int i) {
-        this.distalSynapseCounter = i;
-    }
-
-    /**
-     * Increments and returns the incremented
-     * distal {@link Synapse} count.
-     *
-     * @return
-     */
-    public int incrementDistalSynapses() {
-        return ++distalSynapseCounter;
-    }
-
-    /**
-     * Decrements and returns the decremented
-     * distal {link Synapse} count
-     * @return
-     */
-    public int decrementDistalSynapses() {
-        return --distalSynapseCounter;
     }
     
     /**
@@ -2165,29 +2094,6 @@ public class Connections implements Persistable {
         return retVal;
     }
     
-    
-    ///////////////////////////////////////////////////
-    //    Experimental Prediction Assisted Configs   //
-    ///////////////////////////////////////////////////
-    protected double[] paOverlaps;
-    /**
-     * Sets paOverlaps (predictive assist vector) for {@link PASpatialPooler}
-     *
-     * @param overlaps
-     */
-    public void setPAOverlaps(double[] overlaps) {
-        this.paOverlaps = overlaps;
-    }
-
-    /**
-     * Returns paOverlaps (predictive assist vector) for {@link PASpatialPooler}
-     *
-     * @return
-     */
-    public double[] getPAOverlaps() {
-        return this.paOverlaps;
-    }
-
     /**
      * High verbose output useful for debugging
      */
@@ -2290,7 +2196,7 @@ public class Connections implements Persistable {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            int[] indexes = pool.getDenseConnected(new Connections());
+            int[] indexes = pool.getDenseConnected(this);
             retVal[i] = indexes;
         }
         
@@ -2306,7 +2212,7 @@ public class Connections implements Persistable {
         int[][] retVal = new int[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            int[] indexes = pool.getDensePotential(new Connections());
+            int[] indexes = pool.getDensePotential(this);
             retVal[i] = indexes;
         }
         
@@ -2322,7 +2228,7 @@ public class Connections implements Persistable {
         double[][] retVal = new double[getNumColumns()][];
         for(int i = 0;i < getNumColumns();i++) {
             Pool pool = getPotentialPools().get(i);
-            double[] perm = pool.getDensePermanences(new Connections());
+            double[] perm = pool.getDensePermanences(this);
             retVal[i] = perm;
         }
         
@@ -2377,8 +2283,9 @@ public class Connections implements Persistable {
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + numColumns;
         result = prime * result + numInputs;
+        temp = numSynapses;
+        result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + Arrays.hashCode(overlapDutyCycles);
-        result = prime * result + Arrays.hashCode(paOverlaps);
         temp = Double.doubleToLongBits(permanenceDecrement);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(permanenceIncrement);
@@ -2393,7 +2300,6 @@ public class Connections implements Persistable {
         result = prime * result + ((random == null) ? 0 : random.hashCode());
         result = prime * result + ((receptorSynapses == null) ? 0 : receptorSynapses.hashCode());
         result = prime * result + seed;
-        result = prime * result + segmentCounter;
         result = prime * result + ((segments == null) ? 0 : segments.hashCode());
         temp = Double.doubleToLongBits(stimulusThreshold);
         result = prime * result + (int)(temp ^ (temp >>> 32));
@@ -2412,7 +2318,6 @@ public class Connections implements Persistable {
         temp = Double.doubleToLongBits(synPermTrimThreshold);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + proximalSynapseCounter;
-        result = prime * result + distalSynapseCounter;
         result = prime * result + ((proximalSynapses == null) ? 0 : proximalSynapses.hashCode());
         result = prime * result + ((distalSynapses == null) ? 0 : distalSynapses.hashCode());
         result = prime * result + Arrays.hashCode(tieBreaker);
@@ -2511,9 +2416,9 @@ public class Connections implements Persistable {
             return false;
         if(numInputs != other.numInputs)
             return false;
-        if(!Arrays.equals(overlapDutyCycles, other.overlapDutyCycles))
+        if(numSynapses != other.numSynapses)
             return false;
-        if(!Arrays.equals(paOverlaps, other.paOverlaps))
+        if(!Arrays.equals(overlapDutyCycles, other.overlapDutyCycles))
             return false;
         if(Double.doubleToLongBits(permanenceDecrement) != Double.doubleToLongBits(other.permanenceDecrement))
             return false;
@@ -2542,8 +2447,6 @@ public class Connections implements Persistable {
             return false;
         if(seed != other.seed)
             return false;
-        if(segmentCounter != other.segmentCounter)
-            return false;
         if(segments == null) {
             if(other.segments != null)
                 return false;
@@ -2566,8 +2469,6 @@ public class Connections implements Persistable {
         if(Double.doubleToLongBits(synPermTrimThreshold) != Double.doubleToLongBits(other.synPermTrimThreshold))
             return false;
         if(proximalSynapseCounter != other.proximalSynapseCounter)
-            return false;
-        if(distalSynapseCounter != other.distalSynapseCounter)
             return false;
         if(proximalSynapses == null) {
             if(other.proximalSynapses != null)

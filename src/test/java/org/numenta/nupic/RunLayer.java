@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,17 +46,15 @@ import org.numenta.nupic.algorithms.Anomaly.Mode;
 import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
 import org.numenta.nupic.encoders.MultiEncoder;
 import org.numenta.nupic.encoders.ScalarEncoder;
-import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.SDR;
-import org.numenta.nupic.network.ManualInput;
 import org.numenta.nupic.network.Network;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
@@ -66,15 +63,15 @@ import org.numenta.nupic.util.UniversalRandom;
 public class RunLayer {
     public static boolean IS_VERBOSE = true;
     public static boolean LEARN = true;
-    public static boolean TM_ONLY = false;
+    public static boolean TM_ONLY = true;
     public static boolean SP_ONLY = false;
-    public static boolean NETWORK = true;
+    public static boolean NETWORK = false;
     
     public static class MakeshiftLayer {
         private Connections connections;
         private MultiEncoder encoder;
         private SpatialPooler sp;
-        private OldTemporalMemory tm;
+        private TemporalMemory tm;
         private CLAClassifier classifier;
         @SuppressWarnings("unused")
         private Anomaly anomaly;
@@ -88,7 +85,7 @@ public class RunLayer {
 //        private static String INPUT_PATH = "/Users/cogmission/git/NAB/data/artificialNoAnomaly/art_daily_no_noise.csv";
 //        private static String readFile = "/Users/cogmission/git/NAB/data/artificialNoAnomaly/art_daily_sp_output.txt";
         private static String INPUT_PATH = "/Users/cogmission/git/NAB/data/realTraffic/TravelTime_387.csv";
-        private static String readFile = "/Users/cogmission/git/NAB/data/realTraffic/TravelTime_sp_output.txt";
+        private static String readFile = "/Users/cogmission/git/newtm/htm.java/src/test/resources/TravelTime_sp_output.txt";
         
         private static List<int[]> input;
         private static List<String> raw;
@@ -103,11 +100,11 @@ public class RunLayer {
          * @param c         the {@link Connections} object.
          * @param encoder   the {@link MultiEncoder}
          * @param sp        the {@link SpatialPooler}
-         * @param tm        the {@link OldTemporalMemory}
+         * @param tm        the {@link TemporalMemory}
          * @param cl        the {@link CLAClassifier}
          */
         public MakeshiftLayer(Connections c, MultiEncoder encoder, SpatialPooler sp, 
-            OldTemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
+            TemporalMemory tm, CLAClassifier cl, Anomaly anomaly) {
             
             this.connections = c;
             this.encoder = encoder;
@@ -115,39 +112,39 @@ public class RunLayer {
             this.tm = tm;
             this.classifier = cl;
             
-            Parameters parameters = getParameters();
+//            Parameters parameters = getParameters();
             // 2015-08-31 18:22:00,90
-            network = Network.create("NAB Network", parameters)
-                .add(Network.createRegion("NAB Region")
-                    .add(Network.createLayer("NAB Layer", parameters)
-                        .add(Anomaly.create())
-                        .add(new OldTemporalMemory())));
-            
-            network.observe().subscribe((inference) -> {
-                double score = inference.getAnomalyScore();
-                int record = inference.getRecordNum();
-                
-                recordNum = record;
-                
-                printHeader();
-                
-                Set<Cell> act = ((ManualInput)inference).getActiveCells();
-                int[] activeColumnIndices = SDR.cellsAsColumnIndices(act, connections.getCellsPerColumn());
-                Set<Cell> prev = ((ManualInput)inference).getPreviousPredictiveCells();
-                int[] prevPredColumnIndices = prev == null ? null : SDR.cellsAsColumnIndices(prev, connections.getCellsPerColumn());
-                String input = Arrays.toString((int[])((ManualInput)inference).getLayerInput());
-                String prevPred = prevPredColumnIndices == null ? "null" : Arrays.toString(prevPredColumnIndices);
-                String active = Arrays.toString(activeColumnIndices);
-                System.out.println("          TemporalMemory Input: " + input);
-                System.out.println("TemporalMemory prev. predicted: " + prevPred);
-                System.out.println("         TemporalMemory active: " + active);
-                System.out.println("Anomaly Score: " + score + "\n");
-                
-            }, (error) -> {
-                error.printStackTrace();
-            }, () -> {
-                // On Complete
-            });
+//            network = Network.create("NAB Network", parameters)
+//                .add(Network.createRegion("NAB Region")
+//                    .add(Network.createLayer("NAB Layer", parameters)
+//                        .add(Anomaly.create())
+//                        .add(new TemporalMemory())));
+//            
+//            network.observe().subscribe((inference) -> {
+//                double score = inference.getAnomalyScore();
+//                int record = inference.getRecordNum();
+//                
+//                recordNum = record;
+//                
+//                printHeader();
+//                
+//                Set<Cell> act = ((ManualInput)inference).getActiveCells();
+//                int[] activeColumnIndices = SDR.cellsAsColumnIndices(act, connections.getCellsPerColumn());
+//                Set<Cell> prev = ((ManualInput)inference).getPreviousPredictiveCells();
+//                int[] prevPredColumnIndices = prev == null ? null : SDR.cellsAsColumnIndices(prev, connections.getCellsPerColumn());
+//                String input = Arrays.toString((int[])((ManualInput)inference).getLayerInput());
+//                String prevPred = prevPredColumnIndices == null ? "null" : Arrays.toString(prevPredColumnIndices);
+//                String active = Arrays.toString(activeColumnIndices);
+//                System.out.println("          TemporalMemory Input: " + input);
+//                System.out.println("TemporalMemory prev. predicted: " + prevPred);
+//                System.out.println("         TemporalMemory active: " + active);
+//                System.out.println("Anomaly Score: " + score + "\n");
+//                
+//            }, (error) -> {
+//                error.printStackTrace();
+//            }, () -> {
+//                // On Complete
+//            });
         }
         
         public void printHeader() {
@@ -358,7 +355,7 @@ public class RunLayer {
         //Temporal Memory specific
         parameters.set(KEY.INITIAL_PERMANENCE, 0.2);
         parameters.set(KEY.CONNECTED_PERMANENCE, 0.8);
-        parameters.set(KEY.MIN_THRESHOLD, 5);
+        parameters.set(KEY.MIN_THRESHOLD, 4);
         parameters.set(KEY.MAX_NEW_SYNAPSE_COUNT, 6);
         parameters.set(KEY.PERMANENCE_INCREMENT, 0.1);//0.05
         parameters.set(KEY.PERMANENCE_DECREMENT, 0.1);//0.05
@@ -392,10 +389,10 @@ public class RunLayer {
         //////////////////////////////////////////////////////////
 //        int[] sparseSdr = testSpatialPooler(sp, conn, encoding);
         //////////////////////////////////////////////////////////
-        OldTemporalMemory tm = null;
+        TemporalMemory tm = null;
         if(!RunLayer.SP_ONLY) {
-            tm = new OldTemporalMemory();
-            OldTemporalMemory.init(conn);
+            tm = new TemporalMemory();
+            TemporalMemory.init(conn);
         }
         
         //////////////////////////////////////////////////////////
@@ -466,7 +463,7 @@ public class RunLayer {
         return sparse;
     }
     
-    public static Tuple testTemporalMemory(OldTemporalMemory tm, Connections conn, int[] sparseSPOutput) {
+    public static Tuple testTemporalMemory(TemporalMemory tm, Connections conn, int[] sparseSPOutput) {
         int[] expected = { 
                 0, 87, 96, 128, 145, 151, 163, 180, 183, 218, 233, 242, 250, 260, 
                 264, 289, 290, 303, 312, 313, 334, 335, 337, 342, 346, 347, 353, 355, 356, 357, 

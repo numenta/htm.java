@@ -25,7 +25,7 @@ package org.numenta.nupic.benchmarks;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Connections;
 import org.openjdk.jmh.annotations.Scope;
@@ -38,7 +38,7 @@ public abstract class AbstractAlgorithmBenchmark {
     protected int[] SDR;
     protected ScalarEncoder encoder;
     protected SpatialPooler pooler;
-    protected OldTemporalMemory temporalMemory;
+    protected TemporalMemory temporalMemory;
     protected Connections memory;
 
     @Setup
@@ -65,8 +65,8 @@ public abstract class AbstractAlgorithmBenchmark {
         pooler = new SpatialPooler();
         pooler.init(memory);
 
-        temporalMemory = new OldTemporalMemory();
-        OldTemporalMemory.init(memory);
+        temporalMemory = new TemporalMemory();
+        TemporalMemory.init(memory);
     }
 
     /**

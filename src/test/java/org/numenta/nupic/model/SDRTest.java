@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.numenta.nupic.algorithms.OldTemporalMemory;
+import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.SDR;
@@ -23,7 +23,7 @@ public class SDRTest {
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        OldTemporalMemory.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 16383 };
         Set<Cell> cells = cn.getCellSet(expectedIndexes);
@@ -88,7 +88,7 @@ public class SDRTest {
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        OldTemporalMemory.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 4095 };
         int[] inputIndices = Arrays.stream(expectedIndexes).map(i -> i * cn.getCellsPerColumn()).toArray();
@@ -104,7 +104,7 @@ public class SDRTest {
         Connections cn = new Connections();
         cn.setColumnDimensions(new int[] { 64, 64 });
         cn.setCellsPerColumn(4);
-        OldTemporalMemory.init(cn);
+        TemporalMemory.init(cn);
         
         int[] expectedIndexes = { 0, 3, 4, 4095 };
         int[] inputIndices = Arrays.stream(expectedIndexes).map(i -> i * cn.getCellsPerColumn()).toArray();

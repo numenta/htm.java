@@ -20,7 +20,6 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.algorithms.TemporalMemory.ColumnData;
-import org.numenta.nupic.model.OldConnections.SegmentOverlap;
 import org.numenta.nupic.util.GroupBy2;
 import org.numenta.nupic.util.Tuple;
 import org.numenta.nupic.util.UniversalRandom;
@@ -90,7 +89,7 @@ public class ComputeCycleTest {
         //cc = tm.compute(cn, activeColumnsIndices, true);
         
         Function<Column, Column> identity = Function.identity();
-        Function<SegmentOverlap, Column> segToCol = segment -> segment.segment.getParentCell().getColumn(); 
+        Function<DistalDendrite, Column> segToCol = segment -> segment.getParentCell().getColumn(); 
         
         List<Column> activeColumns = Arrays.stream(activeColumnsIndices)
                 .sorted()
