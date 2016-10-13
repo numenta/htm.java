@@ -16,7 +16,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased [0.6.10-SNAPSHOT]
 #### Removed
 #### Added
-#### Changed
+#### Changed  
+* [[PR #496](https://github.com/numenta/htm.java/pull/496)] Moved ```Connections.java``` and ```ComputeCycle.java``` and other "model" files to package: org.numenta.nupic.model
+* [[PR #496](https://github.com/numenta/htm.java/pull/496)] Updated the TemporalMemory and all unit/compatibility tests to be in sync with latest NuPIC version (Updated: 2016-09-23 SHA 1036f25e7223471d72cebc536d6734f78d37b6c7)
 * [[PR #486](https://github.com/numenta/htm.java/pull/486)] Updated the SpatialPooler and all unit/compatibility tests to be in sync with latest NuPIC version (Updated: 2016-09-22 SHA a3587db662ddc365ed371c81eb4166a41ad4bc3d)  
 
 #### Fixed
