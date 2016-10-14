@@ -226,6 +226,123 @@ public class SpatialPoolerTest {
         }
     }
     
+    /**
+     * When stimulusThreshold is 0, allow columns without any overlap to become
+     * active. This test focuses on the global inhibition code path.
+     */
+    @Test
+    public void testZeroOverlap_NoStimulusThreshold_GlobalInhibition() {
+        int inputSize = 10;
+        int nColumns = 20;
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { inputSize });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { nColumns });
+        parameters.set(KEY.POTENTIAL_RADIUS, 10);
+        parameters.set(KEY.GLOBAL_INHIBITION, true);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 0.0);
+        parameters.set(KEY.RANDOM, new UniversalRandom(42));
+        parameters.set(KEY.SEED, 42);
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        int[] activeArray = new int[nColumns];
+        sp.compute(cn, new int[inputSize], activeArray, true);
+        
+        assertEquals(3, ArrayUtils.where(activeArray, ArrayUtils.INT_GREATER_THAN_0).length);
+    }
+    
+    /**
+     * When stimulusThreshold is > 0, don't allow columns without any overlap to
+     * become active. This test focuses on the global inhibition code path.
+     */
+    @Test
+    public void testZeroOverlap_StimulusThreshold_GlobalInhibition() {
+        int inputSize = 10;
+        int nColumns = 20;
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { inputSize });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { nColumns });
+        parameters.set(KEY.POTENTIAL_RADIUS, 10);
+        parameters.set(KEY.GLOBAL_INHIBITION, true);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.RANDOM, new UniversalRandom(42));
+        parameters.set(KEY.SEED, 42);
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        int[] activeArray = new int[nColumns];
+        sp.compute(cn, new int[inputSize], activeArray, true);
+        
+        assertEquals(0, ArrayUtils.where(activeArray, ArrayUtils.INT_GREATER_THAN_0).length);
+    }
+    
+    @Test
+    public void testZeroOverlap_NoStimulusThreshold_LocalInhibition() {
+        int inputSize = 10;
+        int nColumns = 20;
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { inputSize });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { nColumns });
+        parameters.set(KEY.POTENTIAL_RADIUS, 5);
+        parameters.set(KEY.GLOBAL_INHIBITION, false);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 1.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 0.0);
+        parameters.set(KEY.RANDOM, new UniversalRandom(42));
+        parameters.set(KEY.SEED, 42);
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        // This exact number of active columns is determined by the inhibition
+        // radius, which changes based on the random synapses (i.e. weird math).
+        // Force it to a known number.
+        cn.setInhibitionRadius(2);
+        
+        int[] activeArray = new int[nColumns];
+        sp.compute(cn, new int[inputSize], activeArray, true);
+        
+        assertEquals(6, ArrayUtils.where(activeArray, ArrayUtils.INT_GREATER_THAN_0).length);
+    }
+    
+    /**
+     * When stimulusThreshold is > 0, don't allow columns without any overlap to
+     * become active. This test focuses on the local inhibition code path.
+     */
+    @Test
+    public void testZeroOverlap_StimulusThreshold_LocalInhibition() {
+        int inputSize = 10;
+        int nColumns = 20;
+        parameters = Parameters.getSpatialDefaultParameters();
+        parameters.set(KEY.INPUT_DIMENSIONS, new int[] { inputSize });
+        parameters.set(KEY.COLUMN_DIMENSIONS, new int[] { nColumns });
+        parameters.set(KEY.POTENTIAL_RADIUS, 10);
+        parameters.set(KEY.GLOBAL_INHIBITION, false);
+        parameters.set(KEY.NUM_ACTIVE_COLUMNS_PER_INH_AREA, 3.0);
+        parameters.set(KEY.STIMULUS_THRESHOLD, 1.0);
+        parameters.set(KEY.RANDOM, new UniversalRandom(42));
+        parameters.set(KEY.SEED, 42);
+        
+        SpatialPooler sp = new SpatialPooler();
+        Connections cn = new Connections();
+        parameters.apply(cn);
+        sp.init(cn);
+        
+        int[] activeArray = new int[nColumns];
+        sp.compute(cn, new int[inputSize], activeArray, true);
+        
+        assertEquals(0, ArrayUtils.where(activeArray, ArrayUtils.INT_GREATER_THAN_0).length);
+    }
+    
     @Test
     public void testOverlapsOutput() {
         parameters = Parameters.getSpatialDefaultParameters();
@@ -1558,6 +1675,7 @@ public class SpatialPoolerTest {
         double[] overlaps = new double[] { 1, 2, 1, 4, 8, 3, 12, 5, 4, 1 };
         int[] active = sp.inhibitColumnsGlobal(mem, overlaps, density);
         int[] trueActive = new int[] { 4, 6, 7 };
+        Arrays.sort(active);
         assertTrue(Arrays.equals(trueActive, active));
         
         density = 0.5;

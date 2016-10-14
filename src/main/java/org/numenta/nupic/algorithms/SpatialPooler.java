@@ -22,7 +22,6 @@
 package org.numenta.nupic.algorithms;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.stream.IntStream;
 
 import org.numenta.nupic.model.Column;
@@ -808,28 +807,23 @@ public class SpatialPooler implements Persistable {
     public int[] inhibitColumnsGlobal(Connections c, double[] overlaps, double density) {
         int numCols = c.getNumColumns();
         int numActive = (int)(density * numCols);
-        
-        Comparator<Pair<Integer, Double>> comparator = 
-            (p1, p2) -> { 
-                int p1key = p1.getFirst();
-                int p2key = p2.getFirst();
-                double p1val = p1.getSecond();
-                double p2val = p2.getSecond();
-                if(Math.abs(p2val - p1val) < 0.000000001) {
-                    return Math.abs(p2key - p1key) < 0.000000001 ? 0 : p2key > p1key ? 1 : -1;
-                } else {
-                    return p2val > p1val ? 1 : -1;
-                }
-            };
-        int[] inhibit = IntStream.range(0,overlaps.length)
+ 
+        int[] sortedWinnerIndices = IntStream.range(0,overlaps.length)
             .mapToObj(i-> new Pair<>(i,overlaps[i]))
-            .sorted(comparator)
+            .sorted(c.inhibitionComparator)
             .mapToInt(Pair<Integer,Double>::getFirst)
-            .limit(numActive)
-            .sorted()
             .toArray();
         
-        return inhibit;
+        // Enforce the stimulus threshold
+        double stimulusThreshold = c.getStimulusThreshold();
+        int start = sortedWinnerIndices.length - numActive;
+        while(start < sortedWinnerIndices.length) {
+            int i = sortedWinnerIndices[start];
+            if(overlaps[i] >= stimulusThreshold) break;
+            ++start;
+        }
+        
+        return IntStream.of(sortedWinnerIndices).skip(start).toArray();
     }
     
     /**

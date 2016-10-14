@@ -31,6 +31,7 @@ import org.numenta.nupic.util.SparseObjectMatrix;
 import org.numenta.nupic.util.Topology;
 import org.numenta.nupic.util.UniversalRandom;
 
+import chaschev.lang.Pair;
 import gnu.trove.list.array.TIntArrayList;
 
 /**
@@ -231,6 +232,19 @@ public class Connections implements Persistable {
         return c1 == c2 ? 0 : c1 > c2 ? 1 : -1;
     };
 
+    /** Sorting Lambda used for SpatialPooler inhibition */
+    public Comparator<Pair<Integer, Double>> inhibitionComparator = (Comparator<Pair<Integer, Double>> & Serializable)
+        (p1, p2) -> { 
+            int p1key = p1.getFirst();
+            int p2key = p2.getFirst();
+            double p1val = p1.getSecond();
+            double p2val = p2.getSecond();
+            if(Math.abs(p2val - p1val) < 0.000000001) {
+                return Math.abs(p2key - p1key) < 0.000000001 ? 0 : p2key > p1key ? -1 : 1;
+            } else {
+                return p2val > p1val ? -1 : 1;
+            }
+        };
     
     ////////////////////////////////////////
     //       Connections Constructor      //
