@@ -321,6 +321,7 @@ public class RegionTest extends ObservableTestBase {
         p.set(KEY.SYN_PERM_INACTIVE_DEC, 0.1);
         p.set(KEY.SYN_PERM_ACTIVE_INC, 0.1);
         p.set(KEY.SYN_PERM_TRIM_THRESHOLD, 0.05);
+        p.set(KEY.GLOBAL_INHIBITION, true);
         p.set(KEY.SYN_PERM_CONNECTED, 0.4);
         p.set(KEY.MAX_BOOST, 10.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
@@ -358,7 +359,7 @@ public class RegionTest extends ObservableTestBase {
             }
         });
        
-        final int NUM_CYCLES = 400;
+        final int NUM_CYCLES = 500;
         final int INPUT_GROUP_COUNT = 7; // Days of Week
         Map<String, Object> multiInput = new HashMap<>();
         for(int i = 0;i < NUM_CYCLES;i++) {
