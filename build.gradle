@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 apply plugin: 'signing'
 
 group = 'org.numenta'
-version = '0.6.9-SNAPSHOT'
+version = '0.6.10'
 archivesBaseName = 'htm.java'
 
 sourceCompatibility = 1.8
