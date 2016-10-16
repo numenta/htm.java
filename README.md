@@ -26,6 +26,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 <br>
 
 ## Recent News Items...
+* HTM.Java Release v0.6.10-alpha to tag sync state with NuPIC (10/16/2016)
 * [HTM.Java Receives new TemporalMemory](https://discourse.numenta.org/t/htm-java-now-in-sync-with-nupic/1510) - HTM.Java now fully in sync!! (10/13/2016)
 * [HTM.Java Receives new SpatialPooler](https://github.com/numenta/htm.java/pull/486) - Fully Updated! (10/06/2016)
 * HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB will be offered (soon)! (09/29/2016)
