@@ -450,7 +450,11 @@ public class NetworkTest extends ObservableTestBase {
         });
         
         network.halt();
-        try { network.lookup("r1").lookup("1").getLayerThread().join(3000); }catch(Exception e) { e.printStackTrace(); }
+        try { 
+            network.lookup("r1").lookup("1").getLayerThread().join(3000);
+            // Add a little more wait time
+            Thread.sleep(3000);
+        }catch(Exception e) { e.printStackTrace(); }
         network.restart();
         
         Publisher newPub = network.getPublisher();

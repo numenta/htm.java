@@ -344,6 +344,14 @@ public class Layer<T> implements Persistable {
     public void setNetwork(Network network) {
         this.parentNetwork = network;
     }
+    
+    /**
+     * Returns the parent {@link Network}
+     * @return  the parent Network;
+     */
+    public Network getNetwork() {
+        return this.parentNetwork;
+    }
 
     /**
      * Creates a new {@code Layer} initialized with the specified algorithmic
@@ -414,6 +422,15 @@ public class Layer<T> implements Persistable {
      */
     public void setRegion(Region r) {
         this.parentRegion = r;
+    }
+    
+    /**
+     * Returns the parent {@link Region}
+     * 
+     * @return  the parent Region
+     */
+    public Region getRegion() {
+        return this.parentRegion;
     }
 
     /**

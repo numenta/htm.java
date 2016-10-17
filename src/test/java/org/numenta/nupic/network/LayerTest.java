@@ -48,6 +48,7 @@ import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.Layer.FunctionFactory;
 import org.numenta.nupic.network.sensor.FileSensor;
@@ -110,6 +111,108 @@ public class LayerTest extends ObservableTestBase {
 
         algo_content_mask ^= Layer.CLA_CLASSIFIER;
         assertEquals(0, algo_content_mask);
+    }
+    
+    @Test
+    public void callsOnClosedLayer() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.set(KEY.RANDOM, new UniversalRandom(42));
+        
+        Network n = new Network("AlreadyClosed", p)
+            .add(Network.createRegion("AlreadyClosed")
+                .add(Network.createLayer("AlreadyClosed", p)));
+        
+        Layer<?> l = n.lookup("AlreadyClosed").lookup("AlreadyClosed");
+        l.using(new Connections());
+        l.using(p);
+        
+        l.close();
+        
+        try {
+            l.using(new Connections());
+            
+            fail(); // Should fail here, disallowing "using" call on closed layer
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("Layer already \"closed\"", e.getMessage());
+        }
+        
+        try {
+            l.using(p);
+            
+            fail(); // Should fail here, disallowing "using" call on closed layer
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("Layer already \"closed\"", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testNoName() {
+        Parameters p = Parameters.getAllDefaultParameters();
+        
+        try {
+            new Network("", p)
+                .add(Network.createRegion("")
+                    .add(Network.createLayer("", p)
+                        .add(Sensor.create(
+                            FileSensor::create, 
+                            SensorParams.create(
+                                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))))));
+            
+            fail(); // Fails due to no name...
+        }catch(Exception e) {
+            assertEquals(IllegalStateException.class, e.getClass());
+            assertEquals("All Networks must have a name. Increases digestion, and overall happiness!",
+                e.getMessage());
+        }
+        
+        try {
+            new Network("Name", p)
+                .add(Network.createRegion("")
+                    .add(Network.createLayer("", p)
+                        .add(Sensor.create(
+                            FileSensor::create, 
+                            SensorParams.create(
+                                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))))));
+            
+            fail(); // Fails due to no name on Region...
+        }catch(Exception e) {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Name may not be null or empty. ...not that anyone here advocates name calling!",
+                e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testAddSensor() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.set(KEY.RANDOM, new UniversalRandom(42));
+        
+        try {
+            PublisherSupplier supplier = PublisherSupplier.builder()
+                .addHeader("dayOfWeek")
+                .addHeader("int")
+                .addHeader("B").build();
+                        
+            Network n = new Network("Name", p)
+                .add(Network.createRegion("Name")
+                    .add(Network.createLayer("Name", p)));
+            
+            Layer<?> l = n.lookup("Name").lookup("Name"); 
+            l.add(Sensor.create(
+                ObservableSensor::create, 
+                SensorParams.create(
+                    Keys::obs, "", supplier)));
+            
+            assertEquals(n, l.getNetwork());
+            assertTrue(l.getRegion() != null);
+            
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
