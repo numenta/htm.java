@@ -183,12 +183,15 @@ public class LayerTest extends ObservableTestBase {
             assertEquals("Name may not be null or empty. ...not that anyone here advocates name calling!",
                 e.getMessage());
         }
+    }
+    
+    @Test
+    public void testAddSensor() {
+        Parameters p = NetworkTestHarness.getParameters().copy();
+        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
+        p.set(KEY.RANDOM, new UniversalRandom(42));
         
         try {
-            p = NetworkTestHarness.getParameters().copy();
-            p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-            p.set(KEY.RANDOM, new UniversalRandom(42));
-            
             PublisherSupplier supplier = PublisherSupplier.builder()
                 .addHeader("dayOfWeek")
                 .addHeader("int")
@@ -209,30 +212,6 @@ public class LayerTest extends ObservableTestBase {
             
         }catch(Exception e) {
             e.printStackTrace();
-        }
-    }
-    
-    @Test
-    public void testAddSensor() {
-        Parameters p = NetworkTestHarness.getParameters().copy();
-        p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
-        p.set(KEY.RANDOM, new UniversalRandom(42));
-        
-        try {
-            new Network("Name", p)
-                .add(Network.createRegion("")
-                    .add(Network.createLayer("", p)
-                        .add(Sensor.create(
-                            FileSensor::create, 
-                            SensorParams.create(
-                                Keys::path, "", ResourceLocator.path("rec-center-hourly-small.csv"))))));
-            
-            fail(); // Fails due to no name...
-        }catch(Exception e) {
-            e.printStackTrace();
-            assertEquals(IllegalStateException.class, e.getClass());
-            assertEquals("All Networks must have a name. Increases digestion, and overall happiness!",
-                e.getMessage());
         }
     }
 
