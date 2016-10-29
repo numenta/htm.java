@@ -159,7 +159,7 @@ public class CLAClassifier implements Persistable {
      * @param learn             if true, learn this sample
      * @param infer             if true, perform inference
      * 
-     * @return                  dict containing inference results, there is one entry for each
+     * @return                  {@link Classification} containing inference results, there is one entry for each
      *                          step in steps, where the key is the number of steps, and
      *                          the value is an array containing the relative likelihood for
      *                          each bucketIdx starting from bucketIdx 0.
@@ -171,7 +171,7 @@ public class CLAClassifier implements Persistable {
      *                          {	
      *                              1 :             [0.1, 0.3, 0.2, 0.7],
      *                              4 :             [0.2, 0.4, 0.3, 0.5],
-     *                              'actualValues': [1.5, 3,5, 5,5, 7.6],
+     *                              'actualValues': [1.5, 3.5, 5.5, 7.6],
      *                          }
      */
     @SuppressWarnings("unchecked")
