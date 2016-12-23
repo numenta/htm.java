@@ -75,7 +75,7 @@ See the blog: [Join the Cogmission](http://www.cogmission.ai)
 
 | Core Algorithm  | NuPIC Date    |HTM.Java Date | Latest NuPIC SHA | Latest HTM.Java SHA | Status|
 | --------------- |:-------------:|:------------:|:----------------:|:-------------------:|:-----:|
-| SpatialPooler   | 2016-10-05    | 2016-10-07   |[commit](https://github.com/numenta/nupic/commit/7e77ecba4ffdd4991cfd87972de6211101e6661e)|[commit](https://github.com/numenta/htm.java/commit/2cdcee1fcc5f6c18c2c48b4b553c49879c1256bb#diff-22f96ea06fd0c2b3593c755cbccf0a8b)| [Pending NuPIC #3411*](https://github.com/numenta/nupic/pull/3411)
+| SpatialPooler   | 2016-10-05    | 2016-10-07   |[commit](https://github.com/numenta/nupic/commit/5c3edead9526d3b5fb6a4f37ad9d38cdcf32f5ff)|[commit](https://github.com/numenta/htm.java/commit/2cdcee1fcc5f6c18c2c48b4b553c49879c1256bb#diff-22f96ea06fd0c2b3593c755cbccf0a8b)| [*Behind NuPIC Merge #3411](https://github.com/numenta/nupic/pull/3411)
 | TemporalMemory  | 2016-09-23    | 2016-10-13   |[commit](https://github.com/numenta/nupic/commit/1036f25e7223471d72cebc536d6734f78d37b6c7)|[commit](https://github.com/numenta/htm.java/commit/7f4d8f2e2c910dd662909442546516e36adfc7cc)| Sync'd*
 
 \* May be one of: "Sync'd" or "Behind". "Behind" expresses a temporary lapse in synchronization while devs are implementing new changes.
