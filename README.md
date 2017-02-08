@@ -1,4 +1,4 @@
-# ![Numenta Logo](http://numenta.org/images/numenta-icon128.png)  
+# ![Numenta Logo](http://metaware.us/nupic/1039191.png)  
 # htm.java
 
 <br>
