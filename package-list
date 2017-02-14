@@ -1,0 +1,15 @@
+org.numenta.nupic
+org.numenta.nupic.algorithms
+org.numenta.nupic.benchmarks
+org.numenta.nupic.datagen
+org.numenta.nupic.encoders
+org.numenta.nupic.integration
+org.numenta.nupic.model
+org.numenta.nupic.monitor
+org.numenta.nupic.monitor.mixin
+org.numenta.nupic.network
+org.numenta.nupic.network.sensor
+org.numenta.nupic.research
+org.numenta.nupic.research.sensorimotor
+org.numenta.nupic.serialize
+org.numenta.nupic.util
