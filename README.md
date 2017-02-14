@@ -51,7 +51,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 
 For a more detailed discussion of <b>htm.java</b> see: <BR>
 * [htm.java Wiki](https://github.com/numenta/htm.java/wiki)
-* [Java Docs](http://numenta.org/docs/htm.java/)
+* [Java Docs](http://numenta.github.io/htm.java/)
 
 See the [Test Coverage Reports](https://coveralls.io/jobs/4164658) - For more information on where you can contribute! Extend the tests and get your name in bright lights!
 
