@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.FieldMetaType;
@@ -231,7 +232,7 @@ public class Layer<T> implements Persistable {
     private boolean hasGenericProcess;
 
     /**
-     * List of {@link Encoders} used when storing bucket information see
+     * List of {@link Encoder}s used when storing bucket information see
      * {@link #doEncoderBucketMapping(Inference, Map)}
      */
     private List<EncoderTuple> encoderTuples;
@@ -1048,7 +1049,7 @@ public class Layer<T> implements Persistable {
     /**
      * Restarts this {@code Layer}
      * 
-     * {@link #restart()} is to be called after a call to {@link #halt()}, to begin
+     * {@link #restart} is to be called after a call to {@link #halt()}, to begin
      * processing again. The {@link Network} will continue from where it previously
      * left off after the last call to halt().
      * 
@@ -1180,7 +1181,7 @@ public class Layer<T> implements Persistable {
     }
 
     /**
-     * Returns the previous predictive {@link Cells}
+     * Returns the previous predictive {@link Cell}s
      * 
      * @return the binary vector representing the current prediction.
      */
@@ -1472,7 +1473,7 @@ public class Layer<T> implements Persistable {
      * </p>
      * <p>
      * If any algorithms are repeated then {@link Inference}s will
-     * <em><b>NOT</b></em> be shared between layers. {@link Regions}
+     * <em><b>NOT</b></em> be shared between layers. {@link Region}s
      * <em><b>NEVER</b></em> share {@link Inference}s
      * </p>
      * 
@@ -1657,7 +1658,7 @@ public class Layer<T> implements Persistable {
     
     /**
      * Executes the check point logic, handles the return of the serialized byte array
-     * by delegating the call to {@link rx.Observer#onNext(byte[])} of all the currently queued
+     * by delegating the call to {@link rx.Observer#onNext}(byte[]) of all the currently queued
      * Observers; then clears the list of Observers.
      */
     private void doCheckPoint() {
@@ -1721,9 +1722,38 @@ public class Layer<T> implements Persistable {
 
         // Get fields user wants encoded from Parameters
         Map<String, Class> inferredFields = (Map<String, Class>)params.get(KEY.INFERRED_FIELDS);
+
+        // Store a NamedTuple for each of those fields
         for(Map.Entry<String, Class> entry : inferredFields.entrySet()) {
-            String name = entry.getKey();
-            EncoderTuple encoderTuple = encoderTuples.get
+            String fieldName = entry.getKey(); // Name of encoder input field
+            EncoderTuple encoderTuple = encoderTuples.stream() // Get the EncoderTuple for this input field
+                    .filter(e -> e.getName().equals(fieldName))
+                    .collect(Collectors.toList())
+                    .get(0);
+            Encoder<?> e = encoderTuple.getEncoder();
+
+            int bucketIdx = -1;
+            Object o = encoderInputMap.get(name);
+            if(DateTime.class.isAssignableFrom(o.getClass())) {
+                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
+            } else if(Number.class.isAssignableFrom(o.getClass())) {
+                bucketIdx = e.getBucketIndices((double)o)[0];
+            } else {
+                bucketIdx = e.getBucketIndices((String)o)[0];
+            }
+
+            int offset = encoderTuple.getOffset();
+            int[] tempArray = new int[e.getWidth()];
+            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
+
+            inference.getClassifierInput().put(
+                            name,
+                            new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" },
+                            name,
+                            o,
+                            bucketIdx,
+                            tempArray
+                    ));
         }
     }
 
@@ -1809,9 +1839,9 @@ public class Layer<T> implements Persistable {
 
     /**
      * Called internally to create a subscription on behalf of the specified
-     * {@link LayerObserver}
+     * Layer {@link Observer}
      * 
-     * @param sub       the LayerObserver (subscriber).
+     * @param sub       the Layer Observer (subscriber).
      * @return
      */
     private Subscription createSubscription(final Observer<Inference> sub) {
@@ -2033,8 +2063,7 @@ public class Layer<T> implements Persistable {
      * that stores the state of this {@code Network} while keeping the Network up and running.
      * The Network will be stored at the pre-configured location (in binary form only, not JSON).
      * 
-     * @param network   the {@link Network} to check point.
-     * @return  the {@link CheckPointOp} operator 
+     * @return  the {@link CheckPointOp} operator
      */
     @SuppressWarnings("unchecked")
     CheckPointOp<byte[]> getCheckPointOperator() {
