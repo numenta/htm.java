@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.numenta.nupic.algorithms.Classifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
@@ -417,8 +418,8 @@ public class Parameters implements Persistable {
         
         // Network Layer indicator for auto classifier generation
         AUTO_CLASSIFY("hasClassifiers", Boolean.class),
-        
-        
+        INFERRED_FIELDS("inferredFields", Map.class), // Map<String, Classifier.class
+
         // How many bits to use if encoding the respective date fields.
         // e.g. Tuple(bits to use:int, radius:double)
         DATEFIELD_SEASON("season", Tuple.class), 

@@ -457,6 +457,9 @@ public class Region implements Persistable {
             @Override public void onError(Throwable e) { e.printStackTrace(); }
             @SuppressWarnings("unchecked")
             @Override public void onNext(Inference i) {
+                // TODO: 21: This is where classifierInput is set. Need to change
+                // it to respect only fields user has specified for classification
+                // with the new Parameters KEY.
                 localInf.sdr(i.getSDR()).recordNum(i.getRecordNum()).classifierInput(i.getClassifierInput()).layerInput(i.getSDR());
                 if(i.getSDR().length > 0) {
                     ((Layer<Inference>)tail).compute(localInf);

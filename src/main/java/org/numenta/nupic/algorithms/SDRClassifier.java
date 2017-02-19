@@ -96,7 +96,7 @@ import gnu.trove.list.array.TIntArrayList;
  * @author David Ray
  * @author Andrew Dillon
  */
-public class SDRClassifier implements Persistable {
+public class SDRClassifier implements Persistable, Classifier {
 	private static final long serialVersionUID = 1L;
 
 	int verbosity = 0;
