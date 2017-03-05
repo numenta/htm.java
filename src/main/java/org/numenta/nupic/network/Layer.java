@@ -1691,10 +1691,6 @@ public class Layer<T> implements Persistable {
         // Store the encoding
         int[] encoding = inference.getEncoding();
 
-        // TODO: 21: Looks like this is where the classifierInput(s) are set.
-        // Should probably change this so that instead of adding a mapping for
-        // each encoder, it adds a mapping for each field specified by the user
-        // in the new Parameters KEY.
         for(EncoderTuple t : encoderTuples) {
             String name = t.getName();
             Encoder<?> e = t.getEncoder();
@@ -1713,49 +1709,16 @@ public class Layer<T> implements Persistable {
             int[] tempArray = new int[e.getWidth()];
             System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
 
-            inference.getClassifierInput().put(name, new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" }, name, o, bucketIdx, tempArray));
+            inference.getClassifierInput().put(
+                    name,
+                    new NamedTuple(
+                            new String[] { "name", "inputValue", "bucketIdx", "encoding" },
+                            name,
+                            o,
+                            bucketIdx,
+                            tempArray
+                    ));
         }
-
-//        // Get fields user wants encoded from Parameters
-//        Map<String, Class> inferredFields = (Map<String, Class>)params.get(KEY.INFERRED_FIELDS);
-//        if(inferredFields == null) {
-//            LOGGER.info("KEY.INFERRED_FIELDS is null, no fields will be classified.");
-//            return;
-//        }
-//
-//        // Store a NamedTuple for each of those fields
-//        for(Map.Entry<String, Class> entry : inferredFields.entrySet()) {
-//            String fieldName = entry.getKey(); // Name of encoder input field
-//            EncoderTuple encoderTuple = encoderTuples.stream() // Get the EncoderTuple for this input field
-//                    .filter(e -> e.getName().equals(fieldName))
-//                    .collect(Collectors.toList())
-//                    .get(0);
-//            Encoder<?> e = encoderTuple.getEncoder();
-//
-//            int bucketIdx = -1;
-//            Object o = encoderInputMap.get(fieldName);
-//            if(DateTime.class.isAssignableFrom(o.getClass())) {
-//                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
-//            } else if(Number.class.isAssignableFrom(o.getClass())) {
-//                bucketIdx = e.getBucketIndices((double)o)[0];
-//            } else {
-//                bucketIdx = e.getBucketIndices((String)o)[0];
-//            }
-//
-//            int offset = encoderTuple.getOffset();
-//            int[] tempArray = new int[e.getWidth()];
-//            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
-//
-//            inference.getClassifierInput().put(
-//                    fieldName,
-//                    new NamedTuple(
-//                        new String[] { "name", "inputValue", "bucketIdx", "encoding" },
-//                        fieldName,
-//                        o,
-//                        bucketIdx,
-//                        tempArray
-//                    ));
-//        }
     }
 
     /**
@@ -1950,15 +1913,7 @@ public class Layer<T> implements Persistable {
      * @param encoder
      * @return
      */
-    // TODO: 21: This creates two parallel arrays, one of encoder's names, and
-    // the other of each encoder's classifier. Returns a NamedTuple making use of
-    // these arrays easier.
     NamedTuple makeClassifiers(MultiEncoder encoder) {
-        // TODO: 21: Should be able to inspect new Parameters KEY(s) in here
-        // TODO: 21: to adjust types of Classifiers that are created/used.
-        // Looks like the passed-in MultiEncoder is a single wrapper containing
-        // multiple encoders; one for each field. Right now, a classifier is
-        // created for each of those encoders. However, instead of do
         Map inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
         String[] names = new String[encoder.getEncoders(encoder).size()];
         Classifier[] ca = new Classifier[names.length];
@@ -2384,10 +2339,6 @@ public class Layer<T> implements Persistable {
 
                 @Override
                 public ManualInput call(ManualInput t1) {
-                    // TODO: 21: Should only need to change this code to use the
-                    // new Classifier interface. But will need to change what is
-                    // returned by t1.getClassifierInput() to only pay attention
-                    // to fields being classifier based on new Parameters KEY
                     Map<String, NamedTuple> ci = t1.getClassifierInput();
                     int recordNum = getRecordNum();
                     for(String key : ci.keySet()) {
