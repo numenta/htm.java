@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.algorithms.Classifier;
 import org.numenta.nupic.algorithms.Classification;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
@@ -191,7 +191,9 @@ public class ManualInput implements Inference {
     
     /**
      * <p>
-     * Returns the {@link Map} used as input into the {@link CLAClassifier}
+     * Returns the {@link Map} used as input into the field's {@link Classifier}
+     * (it is only actually used as input if a Classifier type has specified for
+     * the field).
      * 
      * This mapping contains the name of the field being classified mapped
      * to a {@link NamedTuple} containing:
@@ -237,7 +239,7 @@ public class ManualInput implements Inference {
     
     /**
      * Returns a {@link NamedTuple} keyed to the input field
-     * names, whose values are the {@link CLAClassifier} used 
+     * names, whose values are the {@link Classifier} used
      * to track the classification of a particular field
      */
     @Override
@@ -341,10 +343,12 @@ public class ManualInput implements Inference {
      * Returns the most recent {@link Classification}
      * 
      * @param fieldName
-     * @return
+     * @return the most recent {@link Classification}, or null if none exists.
      */
     @Override
     public Classification<Object> getClassification(String fieldName) {
+        if(classification == null)
+            return null;
         return classification.get(fieldName);
     }
     

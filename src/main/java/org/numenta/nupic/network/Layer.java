@@ -37,11 +37,7 @@ import org.joda.time.DateTime;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.Anomaly;
-import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.Classification;
-import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.*;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
@@ -400,7 +396,7 @@ public class Layer<T> implements Persistable {
                 (encoder == null ? "" : "MultiEncoder,"), 
                 (spatialPooler == null ? "" : "SpatialPooler,"), 
                 (temporalMemory == null ? "" : "TemporalMemory,"), 
-                (autoCreateClassifiers == null ? "" : "Auto creating CLAClassifiers for each input field."), 
+                (autoCreateClassifiers == null ? "" : "Auto creating Classifiers for each input field."),
                 (anomalyComputer == null ? "" : "Anomaly"));
         }
     }
@@ -1699,38 +1695,9 @@ public class Layer<T> implements Persistable {
         // Should probably change this so that instead of adding a mapping for
         // each encoder, it adds a mapping for each field specified by the user
         // in the new Parameters KEY.
-//        for(EncoderTuple t : encoderTuples) {
-//            String name = t.getName();
-//            Encoder<?> e = t.getEncoder();
-//
-//            int bucketIdx = -1;
-//            Object o = encoderInputMap.get(name);
-//            if(DateTime.class.isAssignableFrom(o.getClass())) {
-//                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
-//            } else if(Number.class.isAssignableFrom(o.getClass())) {
-//                bucketIdx = e.getBucketIndices((double)o)[0];
-//            } else {
-//                bucketIdx = e.getBucketIndices((String)o)[0];
-//            }
-//
-//            int offset = t.getOffset();
-//            int[] tempArray = new int[e.getWidth()];
-//            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
-//
-//            inference.getClassifierInput().put(name, new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" }, name, o, bucketIdx, tempArray));
-//        }
-
-        // Get fields user wants encoded from Parameters
-        Map<String, Class> inferredFields = (Map<String, Class>)params.get(KEY.INFERRED_FIELDS);
-
-        // Store a NamedTuple for each of those fields
-        for(Map.Entry<String, Class> entry : inferredFields.entrySet()) {
-            String fieldName = entry.getKey(); // Name of encoder input field
-            EncoderTuple encoderTuple = encoderTuples.stream() // Get the EncoderTuple for this input field
-                    .filter(e -> e.getName().equals(fieldName))
-                    .collect(Collectors.toList())
-                    .get(0);
-            Encoder<?> e = encoderTuple.getEncoder();
+        for(EncoderTuple t : encoderTuples) {
+            String name = t.getName();
+            Encoder<?> e = t.getEncoder();
 
             int bucketIdx = -1;
             Object o = encoderInputMap.get(name);
@@ -1742,19 +1709,53 @@ public class Layer<T> implements Persistable {
                 bucketIdx = e.getBucketIndices((String)o)[0];
             }
 
-            int offset = encoderTuple.getOffset();
+            int offset = t.getOffset();
             int[] tempArray = new int[e.getWidth()];
             System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
 
-            inference.getClassifierInput().put(
-                            name,
-                            new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" },
-                            name,
-                            o,
-                            bucketIdx,
-                            tempArray
-                    ));
+            inference.getClassifierInput().put(name, new NamedTuple(new String[] { "name", "inputValue", "bucketIdx", "encoding" }, name, o, bucketIdx, tempArray));
         }
+
+//        // Get fields user wants encoded from Parameters
+//        Map<String, Class> inferredFields = (Map<String, Class>)params.get(KEY.INFERRED_FIELDS);
+//        if(inferredFields == null) {
+//            LOGGER.info("KEY.INFERRED_FIELDS is null, no fields will be classified.");
+//            return;
+//        }
+//
+//        // Store a NamedTuple for each of those fields
+//        for(Map.Entry<String, Class> entry : inferredFields.entrySet()) {
+//            String fieldName = entry.getKey(); // Name of encoder input field
+//            EncoderTuple encoderTuple = encoderTuples.stream() // Get the EncoderTuple for this input field
+//                    .filter(e -> e.getName().equals(fieldName))
+//                    .collect(Collectors.toList())
+//                    .get(0);
+//            Encoder<?> e = encoderTuple.getEncoder();
+//
+//            int bucketIdx = -1;
+//            Object o = encoderInputMap.get(fieldName);
+//            if(DateTime.class.isAssignableFrom(o.getClass())) {
+//                bucketIdx = ((DateEncoder)e).getBucketIndices((DateTime)o)[0];
+//            } else if(Number.class.isAssignableFrom(o.getClass())) {
+//                bucketIdx = e.getBucketIndices((double)o)[0];
+//            } else {
+//                bucketIdx = e.getBucketIndices((String)o)[0];
+//            }
+//
+//            int offset = encoderTuple.getOffset();
+//            int[] tempArray = new int[e.getWidth()];
+//            System.arraycopy(encoding, offset, tempArray, 0, tempArray.length);
+//
+//            inference.getClassifierInput().put(
+//                    fieldName,
+//                    new NamedTuple(
+//                        new String[] { "name", "inputValue", "bucketIdx", "encoding" },
+//                        fieldName,
+//                        o,
+//                        bucketIdx,
+//                        tempArray
+//                    ));
+//        }
     }
 
     /**
@@ -1958,12 +1959,26 @@ public class Layer<T> implements Persistable {
         // Looks like the passed-in MultiEncoder is a single wrapper containing
         // multiple encoders; one for each field. Right now, a classifier is
         // created for each of those encoders. However, instead of do
+        Map inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
         String[] names = new String[encoder.getEncoders(encoder).size()];
-        CLAClassifier[] ca = new CLAClassifier[names.length];
+        Classifier[] ca = new Classifier[names.length];
         int i = 0;
         for(EncoderTuple et : encoder.getEncoders(encoder)) {
             names[i] = et.getName();
-            ca[i] = new CLAClassifier();
+            Object fieldClassifier = inferredFields.get(et.getName());
+            if(fieldClassifier == CLAClassifier.class) {
+                LOGGER.info("Classifying \"" + et.getName() + "\" input field with CLAClassifier");
+                ca[i] = new CLAClassifier();
+            } else if(fieldClassifier == SDRClassifier.class) {
+                LOGGER.info("Classifying \"" + et.getName() + "\" input field with SDRClassifier");
+                ca[i] = new SDRClassifier();
+            } else {
+                if(fieldClassifier != null)
+                    LOGGER.warn("Invalid Classifier class token, \"" + fieldClassifier +
+                            "\", specified for, \"" + et.getName() + "\", input field. " +
+                            "Valid class tokens are CLAClassifier.class and SDRClassifier.class");
+                LOGGER.info("Not classifying \"" + et.getName() + "\" input field");
+            }
             i++;
         }
         return new NamedTuple(names, (Object[])ca);
@@ -2380,10 +2395,13 @@ public class Layer<T> implements Persistable {
                         bucketIdx = inputs.get("bucketIdx");
                         actValue = inputs.get("inputValue");
 
-                        CLAClassifier c = (CLAClassifier)t1.getClassifiers().get(key);
-                        Classification<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
+                        Classifier c = (Classifier)t1.getClassifiers().get(key);
 
-                        t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
+                        // c will be null if no classifier was specifying for this field in KEY.INFERRED_FIELDS map
+                        if(c != null) {
+                            Classification<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
+                            t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);
+                        }
                     }
 
                     return t1;
