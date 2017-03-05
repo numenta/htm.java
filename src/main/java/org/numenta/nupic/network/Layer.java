@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.numenta.nupic.FieldMetaType;
@@ -1915,6 +1914,13 @@ public class Layer<T> implements Persistable {
      */
     NamedTuple makeClassifiers(MultiEncoder encoder) {
         Map inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
+        if(inferredFields == null || inferredFields.entrySet().size() == 0) {
+            throw new IllegalStateException(
+                    "KEY.AUTO_CLASSIFY has been set to \"true\", but KEY.INFERRED_FIELDS is null or\n\t" +
+                    "empty. Must specify desired Classifier for at least one input field in\n\t" +
+                    "KEY.INFERRED_FIELDS or set KEY.AUTO_CLASSIFY to \"false\"."
+            );
+        }
         String[] names = new String[encoder.getEncoders(encoder).size()];
         Classifier[] ca = new Classifier[names.length];
         int i = 0;
@@ -1927,11 +1933,13 @@ public class Layer<T> implements Persistable {
             } else if(fieldClassifier == SDRClassifier.class) {
                 LOGGER.info("Classifying \"" + et.getName() + "\" input field with SDRClassifier");
                 ca[i] = new SDRClassifier();
-            } else {
-                if(fieldClassifier != null)
-                    LOGGER.warn("Invalid Classifier class token, \"" + fieldClassifier +
-                            "\", specified for, \"" + et.getName() + "\", input field. " +
-                            "Valid class tokens are CLAClassifier.class and SDRClassifier.class");
+            } else if(fieldClassifier != null) {
+                throw new IllegalStateException(
+                        "Invalid Classifier class token, \"" + fieldClassifier + "\",\n\t" +
+                        "specified for, \"" + et.getName() + "\", input field.\n\t" +
+                        "Valid class tokens are CLAClassifier.class and SDRClassifier.class"
+                );
+            } else { // fieldClassifier is null
                 LOGGER.info("Not classifying \"" + et.getName() + "\" input field");
             }
             i++;

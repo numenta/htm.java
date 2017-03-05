@@ -63,7 +63,6 @@ public class Parameters implements Persistable {
     private static final Map<KEY, Object> DEFAULTS_TEMPORAL;
     private static final Map<KEY, Object> DEFAULTS_SPATIAL;
     private static final Map<KEY, Object> DEFAULTS_ENCODER;
-    private static final Map<KEY, Object> DEFAULTS_CLASSIFIER;
 
 
     static {
@@ -135,12 +134,6 @@ public class Parameters implements Persistable {
         defaultEncoderParams.put(KEY.AUTO_CLASSIFY, Boolean.FALSE);
         DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
         defaultParams.putAll(DEFAULTS_ENCODER);
-
-        ///////////  Classifier Parameters ///////////
-        Map<KEY, Object> defaultClassifierParams = new ParametersMap();
-        defaultClassifierParams.put(KEY.INFERRED_FIELDS, new HashMap<String, Class<? extends Classifier>>());
-        DEFAULTS_CLASSIFIER = Collections.unmodifiableMap(defaultClassifierParams);
-        defaultParams.putAll(DEFAULTS_CLASSIFIER);
 
         DEFAULTS_ALL = Collections.unmodifiableMap(defaultParams);
     }
