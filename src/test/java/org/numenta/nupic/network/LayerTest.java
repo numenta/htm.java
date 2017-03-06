@@ -223,6 +223,10 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
 
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
@@ -261,7 +265,9 @@ public class LayerTest extends ObservableTestBase {
     @Test
     public void testResetMethod() {
         Parameters p = NetworkTestHarness.getParameters().copy();
-        Layer<?> l = Network.createLayer("l1", p).add(new TemporalMemory());
+        Layer<?> l = Network.createLayer("l1", p)
+                .alterParameter(KEY.AUTO_CLASSIFY, false)
+                .add(new TemporalMemory());
         try {
             l.reset();
             assertTrue(l.hasTemporalMemory());
@@ -309,7 +315,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.AUTO_CLASSIFY, false);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -352,7 +358,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.AUTO_CLASSIFY, false);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -392,7 +398,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.AUTO_CLASSIFY, false);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -436,6 +442,10 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("consumption", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
@@ -740,6 +750,10 @@ public class LayerTest extends ObservableTestBase {
         p.set(KEY.RANDOM, new UniversalRandom(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
 
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("consumption", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
         Network n = Network.create("test network", p);
@@ -867,6 +881,10 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("consumption", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -1075,6 +1093,10 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
 
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
         TestObserver<Inference> tester;
@@ -1112,6 +1134,10 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
 
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
@@ -1159,6 +1185,10 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
 
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
@@ -1235,6 +1265,10 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+
+        Map<String, Class<? extends Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
 
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
@@ -1370,6 +1404,10 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
 
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
@@ -1429,6 +1467,11 @@ public class LayerTest extends ObservableTestBase {
         params.put(KEY_MODE, Mode.PURE);
         params.put(KEY_WINDOW_SIZE, 3);
         params.put(KEY_USE_MOVING_AVG, true);
+
+        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("consumption", CLAClassifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
         Anomaly anomalyComputer = Anomaly.create(params);
 
         Layer<?> l = Network.createLayer("TestLayer", p)
@@ -1451,7 +1494,7 @@ public class LayerTest extends ObservableTestBase {
                 if(flowReceived) return; // No need to set this value multiple times
 
                 flowReceived = i.getClassifiers().size() == 2 &&
-                    i.getClassifiers().get("timestamp") != null &&
+                    i.getClassifiers().get("timestamp") == null &&
                         i.getClassifiers().get("consumption") != null;
             }
         });
