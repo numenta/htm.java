@@ -61,14 +61,12 @@ import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.UniversalRandom;
 
-import org.openjdk.jmh.annotations.Param;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
 import rx.observers.TestObserver;
 import rx.subjects.PublishSubject;
-import sun.plugin.dom.exception.InvalidStateException;
 
 /**
  * Tests the "heart and soul" of the Network API
