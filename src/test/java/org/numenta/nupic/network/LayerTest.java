@@ -41,13 +41,12 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.*;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
-import org.numenta.nupic.algorithms.CLAClassifier;
-import org.numenta.nupic.algorithms.SpatialPooler;
-import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
 import org.numenta.nupic.encoders.MultiEncoder;
+import org.numenta.nupic.encoders.RandomDistributedScalarEncoder;
+import org.numenta.nupic.encoders.ScalarEncoder;
 import org.numenta.nupic.model.Connections;
 import org.numenta.nupic.model.SDR;
 import org.numenta.nupic.network.Layer.FunctionFactory;
@@ -59,14 +58,17 @@ import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.MersenneTwister;
+import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.UniversalRandom;
 
+import org.openjdk.jmh.annotations.Param;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Func1;
 import rx.observers.TestObserver;
 import rx.subjects.PublishSubject;
+import sun.plugin.dom.exception.InvalidStateException;
 
 /**
  * Tests the "heart and soul" of the Network API
@@ -1770,5 +1772,110 @@ public class LayerTest extends ObservableTestBase {
                                                         // Received a record yet.
         assertEquals("[42]", (Arrays.toString((int[])ff.inference.getSDR())));
     }
-   
+
+    @Test
+    public void testMakeClassifiers() {
+        // Setup Parameters
+        Parameters p = Parameters.getAllDefaultParameters();
+        Map<String, Class<? extends Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("field1", CLAClassifier.class);
+        inferredFieldsMap.put("field2", SDRClassifier.class);
+        inferredFieldsMap.put("field3", null);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
+        // Create MultiEncoder and add the fields' encoders to it
+        MultiEncoder me = MultiEncoder.builder().name("").build();
+        me.addEncoder(
+                "field1",
+                RandomDistributedScalarEncoder.builder().resolution(1).build()
+        );
+        me.addEncoder(
+                "field2",
+                RandomDistributedScalarEncoder.builder().resolution(1).build()
+        );
+        me.addEncoder(
+                "field3",
+                RandomDistributedScalarEncoder.builder().resolution(1).build()
+        );
+
+        // Create a Layer with Parameters and MultiEncoder
+        Layer<Map<String, Object>> l = new Layer<>(
+                p,
+                me,
+                new SpatialPooler(),
+                new TemporalMemory(),
+                true,
+                null
+        );
+
+        // Make sure the makeClassifiers() method matches each
+        // field to the specified Classifier type
+        NamedTuple nt = l.makeClassifiers(l.getEncoder());
+        assertEquals(nt.get("field1").getClass(), CLAClassifier.class);
+        assertEquals(nt.get("field2").getClass(), SDRClassifier.class);
+        assertEquals(nt.get("field3"), null);
+    }
+
+    @Test
+    public void TestMakeClassifiersWithNoInferredFieldsKey() {
+        // Setup Parameters
+        Parameters p = Parameters.getAllDefaultParameters();
+
+        // Create MultiEncoder
+        MultiEncoder me = MultiEncoder.builder().name("").build();
+
+        // Create a Layer with Parameters and MultiEncoder
+        Layer<Map<String, Object>> l = new Layer<>(
+                p,
+                me,
+                new SpatialPooler(),
+                new TemporalMemory(),
+                true,
+                null
+        );
+
+        // Make sure the makeClassifiers() method throws exception due to
+        // absence of KEY.INFERRED_FIELDS in the Parameters object
+        try {
+            NamedTuple nt = l.makeClassifiers(l.getEncoder());
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("KEY.INFERRED_FIELDS"));
+            assertTrue(e.getMessage().contains("null"));
+            assertTrue(e.getMessage().contains("empty"));
+        }
+    }
+
+    @Test
+    public void TestMakeClassifiersWithInvalidInferredFieldsKey() {
+         // Setup Parameters
+        Parameters p = Parameters.getAllDefaultParameters();
+        Map<String, Class<? extends Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put("field1", Classifier.class);
+        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+
+        // Create MultiEncoder and add the fields' encoders to it
+        MultiEncoder me = MultiEncoder.builder().name("").build();
+        me.addEncoder(
+                "field1",
+                RandomDistributedScalarEncoder.builder().resolution(1).build()
+        );
+
+        // Create a Layer with Parameters and MultiEncoder
+        Layer<Map<String, Object>> l = new Layer<>(
+                p,
+                me,
+                new SpatialPooler(),
+                new TemporalMemory(),
+                true,
+                null
+        );
+
+        // Make sure the makeClassifiers() method throws exception due to
+        // absence of KEY.INFERRED_FIELDS in the Parameters object
+        try {
+            NamedTuple nt = l.makeClassifiers(l.getEncoder());
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Invalid Classifier class token"));
+        }
+    }
 }
