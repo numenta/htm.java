@@ -26,6 +26,8 @@ import java.util.Map;
 
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
+import org.numenta.nupic.algorithms.CLAClassifier;
+import org.numenta.nupic.algorithms.Classifier;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.util.Tuple;
 
@@ -205,6 +207,18 @@ public class NetworkTestHarness {
         p.set(KEY.FIELD_ENCODING_MAP, fieldEncodings);
 
         return p;
+    }
+
+    /**
+     * @return a Map that can be used as the value for a Parameter
+     * object's KEY.INFERRED_FIELDS key, to classify the specified
+     * field with the specified Classifier type.
+     */
+    public static Map<String, Class<? extends Classifier>> getInferredFieldsMap(
+            String field, Class<? extends Classifier> classifier) {
+        Map<String, Class<? extends Classifier>> inferredFieldsMap = new HashMap<>();
+        inferredFieldsMap.put(field, classifier);
+        return inferredFieldsMap;
     }
     
     /**

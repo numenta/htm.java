@@ -60,6 +60,7 @@ import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.UniversalRandom;
+import static org.numenta.nupic.network.NetworkTestHarness.*;
 
 import rx.Observable;
 import rx.Observer;
@@ -220,10 +221,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
@@ -440,10 +438,7 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("consumption", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         HTMSensor<ObservableSensor<String[]>> htmSensor = (HTMSensor<ObservableSensor<String[]>>)sensor;
 
@@ -747,10 +742,7 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("consumption", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -879,10 +871,7 @@ public class LayerTest extends ObservableTestBase {
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
         p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("consumption", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -1090,10 +1079,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new UniversalRandom(42));
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
         Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
@@ -1132,11 +1118,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
-
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -1183,11 +1165,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
-
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
 
         MultiEncoder me = MultiEncoder.builder().name("").build();
@@ -1263,11 +1241,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-
-        Map<String, Class<? extends Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
-
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         p.set(KEY.SP_PRIMER_DELAY, PRIME_COUNT);
         
         final int cellsPerColumn = (int)p.get(KEY.CELLS_PER_COLUMN);
@@ -1401,11 +1375,7 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("dayOfWeek", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
-
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         MultiEncoder me = MultiEncoder.builder().name("").build();
         final Layer<Map<String, Object>> l = new Layer<>(p, me, new SpatialPooler(), new TemporalMemory(), Boolean.TRUE, null);
 
@@ -1465,11 +1435,7 @@ public class LayerTest extends ObservableTestBase {
         params.put(KEY_MODE, Mode.PURE);
         params.put(KEY_WINDOW_SIZE, 3);
         params.put(KEY_USE_MOVING_AVG, true);
-
-        Map<String, Class<? extends  Classifier>> inferredFieldsMap = new HashMap<>();
-        inferredFieldsMap.put("consumption", CLAClassifier.class);
-        p.set(KEY.INFERRED_FIELDS, inferredFieldsMap);
-
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
         Anomaly anomalyComputer = Anomaly.create(params);
 
         Layer<?> l = Network.createLayer("TestLayer", p)

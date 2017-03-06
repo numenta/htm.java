@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_MODE;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_USE_MOVING_AVG;
 import static org.numenta.nupic.algorithms.Anomaly.KEY_WINDOW_SIZE;
+import static org.numenta.nupic.network.NetworkTestHarness.*;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -676,6 +677,7 @@ public class PersistenceAPITest extends ObservableTestBase {
     public void testSerializeLayer() {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
             null, // map
             8,    // n
@@ -1684,6 +1686,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         
         Layer<?> l2 = null;
         Network network = Network.create("test network", p)
@@ -1711,6 +1714,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
@@ -1734,6 +1738,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getNetworkDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         Network network = Network.create("test network", p)
             .add(Network.createRegion("r1")
@@ -1759,6 +1764,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 
@@ -1782,7 +1788,8 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
-        
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
+
         Network network = Network.create("test network", p).add(Network.createRegion("r1")
             .add(Network.createLayer("1", p)
                 .alterParameter(KEY.AUTO_CLASSIFY, true)
@@ -1797,6 +1804,7 @@ public class PersistenceAPITest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         Object[] n = { "some name", ResourceLocator.path("rec-center-hourly.csv") };
         HTMSensor<File> sensor = (HTMSensor<File>)Sensor.create(
@@ -1824,6 +1832,7 @@ public class PersistenceAPITest extends ObservableTestBase {
 
         Parameters p = NetworkTestHarness.getParameters().copy();
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
             null, // map
@@ -1911,6 +1920,7 @@ public class PersistenceAPITest extends ObservableTestBase {
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", manual}));
 
         Parameters p = getParameters();
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
 
         Map<String, Map<String, Object>> settings = NetworkTestHarness.setupMap(
             null, // map
