@@ -1,5 +1,7 @@
 package org.numenta.nupic.serialize;
 
+import static org.numenta.nupic.network.NetworkTestHarness.getInferredFieldsMap;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -23,7 +25,6 @@ import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.FastRandom;
-import static org.numenta.nupic.network.NetworkTestHarness.*;
 
 
 public class HTMObjectInputOutputTest {

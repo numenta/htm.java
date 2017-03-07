@@ -21,6 +21,8 @@
  */
 package org.numenta.nupic.network;
 
+import static org.numenta.nupic.network.NetworkTestHarness.getInferredFieldsMap;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -63,7 +65,6 @@ import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.MersenneTwister;
 import org.numenta.nupic.util.NamedTuple;
 import org.numenta.nupic.util.UniversalRandom;
-import static org.numenta.nupic.network.NetworkTestHarness.*;
 
 import rx.Observable;
 import rx.Observer;
