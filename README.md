@@ -91,7 +91,7 @@ The primary goal of this library development is to provide a Java version of NuP
 
 By working closely with Numenta and receiving their enthusiastic support and guidance, it is intended that this library be maintained as a viable Java language alternative to Numenta's C++ and Python offerings. However it must be understood that "official" support is (for the time being) currently limited to community resources such as the maintainers of this library and Numenta Forums / Message Lists and IRC:
 
- * [NuPIC Community](http://numenta.org/index.html#community)
+ * [NuPIC Community](http://numenta.org/)
  * [New HTM Forum](http://discourse.numenta.org)
 
 ***
