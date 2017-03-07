@@ -48,7 +48,7 @@ import org.numenta.nupic.network.sensor.Sensor;
 import org.numenta.nupic.network.sensor.SensorParams;
 import org.numenta.nupic.network.sensor.SensorParams.Keys;
 import org.numenta.nupic.util.MersenneTwister;
-import static org.numenta.nupic.network.NetworkTestHarness.*;
+import static org.numenta.nupic.network.NetworkTestHarness.getInferredFieldsMap;
 
 import rx.Observer;
 import rx.Subscriber;
@@ -403,13 +403,14 @@ public class RegionTest extends ObservableTestBase {
         p.set(KEY.MAX_BOOST, 10.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
                 .add(Network.createLayer("1", p)
-                    .alterParameter(KEY.AUTO_CLASSIFY, false))
+                    .alterParameter(KEY.AUTO_CLASSIFY, Boolean.TRUE))
                 .add(Network.createLayer("2", p)
                     .add(Anomaly.create(params)))
                 .add(Network.createLayer("3", p)

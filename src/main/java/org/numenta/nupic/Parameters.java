@@ -23,9 +23,15 @@
 package org.numenta.nupic;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.EnumMap;
+import java.util.Arrays;
 
-import org.numenta.nupic.algorithms.Classifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;

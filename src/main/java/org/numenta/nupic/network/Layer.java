@@ -36,7 +36,13 @@ import org.joda.time.DateTime;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.*;
+import org.numenta.nupic.algorithms.Classification;
+import org.numenta.nupic.algorithms.TemporalMemory;
+import org.numenta.nupic.algorithms.SpatialPooler;
+import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.Classifier;
+import org.numenta.nupic.algorithms.SDRClassifier;
+import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.encoders.EncoderTuple;
@@ -1918,7 +1924,8 @@ public class Layer<T> implements Persistable {
             throw new IllegalStateException(
                     "KEY.AUTO_CLASSIFY has been set to \"true\", but KEY.INFERRED_FIELDS is null or\n\t" +
                     "empty. Must specify desired Classifier for at least one input field in\n\t" +
-                    "KEY.INFERRED_FIELDS or set KEY.AUTO_CLASSIFY to \"false\"."
+                    "KEY.INFERRED_FIELDS or set KEY.AUTO_CLASSIFY to \"false\" (which is its default\n\t" +
+                    "value in Parameters)."
             );
         }
         String[] names = new String[encoder.getEncoders(encoder).size()];
@@ -2356,7 +2363,7 @@ public class Layer<T> implements Persistable {
 
                         Classifier c = (Classifier)t1.getClassifiers().get(key);
 
-                        // c will be null if no classifier was specifying for this field in KEY.INFERRED_FIELDS map
+                        // c will be null if no classifier was specified for this field in KEY.INFERRED_FIELDS map
                         if(c != null) {
                             Classification<Object> result = c.compute(recordNum, inputMap, t1.getSDR(), isLearn, true);
                             t1.recordNum(recordNum).storeClassification((String)inputs.get("name"), result);

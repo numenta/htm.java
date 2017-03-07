@@ -311,7 +311,8 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, false);
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -354,7 +355,8 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, false);
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
@@ -394,7 +396,8 @@ public class LayerTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        p.set(KEY.AUTO_CLASSIFY, false);
+        p.set(KEY.AUTO_CLASSIFY, Boolean.TRUE);
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         HTMSensor<File> htmSensor = (HTMSensor<File>)sensor;
 
