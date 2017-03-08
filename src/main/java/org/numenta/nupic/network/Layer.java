@@ -1918,8 +1918,9 @@ public class Layer<T> implements Persistable {
      * @param encoder
      * @return
      */
+    @SuppressWarnings("unchecked")
     NamedTuple makeClassifiers(MultiEncoder encoder) {
-        Map inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
+        Map<String, Class<? extends Classifier>> inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
         if(inferredFields == null || inferredFields.entrySet().size() == 0) {
             throw new IllegalStateException(
                     "KEY.AUTO_CLASSIFY has been set to \"true\", but KEY.INFERRED_FIELDS is null or\n\t" +

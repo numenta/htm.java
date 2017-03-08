@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
-import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.Classifier;
 import org.numenta.nupic.encoders.Encoder;
 import org.numenta.nupic.util.Tuple;

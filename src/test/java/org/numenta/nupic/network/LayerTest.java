@@ -1851,7 +1851,7 @@ public class LayerTest extends ObservableTestBase {
         // Make sure the makeClassifiers() method throws exception due to
         // absence of KEY.INFERRED_FIELDS in the Parameters object
         try {
-            NamedTuple nt = l.makeClassifiers(l.getEncoder());
+            l.makeClassifiers(l.getEncoder());
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("KEY.INFERRED_FIELDS"));
             assertTrue(e.getMessage().contains("null"));
