@@ -64,7 +64,7 @@ import gnu.trove.list.array.TIntArrayList;
  * @author David Ray
  * @see BitHistory
  */
-public class CLAClassifier implements Persistable {
+public class CLAClassifier implements Persistable, Classifier {
     private static final long serialVersionUID = 1L;
 
     int verbosity = 0;

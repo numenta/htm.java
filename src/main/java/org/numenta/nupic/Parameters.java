@@ -23,18 +23,19 @@
 package org.numenta.nupic;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.EnumMap;
+import java.util.Arrays;
 
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.model.Cell;
+import org.numenta.nupic.model.Segment;
 import org.numenta.nupic.model.Column;
 import org.numenta.nupic.model.ComputeCycle;
 import org.numenta.nupic.model.DistalDendrite;
@@ -417,8 +418,10 @@ public class Parameters implements Persistable {
         
         // Network Layer indicator for auto classifier generation
         AUTO_CLASSIFY("hasClassifiers", Boolean.class),
-        
-        
+
+        /** Maps encoder input field name to type of classifier to be used for them */
+        INFERRED_FIELDS("inferredFields", Map.class), // Map<String, Classifier.class>
+
         // How many bits to use if encoding the respective date fields.
         // e.g. Tuple(bits to use:int, radius:double)
         DATEFIELD_SEASON("season", Tuple.class), 

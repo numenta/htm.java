@@ -1,5 +1,7 @@
 package org.numenta.nupic.serialize;
 
+import static org.numenta.nupic.network.NetworkTestHarness.getInferredFieldsMap;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -11,6 +13,7 @@ import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
+import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.network.Network;
@@ -58,6 +61,7 @@ public class HTMObjectInputOutputTest {
         Parameters p = NetworkTestHarness.getParameters().copy();
         p = p.union(NetworkTestHarness.getHotGymTestEncoderParams());
         p.set(KEY.RANDOM, new FastRandom(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("consumption", CLAClassifier.class));
 
         Sensor<ObservableSensor<String[]>> sensor = Sensor.create(
             ObservableSensor::create, SensorParams.create(Keys::obs, new Object[] {"name", 

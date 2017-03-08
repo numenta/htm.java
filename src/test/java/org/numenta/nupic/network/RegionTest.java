@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import static org.numenta.nupic.network.NetworkTestHarness.getInferredFieldsMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,6 +39,7 @@ import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
 import org.numenta.nupic.algorithms.Anomaly.Mode;
+import org.numenta.nupic.algorithms.CLAClassifier;
 import org.numenta.nupic.algorithms.SpatialPooler;
 import org.numenta.nupic.algorithms.TemporalMemory;
 import org.numenta.nupic.datagen.ResourceLocator;
@@ -202,6 +204,7 @@ public class RegionTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -326,7 +329,8 @@ public class RegionTest extends ObservableTestBase {
         p.set(KEY.MAX_BOOST, 10.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
         p.set(KEY.RANDOM, new MersenneTwister(42));
-        
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
+
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
         
@@ -399,6 +403,7 @@ public class RegionTest extends ObservableTestBase {
         p.set(KEY.MAX_BOOST, 10.0);
         p.set(KEY.DUTY_CYCLE_PERIOD, 7);
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         
         Map<String, Object> params = new HashMap<>();
         params.put(KEY_MODE, Mode.PURE);
@@ -446,6 +451,7 @@ public class RegionTest extends ObservableTestBase {
         Parameters p = NetworkTestHarness.getParameters();
         p = p.union(NetworkTestHarness.getDayDemoTestEncoderParams());
         p.set(KEY.RANDOM, new MersenneTwister(42));
+        p.set(KEY.INFERRED_FIELDS, getInferredFieldsMap("dayOfWeek", CLAClassifier.class));
         
         Network n = Network.create("test network", p)
             .add(Network.createRegion("r1")
