@@ -1934,21 +1934,24 @@ public class Layer<T> implements Persistable {
         int i = 0;
         for(EncoderTuple et : encoder.getEncoders(encoder)) {
             names[i] = et.getName();
-            Object fieldClassifier = inferredFields.get(et.getName());
-            if(fieldClassifier == CLAClassifier.class) {
+            Class fieldClassifier = inferredFields.get(et.getName());
+            if(fieldClassifier == null) {
+                LOGGER.info("Not classifying \"" + et.getName() + "\" input field");
+            }
+            else if(CLAClassifier.class.isAssignableFrom(fieldClassifier)) {
                 LOGGER.info("Classifying \"" + et.getName() + "\" input field with CLAClassifier");
                 ca[i] = new CLAClassifier();
-            } else if(fieldClassifier == SDRClassifier.class) {
+            }
+            else if(SDRClassifier.class.isAssignableFrom(fieldClassifier)) {
                 LOGGER.info("Classifying \"" + et.getName() + "\" input field with SDRClassifier");
                 ca[i] = new SDRClassifier();
-            } else if(fieldClassifier != null) {
+            }
+            else {
                 throw new IllegalStateException(
                         "Invalid Classifier class token, \"" + fieldClassifier + "\",\n\t" +
                         "specified for, \"" + et.getName() + "\", input field.\n\t" +
                         "Valid class tokens are CLAClassifier.class and SDRClassifier.class"
                 );
-            } else { // fieldClassifier is null
-                LOGGER.info("Not classifying \"" + et.getName() + "\" input field");
             }
             i++;
         }
