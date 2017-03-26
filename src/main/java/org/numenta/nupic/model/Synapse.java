@@ -239,6 +239,8 @@ public class Synapse implements Persistable, Comparable<Synapse> {
             return false;
         if(synapseIndex != other.synapseIndex)
             return false;
+        if(permanence != other.permanence)
+            return false;
         return true;
     }
 }

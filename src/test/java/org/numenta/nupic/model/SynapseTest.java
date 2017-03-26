@@ -52,10 +52,16 @@ public class SynapseTest {
         synapse1.setPresynapticCell(cell2);
         assertFalse(synapse1.equals(synapse2));
 
-        // synapse1 should not equal synapse 2 because synapse1's
+        // synapse1 should not equal synapse2 because synapse1's
         // synapseIndex != synapse2's synapseIndex
         synapse1 = new Synapse(cell1, segment1, 0, 0);
         synapse2 = new Synapse(cell1, segment1, 1, 0);
+        assertFalse(synapse1.equals(synapse2));
+
+        // synapse1 should not equal synapse2 because synapse1's
+        // permanence != synapse2's permanence
+        synapse1 = new Synapse(cell1, segment1, 0, 0);
+        synapse2 = new Synapse(cell1, segment1, 0, 1);
         assertFalse(synapse1.equals(synapse2));
 
         // synapse1 should equal synapse2 because all of their
