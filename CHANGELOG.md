@@ -13,7 +13,26 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.10-SNAPSHOT]
+## Unreleased [0.6.13-SNAPSHOT]
+#### Removed
+#### Added
+#### Changed  
+#### Fixed
+
+***
+
+## Unreleased [0.6.12]
+#### Removed
+#### Added
+* [[PR #511](https://github.com/numenta/htm.java/pull/511)] SDRClassifier Network API Integration
+* [[PR #511](https://github.com/numenta/htm.java/pull/511)] Added new Classifier.java interface
+* [[PR #511](https://github.com/numenta/htm.java/pull/511)] Added Tests for new integration
+#### Changed  
+#### Fixed
+
+***
+
+## Unreleased [0.6.10]
 #### Removed
 #### Added
 #### Changed  
