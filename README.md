@@ -30,7 +30,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 * HTM.Java Release v0.6.11-alpha to tag sync state with NuPIC (10/16/2016)
 * [HTM.Java Receives new TemporalMemory](https://discourse.numenta.org/t/htm-java-now-in-sync-with-nupic/1510) - HTM.Java now fully in sync!! (10/13/2016)
 * [HTM.Java Receives new SpatialPooler](https://github.com/numenta/htm.java/pull/486) - Fully Updated! (10/06/2016)
-* HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB will be offered (soon)! (09/29/2016)
+* HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB <strike>will be offered (soon)</strike>! (09/29/2016)
 * [HTM.java Receives New SDRClassifier!](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/algorithms/SDRClassifier.java) (07/26/2016)
 * [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
 * [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
