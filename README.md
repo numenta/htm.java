@@ -152,7 +152,7 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 Gradle:  
 
 dependencies {
-    compile group: 'org.numenta', name: 'htm.java', version:'0.6.11'
+    compile group: 'org.numenta', name: 'htm.java', version:'0.6.12'
 }
 ```
 
