@@ -96,7 +96,7 @@ public enum FieldMetaType {
             case LIST : 
             case STRING : return (T)input;
             case DATETIME : return (T)((DateEncoder)enc).parse(input);
-            case BOOLEAN : return (T)(Boolean.valueOf(input) == true ? new Integer(1) : new Integer(0));
+            case BOOLEAN : return (T)(Boolean.valueOf(input) == true ? new Double(1) : new Double(0));
             case COORD : 
             case GEO :  {
             	String[] parts = input.split("[\\s]*\\;[\\s]*");
