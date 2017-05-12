@@ -13,15 +13,25 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.13-SNAPSHOT]
+## Unreleased [0.6.14-SNAPSHOT]
 #### Removed
 #### Added
 #### Changed  
-#### Fixed
+#### Fixed 
 
 ***
 
-## Unreleased [0.6.12]
+## [v0.6.13-alpha]  Hot Fix!
+#### Removed
+#### Added
+[[PR #518](https://github.com/numenta/htm.java/pull/518)] Added FieldMetaTypeTest.java
+#### Changed  
+#### Fixed
+[[PR #518](https://github.com/numenta/htm.java/pull/518)] Fixed "bool" type decode bug
+
+***
+
+## [v0.6.12-alpha]
 #### Removed
 #### Added
 * [[PR #511](https://github.com/numenta/htm.java/pull/511)] SDRClassifier Network API Integration
@@ -32,7 +42,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ***
 
-## Unreleased [0.6.10]
+## [v0.6.10-alpha]
 #### Removed
 #### Added
 #### Changed  
