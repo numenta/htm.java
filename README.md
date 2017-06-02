@@ -25,6 +25,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 <br>
 
 ## Recent News Items...
+* Updated Sync Report Table Here in README (06/02/2017)
 * New Hot Fix Release [v0.6.13-alpha](https://github.com/numenta/htm.java/releases) (05/12/2017)
 * Updated HTM.Java Examples! [Now in sync with latest release (v0.6.12-alpha)](https://github.com/numenta/htm.java-examples) (See the executable Jars!) (04/06/2017)
 * New Feature Release! [v0.6.12-alpha](https://github.com/numenta/htm.java/releases/tag/v0.6.12-alpha) Network API Allows Multi-field inference! (04/04/2017)
@@ -33,12 +34,6 @@ _**NOTE: Minimum JavaSE version is 8**_
 * [HTM.Java Receives new SpatialPooler](https://github.com/numenta/htm.java/pull/486) - Fully Updated! (10/06/2016)
 * HTM.Java Reaches 100% NuPIC Compatibility and operation within NAB <strike>will be offered (soon)</strike>! (09/29/2016)
 * [HTM.java Receives New SDRClassifier!](https://github.com/numenta/htm.java/blob/master/src/main/java/org/numenta/nupic/algorithms/SDRClassifier.java) (07/26/2016)
-* [HTM.java Status Report](https://discourse.numenta.org/t/htm-java-status-report/645) (05/29/2016)
-* [HTM.java Examples Repo Updated!](https://github.com/numenta/htm.java-examples) Includes use of the [New Cortical.io API!](https://github.com/cortical-io/retina-api-java-sdk) (05/18/2016)
-* [New HTM.java Forum Site](http://discourse.numenta.org/c/htm-java) found on the new [HTM Forum](http://discourse.numenta.org) (05/10/2016)
-* [HTM.java Recieves new Persistence API](https://github.com/numenta/htm.java/wiki/Saving-Your-Network:-The-Persistence-API) (04/14/2016)
-* HTM.java Recieves [Docker Reference-Build Implementation](https://github.com/numenta/htm.java/wiki/Build-Instructions#reference-build-environment) (03/26/2016)  
-* **HTM.java Becomes Build-able With OpenJDK** (03/26/2016)  
 
 
 ### [News Archives...](https://github.com/numenta/htm.java/wiki/News-Archives...)
