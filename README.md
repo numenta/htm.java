@@ -25,7 +25,7 @@ _**NOTE: Minimum JavaSE version is 8**_
 <br>
 
 ## Recent News Items...
-* Updated Sync Report Table Here in README (06/02/2017)
+* Updated [Sync Report Table](https://github.com/numenta/htm.java/blob/master/README.md#versioning) Here in README (06/02/2017)
 * New Hot Fix Release [v0.6.13-alpha](https://github.com/numenta/htm.java/releases) (05/12/2017)
 * Updated HTM.Java Examples! [Now in sync with latest release (v0.6.12-alpha)](https://github.com/numenta/htm.java-examples) (See the executable Jars!) (04/06/2017)
 * New Feature Release! [v0.6.12-alpha](https://github.com/numenta/htm.java/releases/tag/v0.6.12-alpha) Network API Allows Multi-field inference! (04/04/2017)
