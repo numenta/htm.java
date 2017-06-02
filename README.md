@@ -134,7 +134,7 @@ gradle -Pskipbench check  # Executes the tests w/o running the benchmarks
 
 **Linux Gradle Issues?** [see the wiki here.](https://github.com/numenta/htm.java/wiki/Gradle---JAVA_HOME-Issue-Resolution)
 
-**A [wiki](https://github.com/numenta/htm.java/wiki/Build-Instructions) with full build instructions for building HTM.java is available here:** [Build Instructions](https://github.com/numenta/htm.java/wiki/Build-Instructions) (This includes a no-java/gradle-guaranteed-build using the provided [Docker File](https://github.com/numenta/htm.java/blob/master/Dockerfile) as a reference build.) 
+**A [wiki](https://github.com/numenta/htm.java/wiki/Build-Instructions) with full build instructions for building HTM.java is available here:** [Build Instructions](https://github.com/numenta/htm.java/wiki/Build-Instructions) 
 
 ***
 ## For Developers: Usage & Project Integration  
