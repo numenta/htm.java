@@ -110,8 +110,6 @@ public class PersistenceAPITest extends ObservableTestBase {
                         catch(Exception io) { throw new RuntimeException(io); } 
                     }
                 );
-                
-                Files.delete(serialDir.toPath());
             }
         }catch(Exception e) {
             e.printStackTrace();
