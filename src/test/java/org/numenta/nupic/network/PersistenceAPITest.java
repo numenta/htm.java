@@ -49,6 +49,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.numenta.nupic.FieldMetaType;
 import org.numenta.nupic.Parameters;
@@ -97,6 +98,13 @@ public class PersistenceAPITest extends ObservableTestBase {
     /** Printer to visualize DayOfWeek printouts - SET TO TRUE FOR PRINTOUT */
     private BiFunction<Inference, Integer, Integer> dayOfWeekPrintout = createDayOfWeekInferencePrintout(false);
     
+    
+    @BeforeClass
+    public static void beforeClass(){
+    	// Sample data contains datetimes that are invalid in some timezones due to DST.
+    	// If UTC is forced, then test runs should yield the same result regardless of timezone
+    	System.setProperty("user.timezone", "UTC");
+    }
 
     @AfterClass
     public static void cleanUp() {

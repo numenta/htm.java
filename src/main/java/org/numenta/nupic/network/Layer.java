@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -2011,7 +2012,7 @@ public class Layer<T> implements Persistable {
      * Starts this {@code Layer}'s thread
      */
     protected void startLayerThread() {
-        (LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
+        LAYER_THREAD = new Thread("Sensor Layer [" + getName() + "] Thread") {
 
             @SuppressWarnings("unchecked")
             public void run() {
@@ -2044,7 +2045,16 @@ public class Layer<T> implements Persistable {
                     }
                 });
             }
-        }).start();
+        };
+        
+        LAYER_THREAD.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+			
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+				notifyError(new RuntimeException("Unhandled Exception in "+LAYER_THREAD.getName(),e));
+			}
+		});
+        LAYER_THREAD.start();
     }
     
     /**
