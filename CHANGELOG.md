@@ -24,10 +24,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [v0.6.13-alpha]  Hot Fix!
 #### Removed
 #### Added
-[[PR #518](https://github.com/numenta/htm.java/pull/518)] Added FieldMetaTypeTest.java
+* [[PR #518](https://github.com/numenta/htm.java/pull/518)] Added FieldMetaTypeTest.java
 #### Changed  
 #### Fixed
-[[PR #518](https://github.com/numenta/htm.java/pull/518)] Fixed "bool" type decode bug
+* [[PR #518](https://github.com/numenta/htm.java/pull/518)] Fixed "bool" type decode bug
 
 ***
 
