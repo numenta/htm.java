@@ -38,6 +38,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.numenta.nupic.IntegrationTest;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
@@ -64,6 +66,7 @@ import rx.Subscriber;
 import rx.observers.TestObserver;
 
 
+@Category(IntegrationTest.class)
 public class NetworkTest extends ObservableTestBase {
     private int[][] dayMap = new int[][] { 
         new int[] { 1, 1, 0, 0, 0, 0, 0, 1 }, // Sunday

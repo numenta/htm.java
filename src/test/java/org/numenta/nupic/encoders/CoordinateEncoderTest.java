@@ -30,9 +30,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.numenta.nupic.IntegrationTest;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
-
+@Category(IntegrationTest.class)
 public class CoordinateEncoderTest {
 	private CoordinateEncoder ce;
 	private CoordinateEncoder.Builder builder;

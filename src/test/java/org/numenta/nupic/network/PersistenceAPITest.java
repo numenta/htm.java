@@ -51,7 +51,9 @@ import java.util.stream.Stream;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.numenta.nupic.FieldMetaType;
+import org.numenta.nupic.IntegrationTest;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.algorithms.Anomaly;
@@ -93,6 +95,7 @@ import rx.Subscriber;
 import rx.observers.TestObserver;
 
 
+@Category(IntegrationTest.class)
 public class PersistenceAPITest extends ObservableTestBase {
     // TO TURN ON PRINTOUT: SET "TRUE" BELOW
     /** Printer to visualize DayOfWeek printouts - SET TO TRUE FOR PRINTOUT */

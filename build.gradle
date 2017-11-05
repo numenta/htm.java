@@ -29,8 +29,13 @@ repositories {
 
 // COMMENT OUT TO SKIP TESTS WHEN CODE HASN'T CHANGED
 test {
-   outputs.upToDateWhen { false }
+    description = 'Runs only unit tests and excludes integration tests'
+    outputs.upToDateWhen { false }
+    useJUnit {
+        excludeCategories 'org.numenta.nupic.IntegrationTest'
+    }
 }
+
 
 // UNCOMMENT TO SEE STANDARD_OUT & STANDARD_ERR DURING BUILD
 /*

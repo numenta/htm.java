@@ -9,10 +9,12 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.numenta.nupic.encoders.DateEncoder;
 import org.numenta.nupic.util.Tuple;
 
 
+@Category(IntegrationTest.class)
 public class FieldMetaTypeTest {
 
     /**

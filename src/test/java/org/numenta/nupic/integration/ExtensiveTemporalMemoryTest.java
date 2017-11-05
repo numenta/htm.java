@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.numenta.nupic.IntegrationTest;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
 import org.numenta.nupic.datagen.PatternMachine;
@@ -206,6 +208,7 @@ import org.numenta.nupic.monitor.mixin.Metric;
  * @see AbstractTemporalMemoryTest
  * @see BasicTemporalMemoryTest
  */
+@Category(IntegrationTest.class)
 public class ExtensiveTemporalMemoryTest extends AbstractTemporalMemoryTest {
     private static final PatternMachine PATTERN_MACHINE = new PatternMachine(100, 23, 300, true);
     

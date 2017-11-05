@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.numenta.nupic.util.ArrayUtils;
 import org.numenta.nupic.util.Tuple;
 
