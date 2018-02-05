@@ -341,60 +341,6 @@ public class ArrayUtils {
     }
 
     /**
-     * Takes a two-dimensional array of r rows and c columns and reshapes it to
-     * have (r*c)/n by n columns. The value in location [i][j] of the input array
-     * is copied into location [j][i] of the new array.
-     * 
-     * @param array The array of values to be reshaped.
-     * @param n The number of columns in the created array.
-     * @return The new (r*c)/n by n array.
-     * @throws IllegalArgumentException If r*c  is not evenly divisible by n.
-     */
-    public static int[][] reshape(int[][] array, int n) throws IllegalArgumentException {
-        int r = array.length;
-        if (r == 0) {
-            return new int[0][0]; // Special case: zero-length array
-        }
-        if ((array.length * array[0].length) % n != 0) {
-            int size = array.length * array[0].length;
-            throw new IllegalArgumentException(size + " is not evenly divisible by " + n);
-        }
-        int c = array[0].length;
-        int[][] result = new int[(r * c) / n][n];
-        int ii = 0;
-        int jj = 0;
-        
-        for (int i = 0; i < r; i++) {
-            for (int j = 0; j < c; j++) {
-                result[ii][jj] = array[i][j];
-                jj++;
-                if (jj == n) {
-                    jj = 0;
-                    ii++;
-                }
-            }
-        }
-        return result;
-    }
-    
-    /**
-     * Returns an int[] with the dimensions of the input.
-     * @param inputArray
-     * @return
-     */
-    public static int[] shape(Object inputArray) {
-        int nr = 1 + inputArray.getClass().getName().lastIndexOf('[');
-        Object oa = inputArray;
-        int[] l = new int[nr];
-        for(int i = 0;i < nr;i++) {
-            int len = l[i] = Array.getLength(oa);
-            if (0 < len) { oa = Array.get(oa, 0); }
-        }
-        
-        return l;
-    }
-    
-    /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array.
      * <p>
@@ -1141,28 +1087,6 @@ public class ArrayUtils {
         TIntArrayList t = new TIntArrayList(arg1);
         t.addAll(arg2);
         return unique(t.toArray());
-    }
-
-    /**
-     * Prints the specified array to a returned String.
-     *
-     * @param aObject the array object to print.
-     * @return the array in string form suitable for display.
-     */
-    public static String print1DArray(Object aObject) {
-        if (aObject.getClass().isArray()) {
-            if (aObject instanceof Object[]) // can we cast to Object[]
-            {
-                return Arrays.toString((Object[])aObject);
-            } else {  // we can't cast to Object[] - case of primitive arrays
-                int length = Array.getLength(aObject);
-                Object[] objArr = new Object[length];
-                for (int i = 0; i < length; i++)
-                    objArr[i] = Array.get(aObject, i);
-                return Arrays.toString(objArr);
-            }
-        }
-        return "[]";
     }
 
     /**

@@ -22,13 +22,13 @@
 
 package org.numenta.nupic.util;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.numenta.nupic.model.Persistable;
+import static org.numenta.nupic.util.ArrayUtils.interleave;
 
 /**
  * Immutable tuple which adds associative lookup functionality.
@@ -408,28 +408,4 @@ public class NamedTuple extends Tuple {
         }
     }
 
-    /**
-     * Returns an array containing the successive elements of each
-     * argument array as in [ first[0], second[0], first[1], second[1], ... ].
-     * 
-     * Arrays may be of zero length, and may be of different sizes, but may not be null.
-     * 
-     * @param first     the first array
-     * @param second    the second array
-     * @return
-     */
-    static <F, S> Object[] interleave(F first, S second) {
-        int flen, slen;
-        Object[] retVal = new Object[(flen = Array.getLength(first)) + (slen = Array.getLength(second))];
-        for(int i = 0, j = 0, k = 0;i < flen || j < slen;) {
-            if(i < flen) {
-                retVal[k++] = Array.get(first, i++);
-            }
-            if(j < slen) {
-                retVal[k++] = Array.get(second, j++);
-            }
-        }
-        
-        return retVal;
-    }
 }

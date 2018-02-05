@@ -115,49 +115,7 @@ public class ArrayUtilsTest {
         args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
         assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
     }
-    
-    @Test
-    public void testShape() {
-        int[][] inputPattern = { { 2, 3, 4, 5 }, { 6, 7, 8, 9} };
-        int[] shape = ArrayUtils.shape(inputPattern);
-        assertTrue(Arrays.equals(new int[] { 2, 4 }, shape));
-    }
-    
-    @Test 
-    public void testReshape() {
-        int[][] test = {
-            { 0, 1, 2, 3, 4, 5 },
-            { 6, 7, 8, 9, 10, 11 }
-        };
-        
-        int[][] expected = {
-            { 0, 1, 2 },
-            { 3, 4, 5 },
-            { 6, 7, 8 },
-            { 9, 10, 11 }
-        };
-        
-        int[][] result = ArrayUtils.reshape(test, 3);
-        for(int i = 0;i < result.length;i++) {
-            for(int j = 0;j < result[i].length;j++) {
-                assertEquals(expected[i][j], result[i][j]);
-            }
-        }
-        
-        // Unhappy case
-        try {
-            ArrayUtils.reshape(test, 5);
-        }catch(Exception e) {
-            assertTrue(e instanceof IllegalArgumentException);
-            assertEquals("12 is not evenly divisible by 5", e.getMessage());
-        }
-        
-        // Test zero-length case
-        int[] result4 = ArrayUtils.unravel(new int[0][]);
-        assertNotNull(result4);
-        assertTrue(result4.length == 0);
-    }
-    
+
     @Test
     public void testRavelAndUnRavel() {
         int[] test = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
