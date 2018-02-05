@@ -84,7 +84,7 @@ public class ArrayUtils {
         
         return retVal;
     }
-    
+
     /**
      * Returns an array containing the successive elements of each
      * argument array as in [ first[0], second[0], first[1], second[1], ... ].
@@ -100,16 +100,16 @@ public class ArrayUtils {
         Object[] retVal = new Object[(flen = Array.getLength(first)) + (slen = Array.getLength(second))];
         for(int i = 0, j = 0, k = 0;i < flen || j < slen;) {
             if(i < flen) {
-                retVal[k++] = Array.get(first, i++);
+                retVal[k++] = getValue(first, i++);
             }
             if(j < slen) {
-                retVal[k++] = Array.get(second, j++);
+                retVal[k++] = getValue(second, j++);
             }
         }
-        
+
         return retVal;
     }
-    
+
     /**
      * <p>
      * Return a new double[] containing the difference of each element and its
@@ -2046,28 +2046,95 @@ public class ArrayUtils {
      * @param indexes
      */
     public static void setValue(Object array, int value, int... indexes) {
-        if (indexes.length == 1) {
+        if(indexes.length == 1) {
             ((int[])array)[indexes[0]] = value;
         } else {
-            setValue(Array.get(array, indexes[0]), value, tail(indexes));
+            setValue(ArrayUtils.getSlice(array, indexes[0]), value, tail(indexes));
         }
     }
-    
+
     /**
      * Get <tt>value</tt> for <tt>array</tt> at specified position <tt>indexes</tt>
      *
      * @param array
      * @param indexes
      */
-    public static Object getValue(Object array, int... indexes) {
+    public static int getIntValue(Object array, int... indexes) {
         Object slice = array;
-        for(int i = 0;i < indexes.length;i++) {
-            slice = Array.get(slice, indexes[i]);
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = ((Object[])slice)[indexes[i]];
+            }
         }
-        
-        return slice;
+        return ((int[])slice)[indexes[indexes.length - 1]];
     }
 
+    public static Object getValue(Object array, int... indexes) {
+        Object slice = array;
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = get(slice, i);
+            }
+        }
+        return get(slice, indexes[indexes.length - 1]);
+    }
+
+    /**
+     * Get <tt>slice</tt> for <tt>array</tt> at specified position
+     * <tt>indexes</tt>
+     *
+     * @param array
+     * @param indexes
+     */
+    public static Object getSlice(Object array, int... indexes) {
+        Object slice = array;
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = ((Object[])slice)[indexes[i]];
+            }
+        }
+        return ((Object[])slice)[indexes[indexes.length - 1]];
+    }
+
+    /**
+     * Gets an element of an array. Primitive elements will be wrapped in the
+     * corresponding class type.
+     *
+     * @param array
+     *            the array to access
+     * @param index
+     *            the array index to access
+     * @return the element at <code>array[index]</code>
+     * @throws IllegalArgumentException
+     *             if <code>array</code> is not an array
+     * @throws NullPointerException
+     *             if <code>array</code> is null
+     * @throws ArrayIndexOutOfBoundsException
+     *             if <code>index</code> is out of bounds
+     */
+    public static Object get(Object array, int index) {
+        if(array instanceof Object[])
+            return ((Object[])array)[index];
+        if(array instanceof boolean[])
+            return ((boolean[])array)[index] ? Boolean.TRUE : Boolean.FALSE;
+        if(array instanceof byte[])
+            return new Byte(((byte[])array)[index]);
+        if(array instanceof char[])
+            return new Character(((char[])array)[index]);
+        if(array instanceof short[])
+            return new Short(((short[])array)[index]);
+        if(array instanceof int[])
+            return new Integer(((int[])array)[index]);
+        if(array instanceof long[])
+            return new Long(((long[])array)[index]);
+        if(array instanceof float[])
+            return new Float(((float[])array)[index]);
+        if(array instanceof double[])
+            return new Double(((double[])array)[index]);
+        if(array == null)
+            throw new NullPointerException();
+        throw new IllegalArgumentException();
+    }
 
     /**
      *Assigns the specified int value to each element of the specified any dimensional array

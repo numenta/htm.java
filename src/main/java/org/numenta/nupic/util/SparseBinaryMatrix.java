@@ -83,18 +83,18 @@ public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Pe
      * 
      * @param coordinates	the coordinates which specify the returned array
      * @return	the array specified
-     * @throws	IllegalArgumentException if the specified coordinates address
-     * 			an actual value instead of the array holding it.
+     * @throws IllegalArgumentException if the specified coordinates address
+     *             an actual value instead of the array holding it.
      */
     @Override
     public Object getSlice(int... coordinates) {
-        Object slice = ArrayUtils.getValue(this.backingArray, coordinates);
-        //Ensure return value is of type Array
-        if(!slice.getClass().isArray()) {
-            sliceError(coordinates);
+        try {
+            return ArrayUtils.getSlice(this.backingArray, coordinates);
+        } catch(ClassCastException e) {
+            throw new IllegalArgumentException(
+                            "This method only returns the array holding the specified maximum index: " + 
+                                    Arrays.toString(dimensions));
         }
-
-        return slice;
     }
 
     /**
@@ -177,7 +177,7 @@ public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Pe
      */
     public void clearStatistics(int row) {
         this.setTrueCount(row, 0);
-        int[] slice = (int[])Array.get(backingArray, row);
+        int[] slice = (int[])ArrayUtils.getSlice(backingArray, row);
         Arrays.fill(slice, 0);
     }
 
@@ -194,7 +194,7 @@ public class SparseBinaryMatrix extends AbstractSparseBinaryMatrix implements Pe
             return Array.getInt(this.backingArray, index);
         }
         
-        else return (Integer) ArrayUtils.getValue(this.backingArray, coordinates);
+        else return (Integer) ArrayUtils.getIntValue(this.backingArray, coordinates);
     }
 
     @Override
