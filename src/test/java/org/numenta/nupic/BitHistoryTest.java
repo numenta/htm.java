@@ -3,6 +3,7 @@ package org.numenta.nupic;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 
 import org.junit.Test;
 import org.numenta.nupic.algorithms.BitHistory;
@@ -19,7 +20,8 @@ public class BitHistoryTest {
             m.setAccessible(true);
             double[] da = { 2.0, 4.0 };
             String output = (String)m.invoke(history, da);
-            assertEquals("[ 2.00 4.00 ]", output);
+            char decimalSeparator = new DecimalFormat().getDecimalFormatSymbols().getDecimalSeparator();
+            assertEquals("[ 2"+decimalSeparator+"00 4"+decimalSeparator+"00 ]", output);
         }catch(Exception e) {
             e.printStackTrace();
         }

@@ -2,10 +2,12 @@ package org.numenta.nupic.monitor.mixin;
 
 import static org.junit.Assert.assertTrue;
 
+import java.text.DecimalFormat;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.numenta.nupic.Parameters;
 import org.numenta.nupic.Parameters.KEY;
@@ -24,6 +26,7 @@ public class MonitoredTemporalMemoryTest {
         MonitoredTemporalMemory mtm = new MonitoredTemporalMemory(new TemporalMemory(), new Connections());
         prepConstructs((TemporalMemory)mtm.getMonitor(), mtm.getConnections());
         
+        char decimalSeparator = new DecimalFormat().getDecimalFormatSymbols().getDecimalSeparator();
         String expected =
             "Segments: (format => (#) [(source cell=permanence ...),       ...]\n" +
             "------------------------------------\n" +
@@ -32,14 +35,14 @@ public class MonitoredTemporalMemoryTest {
             "Column   0 / Cell   2:\t(0) []\n" +
             "Column   0 / Cell   3:\t(0) []\n\n" +
             
-            "Column   1 / Cell   4:\t(1) [(  0=0.60   1=0.60   2=0.60   3=0.60)]\n" +
+            "Column   1 / Cell   4:\t(1) [(  0=0"+decimalSeparator+"60   1=0"+decimalSeparator+"60   2=0"+decimalSeparator+"60   3=0"+decimalSeparator+"60)]\n" +
             "Column   1 / Cell   5:\t(0) []\n" +
             "Column   1 / Cell   6:\t(0) []\n" +
             "Column   1 / Cell   7:\t(0) []\n" +
             "------------------------------------";
         
         String s = mtm.mmPrettyPrintConnections().trim();
-        assertTrue(expected.equals(s));
+        Assert.assertEquals(expected, s);
     }
     
     public void prepConstructs(TemporalMemory tm, Connections cn) {
