@@ -354,7 +354,7 @@ public class UniversalRandom extends Random {
         int[] selectedIndices = new int[sampleSize];
         List<Integer> collectedRandoms = new ArrayList<>();
         int[] expectedSample = {1,2,3,7,8,9};
-        List<Integer> expectedRandoms = Arrays.stream(new int[] {0,0,0,5,3,3}).boxed().collect(Collectors.toList());
+        List<Integer> expectedRandoms = Arrays.stream(new int[] {0,0,0,5,3,3}).parallel().boxed().collect(Collectors.toList());
         random.sampleWithPrintout(choices, selectedIndices, collectedRandoms);
         System.out.println("samples are equal ? " + Arrays.equals(expectedSample, selectedIndices));
         System.out.println("used randoms are equal ? " + collectedRandoms.equals(expectedRandoms));
