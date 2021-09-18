@@ -35,7 +35,7 @@
 		<repository>
 			<id>repo</id>
 			<name>htm.java</name>
-			<url>http://metaware.us/maven3</url>
+			<url>https://metaware.us/maven3</url>
 		</repository>
 	</repositories>
 
