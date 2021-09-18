@@ -214,7 +214,7 @@ public class RunLayer {
         public Tuple tmStep(int[] sparseSPOutput, boolean learn, boolean isVerbose) {
             // Input into the Temporal Memory
             ComputeCycle cc = tm.compute(connections, sparseSPOutput, learn);
-            int[] activeCellIndices = cc.activeCells().stream().mapToInt(c -> c.getIndex()).sorted().toArray();
+            int[] activeCellIndices = cc.activeCells().parallelStream().mapToInt(c -> c.getIndex()).sorted().toArray();
             int[] predColumnIndices = SDR.cellsAsColumnIndices(cc.predictiveCells(), connections.getCellsPerColumn());
             int[] activeColumns = Arrays.stream(activeCellIndices)
                 .map(cell -> cell / connections.getCellsPerColumn())
@@ -478,7 +478,7 @@ public class RunLayer {
     }
     
     public static void loadSPOutputFile() {
-        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.readFile))) {
+        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.readFile)).parallel()) {
             MakeshiftLayer.input = stream.map(l -> {
                 String line = l.replace("[", "").replace("]",  "").trim();
                 int[] result = Arrays.stream(line.split("[\\s]*\\,[\\s]*")).mapToInt(i -> Integer.parseInt(i)).toArray();
@@ -490,7 +490,7 @@ public class RunLayer {
     }
     
     public static void loadRawInputFile() {
-        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.INPUT_PATH))) {
+        try (Stream<String> stream = Files.lines(Paths.get(MakeshiftLayer.INPUT_PATH)).parallel()) {
             MakeshiftLayer.raw = stream.map(l -> l.trim()).collect(Collectors.toList());
         }catch(Exception e) {e.printStackTrace();}
     }

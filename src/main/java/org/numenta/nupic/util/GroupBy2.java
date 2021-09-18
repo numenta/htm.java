@@ -237,7 +237,7 @@ public class GroupBy2<R extends Comparable<R>> implements Generator<Tuple> {
      * @return  the next smallest generated key.
      */
     private boolean nextMinKey() {
-        return Arrays.stream(nextList)
+        return Arrays.stream(nextList).parallel()
             .filter(opt -> opt.isPresent())
             .map(opt -> opt.get().getSecond())
             .min((k, k2) -> k.compareTo(k2))

@@ -248,7 +248,7 @@ public class QuickDayTest {
             ComputeCycle cc = temporalMemory.compute(memory, input, true);
             lastPredicted = predictedColumns;
             predictedColumns = getSDR(cc.predictiveCells()); //Get the predicted column indexes
-            int[] activeCellIndexes = Connections.asCellIndexes(cc.activeCells()).stream().mapToInt(i -> i).sorted().toArray();  //Get the active cells for classifier input
+            int[] activeCellIndexes = Connections.asCellIndexes(cc.activeCells()).parallelStream().mapToInt(i -> i).sorted().toArray();  //Get the active cells for classifier input
             System.out.println("TemporalMemory Input = " + Arrays.toString(input));
             System.out.println("TemporalMemory Prediction = " + Arrays.toString(predictedColumns));
 

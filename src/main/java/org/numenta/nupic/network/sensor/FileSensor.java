@@ -158,7 +158,7 @@ public class FileSensor implements Sensor<File>, Serializable {
             innerPath = innerPath.startsWith("\\") ? innerPath.substring(1) : innerPath;
             InputStream inStream = jar.getInputStream(jar.getEntry(innerPath));
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
-            retVal = br.lines().onClose(() -> {
+            retVal = br.lines().parallel().onClose(() -> {
                 try {
                     br.close();
                     jar.close();

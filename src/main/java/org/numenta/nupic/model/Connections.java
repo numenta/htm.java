@@ -1553,7 +1553,7 @@ public class Connections implements Persistable {
      * @return  Synapse object on the segment with the minimal permanence
      */
     private Synapse minPermanenceSynapse(DistalDendrite dd) {
-        List<Synapse> synapses = getSynapses(dd).stream().sorted().collect(Collectors.toList());
+        List<Synapse> synapses = getSynapses(dd).parallelStream().sorted().collect(Collectors.toList());
         Synapse min = null;
         double minPermanence = Double.MAX_VALUE;
         
