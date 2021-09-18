@@ -25,6 +25,8 @@ package org.numenta.nupic.util;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 public class SparseObjectMatrixTest {
@@ -38,7 +40,7 @@ public class SparseObjectMatrixTest {
 
         sm = new SparseObjectMatrix<TestObject>(new int[] { 1, 2, 3, 4, 5 });
         dm = sm.getDimensionMultiples();
-        assertEquals(ArrayUtils.print1DArray(dm), "[120, 60, 20, 5, 1]");
+        assertEquals(Arrays.toString(dm), "[120, 60, 20, 5, 1]");
     }
 
     /**

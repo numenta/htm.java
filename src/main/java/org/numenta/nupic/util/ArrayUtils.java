@@ -84,7 +84,7 @@ public class ArrayUtils {
         
         return retVal;
     }
-    
+
     /**
      * Returns an array containing the successive elements of each
      * argument array as in [ first[0], second[0], first[1], second[1], ... ].
@@ -100,16 +100,16 @@ public class ArrayUtils {
         Object[] retVal = new Object[(flen = Array.getLength(first)) + (slen = Array.getLength(second))];
         for(int i = 0, j = 0, k = 0;i < flen || j < slen;) {
             if(i < flen) {
-                retVal[k++] = Array.get(first, i++);
+                retVal[k++] = getValue(first, i++);
             }
             if(j < slen) {
-                retVal[k++] = Array.get(second, j++);
+                retVal[k++] = getValue(second, j++);
             }
         }
-        
+
         return retVal;
     }
-    
+
     /**
      * <p>
      * Return a new double[] containing the difference of each element and its
@@ -340,60 +340,6 @@ public class ArrayUtils {
         return result;
     }
 
-    /**
-     * Takes a two-dimensional array of r rows and c columns and reshapes it to
-     * have (r*c)/n by n columns. The value in location [i][j] of the input array
-     * is copied into location [j][i] of the new array.
-     * 
-     * @param array The array of values to be reshaped.
-     * @param n The number of columns in the created array.
-     * @return The new (r*c)/n by n array.
-     * @throws IllegalArgumentException If r*c  is not evenly divisible by n.
-     */
-    public static int[][] reshape(int[][] array, int n) throws IllegalArgumentException {
-        int r = array.length;
-        if (r == 0) {
-            return new int[0][0]; // Special case: zero-length array
-        }
-        if ((array.length * array[0].length) % n != 0) {
-            int size = array.length * array[0].length;
-            throw new IllegalArgumentException(size + " is not evenly divisible by " + n);
-        }
-        int c = array[0].length;
-        int[][] result = new int[(r * c) / n][n];
-        int ii = 0;
-        int jj = 0;
-        
-        for (int i = 0; i < r; i++) {
-            for (int j = 0; j < c; j++) {
-                result[ii][jj] = array[i][j];
-                jj++;
-                if (jj == n) {
-                    jj = 0;
-                    ii++;
-                }
-            }
-        }
-        return result;
-    }
-    
-    /**
-     * Returns an int[] with the dimensions of the input.
-     * @param inputArray
-     * @return
-     */
-    public static int[] shape(Object inputArray) {
-        int nr = 1 + inputArray.getClass().getName().lastIndexOf('[');
-        Object oa = inputArray;
-        int[] l = new int[nr];
-        for(int i = 0;i < nr;i++) {
-            int len = l[i] = Array.getLength(oa);
-            if (0 < len) { oa = Array.get(oa, 0); }
-        }
-        
-        return l;
-    }
-    
     /**
      * Sorts the array, then returns an array containing the indexes of
      * those sorted items in the original array.
@@ -1141,28 +1087,6 @@ public class ArrayUtils {
         TIntArrayList t = new TIntArrayList(arg1);
         t.addAll(arg2);
         return unique(t.toArray());
-    }
-
-    /**
-     * Prints the specified array to a returned String.
-     *
-     * @param aObject the array object to print.
-     * @return the array in string form suitable for display.
-     */
-    public static String print1DArray(Object aObject) {
-        if (aObject.getClass().isArray()) {
-            if (aObject instanceof Object[]) // can we cast to Object[]
-            {
-                return Arrays.toString((Object[])aObject);
-            } else {  // we can't cast to Object[] - case of primitive arrays
-                int length = Array.getLength(aObject);
-                Object[] objArr = new Object[length];
-                for (int i = 0; i < length; i++)
-                    objArr[i] = Array.get(aObject, i);
-                return Arrays.toString(objArr);
-            }
-        }
-        return "[]";
     }
 
     /**
@@ -2122,28 +2046,95 @@ public class ArrayUtils {
      * @param indexes
      */
     public static void setValue(Object array, int value, int... indexes) {
-        if (indexes.length == 1) {
+        if(indexes.length == 1) {
             ((int[])array)[indexes[0]] = value;
         } else {
-            setValue(Array.get(array, indexes[0]), value, tail(indexes));
+            setValue(ArrayUtils.getSlice(array, indexes[0]), value, tail(indexes));
         }
     }
-    
+
     /**
      * Get <tt>value</tt> for <tt>array</tt> at specified position <tt>indexes</tt>
      *
      * @param array
      * @param indexes
      */
-    public static Object getValue(Object array, int... indexes) {
+    public static int getIntValue(Object array, int... indexes) {
         Object slice = array;
-        for(int i = 0;i < indexes.length;i++) {
-            slice = Array.get(slice, indexes[i]);
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = ((Object[])slice)[indexes[i]];
+            }
         }
-        
-        return slice;
+        return ((int[])slice)[indexes[indexes.length - 1]];
     }
 
+    public static Object getValue(Object array, int... indexes) {
+        Object slice = array;
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = get(slice, i);
+            }
+        }
+        return get(slice, indexes[indexes.length - 1]);
+    }
+
+    /**
+     * Get <tt>slice</tt> for <tt>array</tt> at specified position
+     * <tt>indexes</tt>
+     *
+     * @param array
+     * @param indexes
+     */
+    public static Object getSlice(Object array, int... indexes) {
+        Object slice = array;
+        if(indexes.length > 1) {
+            for(int i = 0;i < indexes.length - 1;i++) {
+                slice = ((Object[])slice)[indexes[i]];
+            }
+        }
+        return ((Object[])slice)[indexes[indexes.length - 1]];
+    }
+
+    /**
+     * Gets an element of an array. Primitive elements will be wrapped in the
+     * corresponding class type.
+     *
+     * @param array
+     *            the array to access
+     * @param index
+     *            the array index to access
+     * @return the element at <code>array[index]</code>
+     * @throws IllegalArgumentException
+     *             if <code>array</code> is not an array
+     * @throws NullPointerException
+     *             if <code>array</code> is null
+     * @throws ArrayIndexOutOfBoundsException
+     *             if <code>index</code> is out of bounds
+     */
+    public static Object get(Object array, int index) {
+        if(array instanceof Object[])
+            return ((Object[])array)[index];
+        if(array instanceof boolean[])
+            return ((boolean[])array)[index] ? Boolean.TRUE : Boolean.FALSE;
+        if(array instanceof byte[])
+            return new Byte(((byte[])array)[index]);
+        if(array instanceof char[])
+            return new Character(((char[])array)[index]);
+        if(array instanceof short[])
+            return new Short(((short[])array)[index]);
+        if(array instanceof int[])
+            return new Integer(((int[])array)[index]);
+        if(array instanceof long[])
+            return new Long(((long[])array)[index]);
+        if(array instanceof float[])
+            return new Float(((float[])array)[index]);
+        if(array instanceof double[])
+            return new Double(((double[])array)[index]);
+        if(array == null)
+            throw new NullPointerException();
+        throw new IllegalArgumentException();
+    }
 
     /**
      *Assigns the specified int value to each element of the specified any dimensional array

@@ -23,7 +23,6 @@
 package org.numenta.nupic.util;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
@@ -112,7 +111,7 @@ public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T>, Serializab
         for(int i = 0;i < index.length - 1;i++) {
             if(index[i] >= dimensions[i]) {
                 throw new IllegalArgumentException("Specified coordinates exceed the configured array dimensions " +
-                        print1DArray(index) + " > " + print1DArray(dimensions));
+                        Arrays.toString(index) + " > " + Arrays.toString(dimensions));
             }
         }
     }
@@ -177,27 +176,6 @@ public abstract class AbstractFlatMatrix<T> implements FlatMatrix<T>, Serializab
             retVal[j] = input[i];
         }
         return retVal;
-    }
-
-    /**
-     * Prints the specified array to a returned String.
-     * 
-     * @param aObject   the array object to print.
-     * @return  the array in string form suitable for display.
-     */
-    public static String print1DArray(Object aObject) {
-        if (aObject.getClass().isArray()) {
-            if (aObject instanceof Object[]) // can we cast to Object[]
-                return Arrays.toString((Object[]) aObject);
-            else {  // we can't cast to Object[] - case of primitive arrays
-                int length = Array.getLength(aObject);
-                Object[] objArr = new Object[length];
-                for (int i=0; i<length; i++)
-                    objArr[i] =  Array.get(aObject, i);
-                return Arrays.toString(objArr);
-            }
-        }
-        return "[]";
     }
 
     @Override

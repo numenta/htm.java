@@ -34,12 +34,112 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.numenta.nupic.model.Cell;
 import org.numenta.nupic.model.Column;
 
 public class ArrayUtilsTest {
     
+	  @Test
+	  public void testJavaArrayBehavior() {
+	  	Object array = Array.newInstance(int.class, 1);
+	  	Assert.assertTrue(array instanceof int[]);
+	  	array = Array.newInstance(int.class, 2);
+	  	Assert.assertTrue(array instanceof int[]);
+	  	Assert.assertFalse(array instanceof int[][]);
+	  	array = Array.newInstance(int.class, 3);
+	  	Assert.assertTrue(array instanceof int[]);
+	  	Assert.assertFalse(array instanceof int[][]);
+	  	Assert.assertFalse(array instanceof int[][][]);
+	  }
+	
+		@Test
+		public void testGet() {
+			int[] singleDimArray = new int[2];
+			singleDimArray[0]=0;
+			singleDimArray[1]=1;
+			assertEquals(0, ArrayUtils.getIntValue(singleDimArray, 0));
+			assertEquals(1, ArrayUtils.getIntValue(singleDimArray, 1));
+			
+			int[][] twoDimArray = new int[2][2];
+			twoDimArray[0]=new int[2];
+			twoDimArray[1]=new int[2];
+			twoDimArray[0][0]=0;
+			twoDimArray[0][1]=1;
+			twoDimArray[1][0]=2;
+			twoDimArray[1][1]=3;
+			assertEquals(0, ArrayUtils.getIntValue(twoDimArray, 0, 0));
+			assertEquals(1, ArrayUtils.getIntValue(twoDimArray, 0, 1));
+			assertEquals(2, ArrayUtils.getIntValue(twoDimArray, 1, 0));
+			assertEquals(3, ArrayUtils.getIntValue(twoDimArray, 1, 1));
+		}
+		
+		@Test
+		public void testSetAndGet() {
+			int[] dimensions = new int[]{2, 2, 2};
+			int[][][] threeDimArray = (int[][][]) Array.newInstance(int.class, dimensions);
+			System.out.println("input array:");
+			for(int i = 0; i < 8; i++) {
+				int[] coords = computeCoordinates(i, dimensions);
+				System.out.println(Arrays.toString(coords));
+				ArrayUtils.setValue(threeDimArray, i, coords);
+			}
+			for(int i = 0; i < 8; i++) {
+				int[] coords = computeCoordinates(i, dimensions);
+				assertEquals(i, ArrayUtils.getIntValue(threeDimArray, coords));
+			}
+			
+			int[][] twoDimArray = (int[][]) ArrayUtils.getSlice(threeDimArray, new int[]{0});
+			for(int i = 0; i < 4; i++) {
+				int[] coords = computeCoordinates(i, new int[]{2,2});
+				assertEquals(i, ArrayUtils.getIntValue(twoDimArray, coords));
+			}
+			int[] oneDimArray = (int[]) ArrayUtils.getSlice(threeDimArray, new int[]{0,0});
+			assertEquals(0, oneDimArray[0]);
+			assertEquals(1, oneDimArray[1]);
+			oneDimArray = (int[]) ArrayUtils.getSlice(threeDimArray, new int[]{0,1});
+			assertEquals(2, oneDimArray[0]);
+			assertEquals(3, oneDimArray[1]);
+			oneDimArray = (int[]) ArrayUtils.getSlice(threeDimArray, new int[]{1,0});
+			assertEquals(4, oneDimArray[0]);
+			assertEquals(5, oneDimArray[1]);
+			oneDimArray = (int[]) ArrayUtils.getSlice(threeDimArray, new int[]{1,1});
+			assertEquals(6, oneDimArray[0]);
+			assertEquals(7, oneDimArray[1]);
+		}
+		
+		private static int[] computeCoordinates(int index, int[] dimensions) {
+      int[] returnVal = new int[dimensions.length];
+      int[] dimensionMultiples = initDimensionMultiples(dimensions);
+      int base = index;
+      for(int i = 0;i < dimensionMultiples.length; i++) {
+          int quotient = base / dimensionMultiples[i];
+          base %= dimensionMultiples[i];
+          returnVal[i] = quotient;
+      }
+      return returnVal;
+		}
+		
+		private static int[] initDimensionMultiples(int[] dimensions) {
+      int holder = 1;
+      int len = dimensions.length;
+      int[] dimensionMultiples = new int[dimensions.length];
+      for(int i = 0;i < len;i++) {
+          holder *= (i == 0 ? 1 : dimensions[len - i]);
+          dimensionMultiples[len - 1 - i] = holder;
+      }
+      return dimensionMultiples;
+  }
+		
+		public static int[] reverse(int[] input) {
+      int[] retVal = new int[input.length];
+      for(int i = input.length - 1, j = 0;i >= 0;i--, j++) {
+          retVal[j] = input[i];
+      }
+      return retVal;
+		}
+		
     @Test
     public void testToBytes() {
         boolean[] ba = { true, true, };
@@ -115,49 +215,7 @@ public class ArrayUtilsTest {
         args = ArrayUtils.argsort(new int[] { 11, 2, 3, 7, 0 }, 0, 3);
         assertTrue(Arrays.equals(new int[] {4, 1, 2}, args));
     }
-    
-    @Test
-    public void testShape() {
-        int[][] inputPattern = { { 2, 3, 4, 5 }, { 6, 7, 8, 9} };
-        int[] shape = ArrayUtils.shape(inputPattern);
-        assertTrue(Arrays.equals(new int[] { 2, 4 }, shape));
-    }
-    
-    @Test 
-    public void testReshape() {
-        int[][] test = {
-            { 0, 1, 2, 3, 4, 5 },
-            { 6, 7, 8, 9, 10, 11 }
-        };
-        
-        int[][] expected = {
-            { 0, 1, 2 },
-            { 3, 4, 5 },
-            { 6, 7, 8 },
-            { 9, 10, 11 }
-        };
-        
-        int[][] result = ArrayUtils.reshape(test, 3);
-        for(int i = 0;i < result.length;i++) {
-            for(int j = 0;j < result[i].length;j++) {
-                assertEquals(expected[i][j], result[i][j]);
-            }
-        }
-        
-        // Unhappy case
-        try {
-            ArrayUtils.reshape(test, 5);
-        }catch(Exception e) {
-            assertTrue(e instanceof IllegalArgumentException);
-            assertEquals("12 is not evenly divisible by 5", e.getMessage());
-        }
-        
-        // Test zero-length case
-        int[] result4 = ArrayUtils.unravel(new int[0][]);
-        assertNotNull(result4);
-        assertTrue(result4.length == 0);
-    }
-    
+
     @Test
     public void testRavelAndUnRavel() {
         int[] test = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
