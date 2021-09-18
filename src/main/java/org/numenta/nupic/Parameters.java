@@ -138,6 +138,7 @@ public class Parameters implements Persistable {
         defaultEncoderParams.put(KEY.ENCODER, "ScalarEncoder");
         defaultEncoderParams.put(KEY.FIELD_ENCODING_MAP, Collections.emptyMap());
         defaultEncoderParams.put(KEY.AUTO_CLASSIFY, Boolean.FALSE);
+        defaultEncoderParams.put(KEY.INFERRED_STEPS, new int[]{1});
         DEFAULTS_ENCODER = Collections.unmodifiableMap(defaultEncoderParams);
         defaultParams.putAll(DEFAULTS_ENCODER);
 
@@ -421,6 +422,9 @@ public class Parameters implements Persistable {
 
         /** Maps encoder input field name to type of classifier to be used for them */
         INFERRED_FIELDS("inferredFields", Map.class), // Map<String, Classifier.class>
+        
+        /** Sets the inference steps */
+        INFERRED_STEPS("inferenceSteps", int[].class),
 
         // How many bits to use if encoding the respective date fields.
         // e.g. Tuple(bits to use:int, radius:double)

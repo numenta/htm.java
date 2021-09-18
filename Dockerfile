@@ -1,6 +1,9 @@
 FROM java:8
 
-RUN wget -q https://services.gradle.org/distributions/gradle-2.12-bin.zip \
+ENV http_proxy http://192.168.99.1:53128
+ENV https_proxy http://192.168.99.1:53128
+
+RUN wget https://services.gradle.org/distributions/gradle-2.12-bin.zip \
   && unzip -q gradle-2.12-bin.zip -d /opt \
   && rm gradle-2.12-bin.zip
   

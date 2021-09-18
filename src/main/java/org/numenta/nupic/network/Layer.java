@@ -21,6 +21,7 @@
  */
 package org.numenta.nupic.network;
 
+import gnu.trove.list.array.TIntArrayList;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -1922,6 +1923,7 @@ public class Layer<T> implements Persistable {
     @SuppressWarnings("unchecked")
     NamedTuple makeClassifiers(MultiEncoder encoder) {
         Map<String, Class<? extends Classifier>> inferredFields = (Map<String, Class<? extends Classifier>>) params.get(KEY.INFERRED_FIELDS);
+        int[] steps  = (int[]) params.get(KEY.INFERRED_STEPS);
         if(inferredFields == null || inferredFields.entrySet().size() == 0) {
             throw new IllegalStateException(
                     "KEY.AUTO_CLASSIFY has been set to \"true\", but KEY.INFERRED_FIELDS is null or\n\t" +
@@ -1930,6 +1932,7 @@ public class Layer<T> implements Persistable {
                     "value in Parameters)."
             );
         }
+        
         String[] names = new String[encoder.getEncoders(encoder).size()];
         Classifier[] ca = new Classifier[names.length];
         int i = 0;
@@ -1940,12 +1943,12 @@ public class Layer<T> implements Persistable {
                 LOGGER.info("Not classifying \"" + et.getName() + "\" input field");
             }
             else if(CLAClassifier.class.isAssignableFrom(fieldClassifier)) {
-                LOGGER.info("Classifying \"" + et.getName() + "\" input field with CLAClassifier");
-                ca[i] = new CLAClassifier();
+                LOGGER.info("Classifying \"" + et.getName() + "\" input field with CLAClassifier");            
+                ca[i] = new CLAClassifier(new TIntArrayList(steps), 0.001, 0.3, 0);
             }
             else if(SDRClassifier.class.isAssignableFrom(fieldClassifier)) {
                 LOGGER.info("Classifying \"" + et.getName() + "\" input field with SDRClassifier");
-                ca[i] = new SDRClassifier();
+                ca[i] = new  SDRClassifier(new TIntArrayList(steps), 0.001, 0.3, 0);
             }
             else {
                 throw new IllegalStateException(

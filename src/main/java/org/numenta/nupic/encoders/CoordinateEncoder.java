@@ -164,7 +164,7 @@ public class CoordinateEncoder extends Encoder<Tuple> implements CoordinateOrder
 	 */
 	@Override
 	public void encodeIntoArray(Tuple inputData, int[] output) {
-		List<int[]> neighs = neighbors((int[])inputData.get(0), (double)inputData.get(1));
+		List<int[]> neighs = neighbors((int[])inputData.get(0), Math.max((double)inputData.get(1), w));
 		int[][] neighbors = new int[neighs.size()][];
 		for(int i = 0;i < neighs.size();i++) neighbors[i] = neighs.get(i);
 

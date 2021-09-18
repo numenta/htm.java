@@ -30,15 +30,17 @@
 			<timezone>-5</timezone>
 		</developer>
 	</developers>
-
-	<repositories>
+        
+        <repositories>
 		<repository>
 			<id>repo</id>
 			<name>htm.java</name>
 			<url>http://metaware.us/maven3</url>
 		</repository>
 	</repositories>
-
+        
+        
+        
 	<scm>
 		<connection>scm:git:git://github.com/numenta/htm.java.git</connection>
 		<developerConnection>scm:git:git://github.com/numenta/htm.java.git</developerConnection>
